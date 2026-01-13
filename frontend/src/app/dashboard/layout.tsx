@@ -1,0 +1,269 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import {
+    LayoutDashboard,
+    FileText,
+    Target,
+    Briefcase,
+    ClipboardList,
+    Video,
+    FileQuestion,
+    Settings,
+    LogOut,
+    Menu,
+    X,
+    CreditCard,
+    Lock,
+    Sparkles
+} from 'lucide-react';
+import { useAuthStore } from '@/store/auth.store';
+import ThemeToggle from '@/components/theme/ThemeToggle';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+// Nav items with unlock requirements
+interface NavItem {
+    href: string;
+    icon: any;
+    label: string;
+    unlockStage: number; // 0 = always visible, 1+ = unlocks at that stage
+}
+
+const navItems: NavItem[] = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', unlockStage: 0 },
+    { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0 },
+    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 1 },
+    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2 },
+    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3 },
+    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3 },
+    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 2 },
+    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0 },
+];
+
+export default function DashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const { user, logout, accessToken } = useAuthStore();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
+
+    // Fetch user progress to determine sidebar visibility
+    const fetchUserProgress = useCallback(async () => {
+        if (!accessToken) return;
+
+        try {
+            const headers = { 'Authorization': `Bearer ${accessToken}` };
+
+            const [resumeRes, atsRes, appRes] = await Promise.all([
+                fetch(`${API_URL}/resumes`, { headers }),
+                fetch(`${API_URL}/scores/history`, { headers }),
+                fetch(`${API_URL}/applications/stats`, { headers }),
+            ]);
+
+            const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
+            const atsData = atsRes.ok ? await atsRes.json() : { data: [] };
+            const appData = appRes.ok ? await appRes.json() : { data: { applied: 0 } };
+
+            const hasResume = (resumeData.data?.length || 0) > 0;
+            const hasAtsScore = (atsData.data?.length || 0) > 0;
+            const hasApplied = (appData.data?.applied || 0) > 0;
+
+            // Calculate stage
+            let stage = 0;
+            if (hasResume) stage = 1;
+            if (hasAtsScore) stage = 2;
+            if (hasApplied) stage = 3;
+
+            setUserStage(stage);
+        } catch (err) {
+            console.error('Failed to fetch user progress:', err);
+        }
+    }, [accessToken]);
+
+    useEffect(() => {
+        if (!accessToken) {
+            router.push('/login');
+        } else {
+            fetchUserProgress();
+        }
+    }, [accessToken, router, fetchUserProgress]);
+
+    if (!accessToken) {
+        return null;
+    }
+
+    const handleLogout = () => {
+        logout();
+        router.push('/');
+    };
+
+    // Calculate which items are unlocked
+    const getUnlockedItems = () => {
+        return navItems.filter(item => item.unlockStage <= userStage);
+    };
+
+    const getLockedItems = () => {
+        return navItems.filter(item => item.unlockStage > userStage);
+    };
+
+    const unlockedItems = getUnlockedItems();
+    const lockedItems = getLockedItems();
+    const isNewUser = userStage === 0;
+
+    return (
+        <div className="min-h-screen flex">
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-64 glass border-r border-white/5
+        transform transition-transform duration-200 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+                <div className="flex flex-col h-full">
+                    {/* Logo */}
+                    <div className="p-6 flex items-center justify-between">
+                        <Link href="/dashboard" className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                <span className="text-white font-bold text-sm">SC</span>
+                            </div>
+                            <span className="text-lg font-bold gradient-text">SmartCareerAI</span>
+                        </Link>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="lg:hidden text-gray-400 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* New User Welcome */}
+                    {isNewUser && (
+                        <div className="mx-4 mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm font-bold text-white">Welcome!</span>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Follow your career roadmap to unlock more features.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Navigation - Unlocked Items */}
+                    <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+                        {unlockedItems.map((item) => {
+                            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`
+                    flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                    ${isActive
+                                            ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border border-purple-500/30'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'}
+                  `}
+                                >
+                                    <item.icon className="w-5 h-5" />
+                                    <span className="font-medium">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+
+                        {/* Locked Items Section */}
+                        {lockedItems.length > 0 && (
+                            <>
+                                <div className="py-3">
+                                    <p className="px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                        Unlock by progressing
+                                    </p>
+                                </div>
+                                {lockedItems.map((item) => (
+                                    <div
+                                        key={item.href}
+                                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 cursor-not-allowed opacity-50"
+                                    >
+                                        <Lock className="w-4 h-4" />
+                                        <span className="font-medium">{item.label}</span>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </nav>
+
+                    {/* User section */}
+                    <div className="p-4 border-t border-white/5">
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white font-medium">
+                                    {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+                                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <ThemeToggle />
+                            <Link
+                                href="/dashboard/settings"
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                            >
+                                <Settings className="w-4 h-4" />
+                                <span className="text-sm">Settings</span>
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span className="text-sm">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main content */}
+            <main className="flex-1 lg:ml-0">
+                {/* Mobile header */}
+                <header className="lg:hidden sticky top-0 z-30 glass border-b border-white/5">
+                    <div className="flex items-center justify-between px-4 py-3">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="text-gray-400 hover:text-white"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-500"></div>
+                            <span className="font-bold gradient-text">SmartCareerAI</span>
+                        </div>
+                        <div className="w-6" />
+                    </div>
+                </header>
+
+                <div className="p-6 lg:p-8">
+                    {children}
+                </div>
+            </main>
+        </div>
+    );
+}

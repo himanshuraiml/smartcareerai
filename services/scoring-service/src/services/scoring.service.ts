@@ -1,0 +1,333 @@
+import { prisma } from '../utils/prisma';
+import { AppError } from '../utils/errors';
+import { logger } from '../utils/logger';
+import { analyzeWithGemini } from '../utils/gemini';
+import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
+
+interface ATSAnalysisResult {
+    overallScore: number;
+    keywordMatchPercent: number;
+    formattingScore: number;
+    experienceScore: number;
+    educationScore: number;
+    matchedKeywords: string[];
+    missingKeywords: string[];
+    formattingIssues: string[];
+    suggestions: string[];
+}
+
+export class ScoringService {
+
+    async analyzeResume(
+        userId: string,
+        resumeId: string,
+        jobRole: string,
+        jobDescription?: string
+    ) {
+        // Get resume
+        const resume = await prisma.resume.findFirst({
+            where: { id: resumeId, userId },
+        });
+
+        if (!resume) {
+            throw new AppError('Resume not found', 404);
+        }
+
+        if (resume.status !== 'PARSED' || !resume.parsedText) {
+            throw new AppError('Resume has not been parsed yet', 400);
+        }
+
+        // Get job role info for context
+        const roleInfo = await prisma.jobRole.findFirst({
+            where: { title: { contains: jobRole, mode: 'insensitive' } },
+        });
+
+        // Perform LLM analysis
+        const analysis = await this.performATSAnalysis(
+            resume.parsedText,
+            jobRole,
+            jobDescription,
+            roleInfo
+        );
+
+        // Save score
+        const score = await prisma.atsScore.create({
+            data: {
+                userId,
+                resumeId,
+                jobRole,
+                jobDescription,
+                overallScore: analysis.overallScore,
+                keywordMatchPercent: analysis.keywordMatchPercent,
+                formattingScore: analysis.formattingScore,
+                experienceScore: analysis.experienceScore,
+                educationScore: analysis.educationScore,
+                matchedKeywords: analysis.matchedKeywords,
+                missingKeywords: analysis.missingKeywords,
+                formattingIssues: analysis.formattingIssues,
+                suggestions: analysis.suggestions,
+                rawAnalysis: analysis as any,
+            },
+        });
+
+        // Extract matched keywords as user skills
+        await this.saveExtractedSkills(userId, analysis.matchedKeywords);
+
+        return this.formatScore(score);
+    }
+
+    async getScoreHistory(userId: string) {
+        const scores = await prisma.atsScore.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+            include: {
+                resume: {
+                    select: { fileName: true },
+                },
+            },
+        });
+
+        return scores.map((score) => ({
+            ...this.formatScore(score),
+            resumeName: score.resume.fileName,
+        }));
+    }
+
+    async getScoreById(scoreId: string, userId: string) {
+        const score = await prisma.atsScore.findFirst({
+            where: { id: scoreId, userId },
+            include: {
+                resume: {
+                    select: { fileName: true, parsedText: true },
+                },
+            },
+        });
+
+        if (!score) {
+            throw new AppError('Score not found', 404);
+        }
+
+        return {
+            ...this.formatScore(score),
+            resumeName: score.resume.fileName,
+        };
+    }
+
+    async getJobRoles() {
+        const roles = await prisma.jobRole.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                title: true,
+                category: true,
+                requiredSkills: true,
+            },
+            orderBy: { title: 'asc' },
+        });
+
+        return roles;
+    }
+
+    private async performATSAnalysis(
+        resumeText: string,
+        jobRole: string,
+        jobDescription?: string,
+        roleInfo?: any
+    ): Promise<ATSAnalysisResult> {
+        const roleContext = roleInfo
+            ? `Required Skills: ${roleInfo.requiredSkills.join(', ')}\nPreferred Skills: ${roleInfo.preferredSkills.join(', ')}\nKeywords: ${roleInfo.keywords.join(', ')}`
+            : '';
+
+        const prompt = ATS_SCORING_PROMPT
+            .replace('{{RESUME_TEXT}}', resumeText)
+            .replace('{{JOB_ROLE}}', jobRole)
+            .replace('{{JOB_DESCRIPTION}}', jobDescription || 'Not provided')
+            .replace('{{ROLE_CONTEXT}}', roleContext);
+
+        try {
+            const systemPrompt = 'You are an expert ATS (Applicant Tracking System) analyzer. Analyze resumes and provide detailed scoring. Return JSON only.';
+
+            const result = await analyzeWithGemini(systemPrompt, prompt);
+
+            // If Gemini failed, use fallback
+            if (!result) {
+                logger.warn('Gemini returned null, using fallback analysis');
+                return this.performBasicAnalysis(resumeText, jobRole, roleInfo);
+            }
+
+            return {
+                overallScore: Math.min(100, Math.max(0, result.overallScore || 50)),
+                keywordMatchPercent: Math.min(100, Math.max(0, result.keywordMatchPercent || 0)),
+                formattingScore: Math.min(100, Math.max(0, result.formattingScore || 50)),
+                experienceScore: Math.min(100, Math.max(0, result.experienceScore || 50)),
+                educationScore: Math.min(100, Math.max(0, result.educationScore || 50)),
+                matchedKeywords: result.matchedKeywords || [],
+                missingKeywords: result.missingKeywords || [],
+                formattingIssues: result.formattingIssues || [],
+                suggestions: result.suggestions || [],
+            };
+        } catch (error) {
+            logger.error('LLM analysis failed', error);
+            // Fallback to basic analysis
+            return this.performBasicAnalysis(resumeText, jobRole, roleInfo);
+        }
+    }
+
+    private performBasicAnalysis(
+        resumeText: string,
+        jobRole: string,
+        roleInfo?: any
+    ): ATSAnalysisResult {
+        const text = resumeText.toLowerCase();
+        const requiredSkills = roleInfo?.requiredSkills || [];
+        const keywords = roleInfo?.keywords || [];
+
+        const matchedKeywords = [...requiredSkills, ...keywords].filter((skill: string) =>
+            text.includes(skill.toLowerCase())
+        );
+        const missingKeywords = requiredSkills.filter(
+            (skill: string) => !text.includes(skill.toLowerCase())
+        );
+
+        const keywordMatchPercent =
+            requiredSkills.length > 0
+                ? (matchedKeywords.length / requiredSkills.length) * 100
+                : 50;
+
+        // Basic formatting checks
+        const formattingIssues: string[] = [];
+        if (!resumeText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)) {
+            formattingIssues.push('No email address found');
+        }
+        if (!resumeText.match(/\d{3}[-.]?\d{3}[-.]?\d{4}/)) {
+            formattingIssues.push('No phone number found');
+        }
+        if (resumeText.length < 500) {
+            formattingIssues.push('Resume appears too short');
+        }
+        if (!text.includes('experience') && !text.includes('work history')) {
+            formattingIssues.push('No clear work experience section found');
+        }
+        if (!text.includes('education') && !text.includes('degree') && !text.includes('university')) {
+            formattingIssues.push('No clear education section found');
+        }
+
+        const formattingScore = Math.max(0, 100 - formattingIssues.length * 15);
+
+        // Generate dynamic suggestions based on actual analysis
+        const suggestions: string[] = [];
+
+        // Suggestions based on missing keywords
+        if (missingKeywords.length > 0) {
+            const topMissing = missingKeywords.slice(0, 3);
+            suggestions.push(`Add these key skills for ${jobRole}: ${topMissing.join(', ')}`);
+        }
+
+        // Suggestions based on formatting issues
+        if (formattingIssues.includes('No email address found')) {
+            suggestions.push('Add a professional email address to your contact section');
+        }
+        if (formattingIssues.includes('No phone number found')) {
+            suggestions.push('Include a phone number for recruiters to reach you');
+        }
+        if (formattingIssues.includes('Resume appears too short')) {
+            suggestions.push('Expand your resume with more detailed project descriptions and achievements');
+        }
+
+        // General improvements based on content analysis
+        if (!text.includes('achieved') && !text.includes('increased') && !text.includes('improved') && !text.includes('reduced')) {
+            suggestions.push('Quantify your achievements (e.g., "Increased sales by 20%", "Reduced load time by 50%")');
+        }
+        if (!text.includes('led') && !text.includes('managed') && !text.includes('coordinated')) {
+            suggestions.push('Highlight leadership experiences and team collaboration');
+        }
+        if (!text.includes('github') && !text.includes('portfolio') && !text.includes('linkedin')) {
+            suggestions.push('Add links to your GitHub, portfolio, or LinkedIn profile');
+        }
+        if (keywordMatchPercent < 50) {
+            suggestions.push(`Your resume matches only ${Math.round(keywordMatchPercent)}% of keywords for ${jobRole} - consider tailoring it more`);
+        }
+
+        // Ensure at least 3 suggestions
+        if (suggestions.length < 3) {
+            if (!suggestions.some(s => s.includes('action verbs'))) {
+                suggestions.push('Use strong action verbs like "developed", "implemented", "designed", "optimized"');
+            }
+        }
+
+        return {
+            overallScore: Math.round((keywordMatchPercent + formattingScore) / 2),
+            keywordMatchPercent: Math.round(keywordMatchPercent),
+            formattingScore,
+            experienceScore: text.includes('experience') ? 70 : 40,
+            educationScore: text.includes('education') || text.includes('degree') ? 70 : 40,
+            matchedKeywords,
+            missingKeywords,
+            formattingIssues,
+            suggestions: suggestions.slice(0, 5), // Max 5 suggestions
+        };
+    }
+
+    private formatScore(score: any) {
+        return {
+            id: score.id,
+            resumeId: score.resumeId,
+            jobRole: score.jobRole,
+            overallScore: score.overallScore,
+            keywordMatchPercent: score.keywordMatchPercent,
+            formattingScore: score.formattingScore,
+            experienceScore: score.experienceScore,
+            educationScore: score.educationScore,
+            matchedKeywords: score.matchedKeywords,
+            missingKeywords: score.missingKeywords,
+            formattingIssues: score.formattingIssues,
+            suggestions: score.suggestions,
+            createdAt: score.createdAt.toISOString(),
+        };
+    }
+
+    // Save extracted skills to user profile
+    private async saveExtractedSkills(userId: string, keywords: string[]) {
+        if (!keywords || keywords.length === 0) return;
+
+        for (const keyword of keywords) {
+            try {
+                // Find or create the skill
+                let skill = await prisma.skill.findFirst({
+                    where: { name: { equals: keyword, mode: 'insensitive' } },
+                });
+
+                if (!skill) {
+                    // Create new skill
+                    skill = await prisma.skill.create({
+                        data: {
+                            name: keyword,
+                            category: 'Extracted',
+                            demandScore: 50,
+                        },
+                    });
+                }
+
+                // Add to user skills if not exists
+                await prisma.userSkill.upsert({
+                    where: {
+                        userId_skillId: { userId, skillId: skill.id },
+                    },
+                    create: {
+                        userId,
+                        skillId: skill.id,
+                        proficiencyLevel: 'intermediate',
+                        source: 'resume',
+                    },
+                    update: {}, // Don't update if exists
+                });
+            } catch (error) {
+                logger.error(`Failed to save skill ${keyword}:`, error);
+            }
+        }
+
+        logger.info(`Saved ${keywords.length} skills for user ${userId}`);
+    }
+}
+

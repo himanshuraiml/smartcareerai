@@ -1,0 +1,205 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartcareer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-smartcareer}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-smartcareer123}
+      POSTGRES_DB: ${DB_NAME:-smartcareer_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-smartcareer}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smartcareer-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (S3-compatible storage)
+  minio:
+    image: minio/minio:latest
+    container_name: smartcareer-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: smartcareer-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - RESUME_SERVICE_URL=http://resume-service:3002
+      - SCORING_SERVICE_URL=http://scoring-service:3003
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-auth
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - JWT_EXPIRES_IN=15m
+      - REFRESH_TOKEN_EXPIRES_IN=7d
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Resume Service
+  resume-service:
+    build:
+      context: ./services/resume-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-resume
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minioadmin123}
+      - MINIO_BUCKET=resumes
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  # Scoring Service
+  scoring-service:
+    build:
+      context: ./services/scoring-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-scoring
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Skill Service
+  skill-service:
+    build:
+      context: ./services/skill-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-skill
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Job Service
+  job-service:
+    build:
+      context: ./services/job-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-job
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Application Service
+  application-service:
+    build:
+      context: ./services/application-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-application
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  default:
+    name: smartcareer-network

@@ -1,0 +1,37 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import path from 'path';
+import { interviewRouter } from './routes/interview.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { logger } from './utils/logger';
+
+// Load env from service directory first, then root
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+const app = express();
+const PORT = process.env.PORT || 3007;
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Health check
+app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'interview-service' });
+});
+
+// Routes
+app.use('/', interviewRouter);
+
+// Error handler
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+    logger.info(`🎤 Interview Service running on port ${PORT}`);
+});
+
+export default app;

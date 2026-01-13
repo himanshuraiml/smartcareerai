@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCareerAI - Pitch Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <span class="logo">🚀</span> SmartCareerAI
+        </div>
+        <div class="nav-controls">
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="slide-counter"><span id="currentSlide">1</span> / <span id="totalSlides">14</span></span>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="slides-container" id="slidesContainer">
+
+        <!-- Slide 1: Title -->
+        <section class="slide active" data-slide="1">
+            <div class="slide-content title-slide">
+                <div class="hero-bg"></div>
+                <div class="title-content">
+                    <div class="badge animate-fade-in">
+                        <i class="fas fa-rocket"></i> AI-Powered Career Platform
+                    </div>
+                    <h1 class="hero-title animate-slide-up">
+                        Smart<span class="gradient-text">Career</span>AI
+                    </h1>
+                    <p class="hero-subtitle animate-slide-up delay-1">
+                        Empowering early-career students and professionals to land their dream jobs with AI-driven
+                        insights, personalized coaching, and intelligent automation.
+                    </p>
+                    <div class="cta-group animate-slide-up delay-2">
+                        <button class="btn btn-primary" onclick="nextSlide()">
+                            View Deck <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <span class="version-tag">Pre-Seed • Prototype Stage • 2026</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Problem -->
+        <section class="slide" data-slide="2">
+            <div class="slide-content">
+                <div class="slide-header">
+                    <span class="section-tag">THE PROBLEM</span>
+                    <h2>Job Hunting is <span class="gradient-text">Broken</span></h2>
+                </div>
+                <div class="problem-grid">
+                    <div class="problem-card">
+                        <div class="problem-icon red">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <h3>75%</h3>
+                        <p>of resumes never reach human eyes due to ATS rejection</p>
+                    </div>
+                    <div class="problem-card">
+                        <div class="problem-icon orange">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <h3>83%</h3>
+                        <p>of students feel unprepared for technical interviews</p>
+                    </div>
+                    <div class="problem-card">
+                        <div class="problem-icon yellow">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>6+ Months</h3>
+                        <p>average job search duration for fresh graduates</p>
+                    </div>
+                    <div class="problem-card">
+                        <div class="problem-icon purple">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>Fragmented</h3>
+                        <p>Tools for resumes, jobs, and interviews are siloed</p>
+                    </div>
+                </div>
+                <div class="problem-quote">
+                    <i class="fas fa-quote-left"></i>
+                    "Students juggle 10+ platforms, get rejected without feedback, and have no clear path to
+                    improvement."
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Solution -->
+        <section class="slide" data-slide="3">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">THE SOLUTION</span>
+                    <h2>One Platform. <span class="gradient-text">Complete Career Support.</span></h2>
+                </div>
+                <div class="solution-showcase">
+                    <div class="platform-visual">
+                        <div class="platform-center">
+                            <div class="platform-logo">
+                                <span>🚀</span>
+                            </div>
+                            <h3>SmartCareerAI</h3>
+                        </div>
+                        <div class="feature-orbit">
+                            <div class="orbit-item" style="--delay: 0s;">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Resume ATS Scoring</span>
+                            </div>
+                            <div class="orbit-item" style="--delay: 0.1s;">
+                                <i class="fas fa-road"></i>
+                                <span>Skill Gap Analysis</span>
+                            </div>
+                            <div class="orbit-item" style="--delay: 0.2s;">
+                                <i class="fas fa-medal"></i>
+                                <span>Skill Validation</span>
+                            </div>
+                            <div class="orbit-item" style="--delay: 0.3s;">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Job Aggregation</span>
+                            </div>
+                            <div class="orbit-item" style="--delay: 0.4s;">
+                                <i class="fas fa-video"></i>
+                                <span>AI Mock Interviews</span>
+                            </div>
+                            <div class="orbit-item" style="--delay: 0.5s;">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Tracking</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Product - Prototype Status -->
+        <section class="slide" data-slide="4">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">PRODUCT</span>
+                    <h2>Prototype <span class="gradient-text">Status</span></h2>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card featured">
+                        <div class="feature-status">
+                            <span class="status-badge live">PROTOTYPE READY</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>ATS Resume Scoring</h3>
+                        <p>AI-powered analysis with keyword matching, formatting checks, and actionable improvement
+                            tips.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> PDF/DOC parsing built</li>
+                            <li><i class="fas fa-check"></i> Job role matching</li>
+                            <li><i class="fas fa-check"></i> Score 0-100 with breakdown</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-status">
+                            <span class="status-badge live">PROTOTYPE READY</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        <h3>AI Audio Interviews</h3>
+                        <p>Practice with AI interviewer using voice. Real-time transcription and analysis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-status">
+                            <span class="status-badge coming">IN DEVELOPMENT</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3>AI Video Interviews</h3>
+                        <p>Full video mock interviews with body language analysis and confidence scoring.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-status">
+                            <span class="status-badge live">PROTOTYPE READY</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        <h3>Skill Gap Analysis</h3>
+                        <p>Compare skills against industry benchmarks and get personalized learning paths.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-status">
+                            <span class="status-badge live">PROTOTYPE READY</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Job Aggregator</h3>
+                        <p>Unified search across LinkedIn, Indeed, Glassdoor with one-click apply.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-status">
+                            <span class="status-badge coming">PLANNED</span>
+                        </div>
+                        <div class="feature-icon">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <h3>Email Tracking</h3>
+                        <p>Auto-scan for interview invites and HR follow-ups with smart reminders.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Traction & Validation -->
+        <section class="slide" data-slide="5">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">TRACTION</span>
+                    <h2>Validation & <span class="gradient-text">Early Signals</span></h2>
+                </div>
+                <div class="validation-grid">
+                    <div class="validation-card">
+                        <div class="validation-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Validation Interviews</h3>
+                        <div class="validation-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Interviews Conducted:</span>
+                                <span class="stat-value">[X] students & professionals</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Pain Point Confirmed:</span>
+                                <span class="stat-value">[X]% reported fragmented tools</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Willingness to Pay:</span>
+                                <span class="stat-value">[X]% would pay for solution</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="validation-card">
+                        <div class="validation-icon">
+                            <i class="fas fa-poll"></i>
+                        </div>
+                        <h3>Survey Results</h3>
+                        <div class="validation-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Respondents:</span>
+                                <span class="stat-value">[X] college students</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Top Pain Point:</span>
+                                <span class="stat-value">ATS rejection without feedback</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Interest Level:</span>
+                                <span class="stat-value">[X]% very interested</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="validation-card">
+                        <div class="validation-icon">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <h3>Prototype Testing</h3>
+                        <div class="validation-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Beta Testers:</span>
+                                <span class="stat-value">[X] users tested prototype</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Task Completion:</span>
+                                <span class="stat-value">[X]% completed core flow</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">NPS Score:</span>
+                                <span class="stat-value">[X] (early feedback)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="validation-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>We are at <strong>prototype stage</strong> - metrics above represent our validation research.
+                        Full user metrics will be tracked post-launch.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Business Model -->
+        <section class="slide" data-slide="6">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">BUSINESS MODEL</span>
+                    <h2">How We <span class="gradient-text">Make Money</span></h2>
+                </div>
+                <div class="business-model-grid">
+                    <div class="bm-section">
+                        <h3><i class="fas fa-rupee-sign"></i> Revenue Streams</h3>
+                        <div class="pricing-cards-mini">
+                            <div class="price-card-mini">
+                                <h4>Free</h4>
+                                <p class="price">₹0<span>/mo</span></p>
+                                <ul>
+                                    <li>3 Resume uploads</li>
+                                    <li>Basic ATS scoring</li>
+                                    <li>2 AI interviews/month</li>
+                                </ul>
+                                <span class="purpose">User Acquisition</span>
+                            </div>
+                            <div class="price-card-mini featured">
+                                <h4>Pro</h4>
+                                <p class="price">₹499<span>/mo</span></p>
+                                <ul>
+                                    <li>Unlimited uploads</li>
+                                    <li>Advanced ATS + tips</li>
+                                    <li>20 AI interviews/month</li>
+                                    <li>Skill roadmaps</li>
+                                </ul>
+                                <span class="purpose">Core Revenue</span>
+                            </div>
+                            <div class="price-card-mini">
+                                <h4>Enterprise</h4>
+                                <p class="price">Custom</p>
+                                <ul>
+                                    <li>University licensing</li>
+                                    <li>Analytics dashboard</li>
+                                    <li>API access</li>
+                                </ul>
+                                <span class="purpose">B2B Revenue</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bm-section">
+                        <h3><i class="fas fa-chart-line"></i> Unit Economics (Projected)</h3>
+                        <div class="unit-economics">
+                            <div class="econ-item">
+                                <span class="econ-label">Target LTV</span>
+                                <span class="econ-value">₹18,000</span>
+                                <span class="econ-note">12-month avg subscription</span>
+                            </div>
+                            <div class="econ-item">
+                                <span class="econ-label">Target CAC</span>
+                                <span class="econ-value">₹2,000-3,500</span>
+                                <span class="econ-note">Content + university partnerships</span>
+                            </div>
+                            <div class="econ-item">
+                                <span class="econ-label">LTV:CAC Ratio</span>
+                                <span class="econ-value highlight">5.7-9x</span>
+                                <span class="econ-note">Target for sustainable growth</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cac-strategy">
+                    <h4>Customer Acquisition Strategy</h4>
+                    <div class="strategy-items">
+                        <div class="strategy-item">
+                            <i class="fas fa-university"></i>
+                            <span>University Career Center Partnerships</span>
+                        </div>
+                        <div class="strategy-item">
+                            <i class="fas fa-share-alt"></i>
+                            <span>Organic content (LinkedIn, YouTube)</span>
+                        </div>
+                        <div class="strategy-item">
+                            <i class="fas fa-users"></i>
+                            <span>Student ambassador program</span>
+                        </div>
+                        <div class="strategy-item">
+                            <i class="fas fa-redo"></i>
+                            <span>Referral incentives (free months)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Market -->
+        <section class="slide" data-slide="7">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">MARKET OPPORTUNITY</span>
+                    <h2">Massive <span class="gradient-text">TAM</span></h2>
+                </div>
+                <div class="market-visual">
+                    <div class="tam-circles">
+                        <div class="tam-circle tam">
+                            <div class="circle-content">
+                                <span class="amount">₹4.2L Cr</span>
+                                <span class="label">TAM</span>
+                                <span class="desc">Global HR Tech</span>
+                            </div>
+                        </div>
+                        <div class="tam-circle sam">
+                            <div class="circle-content">
+                                <span class="amount">₹1L Cr</span>
+                                <span class="label">SAM</span>
+                                <span class="desc">Career Services</span>
+                            </div>
+                        </div>
+                        <div class="tam-circle som">
+                            <div class="circle-content">
+                                <span class="amount">₹6,700 Cr</span>
+                                <span class="label">SOM</span>
+                                <span class="desc">Student Career Tech</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="market-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-graduation-cap"></i>
+                            <h3>40M+</h3>
+                            <p>Annual college graduates worldwide</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>23%</h3>
+                            <p>CAGR in AI recruitment market</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-globe"></i>
+                            <h3>₹40,000</h3>
+                            <p>Avg. spend on career services per student</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Competitive Landscape -->
+        <section class="slide" data-slide="8">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">COMPETITIVE LANDSCAPE</span>
+                    <h2">Why We <span class="gradient-text">Win</span></h2>
+                </div>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Features</th>
+                                <th class="highlight"><span class="competitor-logo">🚀</span> SmartCareerAI</th>
+                                <th>Resume.io</th>
+                                <th>Pramp</th>
+                                <th>LinkedIn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ATS Resume Scoring</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                            </tr>
+                            <tr>
+                                <td>AI Mock Interviews</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Skill Gap Analysis</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="partial"><i class="fas fa-minus-circle"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Job Aggregation</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Unified Platform</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Student-Focused Pricing</td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="yes"><i class="fas fa-check-circle"></i></td>
+                                <td class="no"><i class="fas fa-times-circle"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="unfair-advantage">
+                    <h3><i class="fas fa-shield-alt"></i> Our Unfair Advantage</h3>
+                    <div class="advantage-items">
+                        <div class="advantage-item">
+                            <strong>All-in-One Platform:</strong> Only solution covering entire job search journey in
+                            one place
+                        </div>
+                        <div class="advantage-item">
+                            <strong>AI-Native Architecture:</strong> Built ground-up with LLMs, not bolted on
+                        </div>
+                        <div class="advantage-item">
+                            <strong>Student-First Focus:</strong> Designed for price-sensitive early-career users
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Go-To-Market Strategy -->
+        <section class="slide" data-slide="9">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">GO-TO-MARKET</span>
+                    <h2">Path to <span class="gradient-text">First 1000 Users</span></h2>
+                </div>
+                <div class="gtm-grid">
+                    <div class="gtm-card">
+                        <div class="gtm-icon"><i class="fas fa-bullhorn"></i></div>
+                        <h3>Acquisition Channels</h3>
+                        <ul>
+                            <li><i class="fas fa-check"></i> LinkedIn content marketing</li>
+                            <li><i class="fas fa-check"></i> YouTube tutorials & demos</li>
+                            <li><i class="fas fa-check"></i> Reddit/Discord communities</li>
+                            <li><i class="fas fa-check"></i> SEO (career advice content)</li>
+                        </ul>
+                    </div>
+                    <div class="gtm-card">
+                        <div class="gtm-icon"><i class="fas fa-handshake"></i></div>
+                        <h3>Partnership Strategy</h3>
+                        <ul>
+                            <li><i class="fas fa-check"></i> University career centers</li>
+                            <li><i class="fas fa-check"></i> Coding bootcamps</li>
+                            <li><i class="fas fa-check"></i> Student organizations</li>
+                            <li><i class="fas fa-check"></i> Career coaches</li>
+                        </ul>
+                    </div>
+                    <div class="gtm-card">
+                        <div class="gtm-icon"><i class="fas fa-rocket"></i></div>
+                        <h3>Launch Strategy</h3>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Product Hunt launch</li>
+                            <li><i class="fas fa-check"></i> Hacker News Show HN</li>
+                            <li><i class="fas fa-check"></i> Free workshops at colleges</li>
+                            <li><i class="fas fa-check"></i> Influencer partnerships</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="growth-timeline">
+                    <h3>First 1000 Users Plan</h3>
+                    <div class="timeline-steps">
+                        <div class="timeline-step">
+                            <span class="step-num">1</span>
+                            <span class="step-text">Beta launch with 50 testers from target colleges</span>
+                        </div>
+                        <div class="timeline-step">
+                            <span class="step-num">2</span>
+                            <span class="step-text">Iterate based on feedback, improve core features</span>
+                        </div>
+                        <div class="timeline-step">
+                            <span class="step-num">3</span>
+                            <span class="step-text">Public launch + Product Hunt + content push</span>
+                        </div>
+                        <div class="timeline-step">
+                            <span class="step-num">4</span>
+                            <span class="step-text">Referral program activation → organic growth</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Team -->
+        <section class="slide" data-slide="10">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">TEAM</span>
+                    <h2">The People <span class="gradient-text">Behind It</span></h2>
+                </div>
+                <div class="team-section">
+                    <div class="founders-grid">
+                        <div class="founder-card">
+                            <div class="founder-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3>[Founder Name]</h3>
+                            <p class="founder-role">CEO & Co-Founder</p>
+                            <p class="founder-bio">[Background: e.g., "Former SWE at Google, 5 years in EdTech"]</p>
+                            <div class="founder-links">
+                                <a href="#"><i class="fab fa-linkedin"></i></a>
+                                <a href="#"><i class="fab fa-twitter"></i></a>
+                            </div>
+                        </div>
+                        <div class="founder-card">
+                            <div class="founder-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3>[Co-Founder Name]</h3>
+                            <p class="founder-role">CTO & Co-Founder</p>
+                            <p class="founder-bio">[Background: e.g., "ML Engineer, built AI products at scale"]</p>
+                            <div class="founder-links">
+                                <a href="#"><i class="fab fa-linkedin"></i></a>
+                                <a href="#"><i class="fab fa-github"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="why-us">
+                        <h3>Why We're the Right Team</h3>
+                        <div class="why-items">
+                            <div class="why-item">
+                                <i class="fas fa-lightbulb"></i>
+                                <span><strong>Lived the Problem:</strong> We struggled with job hunting ourselves</span>
+                            </div>
+                            <div class="why-item">
+                                <i class="fas fa-code"></i>
+                                <span><strong>Technical Depth:</strong> Full-stack + AI/ML capabilities in-house</span>
+                            </div>
+                            <div class="why-item">
+                                <i class="fas fa-users"></i>
+                                <span><strong>Domain Access:</strong> Direct connections to students & career
+                                    centers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="advisors">
+                        <h4>Advisors</h4>
+                        <p class="advisor-note">[Add advisor names/roles if applicable, or "Building advisory board"]
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Financials -->
+        <section class="slide" data-slide="11">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">FINANCIALS</span>
+                    <h2">12-24 Month <span class="gradient-text">Projections</span></h2>
+                </div>
+                <div class="financials-grid">
+                    <div class="financial-card">
+                        <h3><i class="fas fa-chart-bar"></i> Revenue Projections</h3>
+                        <div class="projection-table">
+                            <div class="proj-row header">
+                                <span>Metric</span>
+                                <span>Month 6</span>
+                                <span>Month 12</span>
+                                <span>Month 24</span>
+                            </div>
+                            <div class="proj-row">
+                                <span>Users (Free + Paid)</span>
+                                <span>500</span>
+                                <span>2,000</span>
+                                <span>10,000</span>
+                            </div>
+                            <div class="proj-row">
+                                <span>Paid Subscribers</span>
+                                <span>50</span>
+                                <span>300</span>
+                                <span>2,000</span>
+                            </div>
+                            <div class="proj-row">
+                                <span>MRR</span>
+                                <span>₹79K</span>
+                                <span>₹4.75L</span>
+                                <span>₹31.7L</span>
+                            </div>
+                            <div class="proj-row highlight">
+                                <span>ARR</span>
+                                <span>₹9.5L</span>
+                                <span>₹57L</span>
+                                <span>₹3.8Cr</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="financial-card">
+                        <h3><i class="fas fa-calculator"></i> Key Assumptions</h3>
+                        <ul class="assumptions-list">
+                            <li><i class="fas fa-arrow-right"></i> 10% free-to-paid conversion rate</li>
+                            <li><i class="fas fa-arrow-right"></i> ₹499 average monthly subscription</li>
+                            <li><i class="fas fa-arrow-right"></i> 5% monthly churn</li>
+                            <li><i class="fas fa-arrow-right"></i> ₹2,000 blended CAC (organic focus)</li>
+                            <li><i class="fas fa-arrow-right"></i> 50% MoM user growth (early stage)</li>
+                        </ul>
+                    </div>
+                    <div class="financial-card">
+                        <h3><i class="fas fa-fire"></i> Burn Rate & Runway</h3>
+                        <div class="burn-stats">
+                            <div class="burn-item">
+                                <span class="burn-label">Monthly Burn (Projected)</span>
+                                <span class="burn-value">₹12-17L</span>
+                            </div>
+                            <div class="burn-item">
+                                <span class="burn-label">Primary Costs</span>
+                                <span class="burn-value">Engineering, Cloud, AI APIs</span>
+                            </div>
+                            <div class="burn-item">
+                                <span class="burn-label">Break-even Target</span>
+                                <span class="burn-value">Month 18-24</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="financial-note">
+                    <i class="fas fa-info-circle"></i>
+                    These are projections based on market research and comparable SaaS benchmarks. Actual results will
+                    vary.
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: The Ask -->
+        <section class="slide" data-slide="12">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">THE ASK</span>
+                    <h2>Raising <span class="gradient-text">₹2 Crore</span> Pre-Seed</h2>
+                </div>
+                <div class="ask-grid">
+                    <div class="use-of-funds">
+                        <h3>Use of Funds</h3>
+                        <div class="funds-breakdown">
+                            <div class="fund-item engineering">
+                                <div class="fund-bar" style="width: 50%"></div>
+                                <div class="fund-details">
+                                    <span class="fund-percent">50%</span>
+                                    <span class="fund-name">Product Development</span>
+                                    <span class="fund-desc">Complete MVP, V1 features</span>
+                                </div>
+                            </div>
+                            <div class="fund-item marketing">
+                                <div class="fund-bar" style="width: 25%"></div>
+                                <div class="fund-details">
+                                    <span class="fund-percent">25%</span>
+                                    <span class="fund-name">Go-to-Market</span>
+                                    <span class="fund-desc">Initial marketing, partnerships</span>
+                                </div>
+                            </div>
+                            <div class="fund-item operations">
+                                <div class="fund-bar" style="width: 15%"></div>
+                                <div class="fund-details">
+                                    <span class="fund-percent">15%</span>
+                                    <span class="fund-name">Infrastructure</span>
+                                    <span class="fund-desc">Cloud, AI APIs, tools</span>
+                                </div>
+                            </div>
+                            <div class="fund-item reserve">
+                                <div class="fund-bar" style="width: 10%"></div>
+                                <div class="fund-details">
+                                    <span class="fund-percent">10%</span>
+                                    <span class="fund-name">Reserve</span>
+                                    <span class="fund-desc">Buffer & contingency</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="milestones-section">
+                        <h3>12-Month Milestones</h3>
+                        <div class="milestone-grid">
+                            <div class="milestone">
+                                <span class="milestone-value">2,000</span>
+                                <span class="milestone-label">Active Users</span>
+                            </div>
+                            <div class="milestone">
+                                <span class="milestone-value">₹4L</span>
+                                <span class="milestone-label">MRR</span>
+                            </div>
+                            <div class="milestone">
+                                <span class="milestone-value">5</span>
+                                <span class="milestone-label">University Partners</span>
+                            </div>
+                            <div class="milestone">
+                                <span class="milestone-value">Seed</span>
+                                <span class="milestone-label">Round Ready</span>
+                            </div>
+                        </div>
+                        <div class="runway">
+                            <span><strong>Runway:</strong> 12-15 months at projected burn rate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Vision & Risks -->
+        <section class="slide" data-slide="13">
+            <div class="slide-content">
+                <div class="slide-header center">
+                    <span class="section-tag">VISION & RISKS</span>
+                    <h2">Long-term <span class="gradient-text">Roadmap</span></h2>
+                </div>
+                <div class="vision-risks-grid">
+                    <div class="vision-section">
+                        <h3><i class="fas fa-binoculars"></i> Long-term Vision</h3>
+                        <div class="vision-timeline">
+                            <div class="vision-item">
+                                <span class="vision-year">Year 1</span>
+                                <span class="vision-goal">MVP → Product-Market Fit</span>
+                            </div>
+                            <div class="vision-item">
+                                <span class="vision-year">Year 2</span>
+                                <span class="vision-goal">Scale to 50K users, B2B expansion</span>
+                            </div>
+                            <div class="vision-item">
+                                <span class="vision-year">Year 3+</span>
+                                <span class="vision-goal">International expansion, AI career companion</span>
+                            </div>
+                        </div>
+                        <p class="vision-statement">
+                            <strong>Ultimate Vision:</strong> Become the default career platform for every student
+                            globally—from first resume to dream job.
+                        </p>
+                    </div>
+                    <div class="risks-section">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Risks & Mitigation</h3>
+                        <div class="risk-items">
+                            <div class="risk-item">
+                                <div class="risk-name">
+                                    <span class="risk-level medium">MED</span>
+                                    Competition from incumbents
+                                </div>
+                                <div class="risk-mitigation">
+                                    <strong>Mitigation:</strong> Focus on unified experience, move fast, niche down on
+                                    students first
+                                </div>
+                            </div>
+                            <div class="risk-item">
+                                <div class="risk-name">
+                                    <span class="risk-level high">HIGH</span>
+                                    AI API costs at scale
+                                </div>
+                                <div class="risk-mitigation">
+                                    <strong>Mitigation:</strong> Optimize prompts, caching, explore fine-tuned models
+                                </div>
+                            </div>
+                            <div class="risk-item">
+                                <div class="risk-name">
+                                    <span class="risk-level medium">MED</span>
+                                    User acquisition cost
+                                </div>
+                                <div class="risk-mitigation">
+                                    <strong>Mitigation:</strong> Organic-first approach, community building, referrals
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Contact -->
+        <section class="slide" data-slide="14">
+            <div class="slide-content title-slide">
+                <div class="hero-bg"></div>
+                <div class="title-content close-content">
+                    <h1 class="hero-title animate-slide-up">
+                        Let's Build the Future of <span class="gradient-text">Career Success</span>
+                    </h1>
+                    <p class="hero-subtitle animate-slide-up delay-1">
+                        Join us in democratizing access to career resources and helping millions of students land their
+                        dream jobs.
+                    </p>
+                    <div class="contact-info animate-slide-up delay-2">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>[founder@email.com]</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-globe"></i>
+                            <span>[website URL]</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-linkedin"></i>
+                            <span>[LinkedIn profile]</span>
+                        </div>
+                    </div>
+                    <div class="final-cta animate-slide-up delay-3">
+                        <div class="logo-large">🚀</div>
+                        <h2>SmartCareerAI</h2>
+                        <p>AI-Powered Career Success Platform</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Keyboard Navigation Hint -->
+    <div class="keyboard-hint">
+        <span><kbd>←</kbd> <kbd>→</kbd> to navigate</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

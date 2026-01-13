@@ -1,0 +1,1040 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 262 83% 58%;
+  --radius: 0.75rem;
+
+  /* Modal Theme Variables - Dark Mode Default */
+  --modal-bg: #0f172a;
+  --modal-bg-secondary: #1e293b;
+  --modal-text: #e5e7eb;
+  --modal-text-muted: #94a3b8;
+  --modal-title: #ffffff;
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --modal-divider: rgba(255, 255, 255, 0.08);
+  --modal-accent: #6366f1;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(262, 83%, 70%) 0%, hsl(290, 70%, 60%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+}
+
+/* Animation utilities */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ============================== */
+/* NEON FUTURE DESIGN SYSTEM */
+/* ============================== */
+
+/* Enhanced Glassmorphism */
+.glass-premium {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.8) 0%, rgba(11, 15, 25, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow:
+    0 8px 40px rgba(139, 92, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Neon Glow Effects */
+.neon-purple {
+  box-shadow:
+    0 0 5px rgba(139, 92, 246, 0.5),
+    0 0 20px rgba(139, 92, 246, 0.3),
+    0 0 40px rgba(139, 92, 246, 0.1);
+}
+
+.neon-cyan {
+  box-shadow:
+    0 0 5px rgba(34, 211, 238, 0.5),
+    0 0 20px rgba(34, 211, 238, 0.3),
+    0 0 40px rgba(34, 211, 238, 0.1);
+}
+
+.neon-pink {
+  box-shadow:
+    0 0 5px rgba(236, 72, 153, 0.5),
+    0 0 20px rgba(236, 72, 153, 0.3),
+    0 0 40px rgba(236, 72, 153, 0.1);
+}
+
+/* Gradient Borders */
+.border-gradient {
+  position: relative;
+  border: none;
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(236, 72, 153, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Roadmap Node Styles */
+.roadmap-node {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.roadmap-node::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.roadmap-node:hover::after,
+.roadmap-node.active::after {
+  opacity: 1;
+}
+
+.roadmap-node.active {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.roadmap-node.completed {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.roadmap-node.locked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+/* Path/Connector Lines */
+.roadmap-path {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.1) 100%);
+  position: relative;
+}
+
+.roadmap-path.completed {
+  background: linear-gradient(180deg, #10B981 0%, rgba(16, 185, 129, 0.3) 100%);
+}
+
+/* Animated Background Grid */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Level/XP Badge */
+.xp-badge {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+}
+
+/* Smooth float animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================== */
+/* LIGHT MODE OVERRIDES */
+/* ============================== */
+.light-mode {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+}
+
+.light-mode body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #0f172a;
+}
+
+/* Glass effects for light mode */
+.light-mode .glass,
+.light-mode .glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.light-mode .glass-premium {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
+}
+
+/* Text Colors - High Contrast */
+.light-mode .text-white {
+  color: #0f172a !important;
+}
+
+.light-mode .text-gray-100,
+.light-mode .text-gray-200 {
+  color: #1e293b !important;
+}
+
+.light-mode .text-gray-300 {
+  color: #334155 !important;
+}
+
+.light-mode .text-gray-400 {
+  color: #475569 !important;
+}
+
+.light-mode .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light-mode .text-gray-600 {
+  color: #475569 !important;
+}
+
+/* Gradient text should stay vibrant */
+.light-mode .gradient-text {
+  background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Background overrides */
+.light-mode [class*="bg-white"][class*="5"] {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+.light-mode [class*="bg-white"][class*="10"] {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode [class*="bg-white"][class*="20"] {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode [class*="bg-black"][class*="20"],
+.light-mode [class*="bg-black"][class*="50"] {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Border overrides */
+.light-mode [class*="border-white"][class*="5"] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode [class*="border-white"][class*="10"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode [class*="border-white"][class*="20"] {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Input fields */
+.light-mode input,
+.light-mode textarea,
+.light-mode select {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #0f172a !important;
+}
+
+.light-mode input::placeholder,
+.light-mode textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.light-mode input:focus,
+.light-mode textarea:focus,
+.light-mode select:focus {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Buttons */
+.light-mode button:not([class*="bg-gradient"]):not([class*="bg-purple"]):not([class*="bg-red"]):not([class*="bg-green"]) {
+  color: #334155;
+}
+
+.light-mode button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Sidebar and navigation */
+.light-mode aside {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode nav a {
+  color: #475569 !important;
+}
+
+.light-mode nav a:hover,
+.light-mode nav a.active {
+  background: rgba(139, 92, 246, 0.1) !important;
+  color: #7c3aed !important;
+}
+
+/* Cards and stat boxes */
+.light-mode [class*="rounded-xl"],
+.light-mode [class*="rounded-2xl"] {
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* Grid background */
+.light-mode .bg-grid {
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+}
+
+/* Tables */
+.light-mode table {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.light-mode thead {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+.light-mode tbody tr {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Status badges - light mode doesn't need overrides, Tailwind handles these */
+
+/* Neon effects - softer in light mode */
+.light-mode .neon-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.light-mode .neon-cyan {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+}
+
+.light-mode .neon-pink {
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+}
+
+/* Roadmap specific */
+.light-mode .roadmap-node {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* XP Badge */
+.light-mode .xp-badge {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(236, 72, 153, 0.9) 100%);
+  color: white !important;
+}
+
+/* Modals and overlays */
+.light-mode [class*="bg-gray-900"] {
+  background: #ffffff !important;
+}
+
+/* Modal overlays - handled by Tailwind */
+
+/* Scrollbar for light mode */
+.light-mode ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+}
+
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Landing page hero glow - softer */
+.light-mode .hero-glow,
+.light-mode [class*="blur-"] {
+  opacity: 0.3;
+}
+
+/* ============================== */
+/* LANDING PAGE LIGHT MODE FIXES */
+/* ============================== */
+.light-mode .landing-page {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+}
+
+.light-mode .landing-page .bg-grid {
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.06) 1px, transparent 1px) !important;
+}
+
+/* Landing nav */
+.light-mode .landing-page nav {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Hero text */
+.light-mode .landing-page h1 .text-white,
+.light-mode .landing-page h2 .text-white,
+.light-mode .landing-page h3 .text-white {
+  color: #0f172a !important;
+}
+
+/* Hero glow effect - make invisible in light mode */
+.light-mode .landing-page [class*="bg-purple-500"][class*="20"] {
+  opacity: 0.15 !important;
+  background: rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Feature cards */
+.light-mode .landing-page .glass,
+.light-mode .landing-page .glass-premium {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Section backgrounds */
+.light-mode .landing-page section {
+  background: transparent !important;
+}
+
+/* Footer */
+.light-mode .landing-page footer {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Stats text */
+.light-mode .landing-page .text-gray-400,
+.light-mode .landing-page .text-gray-300 {
+  color: #475569 !important;
+}
+
+/* Keep gradient buttons vibrant */
+.light-mode .landing-page [class*="bg-gradient-to-r"] {
+  color: white !important;
+}
+
+/* Secondary buttons */
+.light-mode .landing-page a[class*="border-white"] {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  color: #1e293b !important;
+}
+
+.light-mode .landing-page a[class*="border-white"]:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ============================== */
+/* PRICING PAGE LIGHT MODE FIXES */
+/* ============================== */
+.light-mode .pricing-page {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+  color: #0f172a !important;
+}
+
+.light-mode .pricing-page .text-white {
+  color: #0f172a !important;
+}
+
+.light-mode .pricing-page .text-gray-400 {
+  color: #475569 !important;
+}
+
+.light-mode .pricing-page .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light-mode .pricing-page .text-gray-300 {
+  color: #334155 !important;
+}
+
+.light-mode .pricing-page .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+/* Pricing cards */
+.light-mode .pricing-page .pricing-card,
+.light-mode .pricing-page [class*="bg-gray-900"] {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode .pricing-page .pricing-card:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Popular card border */
+.light-mode .pricing-page .pricing-card[class*="border-purple"] {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Buttons */
+.light-mode .pricing-page button[class*="bg-white"][class*="10"] {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #1e293b !important;
+}
+
+.light-mode .pricing-page button[class*="bg-white"][class*="10"]:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Keep gradient buttons vibrant */
+.light-mode .pricing-page button[class*="bg-gradient"] {
+  color: white !important;
+}
+
+/* Feature list */
+.light-mode .pricing-page [class*="bg-green-500"][class*="20"] {
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+
+.light-mode .pricing-page .bg-gray-800 {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Toggle switch */
+.light-mode .pricing-page .bg-gray-800 {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ============================== */
+/* MODAL / DIALOG LIGHT MODE FIXES */
+/* ============================== */
+.light-mode .bg-gray-900 {
+  background: #ffffff !important;
+}
+
+/* Gray-900 opacity variants handled by Tailwind */
+
+/* Modal overlays */
+.light-mode .fixed.inset-0[class*="bg-black"][class*="50"],
+.light-mode .fixed.inset-0[class*="bg-black"] {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Modal content */
+.light-mode .bg-gray-900.rounded-2xl,
+.light-mode .bg-gray-900.rounded-xl {
+  background: #ffffff !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Modal headers */
+.light-mode .border-b[class*="border-white"][class*="10"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Dropdown options */
+.light-mode option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.light-mode option.bg-gray-900 {
+  background: #ffffff !important;
+}
+
+/* ============================== */
+/* DASHBOARD PAGES LIGHT MODE */
+/* ============================== */
+/* Main dashboard content area */
+.light-mode main {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Resume page specific */
+.light-mode .rounded-2xl.border-2.border-dashed {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+.light-mode .rounded-2xl.border-2.border-dashed:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+/* All dashboard text */
+.light-mode main h1,
+.light-mode main h2,
+.light-mode main h3,
+.light-mode main h4 {
+  color: #0f172a !important;
+}
+
+.light-mode main p.text-gray-400 {
+  color: #475569 !important;
+}
+
+/* Pre/code blocks in modals */
+.light-mode pre {
+  background: rgba(0, 0, 0, 0.03) !important;
+  color: #334155 !important;
+}
+
+/* Score colors - keep vibrant */
+.light-mode .text-green-400 {
+  color: #16a34a !important;
+}
+
+.light-mode .text-yellow-400 {
+  color: #ca8a04 !important;
+}
+
+.light-mode .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.light-mode .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.light-mode .text-purple-400 {
+  color: #9333ea !important;
+}
+
+/* ============================== */
+/* MODAL LIGHT MODE - CRITICAL FIX */
+/* ============================== */
+.light-mode .modal-content {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+}
+
+.light-mode .modal-content .bg-gray-800,
+.light-mode .modal-content .bg-gray-900 {
+  background: #ffffff !important;
+}
+
+.light-mode .modal-content h3,
+.light-mode .modal-content h2 {
+  color: #0f172a !important;
+}
+
+.light-mode .modal-content pre,
+.light-mode .modal-content .resume-text {
+  background: #f8fafc !important;
+  color: #1e293b !important;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .modal-content .text-gray-200,
+.light-mode .modal-content .text-gray-300,
+.light-mode .modal-content .text-gray-400 {
+  color: #334155 !important;
+}
+
+.light-mode .modal-content [class*="border-white"][class*="10"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ATS Score Modal */
+.light-mode .modal-content .text-6xl {
+  color: inherit !important;
+}
+
+/* Fix backdrop blur showing content behind */
+.light-mode [class*="backdrop-blur"] {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.light-mode .fixed.inset-0[class*="bg-black"][class*="50"],
+.light-mode .fixed.inset-0[class*="bg-black"][class*="60"] {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Pricing page subscription section */
+.light-mode .pricing-page .text-xl,
+.light-mode .pricing-page .text-3xl {
+  color: #0f172a !important;
+}
+
+.light-mode .pricing-page .text-sm {
+  color: #475569 !important;
+}
+
+/* Ensure line-through items are visible */
+.light-mode .line-through {
+  color: #94a3b8 !important;
+}
+
+/* ============================== */
+/* RESUME MODAL - THEME BASED */
+/* ============================== */
+
+/* Light Mode Modal Variables */
+.light-mode {
+  --modal-bg: #ffffff;
+  --modal-bg-secondary: #f8fafc;
+  --modal-text: #1f2937;
+  --modal-text-muted: #4b5563;
+  --modal-title: #111827;
+  --modal-border: #e5e7eb;
+  --modal-divider: #e5e7eb;
+  --modal-accent: #6366f1;
+  --modal-overlay: rgba(0, 0, 0, 0.25);
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  background: var(--modal-overlay) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Resume Modal Base Styles */
+.resume-modal {
+  background: var(--modal-bg) !important;
+  color: var(--modal-text) !important;
+  border-radius: 14px;
+  border: 1px solid var(--modal-border) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.resume-modal-header {
+  background: var(--modal-bg-secondary) !important;
+  border-bottom: 1px solid var(--modal-divider) !important;
+  padding: 16px 24px;
+}
+
+.resume-modal-title {
+  color: var(--modal-title) !important;
+  font-weight: 600;
+}
+
+.resume-modal-body {
+  background: var(--modal-bg) !important;
+  padding: 24px;
+}
+
+.resume-modal p,
+.resume-modal li,
+.resume-modal span {
+  color: var(--modal-text) !important;
+}
+
+.resume-modal .text-muted {
+  color: var(--modal-text-muted) !important;
+}
+
+/* Resume Preview Text */
+.resume-modal pre,
+.resume-modal-text {
+  background: var(--modal-bg-secondary) !important;
+  color: var(--modal-text) !important;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--modal-divider);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* Modal Scrollbar */
+.resume-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.resume-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.resume-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Select Dropdown in Modal */
+.resume-modal select {
+  background: var(--modal-bg-secondary) !important;
+  color: var(--modal-text) !important;
+  border: 1px solid var(--modal-border) !important;
+}
+
+.resume-modal select option {
+  background: var(--modal-bg) !important;
+  color: var(--modal-text) !important;
+}
+
+/* Modal Buttons */
+.resume-modal .btn-secondary {
+  background: var(--modal-bg-secondary) !important;
+  color: var(--modal-text) !important;
+  border: 1px solid var(--modal-border) !important;
+}
+
+/* Keyword Tags */
+.resume-modal .tag-success {
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #16a34a !important;
+}
+
+.resume-modal .tag-danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+}
+
+/* Close Button */
+.resume-modal .close-btn {
+  color: var(--modal-text-muted) !important;
+}
+
+.resume-modal .close-btn:hover {
+  color: var(--modal-title) !important;
+}
+
+/* ============================== */
+/* PRICING PAGE - LIGHT THEME FIX */
+/* ============================== */
+
+/* Light Mode Pricing Page */
+.light-mode .pricing-page {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+}
+
+.light-mode .pricing-page h1 {
+  color: #1e1b4b !important;
+  background: linear-gradient(to right, #7c3aed, #db2777) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.light-mode .pricing-page div p {
+  color: #475569 !important;
+}
+
+/* Pricing Cards */
+.light-mode .pricing-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode .pricing-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light-mode .pricing-card h3 {
+  color: #0f172a !important;
+}
+
+.light-mode .pricing-card .text-3xl,
+.light-mode .pricing-card .text-xl {
+  color: #1e293b !important;
+}
+
+.light-mode .pricing-card .text-gray-400 {
+  color: #64748b !important;
+}
+
+.light-mode .pricing-card .text-sm {
+  color: #475569 !important;
+}
+
+/* Feature list items */
+.light-mode .pricing-card li {
+  color: #334155 !important;
+}
+
+.light-mode .pricing-card .line-through {
+  color: #94a3b8 !important;
+}
+
+/* Check icons */
+.light-mode .pricing-card .text-green-400 {
+  color: #16a34a !important;
+}
+
+/* Buttons */
+.light-mode .pricing-card button.bg-white\/10 {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.light-mode .pricing-card button.bg-white\/10:hover {
+  background: #e2e8f0 !important;
+}
+
+/* Toggle button */
+.light-mode .pricing-page button.bg-gray-800 {
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Toggle text */
+.light-mode .pricing-page .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light-mode .pricing-page span.text-white {
+  color: #0f172a !important;
+}

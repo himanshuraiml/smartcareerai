@@ -1,0 +1,34 @@
+{
+  "name": "smartcareer-ai",
+  "version": "1.0.0",
+  "description": "AI-Powered Career Platform for Early-Career Students",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "docker-compose up -d && npm run dev:services",
+    "dev:services": "concurrently \"npm run dev -w @smartcareer/api-gateway\" \"npm run dev -w @smartcareer/auth-service\" \"npm run dev -w @smartcareer/resume-service\" \"npm run dev -w @smartcareer/scoring-service\" \"npm run dev -w @smartcareer/skill-service\" \"npm run dev -w @smartcareer/job-service\" \"npm run dev -w @smartcareer/application-service\" \"npm run dev -w @smartcareer/interview-service\" \"npm run dev -w @smartcareer/validation-service\" \"npm run dev -w @smartcareer/billing-service\"",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "eslint . --ext .ts,.tsx",
+    "db:migrate": "npm run migrate -w @smartcareer/database",
+    "db:seed": "npm run seed -w @smartcareer/database",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
