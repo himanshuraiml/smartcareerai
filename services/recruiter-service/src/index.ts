@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { recruiterRouter } from './routes/recruiter.routes';
+import { messageRouter } from './routes/message.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 

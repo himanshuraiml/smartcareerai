@@ -11,10 +11,11 @@ export class ResumeController {
             const file = req.file;
 
             if (!file) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     error: { message: 'No file uploaded' },
                 });
+                return;
             }
 
             const resume = await resumeService.uploadResume(userId, file);

@@ -7,7 +7,7 @@ interface JwtPayload {
     email: string;
 }
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: Request, _res: Response, next: NextFunction) => {
     try {
         // Check for user ID header (passed by API gateway)
         const userIdHeader = req.headers['x-user-id'];

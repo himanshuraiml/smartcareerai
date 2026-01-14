@@ -1,0 +1,268 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartcareer-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/database/prisma/migrations:/docker-entrypoint-initdb.d/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartcareer-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: smartcareer-minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Services
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: api-gateway
+    container_name: smartcareer-gateway
+    restart: always
+    ports:
+      - "80:3000" # Expose on port 80 directly
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - RECRUITER_SERVICE_URL=http://recruiter-service:3012
+      - JOB_SERVICE_URL=http://job-service:3005
+      - RESUME_SERVICE_URL=http://resume-service:3002
+      - SCORING_SERVICE_URL=http://scoring-service:3003
+      - SKILL_SERVICE_URL=http://skill-service:3004
+      - APPLICATION_SERVICE_URL=http://application-service:3006
+      - BILLING_SERVICE_URL=http://billing-service:3007
+      - INTERVIEW_SERVICE_URL=http://interview-service:3008
+      - ADMIN_SERVICE_URL=http://admin-service:3009 # Or auth-service if logic moved
+      - VALIDATION_SERVICE_URL=http://validation-service:3010
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: auth-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  recruiter-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: recruiter-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3012
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  job-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: job-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  resume-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: resume-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - MINIO_ENDPOINT=minio
+      - MINIO_ACCESS_KEY=${MINIO_USER}
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD}
+      - MINIO_BUCKET=resumes
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  scoring-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: scoring-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  skill-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: skill-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  application-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: application-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  billing-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: billing-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3007
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  interview-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: interview-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3008
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  admin-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: admin-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3009
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  validation-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: validation-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  default:
+    name: smartcareer-network

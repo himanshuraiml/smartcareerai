@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Send, Search, MoreVertical, Phone, Video, Loader2 } from "lucide-react";
+import { Send, Search, MoreVertical, Phone, Video, Loader2, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 
 interface Message {
@@ -176,8 +176,8 @@ export default function MessagesPage() {
                                 return (
                                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                                         <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${isMe
-                                                ? "bg-blue-600 text-white rounded-br-sm"
-                                                : "bg-white/10 text-white rounded-bl-sm"
+                                            ? "bg-blue-600 text-white rounded-br-sm"
+                                            : "bg-white/10 text-white rounded-bl-sm"
                                             }`}>
                                             <p>{msg.content}</p>
                                             <span className={`text-xs mt-1 block ${isMe ? "text-blue-200" : "text-gray-400"}`}>

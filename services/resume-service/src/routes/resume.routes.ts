@@ -13,7 +13,7 @@ const upload = multer({
     limits: {
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
         const allowedMimes = [
             'application/pdf',
             'application/msword',

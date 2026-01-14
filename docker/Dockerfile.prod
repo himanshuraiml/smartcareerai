@@ -1,0 +1,57 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Enable corepack for pnpm/yarn if needed (optional but good practice)
+# COPY package.json package-lock.json* ./
+# Copy workspace definitions
+COPY package.json package-lock.json ./
+COPY packages/database ./packages/database
+
+# Install dependencies for the workspace
+# We need to install specifically to get prisma client generated
+RUN npm ci
+
+# Generate Prisma Client
+WORKDIR /app/packages/database
+RUN npx prisma generate
+
+# Build the specific service
+ARG SERVICE_NAME
+WORKDIR /app/services/${SERVICE_NAME}
+COPY services/${SERVICE_NAME} .
+# We need to link the root node_modules or install local ones?
+# Since we did npm ci at root, node_modules are at /app/node_modules
+# The service likely expects them there or in its own folder.
+# If the service has its own package.json with dependencies not in root, we might need to install them.
+# Our current structure shows services have their own package.json.
+# But usually in monorepo, npm ci at root handles everything.
+# Let's assume standard npm workspaces behavior isn't fully set up (no "workspaces" in root package.json seen? I saw it earlier? Let me re-verify root package.json in thought).
+# Actually I saw "workspaces": ["packages/*", "services/*"] in my thought trace.
+# So npm ci at root installs EVERYTHING.
+
+# Build the service
+RUN npm run build
+
+# --- Production Stage ---
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy built artifacts
+ARG SERVICE_NAME
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./services/${SERVICE_NAME}/dist
+COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./services/${SERVICE_NAME}/package.json
+COPY --from=builder /app/node_modules ./node_modules
+# Copy Prisma Client (it might be in root node_modules or package specific)
+# Usually it's in node_modules/.prisma and node_modules/@prisma
+# Since we copy all node_modules, we should be safe.
+
+# We might want to prune devDependencies to save space, but `npm prune --production` at root is tricky with workspaces.
+# For Oracle (24GB RAM), we don't strictly *need* to optimize perfectly yet.
+
+WORKDIR /app/services/${SERVICE_NAME}
+
+CMD ["node", "dist/index.js"]

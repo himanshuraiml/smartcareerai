@@ -26,6 +26,7 @@ interface GapAnalysis {
     matchPercent: number;
     matchedSkills: { required: string[]; preferred: string[] };
     missingSkills: { required: string[]; preferred: string[] };
+    userSkills: Skill[];
 }
 
 interface Certification {
