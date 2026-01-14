@@ -180,12 +180,18 @@ app.use(
 );
 
 // Admin Service Routes (User Management & Analytics)
+// Admin Service Routes (User Management & Analytics)
 app.use(
     `${API_PREFIX}/admin`,
-    createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/admin`]: '' }))
+    createProxyMiddleware(createProxyOptions(AUTH_SERVICE_URL, { [`^${API_PREFIX}/admin`]: '/admin' }))
 );
 
 // Recruiter Service Routes (Candidate Search & Job Postings)
+app.use(
+    `${API_PREFIX}/messages`,
+    createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/messages`]: '/messages' }))
+);
+
 app.use(
     `${API_PREFIX}/recruiter`,
     createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/recruiter`]: '' }))

@@ -6,13 +6,13 @@ import Link from "next/link";
 import {
     Search,
     Briefcase,
-    Users,
     MessageSquare,
     Settings,
     LogOut,
     Menu,
     X,
-    Bookmark
+    Bookmark,
+    Building
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -21,7 +21,8 @@ const navItems = [
     { href: "/recruiter/saved", icon: Bookmark, label: "Saved Candidates" },
     { href: "/recruiter/jobs", icon: Briefcase, label: "Job Postings" },
     { href: "/recruiter/messages", icon: MessageSquare, label: "Messages" },
-    { href: "/recruiter/settings", icon: Settings, label: "Company Profile" },
+    { href: "/recruiter/profile", icon: Building, label: "Company Profile" },
+    { href: "/recruiter/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function RecruiterLayout({ children }: { children: React.ReactNode }) {

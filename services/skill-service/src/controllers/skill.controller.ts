@@ -137,4 +137,21 @@ export class SkillController {
             next(error);
         }
     }
+
+    async getCertifications(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { targetRole } = req.query;
+
+            if (!targetRole) {
+                res.status(400).json({ success: false, message: 'targetRole is required' });
+                return;
+            }
+
+            const result = await skillService.getCertificationsForRole(targetRole as string);
+
+            res.json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

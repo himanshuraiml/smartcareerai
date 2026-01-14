@@ -5,6 +5,52 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Seeding database...');
 
+    // Seed Admin User
+    // Hash for 'Admin123!'
+    const adminPassword = '$2a$12$P2NRBlMlP1LdUwn7fSMlZuByDd8YVmHCwuLiqsZjnVpV4OLO53bQ9m';
+    const admin = await prisma.user.upsert({
+        where: { email: 'admin@smartcareer.ai' },
+        update: {
+            role: 'ADMIN',
+            passwordHash: adminPassword,
+        },
+        create: {
+            email: 'admin@smartcareer.ai',
+            passwordHash: adminPassword,
+            name: 'System Administrator',
+            role: 'ADMIN',
+            isVerified: true,
+        },
+    });
+    console.log(`✅ Seeded Admin User: ${admin.id}`);
+
+    // Seed Recruiter User
+    // Hash for 'Recruiter123!'
+    const recruiterPassword = '$2a$12$MUSSnTpVxcQq7s5Pn6TwUuVl2C39jCavitzzk0FksuCkiP3c45Hire';
+    const recruiter = await prisma.user.upsert({
+        where: { email: 'recruiter@techhunters.io' },
+        update: {
+            role: 'RECRUITER',
+            passwordHash: recruiterPassword,
+        },
+        create: {
+            email: 'recruiter@techhunters.io',
+            passwordHash: recruiterPassword,
+            name: 'Tech Recruiter',
+            role: 'RECRUITER',
+            isVerified: true,
+            recruiterProfile: {
+                create: {
+                    companyName: 'TechHunters Inc.',
+                    industry: 'Staffing & Recruiting',
+                    location: 'San Francisco, CA',
+                    isVerified: true,
+                }
+            }
+        },
+    });
+    console.log(`✅ Seeded Recruiter User: ${recruiter.id}`);
+
     // Seed job roles
     const jobRoles = [
         {

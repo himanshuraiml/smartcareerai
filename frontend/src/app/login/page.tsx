@@ -19,7 +19,15 @@ export default function LoginPage() {
         e.preventDefault();
         const success = await login(formData.email, formData.password);
         if (success) {
-            router.push('/dashboard');
+            // Check user role and redirect accordingly
+            const user = useAuthStore.getState().user;
+            if (user?.role === 'ADMIN') {
+                router.push('/admin');
+            } else if (user?.role === 'RECRUITER') {
+                router.push('/recruiter');
+            } else {
+                router.push('/dashboard');
+            }
         }
     };
 

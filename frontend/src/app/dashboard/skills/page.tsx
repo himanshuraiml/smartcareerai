@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Target, TrendingUp, BookOpen, Zap, ChevronRight,
-    Loader2, AlertCircle, CheckCircle, Plus, RefreshCw
+    Loader2, AlertCircle, CheckCircle, Plus, RefreshCw, Award
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -28,35 +28,29 @@ interface GapAnalysis {
     missingSkills: { required: string[]; preferred: string[] };
 }
 
+interface Certification {
+    name: string;
+    issuer: string;
+    level: string;
+    url: string;
+    description: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function SkillsPage() {
-    const { accessToken } = useAuthStore();
+    const { accessToken, user } = useAuthStore();
     const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
     const [gapAnalysis, setGapAnalysis] = useState<GapAnalysis | null>(null);
     const [roadmap, setRoadmap] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [analyzing, setAnalyzing] = useState(false);
-    const [selectedRole, setSelectedRole] = useState('Software Developer');
-    const [activeTab, setActiveTab] = useState<'skills' | 'gap' | 'roadmap'>('skills');
+    const [activeTab, setActiveTab] = useState<'skills' | 'gap' | 'roadmap' | 'certifications'>('skills');
+    const [certifications, setCertifications] = useState<Certification[]>([]);
+    const [loadingCerts, setLoadingCerts] = useState(false);
 
-    const jobRoles = [
-        'Software Developer',
-        'Frontend Developer',
-        'Backend Developer',
-        'Full Stack Developer',
-        'Data Scientist',
-        'Data Analyst',
-        'Machine Learning Engineer',
-        'DevOps Engineer',
-        'Cloud Engineer',
-        'Product Manager',
-        'Project Manager',
-        'UI/UX Designer',
-        'Mobile Developer',
-        'QA Engineer',
-        'Cybersecurity Analyst',
-    ];
+    // Use user's registered target role
+    const selectedRole = user?.targetJobRole?.title || 'Software Developer';
 
     const fetchUserSkills = useCallback(async () => {
         try {
@@ -121,8 +115,27 @@ export default function SkillsPage() {
             fetchGapAnalysis();
         } else if (accessToken && activeTab === 'roadmap') {
             fetchRoadmap();
+        } else if (activeTab === 'certifications') {
+            fetchCertifications();
         }
     }, [accessToken, activeTab, selectedRole, fetchGapAnalysis, fetchRoadmap]);
+
+    const fetchCertifications = async () => {
+        setLoadingCerts(true);
+        try {
+            const response = await fetch(
+                `${API_URL}/skills/certifications?targetRole=${encodeURIComponent(selectedRole)}`
+            );
+            if (response.ok) {
+                const data = await response.json();
+                setCertifications(data.data?.certifications || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch certifications:', err);
+        } finally {
+            setLoadingCerts(false);
+        }
+    };
 
     const getProficiencyColor = (level: string) => {
         switch (level) {
@@ -155,18 +168,21 @@ export default function SkillsPage() {
                 </button>
             </div>
 
-            {/* Role Selector */}
-            <div className="flex items-center gap-4">
-                <label className="text-gray-400">Target Role:</label>
-                <select
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-purple-500 focus:outline-none"
+            {/* Target Role Display */}
+            <div className="flex items-center gap-4 p-4 rounded-xl glass">
+                <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-400" />
+                    <span className="text-gray-400">Target Role:</span>
+                </div>
+                <span className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white font-medium">
+                    {selectedRole}
+                </span>
+                <a
+                    href="/dashboard/settings"
+                    className="text-sm text-purple-400 hover:text-purple-300 underline transition-colors"
                 >
-                    {jobRoles.map((role) => (
-                        <option key={role} value={role} className="bg-gray-900">{role}</option>
-                    ))}
-                </select>
+                    Change in Settings
+                </a>
             </div>
 
             {/* Tabs */}
@@ -175,6 +191,7 @@ export default function SkillsPage() {
                     { id: 'skills', label: 'My Skills', icon: Zap },
                     { id: 'gap', label: 'Gap Analysis', icon: Target },
                     { id: 'roadmap', label: 'Learning Roadmap', icon: TrendingUp },
+                    { id: 'certifications', label: 'Certifications', icon: Award },
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -252,27 +269,33 @@ export default function SkillsPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Matched Skills */}
+                                {/* Matched Skills & Other Skills */}
                                 <div className="p-6 rounded-2xl glass">
                                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-400" />
                                         Skills You Have
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {gapAnalysis.matchedSkills.required.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-sm">
-                                                {skill}
-                                            </span>
-                                        ))}
-                                        {gapAnalysis.matchedSkills.preferred.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm">
-                                                {skill}
-                                            </span>
-                                        ))}
-                                        {gapAnalysis.matchedSkills.required.length === 0 &&
-                                            gapAnalysis.matchedSkills.preferred.length === 0 && (
-                                                <p className="text-gray-400">No matching skills yet</p>
-                                            )}
+                                        {/* Render ALL user skills, highlighting matches */}
+                                        {gapAnalysis.userSkills.map((skill, i) => {
+                                            const isRequired = gapAnalysis.matchedSkills.required.includes(skill.name);
+                                            const isPreferred = gapAnalysis.matchedSkills.preferred.includes(skill.name);
+
+                                            // Determine style based on match status
+                                            let style = "bg-white/5 text-gray-400"; // Default (unmatched)
+                                            if (isRequired) style = "bg-green-500/10 text-green-400";
+                                            if (isPreferred) style = "bg-blue-500/10 text-blue-400";
+
+                                            return (
+                                                <span key={i} className={`px-3 py-1 rounded-full text-sm ${style}`}>
+                                                    {skill.name}
+                                                </span>
+                                            );
+                                        })}
+
+                                        {gapAnalysis.userSkills.length === 0 && (
+                                            <p className="text-gray-400">No skills added yet</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -373,9 +396,9 @@ export default function SkillsPage() {
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 ${resource.platform === 'Coursera' ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' :
-                                                                    resource.platform === 'YouTube' ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' :
-                                                                        resource.platform === 'Udemy' ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' :
-                                                                            'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                                                                resource.platform === 'YouTube' ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' :
+                                                                    resource.platform === 'Udemy' ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' :
+                                                                        'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                                                                 }`}
                                                         >
                                                             {resource.platform}: {resource.name}
@@ -395,6 +418,73 @@ export default function SkillsPage() {
                             </div>
                             <h3 className="text-lg font-medium text-white mb-2">No roadmap available</h3>
                             <p className="text-gray-400">Add skills to your profile first</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'certifications' && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Award className="w-5 h-5 text-purple-400" />
+                                Recommended Certifications for {selectedRole}
+                            </h2>
+                            <p className="text-gray-400 text-sm mt-1">
+                                Industry-recognized certifications to boost your career
+                            </p>
+                        </div>
+                    </div>
+
+                    {loadingCerts ? (
+                        <div className="p-12 text-center">
+                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <p className="text-gray-400">Loading certifications...</p>
+                        </div>
+                    ) : certifications.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {certifications.map((cert, index) => (
+                                <div
+                                    key={index}
+                                    className="p-6 rounded-xl glass-card hover:border-purple-500/30 transition-all"
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                                            <Award className="w-6 h-6 text-purple-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-semibold mb-1">{cert.name}</h3>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-sm text-gray-400">{cert.issuer}</span>
+                                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${cert.level === 'Expert' ? 'bg-purple-500/20 text-purple-400' :
+                                                    cert.level === 'Professional' ? 'bg-blue-500/20 text-blue-400' :
+                                                        'bg-green-500/20 text-green-400'
+                                                    }`}>
+                                                    {cert.level}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-400 text-sm mb-3">{cert.description}</p>
+                                            <a
+                                                href={cert.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                                            >
+                                                View Certification <ChevronRight className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-12 rounded-2xl glass text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Award className="w-8 h-8 text-purple-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-white mb-2">No certifications found</h3>
+                            <p className="text-gray-400">Try selecting a different role to see recommended certifications</p>
                         </div>
                     )}
                 </div>

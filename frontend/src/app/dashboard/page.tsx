@@ -85,16 +85,18 @@ export default function DashboardPage() {
     // Calculate roadmap stages based on user progress
     const roadmapStages: RoadmapStage[] = useMemo(() => {
         const hasResume = stats.resumeCount > 0;
+        const hasGoodScore = stats.avgScore && stats.avgScore >= 70;
         const hasTests = (stats.testsTaken || 0) > 0;
         const hasInterviews = (stats.interviewCount || 0) > 0;
         const hasApplied = stats.jobsApplied > 0;
 
-        return DEFAULT_ROADMAP_STAGES.map((stage, index) => {
+        return DEFAULT_ROADMAP_STAGES.map((stage) => {
             let status: RoadmapStage['status'] = 'locked';
             let progress: number | undefined;
 
+            // Stage 1: Profile DNA
             if (stage.id === 'profile') {
-                if (hasResume && stats.avgScore && stats.avgScore >= 70) {
+                if (hasResume && hasGoodScore) {
                     status = 'completed';
                 } else if (hasResume) {
                     status = 'current';
@@ -103,20 +105,44 @@ export default function DashboardPage() {
                     status = 'current';
                     progress = 0;
                 }
-            } else if (stage.id === 'skills') {
+            }
+            // Stage 2: Skill Analysis (skills-gap)
+            else if (stage.id === 'skills-gap') {
+                if (hasResume) {
+                    // Logic: If they have taken tests, they clearly passed analysis
+                    status = hasTests ? 'completed' : 'available';
+                    // Fallback: If just resume, it's available/current
+                    if (!hasTests) status = 'current';
+                }
+            }
+            // Stage 3: Skill Synchronization (skills-tests)
+            else if (stage.id === 'skills-tests') {
+                // Ideally check if skills GAP is done, but for now relies on resume unlocking the path
+                // and if tests are taken, it is completed
                 if (hasResume) {
                     status = hasTests ? 'completed' : 'available';
+                } else {
+                    status = 'locked';
                 }
-            } else if (stage.id === 'interviews') {
-                if (hasTests || hasResume) {
+            }
+            // Stage 4: Simulation Training (interviews)
+            else if (stage.id === 'interviews') {
+                // Must have taken tests to unlock interviews
+                if (hasTests) {
                     status = hasInterviews ? 'completed' : 'available';
                 }
-            } else if (stage.id === 'jobs') {
-                if (hasInterviews || hasTests) {
+            }
+            // Stage 5: Career Launchpad (jobs)
+            else if (stage.id === 'jobs') {
+                // Must have practiced interviews AND taken tests (strict sequence)
+                if (hasInterviews && hasTests) {
                     status = hasApplied ? 'completed' : 'available';
                 }
-            } else if (stage.id === 'growth') {
-                if (hasApplied) {
+            }
+            // Stage 6: Career Ascension (growth)
+            else if (stage.id === 'growth') {
+                // Must have applied to jobs AND practiced interviews AND taken tests
+                if (hasApplied && hasInterviews && hasTests) {
                     status = 'available';
                 }
             }

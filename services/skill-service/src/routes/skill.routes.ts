@@ -21,5 +21,6 @@ router.delete('/user-skills/:skillId', authMiddleware, skillController.removeUse
 router.get('/gap-analysis', authMiddleware, skillController.getGapAnalysis);
 router.get('/roadmap', authMiddleware, skillController.getRoadmap);
 router.get('/recommendations', authMiddleware, skillController.getCourseRecommendations);
+router.get('/certifications', skillController.getCertifications);
 
 export { router as skillRouter };

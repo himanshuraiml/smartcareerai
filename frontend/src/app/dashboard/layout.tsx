@@ -37,9 +37,9 @@ const navItems: NavItem[] = [
     { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0 },
     { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 1 },
     { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2 },
-    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3 },
-    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3 },
-    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 2 },
+    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3 },
+    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 4 },
+    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 4 },
     { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0 },
 ];
 
@@ -61,25 +61,35 @@ export default function DashboardLayout({
         try {
             const headers = { 'Authorization': `Bearer ${accessToken}` };
 
-            const [resumeRes, atsRes, appRes] = await Promise.all([
+            const [resumeRes, skillsRes, testsRes, interviewRes, appRes] = await Promise.all([
                 fetch(`${API_URL}/resumes`, { headers }),
-                fetch(`${API_URL}/scores/history`, { headers }),
+                fetch(`${API_URL}/skills/user-skills`, { headers }),
+                fetch(`${API_URL}/validation/sessions`, { headers }).catch(() => ({ ok: false })),
+                fetch(`${API_URL}/interviews/sessions`, { headers }),
                 fetch(`${API_URL}/applications/stats`, { headers }),
             ]);
 
             const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
-            const atsData = atsRes.ok ? await atsRes.json() : { data: [] };
+            const skillsData = skillsRes.ok ? await skillsRes.json() : { data: [] };
+            const testsData = testsRes.ok ? await (testsRes as Response).json() : { data: [] };
+            const interviewData = interviewRes.ok ? await interviewRes.json() : { data: [] };
             const appData = appRes.ok ? await appRes.json() : { data: { applied: 0 } };
 
             const hasResume = (resumeData.data?.length || 0) > 0;
-            const hasAtsScore = (atsData.data?.length || 0) > 0;
+            const hasSkillsAnalyzed = (skillsData.data?.length || 0) > 0;
+            const hasTests = (testsData.data?.length || 0) > 0;
+            const hasInterviews = (interviewData.data?.length || 0) > 0;
             const hasApplied = (appData.data?.applied || 0) > 0;
 
-            // Calculate stage
+            // Calculate stage based on roadmap progression
+            // 0 = new user, 1 = has resume, 2 = has skills/gap analysis, 
+            // 3 = has taken tests, 4 = has done interviews, 5 = has applied
             let stage = 0;
             if (hasResume) stage = 1;
-            if (hasAtsScore) stage = 2;
-            if (hasApplied) stage = 3;
+            if (hasResume && hasSkillsAnalyzed) stage = 2;
+            if (stage >= 2 && hasTests) stage = 3;
+            if (stage >= 3 && hasInterviews) stage = 4;
+            if (stage >= 4 && hasApplied) stage = 5;
 
             setUserStage(stage);
         } catch (err) {

@@ -1,11 +1,19 @@
 import Groq from 'groq-sdk';
 import { logger } from './logger';
 
-const apiKey = process.env.GROQ_API_KEY || '';
 
 let groq: Groq | null = null;
-if (apiKey) {
-    groq = new Groq({ apiKey });
+
+function getGroqClient() {
+    if (!groq) {
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) {
+            logger.error('GROQ_API_KEY is not set!');
+            throw new Error('GROQ_API_KEY is not configured');
+        }
+        groq = new Groq({ apiKey });
+    }
+    return groq;
 }
 
 export async function generateWithLLM(
@@ -13,16 +21,13 @@ export async function generateWithLLM(
     userPrompt: string,
     options: { json?: boolean; temperature?: number } = {}
 ): Promise<string> {
-    if (!apiKey || !groq) {
-        logger.error('GROQ_API_KEY is not set!');
-        throw new Error('GROQ_API_KEY is not configured');
-    }
+    const client = getGroqClient();
 
     try {
         logger.info('Calling Groq API (Llama 3.1)...');
 
-        const response = await groq.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+        const response = await client.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },

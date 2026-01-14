@@ -23,6 +23,7 @@ app.get('/health', (_req, res) => {
 
 // Routes
 app.use('/', recruiterRouter);
+app.use('/messages', messageRouter);
 
 // Error handler
 app.use(errorHandler);

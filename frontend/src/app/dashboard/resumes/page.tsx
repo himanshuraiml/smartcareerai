@@ -24,28 +24,12 @@ interface AtsScore {
     suggestions: string[];
 }
 
-const JOB_ROLES = [
-    'Software Developer',
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
-    'Data Scientist',
-    'Data Analyst',
-    'Machine Learning Engineer',
-    'DevOps Engineer',
-    'Cloud Engineer',
-    'Product Manager',
-    'Project Manager',
-    'UI/UX Designer',
-    'Mobile Developer',
-    'QA Engineer',
-    'Cybersecurity Analyst',
-];
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function ResumesPage() {
-    const { accessToken } = useAuthStore();
+    const { accessToken, user } = useAuthStore();
     const [resumes, setResumes] = useState<Resume[]>([]);
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -56,9 +40,8 @@ export default function ResumesPage() {
     const [atsResult, setAtsResult] = useState<AtsScore | null>(null);
     const [showAtsModal, setShowAtsModal] = useState(false);
 
-    // Job role selection
-    const [showRoleModal, setShowRoleModal] = useState(false);
-    const [selectedRole, setSelectedRole] = useState('Software Developer');
+    // Use user's registered target role
+    const targetRole = user?.targetJobRole?.title || 'Software Developer';
     const [pendingResumeId, setPendingResumeId] = useState<string | null>(null);
 
     // Fetch resumes on mount
@@ -171,17 +154,10 @@ export default function ResumesPage() {
         }
     };
 
-    // Open role selection modal before analysis
-    const openRoleModal = (resumeId: string) => {
-        setPendingResumeId(resumeId);
-        setShowRoleModal(true);
-    };
 
-    const handleAnalyze = async () => {
-        if (!pendingResumeId) return;
 
-        setShowRoleModal(false);
-        setAnalyzing(pendingResumeId);
+    const handleAnalyze = async (resumeId: string) => {
+        setAnalyzing(resumeId);
         setError(null);
 
         try {
@@ -192,8 +168,8 @@ export default function ResumesPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    resumeId: pendingResumeId,
-                    jobRole: selectedRole,
+                    resumeId: resumeId,
+                    jobRole: targetRole,
                 }),
             });
 
@@ -211,7 +187,7 @@ export default function ResumesPage() {
                             'Authorization': `Bearer ${accessToken}`,
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ resumeId: pendingResumeId }),
+                        body: JSON.stringify({ resumeId: resumeId }),
                     });
                 } catch (e) {
                     console.log('Skill extraction done in background');
@@ -346,10 +322,10 @@ export default function ResumesPage() {
                                     {getStatusBadge(resume.status)}
                                     {resume.status === 'PARSED' && (
                                         <button
-                                            onClick={() => openRoleModal(resume.id)}
+                                            onClick={() => handleAnalyze(resume.id)}
                                             disabled={analyzing === resume.id}
                                             className="p-2 rounded-lg hover:bg-purple-500/10 text-purple-400 transition-colors disabled:opacity-50"
-                                            title="Analyze with ATS"
+                                            title={`Analyze for ${targetRole}`}
                                         >
                                             {analyzing === resume.id ? (
                                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -401,55 +377,19 @@ export default function ResumesPage() {
                 </div>
             )}
 
-            {/* Job Role Selection Modal */}
-            {showRoleModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
-                    <div className="resume-modal w-full max-w-md p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="resume-modal-title text-xl">Select Target Job Role</h3>
-                            <button onClick={() => setShowRoleModal(false)} className="close-btn p-1 rounded hover:bg-black/5">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <p className="text-muted mb-4 text-sm">
-                            Choose the job role you&apos;re targeting. The ATS analysis will score your resume against this role&apos;s requirements.
-                        </p>
-                        <select
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            className="w-full p-3 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        >
-                            {JOB_ROLES.map((role) => (
-                                <option key={role} value={role}>
-                                    {role}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowRoleModal(false)}
-                                className="btn-secondary flex-1 py-3 rounded-xl transition-colors hover:opacity-80"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAnalyze}
-                                className="flex-1 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Target className="w-5 h-5" />
-                                Analyze
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* ATS Score Modal */}
             {showAtsModal && atsResult && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
                     <div className="resume-modal w-full max-w-2xl max-h-[80vh] overflow-hidden">
                         <div className="resume-modal-header flex items-center justify-between">
-                            <h3 className="resume-modal-title text-lg">ATS Analysis Results</h3>
+                            <div>
+                                <h3 className="resume-modal-title text-lg">ATS Analysis Results</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Target Role: <span className="text-purple-600 font-medium">{targetRole}</span>
+                                </p>
+                            </div>
                             <button onClick={() => setShowAtsModal(false)} className="close-btn p-1 rounded hover:bg-black/5">
                                 <X className="w-5 h-5" />
                             </button>

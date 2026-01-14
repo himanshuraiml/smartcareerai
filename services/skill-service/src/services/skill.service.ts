@@ -4,6 +4,80 @@ import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 
 export class SkillService {
+    // Knowledge Base for Dynamic Roadmap Generation
+    private static SKILL_METADATA: Record<string, { concepts: string[]; project: string; focus: string }> = {
+        'python': {
+            concepts: ['Variables & Data Types', 'Control Flow (If/Else, Loops)', 'Functions & Modules', 'OOP Fundamentals', 'File Handling & Exceptions'],
+            project: 'Build a Data Scraper or Automation Script',
+            focus: 'Master Python Syntax and Core Programming Concepts'
+        },
+        'javascript': {
+            concepts: ['ES6+ Syntax', 'DOM Manipulation', 'Async/Await & Promises', 'Event Handling', 'Closures & Scope'],
+            project: 'Build an Interactive To-Do List or Weather App',
+            focus: 'Understand Modern JavaScript and Web Interactivity'
+        },
+        'react': {
+            concepts: ['Components & Props', 'State & Hooks (useState, useEffect)', 'Context API', 'React Router', 'Form Handling'],
+            project: 'Build a Personal Portfolio or E-commerce Frontend',
+            focus: 'Learn Component-Based UI Development'
+        },
+        'node.js': {
+            concepts: ['Event Loop & Async I/O', 'Express.js Framework', 'REST API Design', 'Middleware', 'File System Operations'],
+            project: 'Build a RESTful API for a Blog or Task Manager',
+            focus: 'Master Server-Side JavaScript and API Development'
+        },
+        'sql': {
+            concepts: ['SELECT & Filtering', 'Joins (Inner, Left, Right)', 'Aggregations (GROUP BY)', 'Subqueries', 'Database Design (Normalization)'],
+            project: 'Design and Query a Database for a Store Inventory',
+            focus: 'Master Relational Database Management and Querying'
+        },
+        'aws': {
+            concepts: ['EC2 & S3', 'IAM & Security', 'Lambda & Serverless', 'RDS & DynamoDB', 'VPC & Networking'],
+            project: 'Deploy a Web Application on EC2 with S3 Storage',
+            focus: 'Understand Core Cloud Services and Architecture'
+        },
+        'docker': {
+            concepts: ['Images & Containers', 'Dockerfile Best Practices', 'Docker Compose', 'Volumes & Networking', 'Container Orchestration Basics'],
+            project: 'Containerize a Full-Stack Application',
+            focus: 'Master Application Containerization and Deployment'
+        },
+        'kubernetes': {
+            concepts: ['Pods & Services', 'Deployments & ReplicaSets', 'ConfigMaps & Secrets', 'Ingress & Networking', 'Helm Charts'],
+            project: 'Deploy a Microservices App to a K8s Cluster',
+            focus: 'Learn Container Orchestration and Management'
+        },
+        'git': {
+            concepts: ['Commit & Push', 'Branching & Merging', 'Pull Requests', 'Resolving Conflicts', 'Git Workflows (Gitflow)'],
+            project: 'Collaborate on a Mock Open Source Project',
+            focus: 'Master Version Control and Team Collaboration'
+        },
+        'machine learning': {
+            concepts: ['Supervised vs Unsupervised', 'Regression & Classification', 'Model Evaluation', 'Feature Engineering', 'Neural Networks Basics'],
+            project: 'Build a Price Prediction or Image Classifier Model',
+            focus: 'Understand Core ML Algorithms and Pipelines'
+        },
+        'typescript': {
+            concepts: ['Static Typing', 'Interfaces & Types', 'Generics', 'Utility Types', 'TypeScript Configuration'],
+            project: 'Refactor a JavaScript Project to TypeScript',
+            focus: 'Learn Type-Safe JavaScript Development'
+        },
+        'java': {
+            concepts: ['OOP Principles', 'Collections Framework', 'Multithreading', 'Stream API', 'JVM Internals'],
+            project: 'Build a Console-based Banking System',
+            focus: 'Master Core Java and Object-Oriented Programming'
+        },
+        'c++': {
+            concepts: ['Pointers & References', 'Memory Management', 'STL (Standard Template Library)', 'OOP in C++', 'Templates'],
+            project: 'Build a Simple Game Engine or System Tool',
+            focus: 'Master Low-Level Programming and Performance'
+        },
+        'html/css': {
+            concepts: ['Semantic HTML5', 'CSS Flexbox & Grid', 'Responsive Design', 'CSS Variables', 'Accessibility (A11y)'],
+            project: 'Build a Responsive Landing Page',
+            focus: 'Master Web Layouts and Styling'
+        }
+    };
+
     // Get all available job roles for registration/personalization
     async getJobRoles() {
         return prisma.jobRole.findMany({
@@ -234,124 +308,101 @@ Return a JSON object with:
         };
     }
 
-    // Generate learning roadmap using LLM
+    // Generate deterministic learning roadmap based on skill gaps (No LLM Cost)
     async generateRoadmap(userId: string, targetRole: string, weeks: number) {
         const gapAnalysis = await this.getGapAnalysis(userId, targetRole);
 
-        if (gapAnalysis.missingSkills.required.length === 0) {
-            return {
-                message: 'You already have all required skills for this role!',
-                roadmap: [],
-            };
+        // Identify all skills to learn
+        let skillsToLearn = [
+            ...gapAnalysis.missingSkills.required,
+            ...gapAnalysis.missingSkills.preferred
+        ];
+
+        // If no gaps, add advanced topics
+        if (skillsToLearn.length === 0) {
+            skillsToLearn = ['System Design', 'Architecture Patterns', 'Performance Optimization', 'Leadership'];
         }
 
-        // Get courses for missing skills
-        const allSkills = await prisma.skill.findMany({
-            where: {
-                name: { in: [...gapAnalysis.missingSkills.required, ...gapAnalysis.missingSkills.preferred] },
-            },
-            include: { courses: { where: { isActive: true } } },
-        });
+        // Distribute skills across weeks
+        const totalSkills = skillsToLearn.length;
+        const skillsPerWeek = Math.max(1, Math.ceil(totalSkills / weeks));
+        const roadmap = [];
 
-        const prompt = `Create a ${weeks}-week learning roadmap for someone who wants to become a ${targetRole}.
+        for (let week = 1; week <= weeks; week++) {
+            // Get skills for this week
+            const startIdx = (week - 1) * skillsPerWeek;
+            const weekSkills = skillsToLearn.slice(startIdx, startIdx + skillsPerWeek);
 
-Current skills: ${gapAnalysis.userSkills.map(s => s.name).join(', ')}
+            // Stop if we run out of skills/weeks match
+            if (weekSkills.length === 0 && week > 1) break;
 
-Missing REQUIRED skills (high priority): ${gapAnalysis.missingSkills.required.join(', ')}
-Missing PREFERRED skills (lower priority): ${gapAnalysis.missingSkills.preferred.join(', ')}
-
-Available courses:
-${allSkills.map(s => `${s.name}: ${s.courses.map(c => `${c.title} (${c.durationHours}h, ${c.difficulty})`).join(', ')}`).join('\n')}
-
-Return a JSON object with:
-{
-  "roadmap": [
-    {
-      "week": 1,
-      "focus": "main topic for the week",
-      "skills": ["skill1", "skill2"],
-      "tasks": ["specific task 1", "specific task 2"],
-      "estimatedHours": 10
-    }
-  ],
-  "totalHours": 120,
-  "readinessScore": 85
-}`;
-
-        try {
-            const systemPrompt = 'You are a career development expert. Create detailed learning roadmaps. Return JSON only.';
-            const result = await analyzeWithGemini(systemPrompt, prompt);
-
-            // If LLM failed, use fallback
-            if (!result || !result.roadmap) {
-                throw new Error('LLM returned invalid result');
+            // If we have extra weeks but ran out of skills, focus on projects/review
+            if (weekSkills.length === 0) {
+                roadmap.push({
+                    week,
+                    focus: `Capstone Project & Review`,
+                    skills: ['Full Stack Integration', 'Deployment'],
+                    tasks: [
+                        'Build a comprehensive capstone project integrating all learned skills',
+                        'Deploy your application to a public cloud provider',
+                        'Prepare for mock interviews regarding your project',
+                        'Refine your resume with the new skills and project'
+                    ],
+                    resources: [],
+                    estimatedHours: 20
+                });
+                continue;
             }
 
-            return {
-                targetRole,
-                duration: `${weeks} weeks`,
-                currentMatch: `${gapAnalysis.matchPercent}%`,
-                ...result,
-            };
-        } catch (error) {
-            logger.error('Failed to generate roadmap with LLM, using fallback', error);
+            const primarySkill = weekSkills[0];
+            const primarySkillLower = primarySkill.toLowerCase();
 
-            // Fallback: simple week-by-week skill assignment
-            const allMissingSkills = [
-                ...gapAnalysis.missingSkills.required,
-                ...gapAnalysis.missingSkills.preferred.slice(0, 5)
-            ];
-
-            const skillsPerWeek = Math.max(1, Math.ceil(allMissingSkills.length / weeks));
-            const roadmap = [];
-
-            for (let week = 1; week <= Math.min(weeks, 12); week++) {
-                const startIdx = (week - 1) * skillsPerWeek;
-                const weekSkills = allMissingSkills.slice(startIdx, startIdx + skillsPerWeek);
-
-                if (weekSkills.length > 0) {
-                    const mainSkill = weekSkills[0];
-                    roadmap.push({
-                        week,
-                        focus: `Master ${mainSkill}`,
-                        skills: weekSkills,
-                        tasks: [
-                            `Study ${mainSkill} fundamentals and core concepts`,
-                            `Complete hands-on tutorials and exercises`,
-                            `Build a small project using ${mainSkill}`,
-                            weekSkills.length > 1 ? `Explore ${weekSkills.slice(1).join(', ')}` : 'Review and practice',
-                        ],
-                        resources: this.getCourseResources(mainSkill),
-                        estimatedHours: 8 + (weekSkills.length * 2),
-                    });
+            // Look up metadata
+            let metadata = null;
+            for (const [key, data] of Object.entries(SkillService.SKILL_METADATA)) {
+                if (primarySkillLower.includes(key) || key.includes(primarySkillLower)) {
+                    metadata = data;
+                    break;
                 }
             }
 
-            // If no missing skills, create a generic improvement roadmap
-            if (roadmap.length === 0) {
-                roadmap.push({
-                    week: 1,
-                    focus: `Advance your ${targetRole} skills`,
-                    skills: ['Advanced Concepts', 'Best Practices'],
-                    tasks: [
-                        'Review industry best practices',
-                        'Study advanced patterns and architectures',
-                        'Contribute to open source projects',
-                        'Build a portfolio project',
-                    ],
-                    estimatedHours: 15,
-                });
+            // Default metadata if not found
+            if (!metadata) {
+                metadata = {
+                    focus: `Master ${primarySkill}`,
+                    concepts: [`${primarySkill} Fundamentals`, 'Core Concepts', 'Advanced Features', 'Best Practices'],
+                    project: `Build a small application using ${primarySkill}`
+                };
             }
 
-            return {
-                targetRole,
-                duration: `${weeks} weeks`,
-                currentMatch: `${gapAnalysis.matchPercent}%`,
-                roadmap,
-                totalHours: roadmap.reduce((sum, w) => sum + w.estimatedHours, 0),
-                readinessScore: gapAnalysis.matchPercent,
-            };
+            // Construct rich task list
+            const tasks = [
+                ...metadata.concepts.map(c => `Study: ${c}`),
+                `Hands-on: ${metadata.project}`,
+                weekSkills.length > 1 ? `Explore basics of: ${weekSkills.slice(1).join(', ')}` : 'Review and document your learning'
+            ];
+
+            // Get curated resources
+            const resources = this.getCourseResources(primarySkill);
+
+            roadmap.push({
+                week,
+                focus: metadata.focus,
+                skills: weekSkills,
+                tasks: tasks,
+                resources: resources,
+                estimatedHours: 10 + (weekSkills.length * 2)
+            });
         }
+
+        return {
+            targetRole,
+            duration: `${weeks} weeks`,
+            currentMatch: `${gapAnalysis.matchPercent}%`,
+            roadmap,
+            totalHours: roadmap.reduce((sum, w) => sum + w.estimatedHours, 0),
+            readinessScore: gapAnalysis.matchPercent,
+        };
     }
 
     // Get course recommendations for user's missing skills
@@ -465,6 +516,231 @@ Return a JSON object with:
             { name: `${skill} Tutorial`, platform: 'YouTube', url: `https://www.youtube.com/results?search_query=${searchTerm}+tutorial`, type: 'Search' },
             { name: `${skill} Complete Course`, platform: 'Udemy', url: `https://www.udemy.com/courses/search/?q=${searchTerm}`, type: 'Search' },
         ];
+    }
+
+    // Static certifications for popular job roles (no LLM cost)
+    private static STATIC_CERTIFICATIONS: Record<string, Array<{ name: string; issuer: string; level: string; url: string; description: string }>> = {
+        'DevOps Engineer': [
+            { name: 'AWS Certified DevOps Engineer - Professional', issuer: 'Amazon Web Services', level: 'Professional', url: 'https://aws.amazon.com/certification/certified-devops-engineer-professional/', description: 'Validates expertise in CI/CD, automation, and AWS services' },
+            { name: 'Certified Kubernetes Administrator (CKA)', issuer: 'CNCF', level: 'Professional', url: 'https://www.cncf.io/certification/cka/', description: 'Proves ability to design, install, and configure Kubernetes clusters' },
+            { name: 'Docker Certified Associate', issuer: 'Docker', level: 'Associate', url: 'https://training.mirantis.com/certification/dca-certification-exam/', description: 'Demonstrates proficiency in containerization with Docker' },
+            { name: 'HashiCorp Certified: Terraform Associate', issuer: 'HashiCorp', level: 'Associate', url: 'https://www.hashicorp.com/certification/terraform-associate', description: 'Validates infrastructure as code skills with Terraform' },
+        ],
+        'Cloud Engineer': [
+            { name: 'AWS Certified Solutions Architect - Associate', issuer: 'Amazon Web Services', level: 'Associate', url: 'https://aws.amazon.com/certification/certified-solutions-architect-associate/', description: 'Demonstrates ability to design distributed systems on AWS' },
+            { name: 'Google Cloud Professional Cloud Architect', issuer: 'Google Cloud', level: 'Professional', url: 'https://cloud.google.com/certification/cloud-architect', description: 'Validates expertise in designing GCP solutions' },
+            { name: 'Microsoft Azure Solutions Architect Expert', issuer: 'Microsoft', level: 'Expert', url: 'https://learn.microsoft.com/en-us/certifications/azure-solutions-architect/', description: 'Proves mastery of Azure cloud architecture' },
+        ],
+        'Data Scientist': [
+            { name: 'TensorFlow Developer Certificate', issuer: 'Google', level: 'Professional', url: 'https://www.tensorflow.org/certificate', description: 'Validates skills in building ML models with TensorFlow' },
+            { name: 'AWS Certified Machine Learning - Specialty', issuer: 'Amazon Web Services', level: 'Specialty', url: 'https://aws.amazon.com/certification/certified-machine-learning-specialty/', description: 'Demonstrates expertise in ML on AWS' },
+            { name: 'IBM Data Science Professional Certificate', issuer: 'IBM', level: 'Professional', url: 'https://www.coursera.org/professional-certificates/ibm-data-science', description: 'Comprehensive data science certification covering Python, SQL, ML' },
+        ],
+        'Data Analyst': [
+            { name: 'Google Data Analytics Professional Certificate', issuer: 'Google', level: 'Associate', url: 'https://www.coursera.org/professional-certificates/google-data-analytics', description: 'In-demand certification for data analysis, R, and visualization' },
+            { name: 'IBM Data Analyst Professional Certificate', issuer: 'IBM', level: 'Associate', url: 'https://www.coursera.org/professional-certificates/ibm-data-analyst', description: 'Covers Python, SQL, Excel, and Cognos Analytics' },
+            { name: 'Microsoft Certified: Power BI Data Analyst Associate', issuer: 'Microsoft', level: 'Associate', url: 'https://learn.microsoft.com/en-us/certifications/power-bi-data-analyst-associate/', description: 'Validates expertise in data visualization with Power BI' },
+        ],
+        'Frontend Developer': [
+            { name: 'Meta Front-End Developer Professional Certificate', issuer: 'Meta', level: 'Professional', url: 'https://www.coursera.org/professional-certificates/meta-front-end-developer', description: 'Covers React, JavaScript, and modern frontend development' },
+            { name: 'AWS Certified Developer - Associate', issuer: 'Amazon Web Services', level: 'Associate', url: 'https://aws.amazon.com/certification/certified-developer-associate/', description: 'Validates skills in developing cloud applications' },
+        ],
+        'Backend Developer': [
+            { name: 'Oracle Certified Professional: Java SE Developer', issuer: 'Oracle', level: 'Professional', url: 'https://education.oracle.com/java-se-17-developer/pexam_1Z0-829', description: 'Demonstrates advanced Java programming skills' },
+            { name: 'Microsoft Certified: Azure Developer Associate', issuer: 'Microsoft', level: 'Associate', url: 'https://learn.microsoft.com/en-us/certifications/azure-developer/', description: 'Validates ability to build Azure cloud solutions' },
+            { name: 'MongoDB Associate Developer', issuer: 'MongoDB', level: 'Associate', url: 'https://learn.mongodb.com/pages/mongodb-associate-developer-exam', description: 'Proves proficiency in MongoDB database development' },
+        ],
+        'Full Stack Developer': [
+            { name: 'Meta Full Stack Developer Professional Certificate', issuer: 'Meta', level: 'Professional', url: 'https://www.coursera.org/professional-certificates/meta-back-end-developer', description: 'Comprehensive full-stack certification covering frontend and backend' },
+            { name: 'AWS Certified Developer - Associate', issuer: 'Amazon Web Services', level: 'Associate', url: 'https://aws.amazon.com/certification/certified-developer-associate/', description: 'Validates cloud application development skills' },
+        ],
+        'Cybersecurity Analyst': [
+            { name: 'CompTIA Security+', issuer: 'CompTIA', level: 'Associate', url: 'https://www.comptia.org/certifications/security', description: 'Industry-standard entry-level security certification' },
+            { name: 'Certified Ethical Hacker (CEH)', issuer: 'EC-Council', level: 'Professional', url: 'https://www.eccouncil.org/programs/certified-ethical-hacker-ceh/', description: 'Validates ethical hacking and penetration testing skills' },
+            { name: 'CISSP', issuer: 'ISC2', level: 'Expert', url: 'https://www.isc2.org/Certifications/CISSP', description: 'Gold standard for IT security professionals' },
+        ],
+        'Project Manager': [
+            { name: 'PMP (Project Management Professional)', issuer: 'PMI', level: 'Professional', url: 'https://www.pmi.org/certifications/project-management-pmp', description: 'Most recognized project management certification globally' },
+            { name: 'PRINCE2 Practitioner', issuer: 'AXELOS', level: 'Practitioner', url: 'https://www.axelos.com/certifications/prince2', description: 'Popular methodology-based project management certification' },
+            { name: 'Certified Scrum Master (CSM)', issuer: 'Scrum Alliance', level: 'Associate', url: 'https://www.scrumalliance.org/get-certified/scrum-master-track/certified-scrummaster', description: 'Validates Agile/Scrum methodology expertise' },
+        ],
+    };
+
+    // Get certifications for a target role (with caching)
+    async getCertificationsForRole(targetRole: string) {
+        // Find job role
+        const jobRole = await prisma.jobRole.findFirst({
+            where: { title: { contains: targetRole, mode: 'insensitive' } },
+            include: { cache: true },
+        });
+
+        if (!jobRole) {
+            // Return generic certifications if role not found
+            return this.getStaticCertifications(targetRole);
+        }
+
+        // Check cache validity
+        // Check cache validity (must be unexpired AND have actual content)
+        if (jobRole.cache &&
+            new Date() < jobRole.cache.expiresAt &&
+            Array.isArray(jobRole.cache.certifications) &&
+            (jobRole.cache.certifications as any[]).length > 0
+        ) {
+            logger.info(`Using cached certifications for ${targetRole}`);
+            return {
+                certifications: jobRole.cache.certifications,
+                courseSuggestions: jobRole.cache.courseSuggestions,
+                fromCache: true,
+            };
+        }
+
+        // Get static certifications first (no LLM cost)
+        const staticCerts = this.getStaticCertifications(targetRole);
+
+        // If we have static certifications, use them and cache
+        if (staticCerts.length > 0) {
+            const courseSuggestions = this.generateCourseSuggestionsForRole(targetRole);
+
+            // Save to cache
+            await this.saveToCache(jobRole.id, staticCerts, courseSuggestions);
+
+            return {
+                certifications: staticCerts,
+                courseSuggestions,
+                fromCache: false,
+            };
+        }
+
+        // Fallback: Generate with LLM if no static data (only runs once per role)
+        try {
+            const llmResult = await this.generateCertificationsWithLLM(targetRole);
+
+            // Save to cache
+            await this.saveToCache(jobRole.id, llmResult.certifications, llmResult.courseSuggestions);
+
+            return {
+                ...llmResult,
+                fromCache: false,
+            };
+        } catch (error) {
+            logger.error('Failed to generate certifications with LLM', error);
+            return {
+                certifications: [],
+                courseSuggestions: [],
+                fromCache: false,
+            };
+        }
+    }
+
+    // Get static certifications for a role
+    private getStaticCertifications(targetRole: string): Array<{ name: string; issuer: string; level: string; url: string; description: string }> {
+        const roleLower = targetRole.toLowerCase();
+
+        for (const [role, certs] of Object.entries(SkillService.STATIC_CERTIFICATIONS)) {
+            if (roleLower.includes(role.toLowerCase()) || role.toLowerCase().includes(roleLower)) {
+                return certs;
+            }
+        }
+
+        return [];
+    }
+
+    // Generate course suggestions for a role based on required skills
+    private generateCourseSuggestionsForRole(targetRole: string): Array<{ name: string; platform: string; url: string; skill: string }> {
+        const roleSkillMap: Record<string, string[]> = {
+            'devops': ['docker', 'kubernetes', 'aws', 'terraform', 'git'],
+            'cloud': ['aws', 'docker', 'kubernetes', 'python'],
+            'frontend': ['react', 'javascript', 'typescript', 'css'],
+            'backend': ['node.js', 'python', 'sql', 'docker'],
+            'full stack': ['react', 'node.js', 'javascript', 'sql'],
+            'data scientist': ['python', 'machine learning', 'sql'],
+            'cybersecurity': ['python', 'networking', 'linux'],
+        };
+
+        const roleLower = targetRole.toLowerCase();
+        let skills: string[] = [];
+
+        for (const [key, roleSkills] of Object.entries(roleSkillMap)) {
+            if (roleLower.includes(key)) {
+                skills = roleSkills;
+                break;
+            }
+        }
+
+        // Get courses for each skill
+        const courses: Array<{ name: string; platform: string; url: string; skill: string }> = [];
+        for (const skill of skills.slice(0, 5)) {
+            const skillCourses = this.getCourseResources(skill);
+            if (skillCourses.length > 0) {
+                courses.push({
+                    ...skillCourses[0],
+                    skill,
+                });
+            }
+        }
+
+        return courses;
+    }
+
+    // Save certifications to cache
+    private async saveToCache(
+        jobRoleId: string,
+        certifications: any[],
+        courseSuggestions: any[]
+    ) {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // 30-day cache
+
+        await prisma.jobRoleCache.upsert({
+            where: { jobRoleId },
+            create: {
+                jobRoleId,
+                certifications,
+                courseSuggestions,
+                expiresAt,
+            },
+            update: {
+                certifications,
+                courseSuggestions,
+                generatedAt: new Date(),
+                expiresAt,
+            },
+        });
+
+        logger.info(`Cached certifications for job role ${jobRoleId}`);
+    }
+
+    // Generate certifications with LLM (fallback, only for uncached roles)
+    private async generateCertificationsWithLLM(targetRole: string) {
+        const prompt = `Generate a list of the top 4-5 globally recognized professional certifications for a ${targetRole} role.
+Prioritize official certifications from industry leaders (e.g., Google, NVIDIA, Microsoft, AWS, IBM, Meta, Cisco) over generic ones.
+
+For each certification, provide:
+- name: Official certification name
+- issuer: Issuing organization
+- level: Associate, Professional, or Expert
+- url: Official certification page URL
+- description: One sentence describing what the certification validates
+
+Also provide 3-4 top-tier course suggestions from Coursera, edX, or YouTube by reputable providers (Google, IBM, Microsoft, etc.).
+
+Return JSON:
+{
+  "certifications": [
+    { "name": "...", "issuer": "...", "level": "...", "url": "...", "description": "..." }
+  ],
+  "courseSuggestions": [
+    { "name": "Course name", "platform": "Coursera/Udemy/YouTube", "url": "...", "skill": "..." }
+  ]
+}`;
+
+        const systemPrompt = 'You are a career development expert. Recommend industry-recognized certifications. Return JSON only.';
+        const result = await analyzeWithGemini(systemPrompt, prompt);
+
+        return {
+            certifications: result?.certifications || [],
+            courseSuggestions: result?.courseSuggestions || [],
+        };
     }
 }
 

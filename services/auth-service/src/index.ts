@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { authRouter } from './routes/auth.routes';
+import { adminRouter } from './routes/admin.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
@@ -23,6 +24,7 @@ app.get('/health', (_req, res) => {
 
 // Routes
 app.use('/', authRouter);
+app.use('/admin', adminRouter);
 
 // Error handler
 app.use(errorHandler);

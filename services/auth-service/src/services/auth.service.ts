@@ -56,7 +56,10 @@ export class AuthService {
 
     async login(email: string, password: string) {
         // Find user
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { targetJobRole: true },
+        });
         if (!user) {
             throw new AppError('Invalid email or password', 401);
         }
@@ -117,7 +120,10 @@ export class AuthService {
     }
 
     async getUserById(userId: string) {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { targetJobRole: true },
+        });
         if (!user) {
             throw new AppError('User not found', 404);
         }
@@ -128,6 +134,7 @@ export class AuthService {
         const user = await prisma.user.update({
             where: { id: userId },
             data,
+            include: { targetJobRole: true },
         });
         return this.sanitizeUser(user);
     }

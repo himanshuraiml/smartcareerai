@@ -43,6 +43,8 @@ model User {
   credits            UserCredit[]
   creditTransactions CreditTransaction[]
   recruiterProfile   Recruiter?
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
   // User's target job role for personalized content
   targetJobRoleId    String?  @map("target_job_role_id")
   targetJobRole      JobRole? @relation(fields: [targetJobRoleId], references: [id])
@@ -138,8 +140,26 @@ model JobRole {
 
   // Users targeting this job role
   usersTargeting  User[]
+  // Cache for LLM-generated content
+  cache           JobRoleCache?
 
   @@map("job_roles")
+}
+
+// Cache for LLM-generated certifications and courses per job role
+model JobRoleCache {
+  id                  String   @id @default(uuid())
+  jobRoleId           String   @unique @map("job_role_id")
+  certifications      Json     // Array of {name, issuer, url, level, description}
+  courseSuggestions   Json     @map("course_suggestions") // Array of {name, platform, url, skill}
+  interviewQuestions  Json?    @map("interview_questions") // Array of {question, category, difficulty}
+  generatedAt         DateTime @default(now()) @map("generated_at")
+  expiresAt           DateTime @map("expires_at") // 30 days from generation
+
+  // Relations
+  jobRole             JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+
+  @@map("job_role_cache")
 }
 
 // ============================================
@@ -588,4 +608,18 @@ model RecruiterJob {
   recruiter Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 
   @@map("recruiter_jobs")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  content    String   @db.Text
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
 }
