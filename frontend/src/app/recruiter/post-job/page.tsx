@@ -26,6 +26,8 @@ export default function PostJobPage() {
         experienceMax: "",
     });
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -41,7 +43,7 @@ export default function PostJobPage() {
                 experienceMax: formData.experienceMax ? parseInt(formData.experienceMax) : undefined,
             };
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/recruiter/jobs`, {
+            const res = await fetch(`${API_URL}/recruiter/jobs`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
