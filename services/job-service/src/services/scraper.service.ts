@@ -247,8 +247,8 @@ export class ScraperService {
                 }
 
                 // Simple salary parsing (e.g., "3-5 Lacs PA")
-                let minSal = null;
-                let maxSal = null;
+                let minSal: number | null = null;
+                let maxSal: number | null = null;
                 if (salary && salary.includes('Lacs')) {
                     const matches = salary.match(/(\d+)-(\d+)/);
                     if (matches) {

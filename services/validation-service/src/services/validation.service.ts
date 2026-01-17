@@ -172,7 +172,7 @@ export class ValidationService {
         });
 
         // If passed, award badge
-        let badge = null;
+        let badge: any = null;
         if (passed) {
             // Determine badge type based on score
             let badgeType: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT' | 'VERIFIED' = 'VERIFIED';

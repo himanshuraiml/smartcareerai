@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "build": "echo 'Skipping prisma generate'",
+        "build": "prisma generate",
+        "postinstall": "prisma generate",
         "migrate": "prisma migrate dev",
         "migrate:deploy": "prisma migrate deploy",
         "generate": "prisma generate",
