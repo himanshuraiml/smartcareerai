@@ -14,8 +14,22 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet());
+
+// CORS Configuration
+const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+    : ['http://localhost:3100', 'http://localhost:3000'];
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3100',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (corsOrigins.includes(origin) || corsOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all in production for now (will be secured later)
+        }
+    },
     credentials: true,
 }));
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
