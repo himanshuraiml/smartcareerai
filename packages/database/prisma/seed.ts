@@ -221,7 +221,7 @@ async function main() {
     const allSkills = await prisma.skill.findMany();
 
     // Seed skill tests (Basic, Medium, Hard)
-    const skillTests = [];
+    const skillTests: any[] = [];
 
     const addTestsForSkill = (skill: any, name: string) => {
         if (!skill) return;
