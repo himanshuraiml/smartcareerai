@@ -3,6 +3,16 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 
+// Roadmap week structure for learning paths
+interface RoadmapWeek {
+    week: number;
+    focus: string;
+    skills: string[];
+    tasks: string[];
+    resources: any[];
+    estimatedHours: number;
+}
+
 export class SkillService {
     // Knowledge Base for Dynamic Roadmap Generation
     private static SKILL_METADATA: Record<string, { concepts: string[]; project: string; focus: string }> = {
@@ -217,7 +227,7 @@ Return a JSON object with:
             const analysis = await analyzeWithGemini(systemPrompt, prompt);
 
             // Save extracted skills to user profile
-            const savedSkills = [];
+            const savedSkills: any[] = [];
             for (const extracted of analysis.extractedSkills || []) {
                 const normalizedName = this.normalizeSkillName(extracted.name);
 
@@ -391,7 +401,7 @@ Return a JSON object with:
         // Distribute skills across weeks
         const totalSkills = skillsToLearn.length;
         const skillsPerWeek = Math.max(1, Math.ceil(totalSkills / weeks));
-        const roadmap = [];
+        const roadmap: RoadmapWeek[] = [];
 
         for (let week = 1; week <= weeks; week++) {
             // Get skills for this week
@@ -423,7 +433,7 @@ Return a JSON object with:
             const primarySkillLower = primarySkill.toLowerCase();
 
             // Look up metadata
-            let metadata = null;
+            let metadata: { concepts: string[]; project: string; focus: string } | null = null;
             for (const [key, data] of Object.entries(SkillService.SKILL_METADATA)) {
                 if (primarySkillLower.includes(key) || key.includes(primarySkillLower)) {
                     metadata = data;
@@ -465,7 +475,7 @@ Return a JSON object with:
             duration: `${weeks} weeks`,
             currentMatch: `${gapAnalysis.matchPercent}%`,
             roadmap,
-            totalHours: roadmap.reduce((sum, w) => sum + w.estimatedHours, 0),
+            totalHours: roadmap.reduce((sum: number, w: RoadmapWeek) => sum + w.estimatedHours, 0),
             readinessScore: gapAnalysis.matchPercent,
         };
     }
