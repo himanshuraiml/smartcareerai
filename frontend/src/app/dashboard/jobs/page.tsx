@@ -13,6 +13,7 @@ interface Job {
     company: string;
     location: string;
     locationType: string;
+    sourceUrl?: string;
     description: string;
     requiredSkills: string[];
     salaryMin?: number;
@@ -38,7 +39,8 @@ export default function JobsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
     const [remoteOnly, setRemoteOnly] = useState(false);
-    const [showMatching, setShowMatching] = useState(false);
+    // Default to matching jobs as per user request
+    const [showMatching, setShowMatching] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
 
     const fetchJobs = useCallback(async () => {
@@ -195,6 +197,41 @@ export default function JobsPage() {
             onsite: 'bg-gray-500/10 text-gray-400',
         };
         return colors[type] || colors.onsite;
+    };
+
+    const handleApply = async () => {
+        if (!selectedJob) return;
+
+        // Auto-track application (User Request #3)
+        // We create an application entry even though the user goes external
+        try {
+            await fetch(`${API_URL}/applications`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    jobId: selectedJob.id,
+                    status: 'APPLIED',
+                    company: selectedJob.company,
+                    position: selectedJob.title,
+                    location: selectedJob.location,
+                    salary: formatSalary(selectedJob),
+                    dateApplied: new Date().toISOString()
+                })
+            });
+        } catch (err) {
+            console.error('Failed to track application:', err);
+        }
+
+        // Redirect to source
+        if (selectedJob.sourceUrl) {
+            window.open(selectedJob.sourceUrl, '_blank', 'noopener,noreferrer');
+        } else {
+            // Fallback for internal jobs
+            window.location.href = `/dashboard/applications?jobId=${selectedJob.id}`;
+        }
     };
 
     return (
@@ -439,13 +476,13 @@ export default function JobsPage() {
                             {savedJobIds.has(selectedJob.id) ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                             {savedJobIds.has(selectedJob.id) ? 'Saved' : 'Save'}
                         </button>
-                        <a
-                            href={`/dashboard/applications?jobId=${selectedJob.id}`}
+                        <button
+                            onClick={handleApply}
                             className="flex-1 py-3 rounded-xl bg-purple-600 text-white flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
                         >
                             Apply Now
                             <ExternalLink className="w-4 h-4" />
-                        </a>
+                        </button>
                     </div>
                 </div>
             )}

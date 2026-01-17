@@ -13,6 +13,7 @@ router.get('/users', adminController.getUsers);
 router.get('/users/:id', adminController.getUserById);
 router.put('/users/:id/role', adminController.updateUserRole);
 router.put('/users/:id/verify', adminController.toggleUserVerification);
+router.post('/users/:id/reset', adminController.resetUserData);
 router.delete('/users/:id', adminController.deleteUser);
 
 // Analytics

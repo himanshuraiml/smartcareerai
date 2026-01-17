@@ -78,6 +78,65 @@ export class SkillService {
         }
     };
 
+    // Skill aliases for normalization
+    private static SKILL_ALIASES: Record<string, string> = {
+        'ai': 'Artificial Intelligence',
+        'ml': 'Machine Learning',
+        'genai': 'Generative AI',
+        'modeling': 'Data Modeling',
+        'data modeling': 'Data Modeling',
+        'viz': 'Data Visualization',
+        'vis': 'Data Visualization',
+        'visualization': 'Data Visualization',
+        'data visualization': 'Data Visualization',
+        'js': 'JavaScript',
+        'ts': 'TypeScript',
+        'reactjs': 'React',
+        'react.js': 'React',
+        'nodejs': 'Node.js',
+        'node': 'Node.js',
+        'golang': 'Go',
+        'c#': 'C#',
+        'dotnet': '.NET',
+        'qa': 'Test Automation',
+    };
+
+    // Skills to ignore/block (generic terms)
+    private static SKILL_BLOCKLIST = new Set([
+        'developer',
+        'software',
+        'software developer',
+        'engineer',
+        'dev',
+        'technologies',
+        'tools',
+        'frameworks',
+        'programming',
+        'coding',
+        'web',
+        'app',
+        'application',
+        'system',
+        'computer',
+        'science'
+    ]);
+
+    // Normalize skill name
+    private normalizeSkillName(name: string): string | null {
+        const lowerName = name.toLowerCase().trim();
+
+        // Check blocklist
+        if (SkillService.SKILL_BLOCKLIST.has(lowerName)) {
+            return null;
+        }
+
+        // Check direct alias
+        if (SkillService.SKILL_ALIASES[lowerName]) {
+            return SkillService.SKILL_ALIASES[lowerName];
+        }
+        return name;
+    }
+
     // Get all available job roles for registration/personalization
     async getJobRoles() {
         return prisma.jobRole.findMany({
@@ -160,8 +219,14 @@ Return a JSON object with:
             // Save extracted skills to user profile
             const savedSkills = [];
             for (const extracted of analysis.extractedSkills || []) {
+                const normalizedName = this.normalizeSkillName(extracted.name);
+
+                if (!normalizedName) {
+                    continue;
+                }
+
                 const matchedSkill = allSkills.find(
-                    s => s.name.toLowerCase() === extracted.name.toLowerCase()
+                    s => s.name.toLowerCase() === normalizedName.toLowerCase()
                 );
 
                 if (matchedSkill && extracted.confidence >= 0.7) {

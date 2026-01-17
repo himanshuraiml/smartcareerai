@@ -31,9 +31,12 @@ export const authMiddleware = async (
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
 
+        console.log('🔐 [AdminService] Decoded Token:', JSON.stringify(decoded, null, 2));
+
         req.user = decoded;
         next();
     } catch (error) {
+        console.error('❌ [AdminService] Auth Error:', error);
         if (error instanceof jwt.JsonWebTokenError) {
             next(createError('Invalid token', 401, 'INVALID_TOKEN'));
         } else {
@@ -47,6 +50,7 @@ export const adminMiddleware = async (
     res: Response,
     next: NextFunction
 ) => {
+    console.log('👮 [AdminService] Checking Role:', req.user?.role);
     if (req.user?.role !== 'ADMIN') {
         return next(createError('Admin access required', 403, 'FORBIDDEN'));
     }

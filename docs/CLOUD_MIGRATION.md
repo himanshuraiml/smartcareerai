@@ -216,5 +216,255 @@ SCORING_SERVICE_URL=https://api.smartcareer.com/scoring
 
 ---
 
+## 🚂 Railway Deployment Guide (All-in-One)
+
+Railway is the **recommended platform** for deploying SmartCareerAI because it supports everything in one place: PostgreSQL, Redis, and all your microservices.
+
+### Prerequisites
+
+- GitHub account (Railway deploys from GitHub)
+- Railway account ([railway.app](https://railway.app))
+- Your SmartCareerAI repo pushed to GitHub
+
+---
+
+### Step 1: Create Railway Project
+
+1. Go to [railway.app](https://railway.app) and sign in with GitHub
+2. Click **"New Project"** → **"Deploy from GitHub repo"**
+3. Select your SmartCareerAI repository
+4. Railway will auto-detect your monorepo structure
+
+---
+
+### Step 2: Add PostgreSQL Database
+
+1. In your Railway project, click **"+ New"** → **"Database"** → **"PostgreSQL"**
+2. Railway creates the database instantly
+3. Click on the PostgreSQL service → **"Variables"** tab
+4. Copy `DATABASE_URL` - you'll need this for all services
+
+---
+
+### Step 3: Add Redis Cache
+
+1. Click **"+ New"** → **"Database"** → **"Redis"**
+2. Click on Redis service → **"Variables"** tab
+3. Copy `REDIS_URL`
+
+---
+
+### Step 4: Deploy Backend Services
+
+For each microservice, create a new service:
+
+#### API Gateway
+```bash
+# Click "+ New" → "GitHub Repo" → Select your repo
+# Configure:
+Root Directory: services/api-gateway
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+#### Auth Service
+```bash
+Root Directory: services/auth-service
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+#### Resume Service
+```bash
+Root Directory: services/resume-service
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+#### Job Service
+```bash
+Root Directory: services/job-service
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+#### Scoring Service
+```bash
+Root Directory: services/scoring-service
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+#### Interview Service
+```bash
+Root Directory: services/interview-service
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+---
+
+### Step 5: Configure Environment Variables
+
+For **each backend service**, add these variables in Railway's Variables tab:
+
+```env
+# Database (from Step 2)
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+
+# Redis (from Step 3)
+REDIS_URL=${{Redis.REDIS_URL}}
+
+# JWT Secret (same across all services)
+JWT_SECRET=your-super-secure-jwt-secret-min-32-chars
+
+# OpenAI (if using AI features)
+OPENAI_API_KEY=sk-your-openai-key
+
+# Service URLs (Railway provides these automatically)
+PORT=3000
+NODE_ENV=production
+```
+
+> [!TIP]
+> Use Railway's **Variable References** like `${{Postgres.DATABASE_URL}}` to automatically link services!
+
+---
+
+### Step 6: Deploy Frontend (Next.js)
+
+**Option A: Deploy on Railway**
+```bash
+# Click "+ New" → "GitHub Repo"
+Root Directory: frontend
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+Add these variables:
+```env
+NEXT_PUBLIC_API_URL=https://your-api-gateway.up.railway.app/api/v1
+```
+
+**Option B: Deploy on Vercel (Recommended for Frontend)**
+1. Go to [vercel.com](https://vercel.com)
+2. Import your GitHub repo
+3. Set Root Directory to `frontend`
+4. Add environment variable:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-railway-api-gateway.up.railway.app/api/v1
+   ```
+
+---
+
+### Step 7: Run Database Migrations
+
+After all services are deployed, run migrations:
+
+```bash
+# Option 1: Use Railway CLI
+npm install -g @railway/cli
+railway login
+railway link  # Select your project
+railway run npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma
+
+# Option 2: Add to API Gateway build command
+Build Command: npm install && npx prisma migrate deploy && npm run build
+```
+
+---
+
+### Step 8: Configure Custom Domain (Optional)
+
+1. Click on your service → **"Settings"** → **"Domains"**
+2. Add a custom domain (e.g., `api.smartcareer.com`)
+3. Update your DNS with the provided CNAME record
+
+---
+
+### Railway Project Structure
+
+After setup, your Railway project should look like:
+
+```
+SmartCareerAI (Project)
+├── 🐘 PostgreSQL (Database)
+├── 🔴 Redis (Cache)
+├── 🌐 api-gateway (Service)
+├── 🔐 auth-service (Service)
+├── 📄 resume-service (Service)
+├── 💼 job-service (Service)
+├── 📊 scoring-service (Service)
+├── 🎤 interview-service (Service)
+└── 💻 frontend (Service) [or on Vercel]
+```
+
+---
+
+### Railway Free Tier Limits
+
+| Resource | Free Tier |
+|----------|-----------|
+| **Credit** | $5/month |
+| **RAM** | 512 MB per service |
+| **CPU** | Shared |
+| **Bandwidth** | 100 GB |
+| **Execution** | 500 hours/month |
+
+> [!IMPORTANT]
+> $5/month is usually enough for development/small production. For higher traffic, consider upgrading or optimizing services.
+
+---
+
+### Cost Optimization Tips
+
+1. **Combine services**: Merge smaller services if running low on credit
+2. **Use sleep mode**: Railway pauses inactive services
+3. **Optimize builds**: Use `npm ci` instead of `npm install` for faster builds
+4. **Share database**: All services use the same PostgreSQL instance
+
+---
+
+### Troubleshooting
+
+**Build Fails?**
+- Check the build logs in Railway dashboard
+- Ensure `package.json` has correct build scripts
+- Verify all dependencies are in `dependencies`, not `devDependencies`
+
+**Database Connection Errors?**
+- Ensure `DATABASE_URL` is set correctly
+- Check if using `${{Postgres.DATABASE_URL}}` reference
+
+**Service Can't Find Other Services?**
+- Use Railway's internal networking: `http://service-name.railway.internal:PORT`
+- Or use public URLs for external access
+
+---
+
+### Quick Deploy Commands (Railway CLI)
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Link to project
+railway link
+
+# Deploy current directory
+railway up
+
+# View logs
+railway logs
+
+# Open dashboard
+railway open
+```
+
+---
+
 > [!TIP]
 > Start with Docker locally, then migrate to cloud when ready for production. This guide will be here when you need it!

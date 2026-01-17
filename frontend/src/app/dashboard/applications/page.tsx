@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Trello, List, Clock, CheckCircle, XCircle, MoreVertical,
     Calendar, Building2, Plus, GripVertical, Trash2, Edit3,
-    Loader2, DollarSign, ExternalLink
+    Loader2, DollarSign, ExternalLink, MapPin
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import AddApplicationDialog from '@/components/tracker/AddApplicationDialog';
 
 interface Application {
     id: string;
@@ -43,6 +44,8 @@ const COLUMNS = [
     { id: 'REJECTED', label: 'Rejected', color: 'bg-red-500/10 text-red-400' },
 ];
 
+
+
 export default function ApplicationsPage() {
     const { accessToken } = useAuthStore();
     const [applications, setApplications] = useState<Application[]>([]);
@@ -50,6 +53,7 @@ export default function ApplicationsPage() {
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'board' | 'list'>('board');
     const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+    const [isAddOpen, setIsAddOpen] = useState(false);
 
     const fetchApplications = useCallback(async () => {
         try {
@@ -135,23 +139,39 @@ export default function ApplicationsPage() {
                     <h1 className="text-3xl font-bold text-white">Applications</h1>
                     <p className="text-gray-400 mt-1">Track your job search progress</p>
                 </div>
-                <div className="flex bg-white/5 rounded-lg p-1">
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={() => setView('board')}
-                        className={`p-2 rounded-md transition-colors ${view === 'board' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
+                        onClick={() => setIsAddOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
                     >
-                        <Trello className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
+                        <span>Add Application</span>
                     </button>
-                    <button
-                        onClick={() => setView('list')}
-                        className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                    >
-                        <List className="w-5 h-5" />
-                    </button>
+                    <div className="flex bg-white/5 rounded-lg p-1">
+                        <button
+                            onClick={() => setView('board')}
+                            className={`p-2 rounded-md transition-colors ${view === 'board' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <Trello className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setView('list')}
+                            className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <List className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <AddApplicationDialog
+                isOpen={isAddOpen}
+                onClose={() => setIsAddOpen(false)}
+                onSuccess={() => {
+                    fetchApplications();
+                    fetchStats();
+                }}
+            />
 
             {/* Stats Cards */}
             {stats && (
@@ -175,28 +195,39 @@ export default function ApplicationsPage() {
                 </div>
             )}
 
-            {/* Kanban Board */}
+            {/* Kanban Board (Vertical Sections -> Horizontal Items) */}
             {view === 'board' && (
-                <div className="flex-1 overflow-x-auto overflow-y-hidden">
-                    <div className="flex gap-3 md:gap-4 h-full pb-4" style={{ minWidth: 'max-content' }}>
-                        {COLUMNS.map((column) => (
-                            <div key={column.id} className="w-64 md:w-72 lg:w-80 flex-shrink-0 flex flex-col glass rounded-xl overflow-hidden">
-                                <div className={`p-3 border-b border-white/5 flex items-center justify-between ${column.color}`}>
-                                    <h3 className="font-semibold">{column.label}</h3>
-                                    <span className="bg-black/20 px-2 py-0.5 rounded text-sm">
+                <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-6">
+                    {COLUMNS.map((column) => (
+                        <div key={column.id} className="glass rounded-xl overflow-hidden flex flex-col">
+                            {/* Section Header */}
+                            <div className={`p-3 border-b border-white/5 flex items-center justify-between ${column.color}`}>
+                                <h3 className="font-semibold flex items-center gap-2">
+                                    {column.label}
+                                    <span className="bg-black/20 px-2 py-0.5 rounded text-sm text-white/70">
                                         {getAppsByStatus(column.id).length}
                                     </span>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-black/20">
+                                </h3>
+                            </div>
+
+                            {/* Horizontal Items Container */}
+                            <div className="p-4 bg-black/20 overflow-x-auto">
+                                <div className="flex gap-4 min-w-min pb-2">
                                     {getAppsByStatus(column.id).map((app) => (
                                         <div
                                             key={app.id}
                                             draggable
                                             onDragStart={(e) => e.dataTransfer.setData('appId', app.id)}
-                                            className="p-3 bg-gray-900 rounded-lg border border-white/5 hover:border-purple-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all"
+                                            className="w-72 flex-shrink-0 p-4 bg-gray-900 rounded-xl border border-white/5 hover:border-purple-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all flex flex-col gap-2"
                                         >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-medium text-white truncate pr-2">{app.job.title}</h4>
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h4 className="font-medium text-white truncate w-56" title={app.job.title}>{app.job.title}</h4>
+                                                    <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
+                                                        <Building2 className="w-3 h-3" />
+                                                        {app.job.company}
+                                                    </p>
+                                                </div>
                                                 <button
                                                     onClick={() => setSelectedApp(app)}
                                                     className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-opacity"
@@ -204,11 +235,8 @@ export default function ApplicationsPage() {
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <p className="text-sm text-gray-400 flex items-center gap-1 mb-2">
-                                                <Building2 className="w-3 h-3" />
-                                                {app.job.company}
-                                            </p>
-                                            <div className="flex items-center justify-between text-xs text-gray-500 mt-2 pt-2 border-t border-white/5">
+
+                                            <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5 mt-auto">
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {new Date(app.updatedAt).toLocaleDateString()}
@@ -219,24 +247,37 @@ export default function ApplicationsPage() {
                                                         {new Date(app.interviewDate).toLocaleDateString()}
                                                     </span>
                                                 )}
+                                                {app.job.location && (
+                                                    <span className="flex items-center gap-1 text-gray-400 ml-auto pl-2">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {app.job.location}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
+
+                                    {getAppsByStatus(column.id).length === 0 && (
+                                        <div className="w-full flex items-center justify-center py-8 text-gray-500 text-sm italic">
+                                            No applications in this stage
+                                        </div>
+                                    )}
                                 </div>
-                                {/* Drop Zone */}
+
+                                {/* Drop Zone Overlay (Full Section Drop) */}
                                 <div
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={(e) => {
                                         const appId = e.dataTransfer.getData('appId');
                                         if (appId) handleStatusChange(appId, column.id);
                                     }}
-                                    className="h-10 border-t border-white/5 flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 transition-colors"
+                                    className="h-10 mt-2 border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 hover:border-purple-500/30 transition-all cursor-pointer"
                                 >
-                                    Drop here
+                                    Drop here to move to {column.label}
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
             )}
 

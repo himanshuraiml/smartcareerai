@@ -81,6 +81,36 @@ export class AuthController {
         }
     }
 
+    async getTargetRole(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const user = await authService.getUserById(userId);
+
+            res.json({
+                success: true,
+                data: user.targetJobRole,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateTargetRole(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { targetJobRoleId } = req.body;
+
+            const user = await authService.updateTargetRole(userId, targetJobRoleId);
+
+            res.json({
+                success: true,
+                data: user,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async updateProfile(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;

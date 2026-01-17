@@ -192,7 +192,7 @@ export class InterviewService {
 
         // Calculate overall score
         const answeredQuestions = session.questions.filter(q => q.score !== null);
-        const totalScore = answeredQuestions.reduce((sum, q) => sum + (q.score || 0), 0);
+        const totalScore = answeredQuestions.reduce((sum: number, q: { score: number | null }) => sum + (q.score || 0), 0);
         const overallScore = answeredQuestions.length > 0
             ? Math.round(totalScore / answeredQuestions.length)
             : 0;
@@ -227,7 +227,7 @@ export class InterviewService {
             session: updatedSession,
             overallScore,
             feedback: overallFeedback,
-            questionResults: session.questions.map(q => ({
+            questionResults: session.questions.map((q: { questionText: string; userAnswer: string | null; score: number | null; feedback: string | null }) => ({
                 question: q.questionText,
                 answer: q.userAnswer,
                 score: q.score,

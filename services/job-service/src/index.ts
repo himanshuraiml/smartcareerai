@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { jobRouter } from './routes/job.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
+import { startCronJobs } from './cron';
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ app.use('/', jobRouter);
 
 // Error handler
 app.use(errorHandler);
+
+// Start Cron Jobs
+startCronJobs();
 
 app.listen(PORT, () => {
     logger.info(`💼 Job Service running on port ${PORT}`);

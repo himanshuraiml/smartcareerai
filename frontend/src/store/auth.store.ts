@@ -26,6 +26,8 @@ interface AuthState {
     refreshAccessToken: () => Promise<boolean>;
     clearError: () => void;
     updateTargetJobRole: (jobRoleId: string) => Promise<boolean>;
+    _hasHydrated: boolean;
+    setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -189,6 +191,10 @@ export const useAuthStore = create<AuthState>()(
                     return false;
                 }
             },
+
+            // Hydration state
+            _hasHydrated: false,
+            setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
         }),
         {
             name: 'auth-storage',
@@ -197,6 +203,9 @@ export const useAuthStore = create<AuthState>()(
                 accessToken: state.accessToken,
                 refreshToken: state.refreshToken,
             }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         }
     )
 );

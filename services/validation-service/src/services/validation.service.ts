@@ -90,6 +90,8 @@ export class ValidationService {
             test: {
                 id: test.id,
                 title: test.title,
+                description: test.description,
+                difficulty: test.difficulty,
                 skill: test.skill,
                 durationMinutes: test.durationMinutes,
                 passingScore: test.passingScore,

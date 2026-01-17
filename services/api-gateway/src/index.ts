@@ -105,6 +105,11 @@ app.use(
     createProxyMiddleware(createProxyOptions(AUTH_SERVICE_URL, { [`^${API_PREFIX}/auth`]: '' }))
 );
 
+app.use(
+    `${API_PREFIX}/users`,
+    createProxyMiddleware(createProxyOptions(AUTH_SERVICE_URL, { [`^${API_PREFIX}/users`]: '' }))
+);
+
 // Resume Service Routes
 app.use(
     `${API_PREFIX}/resumes`,
@@ -183,7 +188,7 @@ app.use(
 // Admin Service Routes (User Management & Analytics)
 app.use(
     `${API_PREFIX}/admin`,
-    createProxyMiddleware(createProxyOptions(AUTH_SERVICE_URL, { [`^${API_PREFIX}/admin`]: '/admin' }))
+    createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/admin`]: '' }))
 );
 
 // Recruiter Service Routes (Candidate Search & Job Postings)

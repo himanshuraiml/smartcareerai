@@ -9,6 +9,7 @@ import {
     CheckCircle,
     XCircle,
     Mail,
+    RefreshCw,
     User as UserIcon
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
@@ -86,6 +87,24 @@ export default function UserManagementPage() {
             }
         } catch (error) {
             console.error("Failed to update role", error);
+        }
+    };
+
+    const handleResetUser = async (userId: string) => {
+        if (!confirm("Are you sure you want to RESET this user's progress? This will delete all resumes, test attempts, and interviews. This cannot be undone.")) return;
+
+        try {
+            const response = await fetch(`${API_URL}/admin/users/${userId}/reset`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            if (response.ok) {
+                alert("User progress has been reset successfully.");
+                fetchUsers();
+            }
+        } catch (error) {
+            console.error("Failed to reset user", error);
         }
     };
 
@@ -177,8 +196,8 @@ export default function UserManagementPage() {
                                             value={user.role}
                                             onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                                             className={`px-3 py-1 rounded text-xs font-bold border border-transparent focus:border-white/20 focus:outline-none cursor-pointer ${user.role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
-                                                    user.role === 'RECRUITER' ? 'bg-purple-500/20 text-purple-400' :
-                                                        'bg-blue-500/20 text-blue-400'
+                                                user.role === 'RECRUITER' ? 'bg-purple-500/20 text-purple-400' :
+                                                    'bg-blue-500/20 text-blue-400'
                                                 } [&>option]:bg-gray-900 [&>option]:text-white`}
                                         >
                                             <option value="USER">USER</option>
@@ -201,6 +220,13 @@ export default function UserManagementPage() {
                                         {new Date(user.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="p-4 text-right">
+                                        <button
+                                            onClick={() => handleResetUser(user.id)}
+                                            className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition"
+                                            title="Reset User Progress"
+                                        >
+                                            <RefreshCw className="w-4 h-4" />
+                                        </button>
                                         <button
                                             onClick={() => handleDeleteUser(user.id)}
                                             className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"

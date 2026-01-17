@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 interface TokenPayload {
     id: string;
     email: string;
+    role: string;
 }
 
 export class AuthService {
@@ -43,7 +44,7 @@ export class AuthService {
         });
 
         // Generate tokens
-        const tokens = await this.generateTokens({ id: user.id, email: user.email });
+        const tokens = await this.generateTokens({ id: user.id, email: user.email, role: user.role });
 
         // TODO: Send verification email
         logger.info(`Verification token for ${email}: ${verifyToken}`);
@@ -71,7 +72,7 @@ export class AuthService {
         }
 
         // Generate tokens
-        const tokens = await this.generateTokens({ id: user.id, email: user.email });
+        const tokens = await this.generateTokens({ id: user.id, email: user.email, role: user.role });
 
         return {
             user: this.sanitizeUser(user),
@@ -103,6 +104,7 @@ export class AuthService {
         const tokens = await this.generateTokens({
             id: storedToken.user.id,
             email: storedToken.user.email,
+            role: storedToken.user.role,
         });
 
         return tokens;
@@ -128,6 +130,22 @@ export class AuthService {
             throw new AppError('User not found', 404);
         }
         return this.sanitizeUser(user);
+    }
+
+    async updateTargetRole(userId: string, targetJobRoleId: string) {
+        // Validate that role exists (optional, but good practice)
+        // For now, we trust the ID or rely on foreign key constraints if they existed, 
+        // but explicit check is better if we had access to JobRole model here easily.
+        // Since JobRole is in the same DB, we could check, but let's just update.
+
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { targetJobRoleId },
+            include: { targetJobRole: true },
+        });
+
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
 
     async updateProfile(userId: string, data: { name?: string; avatarUrl?: string }) {

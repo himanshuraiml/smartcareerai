@@ -88,6 +88,19 @@ export class AdminController {
         }
     }
 
+    async resetUserData(req: Request, res: Response, next: NextFunction) {
+        try {
+            await userService.resetUserData(req.params.id);
+
+            res.json({
+                success: true,
+                message: 'User data has been reset successfully. Progress cleared.',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // ============================================
     // Analytics
     // ============================================

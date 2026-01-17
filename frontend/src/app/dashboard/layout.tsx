@@ -50,9 +50,37 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, accessToken } = useAuthStore();
+    const { user, logout, accessToken, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
+
+    // Idle Timeout Logic (10 minutes)
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+
+        const resetTimer = () => {
+            if (!accessToken) return;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                console.log('💤 User inactive for 10 mins, logging out...');
+                handleLogout(); // Use existing handleLogout
+            }, 10 * 60 * 1000); // 10 minutes
+        };
+
+        // Events to listen for
+        const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+
+        // Add listeners
+        if (accessToken) {
+            resetTimer(); // Start timer initially
+            events.forEach(event => window.addEventListener(event, resetTimer));
+        }
+
+        return () => {
+            clearTimeout(timeoutId);
+            events.forEach(event => window.removeEventListener(event, resetTimer));
+        };
+    }, [accessToken]); // Re-bind if login status changes
 
     // Fetch user progress to determine sidebar visibility
     const fetchUserProgress = useCallback(async () => {
@@ -64,7 +92,7 @@ export default function DashboardLayout({
             const [resumeRes, skillsRes, testsRes, interviewRes, appRes] = await Promise.all([
                 fetch(`${API_URL}/resumes`, { headers }),
                 fetch(`${API_URL}/skills/user-skills`, { headers }),
-                fetch(`${API_URL}/validation/sessions`, { headers }).catch(() => ({ ok: false })),
+                fetch(`${API_URL}/validation/attempts`, { headers }).catch(() => ({ ok: false })),
                 fetch(`${API_URL}/interviews/sessions`, { headers }),
                 fetch(`${API_URL}/applications/stats`, { headers }),
             ]);
@@ -98,21 +126,29 @@ export default function DashboardLayout({
     }, [accessToken]);
 
     useEffect(() => {
+        // Wait for hydration before checking auth
+        if (!_hasHydrated) return;
+
         if (!accessToken) {
             router.push('/login');
         } else {
             fetchUserProgress();
         }
-    }, [accessToken, router, fetchUserProgress]);
-
-    if (!accessToken) {
-        return null;
-    }
+    }, [accessToken, router, fetchUserProgress, _hasHydrated]);
 
     const handleLogout = () => {
         logout();
         router.push('/');
     };
+
+    if (!_hasHydrated || !accessToken) {
+        // Show nothing or a loading spinner while hydrating or redirecting
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-black">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+        );
+    }
 
     // Calculate which items are unlocked
     const getUnlockedItems = () => {

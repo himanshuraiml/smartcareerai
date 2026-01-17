@@ -33,9 +33,38 @@ export class ApplicationService {
 
     // Create new application
     async createApplication(userId: string, data: any) {
+        let jobId = data.jobId;
+
+        // If no jobId provided but job details are present, create a manual job listing
+        if (!jobId && data.job) {
+            const newJob = await prisma.jobListing.create({
+                data: {
+                    title: data.job.title,
+                    company: data.job.company,
+                    location: data.job.location || 'Unknown',
+                    locationType: data.job.locationType || 'onsite',
+                    description: data.job.description || 'Manual entry',
+                    requirements: [],
+                    requiredSkills: [],
+                    source: 'manual',
+                    sourceUrl: data.job.sourceUrl || null,
+                    externalId: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    isActive: true,
+                    // If salary is provided in job details
+                    salaryMin: data.job.salaryMin,
+                    salaryMax: data.job.salaryMax,
+                }
+            });
+            jobId = newJob.id;
+        }
+
+        if (!jobId) {
+            throw new AppError('Job ID or Job details are required', 400);
+        }
+
         // Check if already applied to this job
         const existing = await prisma.application.findUnique({
-            where: { userId_jobId: { userId, jobId: data.jobId } },
+            where: { userId_jobId: { userId, jobId } },
         });
 
         if (existing) {
@@ -45,9 +74,9 @@ export class ApplicationService {
         return prisma.application.create({
             data: {
                 userId,
-                jobId: data.jobId,
+                jobId,
                 status: data.status || 'APPLIED',
-                appliedAt: data.status === 'APPLIED' ? new Date() : null,
+                appliedAt: data.status === 'APPLIED' ? new Date() : (data.appliedAt ? new Date(data.appliedAt) : null),
                 notes: data.notes,
                 resumeUsed: data.resumeUsed,
                 coverLetter: data.coverLetter,

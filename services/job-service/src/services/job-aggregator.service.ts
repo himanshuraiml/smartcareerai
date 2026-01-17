@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
-
 import { logger } from '../utils/logger';
+import { ScraperService } from './scraper.service';
 
 // JSearch API from RapidAPI (free tier: 200 requests/month)
 const JSEARCH_API_KEY = process.env.JSEARCH_API_KEY || '';
@@ -18,11 +18,22 @@ interface JobSearchParams {
 }
 
 export class JobAggregatorService {
+    private scraper = new ScraperService();
+
     // Fetch jobs from multiple sources
     async aggregateJobs(params: JobSearchParams) {
+        // Initialize scraper
+        await this.scraper.init();
+
         const results = await Promise.allSettled([
             this.fetchFromRemoteOK(params),
             JSEARCH_API_KEY ? this.fetchFromJSearch(params) : Promise.resolve([]),
+            // Add LinkedIn Scraper
+            this.scraper.scrapeLinkedIn(params.query, params.location || 'India'),
+            // Add Naukri Scraper
+            this.scraper.scrapeNaukri(params.query, params.location || 'India'),
+            // Add IBM Scraper
+            this.scraper.scrapeIBM(params.query)
         ]);
 
         const jobs: any[] = [];

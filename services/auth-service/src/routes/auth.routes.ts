@@ -17,6 +17,8 @@ router.get('/verify-email/:token', authController.verifyEmail);
 
 // Protected routes
 router.get('/me', authMiddleware, authController.getCurrentUser);
+router.get('/me/target-role', authMiddleware, authController.getTargetRole);
+router.put('/me/target-role', authMiddleware, authController.updateTargetRole);
 router.post('/logout', authMiddleware, authController.logout);
 router.put('/profile', authMiddleware, authController.updateProfile);
 

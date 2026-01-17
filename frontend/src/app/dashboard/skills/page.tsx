@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Target, TrendingUp, BookOpen, Zap, ChevronRight,
-    Loader2, AlertCircle, CheckCircle, Plus, RefreshCw, Award
+    Loader2, AlertCircle, CheckCircle, Plus, RefreshCw, Award, PlayCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -37,11 +38,26 @@ interface Certification {
     description: string;
 }
 
+interface TestAttempt {
+    id: string;
+    passed: boolean;
+    score: number;
+    test: {
+        id: string;
+        difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+        skillId: string;
+        title: string;
+    };
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function SkillsPage() {
+    const router = useRouter();
     const { accessToken, user } = useAuthStore();
     const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
+    const [allSkills, setAllSkills] = useState<Skill[]>([]);
+    const [attempts, setAttempts] = useState<TestAttempt[]>([]);
     const [gapAnalysis, setGapAnalysis] = useState<GapAnalysis | null>(null);
     const [roadmap, setRoadmap] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -63,11 +79,71 @@ export default function SkillsPage() {
                 setUserSkills(data.data || []);
             }
         } catch (err) {
-            console.error('Failed to fetch skills:', err);
+            console.error('Failed to fetch user skills:', err);
         } finally {
             setLoading(false);
         }
     }, [accessToken]);
+
+    const fetchAllSkills = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_URL}/skills/skills`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setAllSkills(data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch all skills:', err);
+        }
+    }, [accessToken]);
+
+    const fetchAttempts = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_URL}/validation/attempts`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setAttempts(data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch attempts:', err);
+        }
+    }, [accessToken]);
+
+    const getNextTestLevel = (skillId: string): 'EASY' | 'MEDIUM' | 'HARD' | 'COMPLETED' => {
+        const passedAttempts = attempts.filter(a => a.test.skillId === skillId && a.passed);
+        const hasHard = passedAttempts.some(a => a.test.difficulty === 'HARD');
+        const hasMedium = passedAttempts.some(a => a.test.difficulty === 'MEDIUM');
+        const hasEasy = passedAttempts.some(a => a.test.difficulty === 'EASY');
+
+        if (hasHard) return 'COMPLETED';
+        if (hasMedium) return 'HARD';
+        if (hasEasy) return 'MEDIUM';
+        return 'EASY';
+    };
+
+    const handleTakeTest = (skillNameOrId: string, _difficulty?: string, isId: boolean = false) => {
+        let skillId = skillNameOrId;
+        if (!isId) {
+            const skill = allSkills.find(s => s.name.toLowerCase() === skillNameOrId.toLowerCase());
+            if (!skill) {
+                alert(`Skill "${skillNameOrId}" not found in database.`);
+                return;
+            }
+            skillId = skill.id;
+        }
+
+        const nextLevel = getNextTestLevel(skillId);
+        if (nextLevel === 'COMPLETED') {
+            alert('You have already mastered this skill!');
+            return;
+        }
+
+        router.push(`/dashboard/test/test-${skillId}-${nextLevel}`);
+    };
 
     const fetchGapAnalysis = useCallback(async () => {
         setAnalyzing(true);
@@ -108,8 +184,10 @@ export default function SkillsPage() {
     useEffect(() => {
         if (accessToken) {
             fetchUserSkills();
+            fetchAllSkills();
+            fetchAttempts();
         }
-    }, [accessToken, fetchUserSkills]);
+    }, [accessToken, fetchUserSkills, fetchAllSkills, fetchAttempts]);
 
     useEffect(() => {
         if (accessToken && activeTab === 'gap') {
@@ -240,8 +318,19 @@ export default function SkillsPage() {
                                             <span className={`px-2 py-0.5 rounded text-xs ${getProficiencyColor(us.proficiencyLevel)}`}>
                                                 {us.proficiencyLevel}
                                             </span>
-                                            {us.isVerified && (
-                                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                            {us.isVerified ? (
+                                                <div className="flex items-center gap-1 text-green-400 text-xs">
+                                                    <CheckCircle className="w-3 h-3" />
+                                                    <span>Verified</span>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleTakeTest(us.skill.id, undefined, true)}
+                                                    className="flex items-center gap-1 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded hover:bg-purple-500/30 transition-colors"
+                                                >
+                                                    <PlayCircle className="w-3 h-3" />
+                                                    <span>{getNextTestLevel(us.skill.id) === 'COMPLETED' ? 'Mastered' : `Take ${getNextTestLevel(us.skill.id)} Test`}</span>
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -308,14 +397,28 @@ export default function SkillsPage() {
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {gapAnalysis.missingSkills.required.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-sm">
-                                                {skill} (Required)
-                                            </span>
+                                            <div key={i} className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-sm group">
+                                                <span>{skill} (Required)</span>
+                                                <button
+                                                    onClick={() => handleTakeTest(skill)}
+                                                    className="ml-1 p-0.5 rounded hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    title="Take Assessment"
+                                                >
+                                                    <PlayCircle className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         ))}
                                         {gapAnalysis.missingSkills.preferred.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-sm">
-                                                {skill}
-                                            </span>
+                                            <div key={i} className="flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-sm group">
+                                                <span>{skill}</span>
+                                                <button
+                                                    onClick={() => handleTakeTest(skill)}
+                                                    className="ml-1 p-0.5 rounded hover:bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    title="Take Assessment"
+                                                >
+                                                    <PlayCircle className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         ))}
                                         {gapAnalysis.missingSkills.required.length === 0 &&
                                             gapAnalysis.missingSkills.preferred.length === 0 && (

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import MatchRadar from '@/components/scoring/RadarChart';
 
 interface Resume {
     id: string;
@@ -181,7 +182,7 @@ export default function ResumesPage() {
 
                 // Also trigger skill extraction
                 try {
-                    await fetch(`${API_URL}/skills/analyze-resume`, {
+                    await fetch(`${API_URL}/skills/analyze`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${accessToken}`,
@@ -395,24 +396,66 @@ export default function ResumesPage() {
                             </button>
                         </div>
                         <div className="resume-modal-body overflow-y-auto max-h-[60vh] space-y-6">
-                            {/* Score Circle */}
-                            <div className="text-center">
-                                <div className={`text-6xl font-bold ${getScoreColor(atsResult.overallScore)}`}>
-                                    {atsResult.overallScore}
+
+
+                            {/* Score & Radar Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                {/* Left: Score Circle */}
+                                <div className="text-center">
+                                    <div className="relative inline-flex items-center justify-center">
+                                        <svg className="w-40 h-40 transform -rotate-90">
+                                            <circle
+                                                className="text-gray-700"
+                                                strokeWidth="10"
+                                                stroke="currentColor"
+                                                fill="transparent"
+                                                r="70"
+                                                cx="80"
+                                                cy="80"
+                                            />
+                                            <circle
+                                                className={`${getScoreColor(atsResult.overallScore)} transition-all duration-1000 ease-out`}
+                                                strokeWidth="10"
+                                                strokeDasharray={440}
+                                                strokeDashoffset={440 - (440 * atsResult.overallScore) / 100}
+                                                strokeLinecap="round"
+                                                stroke="currentColor"
+                                                fill="transparent"
+                                                r="70"
+                                                cx="80"
+                                                cy="80"
+                                            />
+                                        </svg>
+                                        <span className={`absolute text-5xl font-bold ${getScoreColor(atsResult.overallScore)}`}>
+                                            {atsResult.overallScore}
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-400 mt-4 font-medium">Overall Match Score</p>
                                 </div>
-                                <p className="text-muted mt-2">Overall ATS Score</p>
+
+                                {/* Right: Radar Chart */}
+                                <div className="bg-white/5 rounded-2xl p-4">
+                                    <MatchRadar data={{
+                                        overall: atsResult.overallScore,
+                                        keywords: atsResult.keywordMatchPercent,
+                                        formatting: atsResult.formattingScore,
+                                        // We assume these might be in the raw API response even if not in explicit interface
+                                        experience: (atsResult as any).experienceScore,
+                                        education: (atsResult as any).educationScore
+                                    }} />
+                                </div>
                             </div>
 
-                            {/* Score Breakdown */}
+                            {/* Detailed Breakdown */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--modal-bg-secondary)' }}>
-                                    <p className="text-muted text-sm">Keyword Match</p>
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <p className="text-gray-400 text-sm mb-1">Keyword Match</p>
                                     <p className={`text-2xl font-bold ${getScoreColor(atsResult.keywordMatchPercent)}`}>
                                         {atsResult.keywordMatchPercent}%
                                     </p>
                                 </div>
-                                <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--modal-bg-secondary)' }}>
-                                    <p className="text-muted text-sm">Formatting</p>
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <p className="text-gray-400 text-sm mb-1">Formatting</p>
                                     <p className={`text-2xl font-bold ${getScoreColor(atsResult.formattingScore)}`}>
                                         {atsResult.formattingScore}
                                     </p>

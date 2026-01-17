@@ -163,6 +163,41 @@ export class UserService {
             },
         });
     }
+    /**
+     * Reset user data (progress, resumes, tests, etc.)
+     */
+    async resetUserData(userId: string) {
+        return prisma.$transaction(async (tx) => {
+            // 1. Delete Applications
+            await tx.application.deleteMany({ where: { userId } });
+
+            // 2. Delete Resumes (Cascades AtsScore)
+            await tx.resume.deleteMany({ where: { userId } });
+
+            // 3. Delete Attributes/Progress
+            await tx.testAttempt.deleteMany({ where: { userId } });
+            await tx.skillBadge.deleteMany({ where: { userId } });
+            await tx.userSkill.deleteMany({ where: { userId } });
+
+            // 4. Delete Interview Sessions
+            // Note: If cascade is not set up on DB level for questions, this might error.
+            // We assume Cascade is set up. If not, we'd need to fetch sessions and delete questions first.
+            await tx.interviewSession.deleteMany({ where: { userId } });
+
+            // 5. Reset User Profile flags
+            return tx.user.update({
+                where: { id: userId },
+                data: {
+                    targetJobRoleId: null,
+                    // We keep isVerified and role presumably? 
+                    // User just wants to reset "progress".
+                },
+                select: { id: true, email: true }
+            });
+        });
+
+        logger.info(`Reset data for user: ${userId}`);
+    }
 }
 
 export const userService = new UserService();

@@ -41,17 +41,20 @@ export default function DashboardPage() {
         try {
             const headers = { 'Authorization': `Bearer ${accessToken}` };
 
-            const [resumeRes, atsRes, appRes, interviewRes] = await Promise.all([
+            const [resumeRes, atsRes, appRes, interviewRes, testsRes] = await Promise.all([
                 fetch(`${API_URL}/resumes`, { headers }),
                 fetch(`${API_URL}/scores/history`, { headers }),
                 fetch(`${API_URL}/applications/stats`, { headers }),
                 fetch(`${API_URL}/interviews/sessions`, { headers }),
+                fetch(`${API_URL}/validation/attempts`, { headers }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
             ]);
 
             const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
             const atsData = atsRes.ok ? await atsRes.json() : { data: [] };
             const appData = appRes.ok ? await appRes.json() : { data: { applied: 0 } };
             const interviewData = interviewRes.ok ? await interviewRes.json() : { data: [] };
+            // @ts-ignore
+            const testsData = testsRes.ok ? await testsRes.json() : { data: [] };
 
             const scores = atsData.data || [];
             const avgScore = scores.length > 0
@@ -64,7 +67,7 @@ export default function DashboardPage() {
                 jobsApplied: appData.data?.applied || 0,
                 avgScore,
                 interviewCount: interviewData.data?.length || 0,
-                testsTaken: 0, // TODO: fetch from validation service
+                testsTaken: testsData.data?.length || 0,
             });
         } catch (err) {
             console.error('Failed to fetch stats:', err);
@@ -86,21 +89,27 @@ export default function DashboardPage() {
     const roadmapStages: RoadmapStage[] = useMemo(() => {
         const hasResume = stats.resumeCount > 0;
         const hasGoodScore = stats.avgScore && stats.avgScore >= 70;
-        const hasTests = (stats.testsTaken || 0) > 0;
-        const hasInterviews = (stats.interviewCount || 0) > 0;
-        const hasApplied = stats.jobsApplied > 0;
+        const testCount = stats.testsTaken || 0;
+        const interviewCount = stats.interviewCount || 0;
+        const applicationCount = stats.jobsApplied || 0;
+
+        const hasTests = testCount >= 1; // At least one test taken to unlock interviews
+        const hasInterviews = interviewCount >= 1; // At least one interview to unlock jobs
+        const hasApplied = applicationCount >= 1;
 
         return DEFAULT_ROADMAP_STAGES.map((stage) => {
             let status: RoadmapStage['status'] = 'locked';
-            let progress: number | undefined;
+            let progress = 0;
 
             // Stage 1: Profile DNA
             if (stage.id === 'profile') {
                 if (hasResume && hasGoodScore) {
                     status = 'completed';
+                    progress = 100;
                 } else if (hasResume) {
                     status = 'current';
-                    progress = stats.avgScore || 30;
+                    // If resume uploaded, at least 50% progress. Then based on score.
+                    progress = Math.max(50, stats.avgScore || 0);
                 } else {
                     status = 'current';
                     progress = 0;
@@ -109,41 +118,83 @@ export default function DashboardPage() {
             // Stage 2: Skill Analysis (skills-gap)
             else if (stage.id === 'skills-gap') {
                 if (hasResume) {
-                    // Logic: If they have taken tests, they clearly passed analysis
-                    status = hasTests ? 'completed' : 'available';
-                    // Fallback: If just resume, it's available/current
-                    if (!hasTests) status = 'current';
+                    if (hasTests) {
+                        status = 'completed';
+                        progress = 100;
+                    } else if (status === 'locked') {
+                        // Previous stage is mostly done (resume uploaded)
+                        status = hasGoodScore ? 'available' : 'locked';
+                        if (hasResume && !hasGoodScore) status = 'current'; // Keep them in Profile
+                        // Actually, strict roadmap:
+                        if (status === 'available' && !hasTests) {
+                            status = 'current';
+                            progress = 0;
+                        }
+                    }
+                }
+                // Correction: If Profile is NOT completed, this should remain locked or dependent
+                // But let's follow the existing flexible flow
+                if (hasResume) {
+                    // If they have resume, they can analyze skills.
+                    status = hasTests ? 'completed' : 'current';
+                    progress = hasTests ? 100 : 50; // 50% just for being here
+                } else {
+                    status = 'locked';
                 }
             }
             // Stage 3: Skill Synchronization (skills-tests)
             else if (stage.id === 'skills-tests') {
-                // Ideally check if skills GAP is done, but for now relies on resume unlocking the path
-                // and if tests are taken, it is completed
                 if (hasResume) {
-                    status = hasTests ? 'completed' : 'available';
+                    if (testCount >= 3) {
+                        status = 'completed';
+                        progress = 100;
+                    } else {
+                        status = (testCount > 0) ? 'current' : 'available';
+                        // If they are strictly working on this:
+                        if (status === 'available') status = 'current';
+
+                        // Target: 3 tests
+                        progress = Math.min(100, Math.round((testCount / 3) * 100));
+                    }
                 } else {
                     status = 'locked';
                 }
             }
             // Stage 4: Simulation Training (interviews)
             else if (stage.id === 'interviews') {
-                // Must have taken tests to unlock interviews
-                if (hasTests) {
-                    status = hasInterviews ? 'completed' : 'available';
+                if (testCount >= 1) {
+                    if (interviewCount >= 3) {
+                        status = 'completed';
+                        progress = 100;
+                    } else {
+                        status = 'current';
+                        // Target: 3 interviews
+                        progress = Math.min(100, Math.round((interviewCount / 3) * 100));
+                    }
+                } else {
+                    status = 'locked';
                 }
             }
             // Stage 5: Career Launchpad (jobs)
             else if (stage.id === 'jobs') {
-                // Must have practiced interviews AND taken tests (strict sequence)
-                if (hasInterviews && hasTests) {
-                    status = hasApplied ? 'completed' : 'available';
+                if (interviewCount >= 1 && testCount >= 1) {
+                    if (applicationCount >= 5) {
+                        status = 'completed';
+                        progress = 100;
+                    } else {
+                        status = 'current';
+                        // Target: 5 applications
+                        progress = Math.min(100, Math.round((applicationCount / 5) * 100));
+                    }
+                } else {
+                    status = 'locked';
                 }
             }
             // Stage 6: Career Ascension (growth)
             else if (stage.id === 'growth') {
-                // Must have applied to jobs AND practiced interviews AND taken tests
-                if (hasApplied && hasInterviews && hasTests) {
+                if (applicationCount >= 1) {
                     status = 'available';
+                    progress = 0;
                 }
             }
 
@@ -280,6 +331,7 @@ export default function DashboardPage() {
                             { label: 'Upload Resume', href: '/dashboard/resumes', icon: FileText },
                             { label: 'Take Skill Test', href: '/dashboard/tests', icon: Award },
                             { label: 'Practice Interview', href: '/dashboard/interviews', icon: Target },
+                            { label: 'Browse Jobs', href: '/dashboard/jobs', icon: Briefcase },
                         ].map((action) => (
                             <Link
                                 key={action.label}
