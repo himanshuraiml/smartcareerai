@@ -35,11 +35,11 @@ interface NavItem {
 const navItems: NavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', unlockStage: 0 },
     { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0 },
-    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 1 },
-    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2 },
-    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3 },
-    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 4 },
-    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 4 },
+    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 2 }, // Unlocks with resume
+    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2 }, // Unlocks with resume
+    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3 }, // Unlocks after skills/tests
+    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3 }, // Unlocks with interviews
+    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3 }, // Unlocks with interviews
     { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0 },
 ];
 
@@ -89,19 +89,26 @@ export default function DashboardLayout({
         try {
             const headers = { 'Authorization': `Bearer ${accessToken}` };
 
-            const [resumeRes, skillsRes, testsRes, interviewRes, appRes] = await Promise.all([
-                fetch(`${API_URL}/resumes`, { headers }),
-                fetch(`${API_URL}/skills/user-skills`, { headers }),
-                fetch(`${API_URL}/validation/attempts`, { headers }).catch(() => ({ ok: false })),
-                fetch(`${API_URL}/interviews/sessions`, { headers }),
-                fetch(`${API_URL}/applications/stats`, { headers }),
-            ]);
+            // Fetch each endpoint individually to avoid one failure blocking all
+            const resumeData = await fetch(`${API_URL}/resumes`, { headers })
+                .then(res => res.ok ? res.json() : { data: [] })
+                .catch(() => ({ data: [] }));
 
-            const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
-            const skillsData = skillsRes.ok ? await skillsRes.json() : { data: [] };
-            const testsData = testsRes.ok ? await (testsRes as Response).json() : { data: [] };
-            const interviewData = interviewRes.ok ? await interviewRes.json() : { data: [] };
-            const appData = appRes.ok ? await appRes.json() : { data: { applied: 0 } };
+            const skillsData = await fetch(`${API_URL}/skills/user-skills`, { headers })
+                .then(res => res.ok ? res.json() : { data: [] })
+                .catch(() => ({ data: [] }));
+
+            const testsData = await fetch(`${API_URL}/validation/attempts`, { headers })
+                .then(res => res.ok ? res.json() : { data: [] })
+                .catch(() => ({ data: [] }));
+
+            const interviewData = await fetch(`${API_URL}/interviews/sessions`, { headers })
+                .then(res => res.ok ? res.json() : { data: [] })
+                .catch(() => ({ data: [] }));
+
+            const appData = await fetch(`${API_URL}/applications/stats`, { headers })
+                .then(res => res.ok ? res.json() : { data: { applied: 0 } })
+                .catch(() => ({ data: { applied: 0 } }));
 
             const hasResume = (resumeData.data?.length || 0) > 0;
             const hasSkillsAnalyzed = (skillsData.data?.length || 0) > 0;
@@ -109,19 +116,21 @@ export default function DashboardLayout({
             const hasInterviews = (interviewData.data?.length || 0) > 0;
             const hasApplied = (appData.data?.applied || 0) > 0;
 
-            // Calculate stage based on roadmap progression
-            // 0 = new user, 1 = has resume, 2 = has skills/gap analysis, 
-            // 3 = has taken tests, 4 = has done interviews, 5 = has applied
+            // Calculate stage - be more lenient
+            // If user has resume, unlock skills (stage 1)
+            // If user has resume, also unlock skill tests (stage 2) - people often do these together
             let stage = 0;
-            if (hasResume) stage = 1;
-            if (hasResume && hasSkillsAnalyzed) stage = 2;
-            if (stage >= 2 && hasTests) stage = 3;
-            if (stage >= 3 && hasInterviews) stage = 4;
-            if (stage >= 4 && hasApplied) stage = 5;
+            if (hasResume) stage = 2; // Unlock both Skills and Skill Tests with resume
+            if (hasSkillsAnalyzed || hasTests) stage = Math.max(stage, 3); // Unlock Interviews
+            if (hasInterviews) stage = 4; // Unlock Jobs/Applications
+            if (hasApplied) stage = 5;
 
+            console.log('User progress:', { hasResume, hasSkillsAnalyzed, hasTests, hasInterviews, hasApplied, stage });
             setUserStage(stage);
         } catch (err) {
             console.error('Failed to fetch user progress:', err);
+            // Default to stage 1 so users aren't fully blocked
+            setUserStage(1);
         }
     }, [accessToken]);
 
