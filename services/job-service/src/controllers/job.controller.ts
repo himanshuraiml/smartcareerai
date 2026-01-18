@@ -153,6 +153,40 @@ export class JobController {
         }
     }
 
+    // Get personalized jobs for user based on their target role
+    async getJobsForUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { limit } = req.query;
+
+            const jobs = await jobService.getJobsForUser(
+                userId,
+                parseInt(limit as string) || 20
+            );
+
+            res.json({ success: true, data: jobs });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Aggregate jobs for user based on their target role
+    async aggregateJobsForUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { limit } = req.query;
+
+            const jobs = await aggregatorService.aggregateJobsForUser(
+                userId,
+                parseInt(limit as string) || 20
+            );
+
+            res.json({ success: true, data: jobs, count: jobs.length });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Sync all jobs from external sources
     async syncJobs(_req: Request, res: Response, next: NextFunction) {
         try {

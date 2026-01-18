@@ -29,7 +29,7 @@ interface Job {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function JobsPage() {
-    const { accessToken } = useAuthStore();
+    const { accessToken, user } = useAuthStore();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
@@ -42,6 +42,25 @@ export default function JobsPage() {
     // Default to matching jobs as per user request
     const [showMatching, setShowMatching] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
+
+    // Fetch personalized jobs based on user's target job role
+    const fetchPersonalizedJobs = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_URL}/jobs/for-me?limit=20`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setJobs(data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch personalized jobs:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [accessToken]);
 
     const fetchJobs = useCallback(async () => {
         setLoading(true);
@@ -105,15 +124,12 @@ export default function JobsPage() {
         }
     }, [accessToken]);
 
-    // Fetch from external job aggregator (RemoteOK, JSearch)
-    const fetchFromAggregator = useCallback(async (query?: string) => {
+    // Fetch from external job aggregator based on user's target role
+    const fetchFromAggregator = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            params.append('q', query || 'software developer');
-            params.append('limit', '20');
-
-            const response = await fetch(`${API_URL}/jobs/aggregate?${params.toString()}`, {
+            // Use personalized aggregate endpoint - fetches jobs based on user's target role
+            const response = await fetch(`${API_URL}/jobs/aggregate-for-me?limit=20`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
 
@@ -130,19 +146,11 @@ export default function JobsPage() {
 
     useEffect(() => {
         if (accessToken) {
-            if (showMatching) {
-                fetchMatchingJobs();
-            } else {
-                fetchJobs().then(() => {
-                    // If no jobs in database, try aggregator
-                    if (jobs.length === 0) {
-                        fetchFromAggregator(searchQuery || 'developer');
-                    }
-                });
-            }
+            // Always fetch personalized jobs first based on user's target role
+            fetchPersonalizedJobs();
             fetchSavedJobs();
         }
-    }, [accessToken, showMatching]);
+    }, [accessToken, fetchPersonalizedJobs, fetchSavedJobs]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -243,17 +251,21 @@ export default function JobsPage() {
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h1 className="text-3xl font-bold text-white">Jobs</h1>
-                            <p className="text-gray-400 mt-1">Find your next opportunity</p>
+                            <p className="text-gray-400 mt-1">
+                                {user?.targetJobRole
+                                    ? `Jobs for ${user.targetJobRole.title}`
+                                    : 'Find your next opportunity'}
+                            </p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => fetchFromAggregator(searchQuery || 'developer')}
+                                onClick={() => fetchFromAggregator()}
                                 className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 transition-colors"
                             >
                                 Import Jobs
                             </button>
                             <button
-                                onClick={() => showMatching ? fetchMatchingJobs() : fetchJobs()}
+                                onClick={() => fetchPersonalizedJobs()}
                                 className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
                             >
                                 <RefreshCw className="w-5 h-5" />

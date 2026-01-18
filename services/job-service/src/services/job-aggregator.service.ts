@@ -221,4 +221,26 @@ export class JobAggregatorService {
         logger.info(`Job sync complete: ${totalSynced} jobs aggregated`);
         return { synced: totalSynced };
     }
+
+    // Aggregate jobs for a specific user based on their target job role
+    async aggregateJobsForUser(userId: string, limit: number = 20) {
+        // Get user's target job role
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { targetJobRole: true },
+        });
+
+        // Use role title or default to 'software developer'
+        const query = user?.targetJobRole?.title || 'software developer';
+
+        logger.info(`Aggregating jobs for user ${userId} with role: ${query}`);
+
+        // Aggregate jobs with the role as query
+        const jobs = await this.aggregateJobs({
+            query,
+            limit,
+        });
+
+        return jobs;
+    }
 }

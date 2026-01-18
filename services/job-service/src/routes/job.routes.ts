@@ -24,6 +24,10 @@ router.get('/saved', authMiddleware, jobController.getSavedJobs);
 router.get('/aggregate', authMiddleware, jobController.aggregateJobs);
 router.post('/sync', authMiddleware, jobController.syncJobs);
 
+// Personalized job routes (based on user's target role)
+router.get('/for-me', authMiddleware, jobController.getJobsForUser);
+router.get('/aggregate-for-me', authMiddleware, jobController.aggregateJobsForUser);
+
 // One-Click Apply
 router.post('/jobs/:id/apply', authMiddleware, jobController.applyToJob);
 

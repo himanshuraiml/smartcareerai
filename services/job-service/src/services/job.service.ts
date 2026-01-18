@@ -224,6 +224,76 @@ export class JobService {
             .slice(0, limit);
     }
 
+    // Get jobs personalized for user based on their target job role
+    async getJobsForUser(userId: string, limit: number = 20) {
+        // Get user's target job role
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { targetJobRole: true },
+        });
+
+        if (!user?.targetJobRole) {
+            // No target role - fall back to matching jobs or latest
+            return this.getMatchingJobs(userId, limit);
+        }
+
+        const roleTitle = user.targetJobRole.title;
+        const roleRequiredSkills = user.targetJobRole.requiredSkills as string[] || [];
+
+        // Search jobs that match the role title OR have overlapping skills
+        const jobs = await prisma.jobListing.findMany({
+            where: {
+                isActive: true,
+                OR: [
+                    // Match by title containing role
+                    { title: { contains: roleTitle.split(' ')[0], mode: 'insensitive' } },
+                    // Match by required skills overlap
+                    ...(roleRequiredSkills.length > 0 ? [{ requiredSkills: { hasSome: roleRequiredSkills } }] : []),
+                ],
+            },
+            take: limit * 2,
+            orderBy: { createdAt: 'desc' },
+        });
+
+        // Get user's skills for scoring
+        const userSkills = await prisma.userSkill.findMany({
+            where: { userId },
+            include: { skill: true },
+        });
+        const userSkillNames = userSkills.map(us => us.skill.name);
+
+        // Score and rank jobs
+        const scoredJobs = jobs.map(job => {
+            const requiredSkills = job.requiredSkills as string[];
+
+            // Score based on user's skills
+            const matchedCount = requiredSkills.filter(skill =>
+                userSkillNames.some(us => us.toLowerCase() === skill.toLowerCase())
+            ).length;
+            const matchPercent = requiredSkills.length > 0
+                ? Math.round((matchedCount / requiredSkills.length) * 100)
+                : 0;
+
+            // Bonus for role title match
+            const titleMatch = job.title.toLowerCase().includes(roleTitle.toLowerCase().split(' ')[0]) ? 10 : 0;
+
+            return {
+                ...job,
+                matchPercent: Math.min(matchPercent + titleMatch, 100),
+                matchedSkills: matchedCount,
+                totalRequired: requiredSkills.length,
+            };
+        });
+
+        // Sort by match percentage and return top results
+        const result = scoredJobs
+            .sort((a, b) => b.matchPercent - a.matchPercent)
+            .slice(0, limit);
+
+        logger.info(`Found ${result.length} jobs for user ${userId} with role ${roleTitle}`);
+        return result;
+    }
+
     // Save/bookmark a job
     async saveJob(userId: string, jobId: string) {
         const job = await prisma.jobListing.findUnique({ where: { id: jobId } });
