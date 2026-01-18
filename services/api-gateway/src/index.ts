@@ -100,7 +100,14 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
     onError: (err, req, res) => {
         logger.error(`Proxy error to ${target}: ${err.message}`);
         if (res && 'status' in res) {
-            (res as express.Response).status(502).json({ error: 'Service unavailable', message: err.message });
+            const response = res as express.Response;
+            // Add CORS headers to error response
+            const origin = (req as express.Request).headers.origin;
+            if (origin) {
+                response.setHeader('Access-Control-Allow-Origin', origin);
+                response.setHeader('Access-Control-Allow-Credentials', 'true');
+            }
+            response.status(502).json({ error: 'Service unavailable', message: err.message });
         }
     },
     onProxyReq: (proxyReq, req) => {
