@@ -1,13 +1,13 @@
 import { PrismaClient, Difficulty } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log('🌱 Seeding database...');
 
-    // Seed Admin User
-    // Hash for 'Admin123!'
-    const adminPassword = '$2a$12$P2NRBlMlP1LdUwn7fSMlZuByDd8YVmHCwuLiqsZjnVpV4OLO53bQ9m';
+    // Seed Admin User - hash password dynamically
+    const adminPassword = await bcrypt.hash('Admin123!', 12);
     const admin = await prisma.user.upsert({
         where: { email: 'admin@smartcareer.ai' },
         update: {
@@ -24,9 +24,8 @@ async function main() {
     });
     console.log(`✅ Seeded Admin User: ${admin.id}`);
 
-    // Seed Recruiter User
-    // Hash for 'Recruiter123!'
-    const recruiterPassword = '$2a$12$MUSSnTpVxcQq7s5Pn6TwUuVl2C39jCavitzzk0FksuCkiP3c45Hire';
+    // Seed Recruiter User - hash password dynamically
+    const recruiterPassword = await bcrypt.hash('Recruiter123!', 12);
     const recruiter = await prisma.user.upsert({
         where: { email: 'recruiter@techhunters.io' },
         update: {
