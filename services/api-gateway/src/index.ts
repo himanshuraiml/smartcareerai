@@ -12,6 +12,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - required for Railway (and other reverse proxies)
+// This allows express-rate-limit to correctly identify client IPs
+app.set('trust proxy', true);
+
 // Middleware
 app.use(helmet());
 
