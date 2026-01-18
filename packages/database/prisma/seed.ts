@@ -205,6 +205,19 @@ async function main() {
         { name: 'Data Visualization', category: 'Data', demandScore: 88 },
         { name: 'Data Modeling', category: 'Data', demandScore: 85 },
         { name: 'Artificial Intelligence', category: 'AI', demandScore: 90 },
+        // Additional programming languages
+        { name: 'C', category: 'Programming', demandScore: 75 },
+        { name: 'C++', category: 'Programming', demandScore: 78 },
+        { name: 'Go', category: 'Programming', demandScore: 80 },
+        { name: 'Rust', category: 'Programming', demandScore: 72 },
+        // More data skills
+        { name: 'Feature Engineering', category: 'Data', demandScore: 82 },
+        { name: 'NumPy', category: 'Data', demandScore: 85 },
+        { name: 'Scikit-learn', category: 'AI', demandScore: 80 },
+        { name: 'Deep Learning', category: 'AI', demandScore: 85 },
+        { name: 'Natural Language Processing', category: 'AI', demandScore: 78 },
+        { name: 'Computer Vision', category: 'AI', demandScore: 75 },
+        { name: 'Generative AI', category: 'AI', demandScore: 92 },
     ];
 
     for (const skill of skills) {
