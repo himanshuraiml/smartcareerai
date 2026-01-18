@@ -20,12 +20,51 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true
     },
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/shared"
+        },
+        {
+            "path": "./services/api-gateway"
+        },
+        {
+            "path": "./services/auth-service"
+        },
+        {
+            "path": "./services/skill-service"
+        },
+        {
+            "path": "./services/resume-service"
+        },
+        {
+            "path": "./services/scoring-service"
+        },
+        {
+            "path": "./services/job-service"
+        },
+        {
+            "path": "./services/application-service"
+        },
+        {
+            "path": "./services/interview-service"
+        },
+        {
+            "path": "./services/validation-service"
+        },
+        {
+            "path": "./services/billing-service"
+        },
+        {
+            "path": "./services/admin-service"
+        },
+        {
+            "path": "./services/recruiter-service"
+        }
+    ],
     "exclude": [
         "node_modules",
         "dist",
-        "frontend",
-        "packages",
-        "services",
-        "**/*.test.ts"
+        "frontend"
     ]
 }
