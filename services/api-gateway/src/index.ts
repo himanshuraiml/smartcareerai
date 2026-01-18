@@ -13,8 +13,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy - required for Railway (and other reverse proxies)
-// This allows express-rate-limit to correctly identify client IPs
-app.set('trust proxy', true);
+// Set to 1 to trust the first proxy hop only (Railway's edge proxy)
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
