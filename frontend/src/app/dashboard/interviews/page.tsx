@@ -32,7 +32,7 @@ export default function InterviewsPage() {
         type: 'TECHNICAL',
         targetRole: 'Software Developer',
         difficulty: 'MEDIUM',
-        format: 'TEXT', // TEXT, AUDIO, VIDEO
+        format: 'VIDEO', // Video-only mode for immersive interviews
     });
 
     const jobRoles = [
@@ -247,49 +247,17 @@ export default function InterviewsPage() {
                         <h2 className="text-xl font-bold text-white mb-4">Start New Interview</h2>
 
                         <div className="space-y-4">
-                            {/* Interview Format Selector */}
-                            <div>
-                                <label className="block text-gray-400 text-sm mb-3">Interview Format</label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewSession({ ...newSession, format: 'TEXT' })}
-                                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${newSession.format === 'TEXT'
-                                                ? 'border-purple-500 bg-purple-500/10'
-                                                : 'border-white/10 hover:border-white/30'
-                                            }`}
-                                    >
-                                        <MessageSquare className={`w-6 h-6 ${newSession.format === 'TEXT' ? 'text-purple-400' : 'text-gray-400'}`} />
-                                        <span className={`text-sm font-medium ${newSession.format === 'TEXT' ? 'text-purple-400' : 'text-gray-400'}`}>Text</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewSession({ ...newSession, format: 'AUDIO' })}
-                                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${newSession.format === 'AUDIO'
-                                                ? 'border-blue-500 bg-blue-500/10'
-                                                : 'border-white/10 hover:border-white/30'
-                                            }`}
-                                    >
-                                        <Mic className={`w-6 h-6 ${newSession.format === 'AUDIO' ? 'text-blue-400' : 'text-gray-400'}`} />
-                                        <span className={`text-sm font-medium ${newSession.format === 'AUDIO' ? 'text-blue-400' : 'text-gray-400'}`}>Audio</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewSession({ ...newSession, format: 'VIDEO' })}
-                                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${newSession.format === 'VIDEO'
-                                                ? 'border-green-500 bg-green-500/10'
-                                                : 'border-white/10 hover:border-white/30'
-                                            }`}
-                                    >
-                                        <Video className={`w-6 h-6 ${newSession.format === 'VIDEO' ? 'text-green-400' : 'text-gray-400'}`} />
-                                        <span className={`text-sm font-medium ${newSession.format === 'VIDEO' ? 'text-green-400' : 'text-gray-400'}`}>Video</span>
-                                    </button>
+                            {/* Video Interview Mode Banner */}
+                            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                        <Video className="w-5 h-5 text-purple-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-medium">Mock Interview Mode</h3>
+                                        <p className="text-gray-400 text-sm">Experience a realistic video interview with AI interviewer</p>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2 text-center">
-                                    {newSession.format === 'TEXT' && 'Type your answers - great for practice'}
-                                    {newSession.format === 'AUDIO' && 'Speak your answers - practice verbal communication'}
-                                    {newSession.format === 'VIDEO' && 'Record video answers - simulate real interviews'}
-                                </p>
                             </div>
 
                             <div>

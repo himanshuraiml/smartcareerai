@@ -166,21 +166,21 @@ export class InterviewController {
     };
 
     /**
-     * Submit video answer - Coming Soon
-     * Currently extracts audio for analysis, visual analysis placeholder
+     * Submit video answer - extracts audio for transcription and analysis
      */
     submitVideoAnswer = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = req.headers['x-user-id'] as string;
             const { id } = req.params;
-            const { questionId } = req.body;
+            const { questionId, transcript, metrics } = req.body;
 
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            if (!req.file) {
-                return res.status(400).json({ error: 'No video file provided' });
+            // Valid if file OR transcript provided
+            if (!req.file && !transcript) {
+                return res.status(400).json({ error: 'No video file or transcript provided' });
             }
 
             if (!questionId) {
@@ -189,20 +189,66 @@ export class InterviewController {
 
             logger.info(`Processing video answer for session ${id}, question ${questionId}`);
 
-            // Get video analysis status
-            const videoAnalysis = await videoAnalysisService.analyzeVideo(
-                req.file.buffer,
-                req.file.originalname || 'video.webm'
+            let answerText = '';
+            let audioMetrics = null;
+            let visualMetrics = null;
+
+            if (transcript) {
+                // Client-side analysis path
+                logger.info('Using client-side transcript and metrics');
+                answerText = transcript;
+                if (metrics) {
+                    try {
+                        const parsed = typeof metrics === 'string' ? JSON.parse(metrics) : metrics;
+                        if (parsed) {
+                            audioMetrics = {
+                                wordsPerMinute: parsed.wpm || 0,
+                                speakingPace: (parsed.wpm || 0) < 110 ? 'slow' : (parsed.wpm || 0) > 160 ? 'fast' : 'good',
+                            };
+                            visualMetrics = {
+                                eyeContactScore: parsed.eyeContactScore || 0,
+                                sentiment: parsed.sentiment || 'neutral',
+                            };
+                        }
+                    } catch (e) {
+                        logger.warn('Error parsing metrics', e);
+                    }
+                }
+            } else if (req.file) {
+                // Fallback server-side analysis
+                logger.info('Processing video file on server');
+                const audioAnalysis = await audioAnalysisService.analyzeAudio(
+                    req.file.buffer,
+                    req.file.originalname || 'video.webm'
+                );
+                answerText = audioAnalysis.transcription.text;
+                audioMetrics = {
+                    wordsPerMinute: audioAnalysis.transcription.wordsPerMinute,
+                };
+            }
+
+            // Submit for evaluation
+            const result = await this.interviewService.submitAnswer(
+                id,
+                userId,
+                questionId,
+                answerText,
+                { ...audioMetrics, ...visualMetrics }
             );
 
-            // For now, return coming soon message
             res.json({
                 success: true,
                 data: {
-                    message: 'Video answer received',
-                    videoAnalysis: videoAnalysis,
-                    note: 'Full video analysis with visual feedback is coming soon. ' +
-                        'For now, consider using audio mode for speech analysis.',
+                    ...result,
+                    audioAnalysis: {
+                        transcription: answerText,
+                        wordsPerMinute: audioMetrics?.wordsPerMinute || 0,
+                    },
+                    videoAnalysis: visualMetrics,
+                    sentiment: {
+                        sentiment: visualMetrics?.sentiment || 'neutral',
+                        confidence: 85,
+                    },
                 },
             });
         } catch (error) {
@@ -261,6 +307,46 @@ export class InterviewController {
             res.json({ success: true, data: result });
         } catch (error) {
             logger.error('Complete session error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Get AI-generated hint for a question
+     */
+    getQuestionHint = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            const { id, questionId } = req.params;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const hint = await interviewService.getQuestionHint(id, userId, questionId);
+            res.json({ success: true, data: hint });
+        } catch (error) {
+            logger.error('Get question hint error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Get live analytics for interview session
+     */
+    getLiveAnalytics = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            const { id } = req.params;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const analytics = await interviewService.getLiveAnalytics(id, userId);
+            res.json({ success: true, data: analytics });
+        } catch (error) {
+            logger.error('Get live analytics error:', error);
             next(error);
         }
     };

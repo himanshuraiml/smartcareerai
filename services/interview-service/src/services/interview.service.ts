@@ -120,7 +120,7 @@ export class InterviewService {
     }
 
     // Submit an answer to a question
-    async submitAnswer(sessionId: string, userId: string, questionId: string, answer: string) {
+    async submitAnswer(sessionId: string, userId: string, questionId: string, answer: string, metrics?: any) {
         const session = await prisma.interviewSession.findFirst({
             where: { id: sessionId, userId, status: 'IN_PROGRESS' },
         });
@@ -142,7 +142,8 @@ export class InterviewService {
             question.questionText,
             answer,
             session.targetRole,
-            session.type
+            session.type,
+            metrics
         );
 
         // Update question with answer and score
@@ -233,6 +234,91 @@ export class InterviewService {
                 score: q.score,
                 feedback: q.feedback,
             })),
+        };
+    }
+
+    // Get AI hint for a specific question
+    async getQuestionHint(sessionId: string, userId: string, questionId: string) {
+        const session = await prisma.interviewSession.findFirst({
+            where: { id: sessionId, userId },
+        });
+
+        if (!session) {
+            throw new Error('Interview session not found');
+        }
+
+        const question = await prisma.interviewQuestion.findFirst({
+            where: { id: questionId, sessionId },
+        });
+
+        if (!question) {
+            throw new Error('Question not found');
+        }
+
+        // Import dynamically to avoid circular deps
+        const { generateQuestionHint } = await import('../utils/llm');
+
+        const hint = await generateQuestionHint(
+            question.questionText,
+            session.targetRole,
+            session.type
+        );
+
+        logger.info(`Generated hint for question ${questionId}`);
+        return hint;
+    }
+
+    // Get live analytics for an interview session
+    async getLiveAnalytics(sessionId: string, userId: string) {
+        const session = await prisma.interviewSession.findFirst({
+            where: { id: sessionId, userId },
+            include: {
+                questions: {
+                    orderBy: { orderIndex: 'asc' },
+                },
+            },
+        });
+
+        if (!session) {
+            throw new Error('Interview session not found');
+        }
+
+        // Calculate analytics from answered questions
+        const answeredQuestions = session.questions.filter(q => q.score !== null);
+        const totalQuestions = session.questions.length;
+        const currentQuestionIndex = session.questions.findIndex(q => q.userAnswer === null);
+
+        // Calculate average score (tech accuracy)
+        const avgScore = answeredQuestions.length > 0
+            ? Math.round(answeredQuestions.reduce((sum, q) => sum + (q.score || 0), 0) / answeredQuestions.length)
+            : 0;
+
+        // Get the current question if interview is in progress
+        const currentQuestion = currentQuestionIndex >= 0 && currentQuestionIndex < totalQuestions
+            ? session.questions[currentQuestionIndex]
+            : null;
+
+        return {
+            sessionId,
+            status: session.status,
+            targetRole: session.targetRole,
+            interviewType: session.type,
+            progress: {
+                current: currentQuestionIndex >= 0 ? currentQuestionIndex + 1 : totalQuestions,
+                total: totalQuestions,
+                answered: answeredQuestions.length,
+            },
+            techAccuracy: {
+                score: avgScore,
+                label: avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Fair' : 'Needs Improvement',
+            },
+            currentQuestion: currentQuestion ? {
+                id: currentQuestion.id,
+                text: currentQuestion.questionText,
+                type: currentQuestion.questionType,
+                index: currentQuestionIndex,
+            } : null,
+            startedAt: session.startedAt,
         };
     }
 }

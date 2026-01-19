@@ -45,6 +45,12 @@ router.post('/sessions/:id/answer/video', upload.single('video'), controller.sub
 // Complete session
 router.post('/sessions/:id/complete', controller.completeSession);
 
+// AI hints for questions
+router.get('/sessions/:id/hint/:questionId', controller.getQuestionHint);
+
+// Live analytics for interview sessions
+router.get('/sessions/:id/analytics', controller.getLiveAnalytics);
+
 // Analysis capabilities status
 router.get('/analysis/status', controller.getAnalysisStatus);
 

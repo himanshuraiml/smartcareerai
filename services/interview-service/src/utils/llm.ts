@@ -82,17 +82,27 @@ export async function evaluateAnswer(
     question: string,
     answer: string,
     targetRole: string,
-    interviewType: string
+    interviewType: string,
+    metrics?: { wpm?: number; eyeContactScore?: number; sentiment?: string }
 ): Promise<{ score: number; feedback: string }> {
     const systemPrompt = `You are an expert interviewer evaluating candidate responses.
 Score from 0-100 and provide constructive feedback.
 Return JSON: {"score": number, "feedback": "string"}`;
 
+    let metricContext = '';
+    if (metrics) {
+        if (metrics.wpm) metricContext += `- Speaking Pace: ${metrics.wpm} words per minute (Ideal: 120-160)\n`;
+        if (metrics.eyeContactScore) metricContext += `- Eye Contact Score: ${metrics.eyeContactScore}/100\n`;
+        if (metrics.sentiment) metricContext += `- Detected Sentiment: ${metrics.sentiment}\n`;
+    }
+
     const userPrompt = `Evaluate this answer for a ${targetRole} ${interviewType} interview:
 
 Question: ${question}
 
-Candidate's Answer: ${answer}
+Candidate's Answer: "${answer}"
+
+${metricContext ? `Delivery Metrics:\n${metricContext}` : ''}
 
 Evaluate based on:
 1. Relevance and accuracy
@@ -182,6 +192,128 @@ Be encouraging but honest.`;
         logger.error('Failed to generate feedback:', error);
         return getBasicFeedback(overallScore);
     }
+}
+
+// Generate AI hint/tip for a specific interview question
+export async function generateQuestionHint(
+    questionText: string,
+    targetRole: string,
+    interviewType: string
+): Promise<{ hint: string; keyPoints: string[] }> {
+    const systemPrompt = `You are an expert interview coach helping candidates prepare for interviews.
+Provide helpful hints and key points to address for interview questions.
+Return JSON: {"hint": "brief strategic tip", "keyPoints": ["point1", "point2", "point3"]}`;
+
+    const userPrompt = `Provide a helpful hint for answering this ${interviewType} interview question for a ${targetRole} position:
+
+Question: "${questionText}"
+
+Requirements:
+- Give a brief, actionable hint (1-2 sentences) on how to approach this question
+- List 3 key points the candidate should address
+- Be encouraging but specific
+- For behavioral questions, mention STAR method if appropriate
+- For technical questions, suggest structuring the answer logically
+
+Return ONLY the JSON, no other text.`;
+
+    try {
+        const client = getGroq();
+        if (!client) {
+            return getFallbackHint(interviewType);
+        }
+
+        const response = await client.chat.completions.create({
+            model: 'llama-3.1-70b-versatile',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.5,
+            max_tokens: 300,
+            response_format: { type: 'json_object' },
+        });
+
+        const text = response.choices[0]?.message?.content || '{}';
+        const result = JSON.parse(text);
+
+        return {
+            hint: result.hint || 'Focus on providing specific examples and clear explanations.',
+            keyPoints: result.keyPoints || ['Be specific', 'Use examples', 'Stay structured'],
+        };
+    } catch (error) {
+        logger.error('Failed to generate question hint:', error);
+        return getFallbackHint(interviewType);
+    }
+}
+
+// Analyze sentiment from answer text
+export async function analyzeSentiment(
+    answerText: string
+): Promise<{ sentiment: 'positive' | 'neutral' | 'negative' | 'confident'; confidence: number; feedback: string }> {
+    const systemPrompt = `Analyze the sentiment and confidence level of interview answers.
+Return JSON: {"sentiment": "positive|neutral|negative|confident", "confidence": 0-100, "feedback": "brief observation"}`;
+
+    const userPrompt = `Analyze the sentiment and confidence in this interview answer:
+
+"${answerText}"
+
+Consider:
+- Tone and language used
+- Confidence level in statements
+- Positive vs negative framing
+- Professional communication style
+
+Return ONLY the JSON.`;
+
+    try {
+        const client = getGroq();
+        if (!client) {
+            return { sentiment: 'neutral', confidence: 70, feedback: 'Analysis requires AI configuration.' };
+        }
+
+        const response = await client.chat.completions.create({
+            model: 'llama-3.1-70b-versatile',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 200,
+            response_format: { type: 'json_object' },
+        });
+
+        const text = response.choices[0]?.message?.content || '{}';
+        const result = JSON.parse(text);
+
+        return {
+            sentiment: result.sentiment || 'neutral',
+            confidence: Math.min(100, Math.max(0, result.confidence || 70)),
+            feedback: result.feedback || 'Response recorded.',
+        };
+    } catch (error) {
+        logger.error('Failed to analyze sentiment:', error);
+        return { sentiment: 'neutral', confidence: 70, feedback: 'Analysis unavailable.' };
+    }
+}
+
+// Fallback hint when LLM is not available
+function getFallbackHint(interviewType: string): { hint: string; keyPoints: string[] } {
+    if (interviewType === 'BEHAVIORAL') {
+        return {
+            hint: 'Use the STAR method: Situation, Task, Action, Result. Focus on specific examples.',
+            keyPoints: ['Describe a specific situation', 'Explain your actions clearly', 'Highlight the positive outcome'],
+        };
+    } else if (interviewType === 'TECHNICAL') {
+        return {
+            hint: 'Structure your answer logically. Start with concepts, then provide examples or implementation details.',
+            keyPoints: ['Explain the concept clearly', 'Mention trade-offs or alternatives', 'Give a practical example if possible'],
+        };
+    }
+    return {
+        hint: 'Be specific and provide concrete examples from your experience.',
+        keyPoints: ['Stay focused on the question', 'Use specific examples', 'Be concise but thorough'],
+    };
 }
 
 // Fallback questions when LLM is not available

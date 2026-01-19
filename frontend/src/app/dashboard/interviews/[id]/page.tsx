@@ -153,14 +153,12 @@ export default function InterviewRoomPage() {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
-                const data = await response.json();
-                setSession(prev => prev ? {
-                    ...prev,
-                    status: 'IN_PROGRESS',
-                    startedAt: new Date().toISOString(),
-                    questions: data.data.questions,
-                } : null);
-                setCurrentQuestionIndex(0);
+                // Route based on interview type
+                if (session?.type === 'HR' || session?.type === 'BEHAVIORAL') {
+                    router.push(`/dashboard/interviews/${id}/hr-room`);
+                } else {
+                    router.push(`/dashboard/interviews/${id}/room`);
+                }
             }
         } catch (err) {
             console.error('Failed to start interview:', err);
