@@ -239,25 +239,12 @@ export default function ResumesPage() {
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Resumes</h1>
-                    <p className="text-gray-400 mt-2">Upload and manage your resumes for AI-powered analysis</p>
-                </div>
-                <button
-                    onClick={fetchResumes}
-                    className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                    title="Refresh"
-                >
-                    <RefreshCw className="w-5 h-5" />
-                </button>
-            </div>
+
 
             {/* Upload Zone */}
             <div
                 {...getRootProps()}
-                className={`p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer
+                className={`p-6 md:p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer
           ${isDragActive ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-purple-500/50 hover:bg-white/5'}
           ${uploading ? 'pointer-events-none opacity-50' : ''}`}
             >
@@ -265,15 +252,15 @@ export default function ResumesPage() {
                 <div className="text-center">
                     {uploading ? (
                         <>
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-purple-400 animate-spin" />
                             </div>
                             <p className="text-white font-medium">Uploading...</p>
                         </>
                     ) : (
                         <>
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Upload className="w-8 h-8 text-purple-400" />
+                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Upload className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
                             </div>
                             <p className="text-white font-medium mb-2">
                                 {isDragActive ? 'Drop your resume here' : 'Drag & drop your resume'}
@@ -319,14 +306,15 @@ export default function ResumesPage() {
                                     <p className="text-white font-medium truncate">{resume.fileName}</p>
                                     <p className="text-gray-400 text-sm">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 md:gap-3">
                                     {getStatusBadge(resume.status)}
                                     {resume.status === 'PARSED' && (
                                         <button
                                             onClick={() => handleAnalyze(resume.id)}
                                             disabled={analyzing === resume.id}
-                                            className="p-2 rounded-lg hover:bg-purple-500/10 text-purple-400 transition-colors disabled:opacity-50"
+                                            className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-purple-500/10 text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center"
                                             title={`Analyze for ${targetRole}`}
+                                            aria-label="Analyze resume"
                                         >
                                             {analyzing === resume.id ? (
                                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -337,15 +325,17 @@ export default function ResumesPage() {
                                     )}
                                     <button
                                         onClick={() => handleView(resume)}
-                                        className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
                                         title="View"
+                                        aria-label="View resume"
                                     >
                                         <Eye className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(resume.id)}
-                                        className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
+                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
                                         title="Delete"
+                                        aria-label="Delete resume"
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>

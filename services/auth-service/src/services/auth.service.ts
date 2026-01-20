@@ -9,6 +9,7 @@ interface TokenPayload {
     id: string;
     email: string;
     role: string;
+    adminForInstitutionId?: string | null;
 }
 
 export class AuthService {
@@ -44,7 +45,12 @@ export class AuthService {
         });
 
         // Generate tokens
-        const tokens = await this.generateTokens({ id: user.id, email: user.email, role: user.role });
+        const tokens = await this.generateTokens({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            adminForInstitutionId: user.adminForInstitutionId
+        });
 
         // TODO: Send verification email
         logger.info(`Verification token for ${email}: ${verifyToken}`);
@@ -72,7 +78,12 @@ export class AuthService {
         }
 
         // Generate tokens
-        const tokens = await this.generateTokens({ id: user.id, email: user.email, role: user.role });
+        const tokens = await this.generateTokens({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            adminForInstitutionId: user.adminForInstitutionId
+        });
 
         return {
             user: this.sanitizeUser(user),
@@ -105,6 +116,7 @@ export class AuthService {
             id: storedToken.user.id,
             email: storedToken.user.email,
             role: storedToken.user.role,
+            adminForInstitutionId: storedToken.user.adminForInstitutionId
         });
 
         return tokens;

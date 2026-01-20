@@ -6,6 +6,7 @@ interface JwtPayload {
     id: string;
     email: string;
     role: string;
+    adminForInstitutionId?: string;
 }
 
 declare global {
@@ -54,5 +55,26 @@ export const adminMiddleware = async (
     if (req.user?.role !== 'ADMIN') {
         return next(createError('Admin access required', 403, 'FORBIDDEN'));
     }
+    next();
+};
+
+export const institutionAdminMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    console.log('🏫 [AdminService] Middleware Check');
+    console.log('   User Role:', req.user?.role);
+    console.log('   Institution ID:', req.user?.adminForInstitutionId);
+
+    if (req.user?.role !== 'INSTITUTION_ADMIN') {
+        console.log('❌ Role Mismatch');
+        return next(createError('Institution admin access required', 403, 'FORBIDDEN'));
+    }
+    if (!req.user?.adminForInstitutionId) {
+        console.log('❌ Missing Institution ID in Token');
+        return next(createError('No institution assigned to this admin', 403, 'NO_INSTITUTION'));
+    }
+    console.log('✅ Access Granted');
     next();
 };

@@ -1,13 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight, FileText, Zap, Mic, Rocket, Gem,
-    Check, Star, Users, TrendingUp, Award
+    Check, Star, Users, TrendingUp, Award, Menu, X
 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function HomePage() {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-[#0B0F19] dark-mode:bg-[#0B0F19] bg-grid overflow-hidden landing-page">
             {/* Navigation */}
@@ -15,15 +19,21 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center neon-purple">
-                                <span className="text-white font-bold text-sm">SC</span>
-                            </div>
+                            <Image
+                                src="/logo.png"
+                                alt="SmartCareerAI Logo"
+                                width={32}
+                                height={32}
+                                className="w-8 h-8 rounded-lg neon-purple"
+                            />
                             <span className="text-xl font-bold gradient-text">SmartCareerAI</span>
                         </div>
-                        <div className="flex items-center gap-4">
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden md:flex items-center gap-4">
                             <Link
                                 href="/pricing"
-                                className="text-gray-400 hover:text-white transition-colors hidden sm:block"
+                                className="text-gray-400 hover:text-white transition-colors"
                             >
                                 Pricing
                             </Link>
@@ -40,12 +50,58 @@ export default function HomePage() {
                                 Get Started
                             </Link>
                         </div>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="md:hidden p-2 rounded-lg hover:bg-white/10 text-gray-300 transition-colors"
+                            aria-label="Toggle menu"
+                        >
+                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
                     </div>
                 </div>
+
+                {/* Mobile Menu */}
+                <AnimatePresence>
+                    {mobileMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="md:hidden border-t border-white/10 bg-gray-900/95 backdrop-blur-lg"
+                        >
+                            <div className="px-4 py-4 space-y-3">
+                                <Link
+                                    href="/pricing"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="block px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    Pricing
+                                </Link>
+                                <Link
+                                    href="/login"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="block px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="block px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity text-center neon-purple"
+                                >
+                                    Get Started
+                                </Link>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4 relative">
+            <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4 relative">
                 {/* Background Glow */}
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-purple-500/20 rounded-full blur-[150px] pointer-events-none" />
 
@@ -63,7 +119,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-5xl md:text-7xl font-bold mb-6"
+                        className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6"
                     >
                         <span className="gradient-text">Your Career Journey,</span>
                         <br />
@@ -74,7 +130,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-xl text-gray-400 max-w-2xl mx-auto mb-10"
+                        className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10"
                     >
                         A gamified, step-by-step roadmap that guides you from resume optimization
                         to landing your dream job – powered by AI.
@@ -88,13 +144,13 @@ export default function HomePage() {
                     >
                         <Link
                             href="/register"
-                            className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg hover:opacity-90 transition-opacity flex items-center gap-2 neon-purple"
+                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 neon-purple"
                         >
                             Start Your Journey <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link
                             href="#roadmap"
-                            className="px-8 py-4 rounded-xl glass-card text-white font-semibold text-lg hover:border-purple-500/50 transition-colors"
+                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl glass-card text-white font-semibold text-base sm:text-lg hover:border-purple-500/50 transition-colors"
                         >
                             See the Roadmap
                         </Link>
@@ -124,7 +180,7 @@ export default function HomePage() {
             </section>
 
             {/* Career Roadmap Section */}
-            <section id="roadmap" className="py-24 px-4 relative">
+            <section id="roadmap" className="py-12 md:py-24 px-4 relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none" />
 
                 <div className="max-w-5xl mx-auto relative z-10">
@@ -134,10 +190,10 @@ export default function HomePage() {
                         viewport={{ once: true }}
                         className="text-center mb-16"
                     >
-                        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                             <span className="gradient-text">Your Career Mission</span>
                         </h2>
-                        <p className="text-gray-400 max-w-2xl mx-auto">
+                        <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto">
                             Follow the guided path or skip ahead – the choice is yours.
                             Each stage unlocks new AI-powered tools to accelerate your growth.
                         </p>
@@ -157,13 +213,14 @@ export default function HomePage() {
                                     whileInView={{ opacity: 1, x: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
                                     transition={{ delay: index * 0.1 }}
-                                    className={`relative flex items-center gap-8 md:gap-0 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                                    transition={{ delay: index * 0.1 }}
+                                    className={`relative flex flex-col-reverse md:items-center gap-6 md:gap-0 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
                                         }`}
                                 >
                                     {/* Content Card */}
                                     <div className={`flex-1 ${index % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16'}`}>
-                                        <div className="p-6 rounded-2xl glass-card hover:neon-purple transition-all group cursor-pointer">
-                                            <div className={`flex items-center gap-3 mb-3 ${index % 2 === 0 ? 'md:justify-end' : ''}`}>
+                                        <div className="p-6 rounded-2xl glass-card hover:neon-purple transition-all group cursor-pointer text-center md:text-left">
+                                            <div className={`flex items-center justify-center gap-3 mb-3 ${index % 2 === 0 ? 'md:justify-end' : 'md:justify-start'}`}>
                                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                                                     Stage {index + 1}
                                                 </span>
@@ -172,7 +229,7 @@ export default function HomePage() {
                                                 {stage.title}
                                             </h3>
                                             <p className="text-gray-400 mb-4">{stage.description}</p>
-                                            <div className={`flex flex-wrap gap-2 ${index % 2 === 0 ? 'md:justify-end' : ''}`}>
+                                            <div className={`flex flex-wrap justify-center gap-2 ${index % 2 === 0 ? 'md:justify-end' : 'md:justify-start'}`}>
                                                 {stage.tools.map((tool, i) => (
                                                     <span key={i} className="px-3 py-1 rounded-full bg-white/5 text-xs text-gray-300 border border-white/10">
                                                         {tool}
@@ -188,8 +245,8 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Mobile Icon */}
-                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 md:hidden">
-                                        <stage.icon className="w-7 h-7 text-white" />
+                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 md:hidden">
+                                        <stage.icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                                     </div>
 
                                     {/* Spacer for opposite side */}
@@ -202,7 +259,7 @@ export default function HomePage() {
             </section>
 
             {/* Features Grid */}
-            <section className="py-20 px-4">
+            <section className="py-12 md:py-20 px-4">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -240,7 +297,7 @@ export default function HomePage() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4">
+            <section className="py-12 md:py-20 px-4">
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}

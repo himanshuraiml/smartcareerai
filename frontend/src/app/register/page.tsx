@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Briefcase, ChevronRight, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -99,9 +100,13 @@ export default function RegisterPage() {
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center neon-purple">
-                            <span className="text-white font-bold">SC</span>
-                        </div>
+                        <Image
+                            src="/logo.png"
+                            alt="SmartCareerAI Logo"
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 rounded-xl"
+                        />
                         <span className="text-2xl font-bold gradient-text">SmartCareerAI</span>
                     </Link>
                 </div>
@@ -111,8 +116,8 @@ export default function RegisterPage() {
                     {[1, 2].map((s) => (
                         <div key={s} className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
-                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
-                                    : 'bg-white/10 text-gray-500'
+                                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
+                                : 'bg-white/10 text-gray-500'
                                 }`}>
                                 {step > s ? <Check className="w-4 h-4" /> : s}
                             </div>
@@ -256,8 +261,8 @@ export default function RegisterPage() {
                                                             type="button"
                                                             onClick={() => setFormData({ ...formData, targetJobRoleId: role.id })}
                                                             className={`p-3 rounded-lg text-left text-sm font-medium transition-all ${formData.targetJobRoleId === role.id
-                                                                    ? 'bg-purple-500/20 border border-purple-500/50 text-white'
-                                                                    : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                                                                ? 'bg-purple-500/20 border border-purple-500/50 text-white'
+                                                                : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
                                                                 }`}
                                                         >
                                                             {role.title}

@@ -19,6 +19,7 @@ import {
     Lock,
     Sparkles
 } from 'lucide-react';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
@@ -193,9 +194,13 @@ export default function DashboardLayout({
                     {/* Logo */}
                     <div className="p-6 flex items-center justify-between">
                         <Link href="/dashboard" className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">SC</span>
-                            </div>
+                            <Image
+                                src="/logo.png"
+                                alt="SmartCareerAI Logo"
+                                width={32}
+                                height={32}
+                                className="w-8 h-8 rounded-lg"
+                            />
                             <span className="text-lg font-bold gradient-text">SmartCareerAI</span>
                         </Link>
                         <button
@@ -308,7 +313,13 @@ export default function DashboardLayout({
                             <Menu className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-500"></div>
+                            <Image
+                                src="/logo.png"
+                                alt="SmartCareerAI Logo"
+                                width={24}
+                                height={24}
+                                className="w-6 h-6 rounded"
+                            />
                             <span className="font-bold gradient-text">SmartCareerAI</span>
                         </div>
                         <div className="w-6" />

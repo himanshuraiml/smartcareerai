@@ -264,8 +264,8 @@ export default function SkillsPage() {
                 </a>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-white/10 pb-2">
+            {/* Tabs - Desktop */}
+            <div className="hidden md:flex gap-2 border-b border-white/10 pb-2">
                 {[
                     { id: 'skills', label: 'My Skills', icon: Zap },
                     { id: 'gap', label: 'Gap Analysis', icon: Target },
@@ -284,6 +284,20 @@ export default function SkillsPage() {
                         {tab.label}
                     </button>
                 ))}
+            </div>
+
+            {/* Tabs - Mobile Dropdown */}
+            <div className="md:hidden">
+                <select
+                    value={activeTab}
+                    onChange={(e) => setActiveTab(e.target.value as any)}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-purple-500 focus:outline-none"
+                >
+                    <option value="skills" className="bg-gray-900">My Skills</option>
+                    <option value="gap" className="bg-gray-900">Gap Analysis</option>
+                    <option value="roadmap" className="bg-gray-900">Learning Roadmap</option>
+                    <option value="certifications" className="bg-gray-900">Certifications</option>
+                </select>
             </div>
 
             {/* Tab Content */}

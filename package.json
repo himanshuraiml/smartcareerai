@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "docker-compose up -d && npm run dev:services",
-    "dev:services": "concurrently \"npm run dev -w @smartcareer/api-gateway\" \"npm run dev -w @smartcareer/auth-service\" \"npm run dev -w @smartcareer/resume-service\" \"npm run dev -w @smartcareer/scoring-service\" \"npm run dev -w @smartcareer/skill-service\" \"npm run dev -w @smartcareer/job-service\" \"npm run dev -w @smartcareer/application-service\" \"npm run dev -w @smartcareer/interview-service\" \"npm run dev -w @smartcareer/validation-service\" \"npm run dev -w @smartcareer/billing-service\"",
+    "dev:services": "concurrently \"npm run dev -w @smartcareer/api-gateway\" \"npm run dev -w @smartcareer/auth-service\" \"npm run dev -w @smartcareer/resume-service\" \"npm run dev -w @smartcareer/scoring-service\" \"npm run dev -w @smartcareer/skill-service\" \"npm run dev -w @smartcareer/job-service\" \"npm run dev -w @smartcareer/application-service\" \"npm run dev -w @smartcareer/interview-service\" \"npm run dev -w @smartcareer/validation-service\" \"npm run dev -w @smartcareer/billing-service\" \"npm run dev -w @smartcareer/admin-service\"",
     "dev:frontend": "npm run dev -w frontend",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",

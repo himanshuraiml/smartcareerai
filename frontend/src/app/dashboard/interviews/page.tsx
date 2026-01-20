@@ -112,14 +112,14 @@ export default function InterviewsPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">AI Interviews</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">AI Interviews</h1>
                     <p className="text-gray-400 mt-1">Practice with AI-powered interview simulations</p>
                 </div>
                 <button
                     onClick={() => setShowNewModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition whitespace-nowrap"
                 >
                     <Plus className="w-4 h-4" />
                     New Interview
@@ -207,10 +207,10 @@ export default function InterviewsPage() {
                                         <Video className="w-6 h-6 text-purple-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-medium group-hover:text-purple-400 transition">
+                                        <h3 className="text-white font-medium group-hover:text-purple-400 transition line-clamp-2 md:line-clamp-none">
                                             {session.type} Interview - {session.targetRole}
                                         </h3>
-                                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-400">
                                             <span className="flex items-center gap-1">
                                                 <Target className="w-3 h-3" />
                                                 {session.difficulty}

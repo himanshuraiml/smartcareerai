@@ -257,23 +257,24 @@ export default function JobsPage() {
                                     : 'Find your next opportunity'}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <button
                                 onClick={() => fetchFromAggregator()}
-                                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 transition-colors"
+                                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-700 transition-colors whitespace-nowrap"
                             >
                                 Import Jobs
                             </button>
                             <button
                                 onClick={() => fetchPersonalizedJobs()}
                                 className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                aria-label="Refresh jobs"
                             >
                                 <RefreshCw className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSearch} className="flex gap-3">
+                    <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
@@ -284,20 +285,23 @@ export default function JobsPage() {
                                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
                             />
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`px-4 py-3 rounded-xl border transition-colors ${showFilters ? 'bg-purple-500/20 border-purple-500 text-purple-400' : 'border-white/10 text-gray-400 hover:text-white'
-                                }`}
-                        >
-                            <Filter className="w-5 h-5" />
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-                        >
-                            Search
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`px-4 py-3 rounded-xl border transition-colors ${showFilters ? 'bg-purple-500/20 border-purple-500 text-purple-400' : 'border-white/10 text-gray-400 hover:text-white'
+                                    }`}
+                                aria-label="Toggle filters"
+                            >
+                                <Filter className="w-5 h-5" />
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex-1 md:flex-none px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                            >
+                                Search
+                            </button>
+                        </div>
                     </form>
 
                     {/* Filters */}
@@ -357,15 +361,15 @@ export default function JobsPage() {
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <h3 className="text-white font-semibold">{job.title}</h3>
-                                        <div className="flex items-center gap-3 mt-1 text-gray-400 text-sm">
+                                        <h3 className="text-white font-semibold line-clamp-2">{job.title}</h3>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2 text-gray-400 text-sm">
                                             <span className="flex items-center gap-1">
-                                                <Building2 className="w-4 h-4" />
-                                                {job.company}
+                                                <Building2 className="w-4 h-4 flex-shrink-0" />
+                                                <span className="truncate">{job.company}</span>
                                             </span>
                                             <span className="flex items-center gap-1">
-                                                <MapPin className="w-4 h-4" />
-                                                {job.location}
+                                                <MapPin className="w-4 h-4 flex-shrink-0" />
+                                                <span className="truncate">{job.location}</span>
                                             </span>
                                         </div>
                                     </div>
