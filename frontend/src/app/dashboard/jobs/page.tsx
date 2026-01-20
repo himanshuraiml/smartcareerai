@@ -124,12 +124,18 @@ export default function JobsPage() {
         }
     }, [accessToken]);
 
-    // Fetch from external job aggregator based on user's target role
-    const fetchFromAggregator = useCallback(async () => {
+    // Fetch from external job aggregator based on user's target role or search query
+    const fetchFromAggregator = useCallback(async (query?: string) => {
         setLoading(true);
         try {
-            // Use personalized aggregate endpoint - fetches jobs based on user's target role
-            const response = await fetch(`${API_URL}/jobs/aggregate-for-me?limit=20`, {
+            let url = `${API_URL}/jobs/aggregate-for-me?limit=20`;
+
+            if (query) {
+                // Use general aggregate endpoint if search query is provided
+                url = `${API_URL}/jobs/aggregate?q=${encodeURIComponent(query)}&limit=20`;
+            }
+
+            const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
 

@@ -190,8 +190,8 @@ export class InterviewController {
             logger.info(`Processing video answer for session ${id}, question ${questionId}`);
 
             let answerText = '';
-            let audioMetrics = null;
-            let visualMetrics = null;
+            let audioMetrics: any = null;
+            let visualMetrics: any = null;
 
             if (transcript) {
                 // Client-side analysis path
@@ -228,7 +228,7 @@ export class InterviewController {
             }
 
             // Submit for evaluation
-            const result = await this.interviewService.submitAnswer(
+            const result = await interviewService.submitAnswer(
                 id,
                 userId,
                 questionId,

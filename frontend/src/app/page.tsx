@@ -213,9 +213,8 @@ export default function HomePage() {
                                     whileInView={{ opacity: 1, x: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
                                     transition={{ delay: index * 0.1 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className={`relative flex flex-col-reverse md:items-center gap-6 md:gap-0 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                                        }`}
+
+                                    className={`relative flex flex-col-reverse md:items-center gap-6 md:gap-0 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                                 >
                                     {/* Content Card */}
                                     <div className={`flex-1 ${index % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16'}`}>
