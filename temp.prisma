@@ -1,0 +1,474 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model applications {
+  id              String            @id
+  user_id         String
+  job_id          String
+  status          ApplicationStatus @default(SAVED)
+  applied_at      DateTime?
+  interview_date  DateTime?
+  notes           String?
+  resume_used     String?
+  cover_letter    String?
+  salary_expected Int?
+  created_at      DateTime          @default(now())
+  updated_at      DateTime
+  job_listings    job_listings      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  users           users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, job_id])
+}
+
+model ats_scores {
+  id                    String   @id
+  resume_id             String
+  user_id               String
+  job_role              String
+  job_description       String?
+  overall_score         Int
+  keyword_match_percent Float
+  formatting_score      Int
+  experience_score      Int
+  education_score       Int
+  matched_keywords      String[]
+  missing_keywords      String[]
+  formatting_issues     String[]
+  suggestions           String[]
+  raw_analysis          Json?
+  created_at            DateTime @default(now())
+  resumes               resumes  @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  users                 users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model courses {
+  id             String   @id
+  title          String
+  provider       String
+  url            String
+  duration_hours Int
+  difficulty     String
+  skill_id       String
+  rating         Float?   @default(0)
+  is_free        Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  skills         skills   @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+}
+
+model credit_transactions {
+  id               String          @id
+  user_id          String
+  credit_type      CreditType
+  amount           Int
+  transaction_type TransactionType
+  description      String?
+  reference_id     String?
+  created_at       DateTime        @default(now())
+  users            users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, credit_type])
+}
+
+model interview_questions {
+  id                 String             @id
+  session_id         String
+  question_text      String
+  question_type      String             @default("technical")
+  user_answer        String?
+  score              Int?
+  feedback           String?
+  order_index        Int                @default(0)
+  created_at         DateTime           @default(now())
+  interview_sessions interview_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
+}
+
+model interview_sessions {
+  id                  String                @id
+  user_id             String
+  type                InterviewType         @default(TECHNICAL)
+  target_role         String
+  difficulty          Difficulty            @default(MEDIUM)
+  status              InterviewStatus       @default(PENDING)
+  overall_score       Int?
+  feedback            String?
+  started_at          DateTime?
+  completed_at        DateTime?
+  created_at          DateTime              @default(now())
+  interview_questions interview_questions[]
+  users               users                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model job_listings {
+  id              String         @id
+  title           String
+  company         String
+  location        String
+  location_type   String         @default("onsite")
+  description     String
+  requirements    String[]
+  required_skills String[]
+  salary_min      Int?
+  salary_max      Int?
+  salary_currency String?        @default("USD")
+  experience_min  Int?
+  experience_max  Int?
+  source          String
+  source_url      String?
+  external_id     String?
+  posted_at       DateTime?
+  expires_at      DateTime?
+  is_active       Boolean        @default(true)
+  scraped_at      DateTime       @default(now())
+  created_at      DateTime       @default(now())
+  applications    applications[]
+
+  @@unique([source, external_id])
+  @@index([location])
+  @@index([title, company])
+}
+
+model job_role_cache {
+  id                  String    @id
+  job_role_id         String    @unique
+  certifications      Json
+  course_suggestions  Json
+  interview_questions Json?
+  generated_at        DateTime  @default(now())
+  expires_at          DateTime
+  job_roles           job_roles @relation(fields: [job_role_id], references: [id], onDelete: Cascade)
+}
+
+model job_roles {
+  id               String          @id
+  title            String          @unique
+  category         String
+  required_skills  String[]
+  preferred_skills String[]
+  keywords         String[]
+  is_active        Boolean         @default(true)
+  created_at       DateTime        @default(now())
+  job_role_cache   job_role_cache?
+  users            users[]
+}
+
+model messages {
+  id                                String   @id
+  sender_id                         String
+  receiver_id                       String
+  content                           String
+  is_read                           Boolean  @default(false)
+  created_at                        DateTime @default(now())
+  users_messages_receiver_idTousers users    @relation("messages_receiver_idTousers", fields: [receiver_id], references: [id], onDelete: Cascade)
+  users_messages_sender_idTousers   users    @relation("messages_sender_idTousers", fields: [sender_id], references: [id], onDelete: Cascade)
+}
+
+model recruiter_jobs {
+  id              String     @id
+  recruiter_id    String
+  title           String
+  description     String
+  requirements    String[]
+  required_skills String[]
+  location        String
+  location_type   String     @default("onsite")
+  salary_min      Int?
+  salary_max      Int?
+  experience_min  Int?
+  experience_max  Int?
+  is_active       Boolean    @default(true)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime
+  recruiters      recruiters @relation(fields: [recruiter_id], references: [id], onDelete: Cascade)
+}
+
+model recruiters {
+  id               String             @id
+  user_id          String             @unique
+  company_name     String
+  company_logo     String?
+  company_size     String?
+  industry         String?
+  website          String?
+  location         String?
+  is_verified      Boolean            @default(false)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime
+  recruiter_jobs   recruiter_jobs[]
+  users            users              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  saved_candidates saved_candidates[]
+}
+
+model refresh_tokens {
+  id         String   @id
+  user_id    String
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model resumes {
+  id          String       @id
+  user_id     String
+  file_name   String
+  file_url    String
+  file_size   Int
+  mime_type   String
+  parsed_text String?
+  status      ResumeStatus @default(PENDING)
+  is_active   Boolean      @default(true)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime
+  ats_scores  ats_scores[]
+  users       users        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model saved_candidates {
+  id           String     @id
+  recruiter_id String
+  candidate_id String
+  notes        String?
+  tags         String[]
+  status       String     @default("saved")
+  saved_at     DateTime   @default(now())
+  recruiters   recruiters @relation(fields: [recruiter_id], references: [id], onDelete: Cascade)
+
+  @@unique([recruiter_id, candidate_id])
+}
+
+model skill_badges {
+  id              String         @id
+  user_id         String
+  skill_id        String
+  badge_type      BadgeType      @default(VERIFIED)
+  test_attempt_id String?        @unique
+  issued_at       DateTime       @default(now())
+  expires_at      DateTime?
+  skills          skills         @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+  test_attempts   test_attempts? @relation(fields: [test_attempt_id], references: [id])
+  users           users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, skill_id])
+}
+
+model skill_tests {
+  id               String           @id
+  skill_id         String
+  title            String
+  description      String?
+  difficulty       Difficulty       @default(MEDIUM)
+  duration_minutes Int              @default(30)
+  passing_score    Int              @default(70)
+  questions_count  Int              @default(10)
+  is_active        Boolean          @default(true)
+  created_at       DateTime         @default(now())
+  skills           skills           @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+  test_attempts    test_attempts[]
+  test_questions   test_questions[]
+}
+
+model skills {
+  id           String         @id
+  name         String         @unique
+  category     String
+  demand_score Int            @default(50)
+  is_active    Boolean        @default(true)
+  created_at   DateTime       @default(now())
+  courses      courses[]
+  skill_badges skill_badges[]
+  skill_tests  skill_tests[]
+  user_skills  user_skills[]
+}
+
+model subscription_plans {
+  id                 String               @id
+  name               String               @unique
+  display_name       String
+  price_monthly      Decimal              @db.Decimal(10, 2)
+  price_yearly       Decimal              @db.Decimal(10, 2)
+  features           Json
+  razorpay_plan_id   String?
+  is_active          Boolean              @default(true)
+  sort_order         Int                  @default(0)
+  created_at         DateTime             @default(now())
+  user_subscriptions user_subscriptions[]
+}
+
+model test_attempts {
+  id           String        @id
+  user_id      String
+  test_id      String
+  score        Int?
+  passed       Boolean?
+  answers      Json?
+  started_at   DateTime      @default(now())
+  completed_at DateTime?
+  skill_badges skill_badges?
+  skill_tests  skill_tests   @relation(fields: [test_id], references: [id], onDelete: Cascade)
+  users        users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model test_questions {
+  id             String      @id
+  test_id        String
+  question_text  String
+  question_type  String      @default("mcq")
+  options        Json
+  correct_answer String
+  explanation    String?
+  points         Int         @default(1)
+  order_index    Int         @default(0)
+  skill_tests    skill_tests @relation(fields: [test_id], references: [id], onDelete: Cascade)
+}
+
+model user_credits {
+  id          String     @id
+  user_id     String
+  credit_type CreditType
+  balance     Int        @default(0)
+  updated_at  DateTime
+  users       users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, credit_type])
+}
+
+model user_skills {
+  id                String   @id
+  user_id           String
+  skill_id          String
+  proficiency_level String
+  source            String
+  is_verified       Boolean  @default(false)
+  created_at        DateTime @default(now())
+  updated_at        DateTime
+  skills            skills   @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+  users             users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, skill_id])
+}
+
+model user_subscriptions {
+  id                       String             @id
+  user_id                  String             @unique
+  plan_id                  String
+  razorpay_customer_id     String?
+  razorpay_subscription_id String?
+  status                   SubscriptionStatus @default(ACTIVE)
+  current_period_start     DateTime
+  current_period_end       DateTime
+  cancel_at_period_end     Boolean            @default(false)
+  created_at               DateTime           @default(now())
+  updated_at               DateTime
+  subscription_plans       subscription_plans @relation(fields: [plan_id], references: [id])
+  users                    users              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                                   String                @id
+  email                                String                @unique
+  password_hash                        String
+  name                                 String?
+  avatar_url                           String?
+  is_verified                          Boolean               @default(false)
+  verify_token                         String?
+  reset_token                          String?
+  reset_expires                        DateTime?
+  created_at                           DateTime              @default(now())
+  updated_at                           DateTime
+  role                                 UserRole              @default(USER)
+  target_job_role_id                   String?
+  applications                         applications[]
+  ats_scores                           ats_scores[]
+  credit_transactions                  credit_transactions[]
+  interview_sessions                   interview_sessions[]
+  messages_messages_receiver_idTousers messages[]            @relation("messages_receiver_idTousers")
+  messages_messages_sender_idTousers   messages[]            @relation("messages_sender_idTousers")
+  recruiters                           recruiters?
+  refresh_tokens                       refresh_tokens[]
+  resumes                              resumes[]
+  skill_badges                         skill_badges[]
+  test_attempts                        test_attempts[]
+  user_credits                         user_credits[]
+  user_skills                          user_skills[]
+  user_subscriptions                   user_subscriptions?
+  job_roles                            job_roles?            @relation(fields: [target_job_role_id], references: [id])
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum BadgeType {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+  VERIFIED
+}
+
+enum CreditType {
+  RESUME_REVIEW
+  AI_INTERVIEW
+  SKILL_TEST
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum InterviewStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewType {
+  TECHNICAL
+  BEHAVIORAL
+  HR
+  MIXED
+}
+
+enum ResumeStatus {
+  PENDING
+  PARSING
+  PARSED
+  FAILED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  HALTED
+  PAUSED
+}
+
+enum TransactionType {
+  PURCHASE
+  CONSUME
+  GRANT
+  REFUND
+}
+
+enum UserRole {
+  USER
+  RECRUITER
+  ADMIN
+}
