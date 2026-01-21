@@ -50,6 +50,39 @@ async function main() {
     });
     console.log(`✅ Seeded Recruiter User: ${recruiter.id}`);
 
+    // Seed Institution and Institution Admin
+    const instAdminPassword = await bcrypt.hash('InstAdmin123!', 12);
+
+    // Create Institution
+    const institution = await prisma.institution.upsert({
+        where: { domain: 'stanford.edu' },
+        update: {},
+        create: {
+            name: 'Stanford University',
+            domain: 'stanford.edu',
+            address: '450 Serra Mall, Stanford, CA 94305',
+            logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Seal_of_Leland_Stanford_Junior_University.svg/1200px-Seal_of_Leland_Stanford_Junior_University.svg.png'
+        }
+    });
+
+    const instAdmin = await prisma.user.upsert({
+        where: { email: 'admin@stanford.edu' },
+        update: {
+            role: 'INSTITUTION_ADMIN',
+            passwordHash: instAdminPassword,
+            adminForInstitutionId: institution.id
+        },
+        create: {
+            email: 'admin@stanford.edu',
+            passwordHash: instAdminPassword,
+            name: 'Stanford Admin',
+            role: 'INSTITUTION_ADMIN',
+            isVerified: true,
+            adminForInstitutionId: institution.id
+        },
+    });
+    console.log(`✅ Seeded Institution Admin: ${instAdmin.id}`);
+
     // Seed job roles
     const jobRoles = [
         {

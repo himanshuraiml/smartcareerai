@@ -10,7 +10,8 @@
         "generate": "prisma generate",
         "seed": "ts-node prisma/seed.ts",
         "start": "prisma migrate deploy",
-        "studio": "prisma studio"
+        "studio": "prisma studio",
+        "test": "jest"
     },
     "prisma": {
         "seed": "ts-node prisma/seed.ts"
