@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, Mic, MicOff, Video, VideoOff, Square, Loader2,
-    Lightbulb, MessageSquare, ChevronRight
+    Lightbulb, MessageSquare, ChevronRight, Monitor, Camera, AlertTriangle, CheckCircle, Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useFaceAnalysis } from '@/hooks/use-face-analysis';
+import { useProctoring } from '@/hooks/useProctoring';
+
 
 interface Question {
     id: string;
@@ -73,6 +75,14 @@ export default function InterviewRoomPage() {
     const [speechPacing, setSpeechPacing] = useState<{ wpm: number; label: string }>({ wpm: 0, label: 'Ready' });
     const [isMuted, setIsMuted] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
+
+    // Proctoring state
+    const [showProctoringModal, setShowProctoringModal] = useState(true);
+    const [screenShareError, setScreenShareError] = useState<string | null>(null);
+    const [agreedToGuidelines, setAgreedToGuidelines] = useState(false);
+
+    // Proctoring hook
+    const { state: proctoringState, controls: proctoringControls, allRequirementsMet } = useProctoring();
 
     // Select a random AI interviewer
     const [interviewer] = useState(() => AI_INTERVIEWERS[Math.floor(Math.random() * AI_INTERVIEWERS.length)]);
@@ -363,8 +373,182 @@ export default function InterviewRoomPage() {
     const currentQuestion = session.questions[currentQuestionIndex];
     const progress = analytics?.progress || { current: currentQuestionIndex + 1, total: session.questions.length, answered: 0 };
 
+    // Handle screen share request with entire screen detection
+    const handleRequestScreenShare = async () => {
+        setScreenShareError(null);
+        const success = await proctoringControls.requestScreenShare();
+        if (!success) {
+            setScreenShareError('Please select "Entire Screen" to continue. Window or tab sharing is not allowed.');
+        }
+    };
+
+    // Start interview after all permissions granted
+    const handleStartInterview = async () => {
+        if (allRequirementsMet && agreedToGuidelines) {
+            await proctoringControls.enterFullscreen();
+            setShowProctoringModal(false);
+        }
+    };
+
+    // Handle interview end with fullscreen exit
+    const handleEndInterview = async () => {
+        await proctoringControls.exitFullscreen();
+        proctoringControls.stopAllStreams();
+        await endSession();
+    };
+
     return (
         <div className="min-h-screen -m-6 lg:-m-8 bg-gray-50 dark:bg-[#0a0f14]">
+            {/* Proctoring Modal */}
+            {showProctoringModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 rounded-2xl p-6 max-w-xl w-full border border-white/10 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <Shield className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Start Assessment: {session?.targetRole}</h2>
+                                <p className="text-gray-400 text-sm">Complete the checklist to begin</p>
+                            </div>
+                        </div>
+
+                        {/* Interview Info */}
+                        <div className="flex gap-3 mb-6">
+                            <div className="px-3 py-1.5 rounded-lg bg-gray-800 border border-white/10 text-gray-300 text-sm">
+                                ⏱ 20 Minutes
+                            </div>
+                            <div className="px-3 py-1.5 rounded-lg bg-gray-800 border border-white/10 text-gray-300 text-sm">
+                                📝 {session?.questions.length || 10} Questions
+                            </div>
+                            <div className="px-3 py-1.5 rounded-lg bg-gray-800 border border-white/10 text-gray-300 text-sm">
+                                ⚡ 1 Attempt
+                            </div>
+                        </div>
+
+                        {/* Proctoring Guidelines */}
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                                <h3 className="text-amber-400 font-medium">Important Proctoring Guidelines</h3>
+                            </div>
+                            <ul className="space-y-2 text-gray-300 text-sm">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-gray-500">•</span>
+                                    Switching off the camera or changing tabs/windows during assessment is <strong className="text-white">not allowed</strong>.
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-gray-500">•</span>
+                                    <strong className="text-white">Stay on Camera:</strong> Keep your webcam and mic on throughout the interview.
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-gray-500">•</span>
+                                    <strong className="text-white">Screen Recording:</strong> Your screen will be monitored. Please close unnecessary tabs/apps.
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-gray-500">•</span>
+                                    <strong className="text-white">Stay Present:</strong> Always remain visible and focused on the screen.
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Permission Checklist */}
+                        <div className="mb-6 p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                            <h3 className="text-white font-medium mb-4">System Requirements</h3>
+                            <div className="space-y-3">
+                                {/* Camera */}
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <Camera className={`w-5 h-5 ${proctoringState.cameraAllowed ? 'text-green-400' : 'text-gray-400'}`} />
+                                        <span className="text-gray-300">Camera Access</span>
+                                    </div>
+                                    {proctoringState.cameraAllowed ? (
+                                        <CheckCircle className="w-5 h-5 text-green-400" />
+                                    ) : (
+                                        <button
+                                            onClick={proctoringControls.requestCamera}
+                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                        >
+                                            Grant
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Microphone */}
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <Mic className={`w-5 h-5 ${proctoringState.micAllowed ? 'text-green-400' : 'text-gray-400'}`} />
+                                        <span className="text-gray-300">Microphone Access</span>
+                                    </div>
+                                    {proctoringState.micAllowed ? (
+                                        <CheckCircle className="w-5 h-5 text-green-400" />
+                                    ) : (
+                                        <button
+                                            onClick={proctoringControls.requestMic}
+                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                        >
+                                            Grant
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Screen Share */}
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <Monitor className={`w-5 h-5 ${proctoringState.isEntireScreen ? 'text-green-400' : 'text-gray-400'}`} />
+                                        <div>
+                                            <span className="text-gray-300">Entire Screen Share</span>
+                                            {screenShareError && (
+                                                <p className="text-red-400 text-xs mt-1">{screenShareError}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {proctoringState.isEntireScreen ? (
+                                        <CheckCircle className="w-5 h-5 text-green-400" />
+                                    ) : (
+                                        <button
+                                            onClick={handleRequestScreenShare}
+                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                        >
+                                            Share Screen
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Agreement Checkbox */}
+                        <label className="flex items-center gap-3 mb-6 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={agreedToGuidelines}
+                                onChange={(e) => setAgreedToGuidelines(e.target.checked)}
+                                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-900"
+                            />
+                            <span className="text-gray-300 text-sm">
+                                I have read and understood all the instructions and guidelines.
+                            </span>
+                        </label>
+
+                        {/* Start Button */}
+                        <button
+                            onClick={handleStartInterview}
+                            disabled={!allRequirementsMet || !agreedToGuidelines}
+                            className="w-full py-3 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Proceed to Interview
+                        </button>
+
+                        {/* Violation Counter (if any) */}
+                        {proctoringState.violations > 0 && (
+                            <p className="text-red-400 text-sm mt-4 text-center">
+                                ⚠️ {proctoringState.violations} violation(s) detected
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-4">
@@ -394,7 +578,7 @@ export default function InterviewRoomPage() {
 
                     {/* End Session */}
                     <button
-                        onClick={endSession}
+                        onClick={handleEndInterview}
                         className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition"
                     >
                         End Session

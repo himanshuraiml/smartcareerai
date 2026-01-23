@@ -654,3 +654,48 @@ model Message {
 
   @@map("messages")
 }
+
+// ============================================
+// EMAIL TRACKING
+// ============================================
+
+model EmailConnection {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  email        String
+  accessToken  String    @map("access_token") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  tokenExpiry  DateTime? @map("token_expiry")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSyncAt   DateTime? @map("last_sync_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("email_connections")
+}
+
+model TrackedEmail {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  messageId   String           @map("message_id")
+  subject     String
+  sender      String
+  snippet     String?          @db.Text
+  type        TrackedEmailType @default(OTHER)
+  companyName String?          @map("company_name")
+  receivedAt  DateTime         @map("received_at")
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@unique([userId, messageId])
+  @@map("tracked_emails")
+}
+
+enum TrackedEmailType {
+  APPLICATION_RECEIVED
+  INTERVIEW
+  OFFER
+  REJECTION
+  UPDATE
+  OTHER
+}

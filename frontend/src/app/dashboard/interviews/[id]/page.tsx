@@ -382,69 +382,306 @@ export default function InterviewRoomPage() {
         );
     }
 
-    // Completed interview view
+    // Completed interview view - Rich Feedback UI
     if (session.status === 'COMPLETED') {
+        // State for question tabs
+        const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
+
+        // Calculate metrics from session data
+        const avgScore = session.questions.reduce((sum, q) => sum + (q.score || 0), 0) / session.questions.length;
+
+        // Verbal fluency data for radar chart
+        const verbalFluencyData = [75, 68, 72, 80, 65]; // pace, tone, fluency, pauses, words
+        const verbalFluencyLabels = ['pace', 'tone', 'fluency', 'pause', 'words'];
+
+        // Content relevance data for bar chart
+        const contentRelevanceData = session.questions.map(q => q.score || 0);
+        const contentRelevanceLabels = session.questions.map((_, i) => `Q${i + 1}`);
+
         return (
             <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard/interviews" className="text-gray-400 hover:text-white">
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">Interview Results</h1>
-                        <p className="text-gray-400">{session.type} Interview - {session.targetRole}</p>
-                    </div>
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
+                    <span>›</span>
+                    <Link href="/dashboard/interviews" className="hover:text-white">My Interviews</Link>
+                    <span>›</span>
+                    <span className="text-white">{session.targetRole}</span>
                 </div>
 
-                {/* Score Card */}
-                <div className="p-8 rounded-2xl glass text-center">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
-                        <Award className="w-12 h-12 text-purple-400" />
-                    </div>
-                    <p className={`text-5xl font-bold ${getScoreColor(session.overallScore || 0)}`}>
-                        {session.overallScore}%
-                    </p>
-                    <p className="text-gray-400 mt-2">Overall Score</p>
-                </div>
+                {/* Performance Breakdown */}
+                <div className="p-6 rounded-2xl glass">
+                    <h2 className="text-xl font-bold text-white mb-2">Performance Breakdown</h2>
+                    <p className="text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
 
-                {/* Feedback */}
-                {session.feedback && (
-                    <div className="p-6 rounded-xl glass">
-                        <h3 className="text-lg font-semibold text-white mb-3">Overall Feedback</h3>
-                        <p className="text-gray-300 whitespace-pre-line">{session.feedback}</p>
-                    </div>
-                )}
-
-                {/* Question Results */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-white">Question Breakdown</h3>
-                    {session.questions.map((q, index) => (
-                        <div key={q.id} className="p-6 rounded-xl glass">
-                            <div className="flex items-start justify-between mb-3">
-                                <span className="text-purple-400 font-medium">Q{index + 1}</span>
-                                {q.score !== null && (
-                                    <span className={`font-bold ${getScoreColor(q.score)}`}>
-                                        {q.score}/100
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-white mb-3">{q.questionText}</p>
-                            {q.userAnswer && (
-                                <div className="p-3 rounded-lg bg-white/5 mb-3">
-                                    <p className="text-gray-400 text-sm mb-1">Your Answer:</p>
-                                    <p className="text-gray-300">{q.userAnswer}</p>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Score Card */}
+                        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/20">
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="relative">
+                                    <div className="w-32 h-32 rounded-full border-8 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                                        <span className={`text-4xl font-bold ${getScoreColor(session.overallScore || 0)}`}>
+                                            {session.overallScore || 0}/100
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
-                            {q.feedback && (
-                                <div className="p-3 rounded-lg bg-purple-500/10">
-                                    <p className="text-purple-400 text-sm mb-1">Feedback:</p>
-                                    <p className="text-gray-300">{q.feedback}</p>
+                            </div>
+                            <p className="text-center text-teal-400 font-medium">
+                                {(session.overallScore || 0) >= 80 ? 'Excellent' : (session.overallScore || 0) >= 60 ? 'Good' : 'Needs Improvement'}
+                            </p>
+                            <p className="text-center text-gray-500 text-sm mt-1">Foundation builder ⓘ</p>
+                        </div>
+
+                        {/* Recruiter Perspective & Knowledge */}
+                        <div className="lg:col-span-2 space-y-4">
+                            <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                                <h3 className="text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
+                                <p className="text-gray-400 text-sm">
+                                    {session.feedback || 'Complete the interview to receive detailed feedback.'}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                                    <h3 className="text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
+                                    <p className="text-gray-400 text-sm">
+                                        Average technical score: {Math.round(avgScore)}%
+                                    </p>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                                    <h3 className="text-white font-medium mb-2">Areas of Improvement</h3>
+                                    <ul className="text-gray-400 text-sm space-y-1">
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-teal-400">•</span>
+                                            Provide more detailed answers
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-teal-400">•</span>
+                                            Focus on clarity and depth
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Analytics Section */}
+                <div className="p-6 rounded-2xl glass">
+                    <h2 className="text-lg font-bold text-white mb-6">An in-depth look at your mock interview performance metrics.</h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Content Relevance Score */}
+                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                            <h3 className="text-white font-medium mb-2">Content Relevance Score per Question</h3>
+                            <p className="text-gray-500 text-xs mb-4">Answer quality and topic alignment rating</p>
+                            <div className="space-y-2">
+                                {session.questions.map((q, i) => (
+                                    <div key={q.id} className="flex items-center gap-2">
+                                        <span className="text-gray-400 text-xs w-6">Q{i + 1}</span>
+                                        <div className="flex-1 h-4 bg-gray-900 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-teal-500 rounded-full"
+                                                style={{ width: `${(q.score || 0)}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-white text-xs w-8 text-right">{q.score || 0}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Verbal Fluency Index - Radar */}
+                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                            <h3 className="text-white font-medium mb-2">Verbal Fluency Index</h3>
+                            <p className="text-gray-500 text-xs mb-4">Multi-dimensional speech quality analysis</p>
+                            <div className="aspect-square max-w-[200px] mx-auto">
+                                <svg viewBox="0 0 200 200" className="w-full h-full">
+                                    {/* Grid */}
+                                    {[20, 40, 60, 80, 100].map((level) => (
+                                        <polygon
+                                            key={level}
+                                            points={verbalFluencyLabels.map((_, i) => {
+                                                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                                const r = (level / 100) * 70;
+                                                return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
+                                            }).join(' ')}
+                                            fill="none"
+                                            stroke="#1a2530"
+                                            strokeWidth="1"
+                                        />
+                                    ))}
+                                    {/* Data */}
+                                    <polygon
+                                        points={verbalFluencyData.map((value, i) => {
+                                            const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                            const r = (value / 100) * 70;
+                                            return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
+                                        }).join(' ')}
+                                        fill="rgba(20, 184, 166, 0.2)"
+                                        stroke="#14b8a6"
+                                        strokeWidth="2"
+                                    />
+                                    {/* Labels */}
+                                    {verbalFluencyLabels.map((label, i) => {
+                                        const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                        const r = 90;
+                                        return (
+                                            <text
+                                                key={i}
+                                                x={100 + r * Math.cos(angle)}
+                                                y={100 + r * Math.sin(angle)}
+                                                fill="#9ca3af"
+                                                fontSize="10"
+                                                textAnchor="middle"
+                                                dominantBaseline="middle"
+                                            >
+                                                {label}
+                                            </text>
+                                        );
+                                    })}
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Confidence & Clarity Index - Gauge */}
+                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                            <h3 className="text-white font-medium mb-2">Confidence & Clarity Index</h3>
+                            <p className="text-gray-500 text-xs mb-4">Overall communication effectiveness score</p>
+                            <div className="relative aspect-[2/1] max-w-[200px] mx-auto">
+                                <svg viewBox="0 0 200 100" className="w-full h-full">
+                                    <path
+                                        d="M 20 100 A 80 80 0 0 1 180 100"
+                                        fill="none"
+                                        stroke="#1a2530"
+                                        strokeWidth="12"
+                                        strokeLinecap="round"
+                                    />
+                                    <path
+                                        d="M 20 100 A 80 80 0 0 1 180 100"
+                                        fill="none"
+                                        stroke="#14b8a6"
+                                        strokeWidth="12"
+                                        strokeLinecap="round"
+                                        strokeDasharray={`${((session.overallScore || 0) / 100) * 251.2} 251.2`}
+                                    />
+                                    <circle cx="180" cy="100" r="8" fill="#14b8a6" />
+                                </svg>
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                                    <p className="text-3xl font-bold text-white">{session.overallScore || 0}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Question-wise Feedback */}
+                <div className="p-6 rounded-2xl glass">
+                    <h2 className="text-xl font-bold text-white mb-2">Question wise feedback</h2>
+                    <p className="text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
+
+                    {/* Question Tabs */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                        {session.questions.map((q, i) => (
+                            <button
+                                key={q.id}
+                                onClick={() => setSelectedQuestionIndex(i)}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedQuestionIndex
+                                        ? 'bg-teal-500 text-white'
+                                        : q.userAnswer
+                                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            : 'bg-gray-800/50 text-gray-500'
+                                    }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Selected Question Content */}
+                    {session.questions[selectedQuestionIndex] && (
+                        <div className="space-y-6">
+                            {/* Question */}
+                            <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                                <p className="text-white font-medium">{session.questions[selectedQuestionIndex].questionText}</p>
+                            </div>
+
+                            {/* Skills Badge - Mock data */}
+                            <div>
+                                <p className="text-gray-400 text-sm mb-2">Skill Assessed</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        problem solving
+                                    </span>
+                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        communication
+                                    </span>
+                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        technical knowledge
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Your Answer */}
+                            <div>
+                                <p className="text-gray-400 text-sm mb-2">Your Answer</p>
+                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
+                                    <p className="text-gray-300">
+                                        {session.questions[selectedQuestionIndex].userAnswer || 'No answer recorded'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Ideal Answer */}
+                            <div>
+                                <p className="text-gray-400 text-sm mb-2">Ideal Answer</p>
+                                <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/20">
+                                    <p className="text-gray-300">
+                                        A well-structured response would include specific examples, demonstrate clear problem-solving methodology, and show awareness of best practices in the field.
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                            ✓ clear structure
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                            ✓ examples
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Verbal Fluency Metrics */}
+                            <div>
+                                <p className="text-gray-400 text-sm mb-3">Verbal Fluency</p>
+                                <div className="grid grid-cols-5 gap-3">
+                                    {['Pace', 'Tone', 'Fluency', 'Pauses', 'Filler Words'].map((label, i) => (
+                                        <div key={label} className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
+                                            <p className="text-gray-400 text-xs mb-1">{label}</p>
+                                            <p className="text-xl font-bold text-white">{[72, 68, 75, 80, 65][i]}</p>
+                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                                <div
+                                                    className="h-full bg-teal-500 rounded-full"
+                                                    style={{ width: `${[72, 68, 75, 80, 65][i]}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Feedback */}
+                            {session.questions[selectedQuestionIndex].feedback && (
+                                <div>
+                                    <p className="text-gray-400 text-sm mb-2">How can You Improve?</p>
+                                    <p className="text-gray-300 text-sm">{session.questions[selectedQuestionIndex].feedback}</p>
                                 </div>
                             )}
                         </div>
-                    ))}
+                    )}
                 </div>
 
+                {/* Action Buttons */}
                 <div className="flex gap-4">
                     <Link
                         href="/dashboard/interviews"

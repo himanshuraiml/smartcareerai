@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Outfit } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { OnboardingProvider } from '@/components/onboarding/OnboardingTour';
 import KeyboardShortcuts from '@/components/keyboard/KeyboardShortcuts';
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
     title: 'SmartCareerAI - AI-Powered Career Platform',
@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className="dark dark-mode">
-            <body className={inter.className}>
+            <body className={outfit.className}>
                 <ThemeProvider>
                     <OnboardingProvider>
                         {children}

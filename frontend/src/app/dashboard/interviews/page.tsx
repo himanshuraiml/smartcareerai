@@ -260,18 +260,85 @@ export default function InterviewsPage() {
                                 </div>
                             </div>
 
+                            {/* Interview Type Selection - 3 Cards */}
                             <div>
-                                <label className="block text-gray-400 text-sm mb-2">Interview Type</label>
-                                <select
-                                    value={newSession.type}
-                                    onChange={(e) => setNewSession({ ...newSession, type: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-purple-500 [&>option]:bg-gray-800 [&>option]:text-white"
-                                >
-                                    <option value="TECHNICAL">Technical</option>
-                                    <option value="BEHAVIORAL">Behavioral</option>
-                                    <option value="HR">HR</option>
-                                    <option value="MIXED">Mixed</option>
-                                </select>
+                                <label className="block text-gray-400 text-sm mb-3">Select Interview Type</label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {/* HR + Technical (Mixed) */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewSession({ ...newSession, type: 'MIXED' })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'MIXED'
+                                                ? 'border-purple-500 bg-purple-500/10'
+                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'MIXED' ? 'bg-purple-500/20' : 'bg-gray-700'
+                                                }`}>
+                                                <Video className={`w-5 h-5 ${newSession.type === 'MIXED' ? 'text-purple-400' : 'text-gray-400'}`} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-white font-medium">HR + Technical</h4>
+                                                <p className="text-gray-400 text-sm mt-0.5">Complete interview with behavioral and technical questions</p>
+                                                <span className="text-xs text-gray-500 mt-1 inline-block">~12 questions</span>
+                                            </div>
+                                            {newSession.type === 'MIXED' && (
+                                                <CheckCircle className="w-5 h-5 text-purple-400" />
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {/* Technical Only */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewSession({ ...newSession, type: 'TECHNICAL' })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'TECHNICAL'
+                                                ? 'border-blue-500 bg-blue-500/10'
+                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'TECHNICAL' ? 'bg-blue-500/20' : 'bg-gray-700'
+                                                }`}>
+                                                <Target className={`w-5 h-5 ${newSession.type === 'TECHNICAL' ? 'text-blue-400' : 'text-gray-400'}`} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-white font-medium">Technical Only</h4>
+                                                <p className="text-gray-400 text-sm mt-0.5">Coding, system design, and technical problem-solving</p>
+                                                <span className="text-xs text-gray-500 mt-1 inline-block">~8 questions</span>
+                                            </div>
+                                            {newSession.type === 'TECHNICAL' && (
+                                                <CheckCircle className="w-5 h-5 text-blue-400" />
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {/* HR / Behavioral */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewSession({ ...newSession, type: 'BEHAVIORAL' })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'BEHAVIORAL'
+                                                ? 'border-green-500 bg-green-500/10'
+                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'BEHAVIORAL' ? 'bg-green-500/20' : 'bg-gray-700'
+                                                }`}>
+                                                <MessageSquare className={`w-5 h-5 ${newSession.type === 'BEHAVIORAL' ? 'text-green-400' : 'text-gray-400'}`} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-white font-medium">HR / Behavioral</h4>
+                                                <p className="text-gray-400 text-sm mt-0.5">STAR-based behavioral questions and soft skills</p>
+                                                <span className="text-xs text-gray-500 mt-1 inline-block">~8 questions</span>
+                                            </div>
+                                            {newSession.type === 'BEHAVIORAL' && (
+                                                <CheckCircle className="w-5 h-5 text-green-400" />
+                                            )}
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
 
                             <div>

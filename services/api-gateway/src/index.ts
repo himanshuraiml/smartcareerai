@@ -240,6 +240,14 @@ app.use(
     createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/recruiter`]: '' }))
 );
 
+const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:3013';
+
+// Email Tracking Service Routes
+app.use(
+    `${API_PREFIX}/email`,
+    createProxyMiddleware(createProxyOptions(EMAIL_SERVICE_URL, { [`^${API_PREFIX}/email`]: '' }))
+);
+
 // JSON parsing for non-proxy routes
 app.use(express.json());
 
@@ -267,6 +275,7 @@ app.listen(PORT, () => {
     logger.info(`💳 Billing Service: ${BILLING_SERVICE_URL}`);
     logger.info(`👑 Admin Service: ${ADMIN_SERVICE_URL}`);
     logger.info(`🏢 Recruiter Service: ${RECRUITER_SERVICE_URL}`);
+    logger.info(`📧 Email Tracking Service: ${EMAIL_SERVICE_URL}`);
 });
 
 export default app;
