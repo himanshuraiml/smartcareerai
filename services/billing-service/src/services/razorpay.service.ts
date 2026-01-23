@@ -42,7 +42,7 @@ export interface CreateOrderParams {
 
 export class RazorpayService {
     /**
-     * Create a Razorpay customer
+     * Create or get existing Razorpay customer
      */
     async createCustomer(email: string, name: string, contact?: string) {
         try {
@@ -54,9 +54,38 @@ export class RazorpayService {
             });
             logger.info(`Created Razorpay customer: ${customer.id}`);
             return customer;
-        } catch (error) {
+        } catch (error: any) {
+            // If customer already exists, fetch by email
+            if (error?.error?.code === 'BAD_REQUEST_ERROR' &&
+                error?.error?.description?.includes('already exists')) {
+                logger.info(`Customer already exists for ${email}, fetching existing customer`);
+                const existingCustomer = await this.getCustomerByEmail(email);
+                if (existingCustomer) {
+                    return existingCustomer;
+                }
+            }
             logger.error('Failed to create Razorpay customer', error);
             throw error;
+        }
+    }
+
+    /**
+     * Get customer by email (searches through customers)
+     */
+    async getCustomerByEmail(email: string) {
+        try {
+            const customers = await getRazorpayInstance().customers.all({
+                count: 100,
+            });
+            const customer = customers.items.find((c: any) => c.email === email);
+            if (customer) {
+                logger.info(`Found existing customer: ${customer.id}`);
+                return customer;
+            }
+            return null;
+        } catch (error) {
+            logger.error('Failed to fetch customers', error);
+            return null;
         }
     }
 

@@ -1,5 +1,6 @@
 import { PrismaClient, CreditType, TransactionType } from '@prisma/client';
 import { razorpayService } from './razorpay.service';
+import { subscriptionService } from './subscription.service';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
 
@@ -63,6 +64,9 @@ export class CreditService {
      * Get user's credit balances
      */
     async getBalances(userId: string) {
+        // Check and renew subscription if billing period has passed (lazy renewal)
+        await subscriptionService.checkAndRenewSubscription(userId);
+
         const credits = await prisma.userCredit.findMany({
             where: { userId },
         });
@@ -187,6 +191,9 @@ export class CreditService {
      * Consume credits for a feature
      */
     async consumeCredit(userId: string, creditType: CreditType, featureId?: string) {
+        // Check and renew subscription if billing period has passed (lazy renewal)
+        await subscriptionService.checkAndRenewSubscription(userId);
+
         // Check subscription for unlimited access
         const subscription = await prisma.userSubscription.findUnique({
             where: { userId },
@@ -247,6 +254,9 @@ export class CreditService {
      * Check if user has credits (without consuming)
      */
     async hasCredits(userId: string, creditType: CreditType): Promise<boolean> {
+        // Check and renew subscription if billing period has passed (lazy renewal)
+        await subscriptionService.checkAndRenewSubscription(userId);
+
         // Check for unlimited subscription
         const subscription = await prisma.userSubscription.findUnique({
             where: { userId },

@@ -51,8 +51,17 @@ export class SubscriptionService {
 
         // Check for existing subscription
         const existingSubscription = await this.getUserSubscription(userId);
+
+        // Allow upgrade from free plan, block if already on a paid plan
         if (existingSubscription && existingSubscription.status === 'ACTIVE') {
-            throw createError('User already has an active subscription', 400, 'SUBSCRIPTION_EXISTS');
+            const isFreePlan = existingSubscription.plan.name === 'free';
+            const isUpgrading = planName !== 'free';
+
+            if (!isFreePlan && isUpgrading) {
+                // Already on a paid plan - need to cancel first or use upgrade flow
+                throw createError('Please cancel your current subscription before upgrading', 400, 'SUBSCRIPTION_EXISTS');
+            }
+            // If on free plan and upgrading to paid, allow it (continue with subscription creation)
         }
 
         // Get the plan
@@ -218,6 +227,89 @@ export class SubscriptionService {
                     amount: credit.amount,
                     transactionType: 'GRANT',
                     description: `Monthly credit refill from ${plan.displayName} plan`,
+                },
+            });
+        }
+    }
+
+    /**
+     * Check and renew subscription if billing period has passed (lazy renewal)
+     * This ensures Free users and all users get their monthly credits refilled
+     */
+    async checkAndRenewSubscription(userId: string) {
+        const subscription = await this.getUserSubscription(userId);
+
+        if (!subscription || subscription.status !== 'ACTIVE') {
+            return null;
+        }
+
+        const now = new Date();
+        const periodEnd = new Date(subscription.currentPeriodEnd);
+
+        // If the current period has not ended, no renewal needed
+        if (now < periodEnd) {
+            return subscription;
+        }
+
+        // Calculate the new period dates
+        const newPeriodStart = new Date();
+        const newPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+
+        // Update the subscription period
+        const updatedSubscription = await prisma.userSubscription.update({
+            where: { userId },
+            data: {
+                currentPeriodStart: newPeriodStart,
+                currentPeriodEnd: newPeriodEnd,
+            },
+            include: { plan: true },
+        });
+
+        // Reset credits based on the plan (refill monthly allowance)
+        await this.resetCreditsForPlan(userId, updatedSubscription.plan);
+
+        logger.info(`Renewed subscription for user ${userId} (lazy renewal)`);
+
+        return updatedSubscription;
+    }
+
+    /**
+     * Reset credits for a new billing period (sets balance to plan limits)
+     */
+    async resetCreditsForPlan(userId: string, plan: any) {
+        const features = plan.features as any;
+
+        const creditTypes = [
+            { type: 'RESUME_REVIEW', amount: features.resumeReviews || 0 },
+            { type: 'AI_INTERVIEW', amount: features.interviews || 0 },
+            { type: 'SKILL_TEST', amount: features.skillTests || 0 },
+        ];
+
+        for (const credit of creditTypes) {
+            if (credit.amount === 'unlimited') continue;
+
+            await prisma.userCredit.upsert({
+                where: {
+                    userId_creditType: { userId, creditType: credit.type as any },
+                },
+                create: {
+                    userId,
+                    creditType: credit.type as any,
+                    balance: credit.amount,
+                },
+                update: {
+                    balance: credit.amount, // Reset to plan limit, not increment
+                },
+            });
+
+            // Log the transaction
+            await prisma.creditTransaction.create({
+                data: {
+                    userId,
+                    creditType: credit.type as any,
+                    amount: credit.amount,
+                    transactionType: 'GRANT',
+                    description: `Monthly credit renewal from ${plan.displayName} plan`,
                 },
             });
         }

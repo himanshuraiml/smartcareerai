@@ -146,13 +146,15 @@ export class InterviewService {
             metrics
         );
 
-        // Update question with answer and score
+        // Update question with answer, score, metrics, and improved answer
         await prisma.interviewQuestion.update({
             where: { id: questionId },
             data: {
                 userAnswer: answer,
                 score: evaluation.score,
                 feedback: evaluation.feedback,
+                metrics: evaluation.metrics,
+                improvedAnswer: evaluation.improvedAnswer,
             },
         });
 
@@ -228,11 +230,13 @@ export class InterviewService {
             session: updatedSession,
             overallScore,
             feedback: overallFeedback,
-            questionResults: session.questions.map((q: { questionText: string; userAnswer: string | null; score: number | null; feedback: string | null }) => ({
+            questionResults: session.questions.map((q: any) => ({
                 question: q.questionText,
                 answer: q.userAnswer,
                 score: q.score,
                 feedback: q.feedback,
+                metrics: q.metrics,
+                improvedAnswer: q.improvedAnswer,
             })),
         };
     }

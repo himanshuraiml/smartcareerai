@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose up:*)",
+      "Bash(grep:*)",
+      "Bash(docker logs:*)"
+    ]
+  }
+}

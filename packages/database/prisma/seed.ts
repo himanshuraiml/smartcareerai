@@ -764,7 +764,7 @@ async function main() {
                 resumeReviews: 3,
                 interviews: 1,
                 skillTests: 3,
-                jobAlerts: false,
+                jobAlerts: true,
                 prioritySupport: false,
             },
             sortOrder: 0,
@@ -774,6 +774,7 @@ async function main() {
             displayName: 'Starter',
             priceMonthly: 299,
             priceYearly: 2499,
+            razorpayPlanId: 'plan_S6zfvOOu5j9WKA',
             features: {
                 resumeReviews: 15,
                 interviews: 5,
@@ -788,6 +789,7 @@ async function main() {
             displayName: 'Pro',
             priceMonthly: 799,
             priceYearly: 6999,
+            razorpayPlanId: 'plan_S6zgEyCYs0G0Y8',
             features: {
                 resumeReviews: 'unlimited',
                 interviews: 20,
@@ -802,6 +804,7 @@ async function main() {
             displayName: 'Enterprise',
             priceMonthly: 1999,
             priceYearly: 17999,
+            razorpayPlanId: 'plan_S6zgnCCDTVKYtc',
             features: {
                 resumeReviews: 'unlimited',
                 interviews: 'unlimited',

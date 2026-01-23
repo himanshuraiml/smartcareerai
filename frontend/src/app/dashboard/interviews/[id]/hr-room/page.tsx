@@ -293,17 +293,17 @@ export default function HRInterviewRoomPage() {
     const toneInfo = getToneInfo();
 
     return (
-        <div className="min-h-screen -m-6 lg:-m-8 bg-[#0a0f14]">
+        <div className="min-h-screen -m-6 lg:-m-8 bg-gray-50 dark:bg-[#0a0f14]">
             {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/interviews" className="text-gray-400 hover:text-white">
+                    <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-lg font-semibold text-white">Soft Skills & HR Scenarios</h1>
-                            <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-400 text-xs font-medium">
+                            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Soft Skills & HR Scenarios</h1>
+                            <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-medium">
                                 LIVE SESSION
                             </span>
                         </div>
@@ -313,7 +313,7 @@ export default function HRInterviewRoomPage() {
 
                 <button
                     onClick={endSession}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 transition"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-white/20 transition"
                 >
                     <X className="w-4 h-4" />
                     Exit Session
@@ -324,14 +324,14 @@ export default function HRInterviewRoomPage() {
                 {/* Left side - Video Area */}
                 <div className="flex-1 p-6 flex flex-col">
                     {/* Question Display */}
-                    <div className="mb-4 p-6 rounded-xl bg-[#111820] border border-white/5">
+                    <div className="mb-4 p-6 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-teal-400 uppercase tracking-wider font-medium">
+                            <span className="text-xs text-teal-600 dark:text-teal-400 uppercase tracking-wider font-medium">
                                 Question {progress.current} of {progress.total}
                             </span>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-teal-400 font-medium">{progress.percentage}% COMPLETE</span>
-                                <div className="w-32 h-1.5 rounded-full bg-white/10">
+                                <span className="text-xs text-teal-600 dark:text-teal-400 font-medium">{progress.percentage}% COMPLETE</span>
+                                <div className="w-32 h-1.5 rounded-full bg-gray-200 dark:bg-white/10">
                                     <div
                                         className="h-full rounded-full bg-teal-500 transition-all"
                                         style={{ width: `${progress.percentage}%` }}
@@ -339,7 +339,7 @@ export default function HRInterviewRoomPage() {
                                 </div>
                             </div>
                         </div>
-                        <p className="text-white text-xl font-medium leading-relaxed">
+                        <p className="text-gray-900 dark:text-white text-xl font-medium leading-relaxed">
                             {currentQuestion?.questionText || 'Loading question...'}
                         </p>
                     </div>
@@ -347,7 +347,7 @@ export default function HRInterviewRoomPage() {
                     {/* Video Feeds */}
                     <div className="flex-1 grid grid-cols-2 gap-4 mb-4">
                         {/* User Camera */}
-                        <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5">
+                        <div className="relative rounded-2xl overflow-hidden bg-gray-200 dark:bg-gray-900 border border-gray-200 dark:border-white/5">
                             {previewStream ? (
                                 <video
                                     ref={videoPreviewRef}
@@ -359,7 +359,7 @@ export default function HRInterviewRoomPage() {
                             ) : (
                                 <div className="flex items-center justify-center h-full">
                                     <div className="text-center">
-                                        <VideoOff className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                                        <VideoOff className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-2" />
                                         <p className="text-gray-500">Camera not available</p>
                                     </div>
                                 </div>
@@ -373,15 +373,15 @@ export default function HRInterviewRoomPage() {
                                 </div>
                             )}
                             <div className="absolute bottom-4 left-4 right-4">
-                                <div className="px-3 py-2 rounded-lg bg-black/50 backdrop-blur-sm">
-                                    <p className="text-xs text-gray-400">YOU</p>
-                                    <p className="text-white font-medium">{session.targetRole} Candidate</p>
+                                <div className="px-3 py-2 rounded-lg bg-white/80 dark:bg-black/50 backdrop-blur-sm">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">YOU</p>
+                                    <p className="text-gray-900 dark:text-white font-medium">{session.targetRole} Candidate</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* AI Interviewer */}
-                        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a2530] to-[#0d1318] border border-white/5">
+                        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#1a2530] dark:to-[#0d1318] border border-gray-200 dark:border-white/5">
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="relative">
                                     {/* Glow effect */}
@@ -408,9 +408,9 @@ export default function HRInterviewRoomPage() {
                                 </div>
                             </div>
                             <div className="absolute bottom-4 left-4 right-4">
-                                <div className="px-3 py-2 rounded-lg bg-black/50 backdrop-blur-sm">
-                                    <p className="text-xs text-teal-400">AI INTERVIEWER</p>
-                                    <p className="text-white font-medium">{interviewer.name} ({interviewer.role})</p>
+                                <div className="px-3 py-2 rounded-lg bg-white/80 dark:bg-black/50 backdrop-blur-sm">
+                                    <p className="text-xs text-teal-600 dark:text-teal-400">AI INTERVIEWER</p>
+                                    <p className="text-gray-900 dark:text-white font-medium">{interviewer.name} ({interviewer.role})</p>
                                 </div>
                             </div>
                         </div>
@@ -420,16 +420,16 @@ export default function HRInterviewRoomPage() {
                     <div className="flex items-center justify-center gap-4 py-4">
                         <button
                             onClick={() => setIsMuted(!isMuted)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20'}`}
                         >
                             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
 
-                        <button className="w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition">
+                        <button className="w-12 h-12 rounded-full bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition">
                             <VideoIcon className="w-5 h-5" />
                         </button>
 
-                        <div className="w-px h-8 bg-white/10" />
+                        <div className="w-px h-8 bg-gray-300 dark:bg-white/10" />
 
                         {!isRecording && !videoBlob && (
                             <button
@@ -463,9 +463,9 @@ export default function HRInterviewRoomPage() {
                 </div>
 
                 {/* Right Panel - Analysis */}
-                <div className="w-96 border-l border-white/5 p-6 flex flex-col gap-4 overflow-y-auto bg-[#0d1117]">
+                <div className="w-96 border-l border-gray-200 dark:border-white/5 p-6 flex flex-col gap-4 overflow-y-auto bg-gray-50 dark:bg-[#0d1117]">
                     {/* Tone Analysis */}
-                    <div className="p-4 rounded-xl bg-[#111820] border border-white/5">
+                    <div className="p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-xs text-gray-500 uppercase tracking-wider">Tone Analysis</span>
                             <span className={`text-xs font-medium ${toneInfo.color}`}>{toneInfo.label.toUpperCase()}</span>
@@ -473,20 +473,20 @@ export default function HRInterviewRoomPage() {
 
                         {/* Tone Gauge */}
                         <div className="relative">
-                            <div className="flex justify-between text-[10px] text-gray-600 mb-2">
+                            <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-600 mb-2">
                                 <span>TIMID</span>
                                 <span>AGGRESSIVE</span>
                             </div>
-                            <div className="h-2 rounded-full bg-white/5 relative overflow-hidden">
+                            <div className="h-2 rounded-full bg-gray-200 dark:bg-white/5 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-teal-500 to-red-500 opacity-30" />
                                 <div
-                                    className="absolute top-0 bottom-0 w-1 bg-white rounded-full shadow-lg transition-all duration-300"
+                                    className="absolute top-0 bottom-0 w-1 bg-gray-900 dark:bg-white rounded-full shadow-lg transition-all duration-300"
                                     style={{ left: `${toneInfo.position}%` }}
                                 />
                             </div>
                         </div>
 
-                        <p className="text-xs text-gray-400 mt-3">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
                             {faceAnalysis.metrics.isFaceDetected ?
                                 `Your pace is steady (${speech.wpm || 0} wpm). Try to maintain this energy when discussing the resolution.` :
                                 'Analyzing your tone and expression...'
@@ -495,10 +495,10 @@ export default function HRInterviewRoomPage() {
                     </div>
 
                     {/* Keyword Check */}
-                    <div className="p-4 rounded-xl bg-[#111820] border border-white/5">
+                    <div className="p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-xs text-gray-500 uppercase tracking-wider">Keyword Check</span>
-                            <span className="text-xs text-teal-400 font-medium">{detectedKeywords.size}/{Math.min(HR_KEYWORDS.length, 5)} Detected</span>
+                            <span className="text-xs text-teal-600 dark:text-teal-400 font-medium">{detectedKeywords.size}/{Math.min(HR_KEYWORDS.length, 5)} Detected</span>
                         </div>
 
                         <div className="space-y-2">
@@ -507,14 +507,14 @@ export default function HRInterviewRoomPage() {
                                 return (
                                     <div key={keyword} className="flex items-center gap-2">
                                         {detected ? (
-                                            <CheckCircle className="w-4 h-4 text-teal-400" />
+                                            <CheckCircle className="w-4 h-4 text-teal-500 dark:text-teal-400" />
                                         ) : (
-                                            <Circle className="w-4 h-4 text-gray-600" />
+                                            <Circle className="w-4 h-4 text-gray-400 dark:text-gray-600" />
                                         )}
-                                        <span className={`text-sm capitalize ${detected ? 'text-teal-400 font-medium' : 'text-gray-500'}`}>
+                                        <span className={`text-sm capitalize ${detected ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-gray-500'}`}>
                                             {keyword}
                                         </span>
-                                        {detected && <span className="ml-auto text-xs text-teal-400">DETECTED</span>}
+                                        {detected && <span className="ml-auto text-xs text-teal-600 dark:text-teal-400">DETECTED</span>}
                                     </div>
                                 );
                             })}
@@ -524,41 +524,41 @@ export default function HRInterviewRoomPage() {
                     {/* STAR Method Tip */}
                     <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
                         <div className="flex items-center gap-2 mb-3">
-                            <Lightbulb className="w-4 h-4 text-amber-400" />
-                            <span className="text-xs text-amber-400 uppercase tracking-wider font-medium">STAR Method Tip</span>
+                            <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                            <span className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider font-medium">STAR Method Tip</span>
                         </div>
-                        <p className="text-gray-300 text-sm mb-2">
-                            Don't forget to emphasize the <span className="text-amber-400 font-medium">Result</span>. Quantify the impact of your leadership if possible.
+                        <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">
+                            Don't forget to emphasize the <span className="text-amber-600 dark:text-amber-400 font-medium">Result</span>. Quantify the impact of your leadership if possible.
                         </p>
                         <div className="mt-3 space-y-1">
                             <div className="flex items-center gap-2 text-xs">
-                                <CheckCircle className="w-3 h-3 text-teal-400" />
-                                <span className="text-gray-400">Situation</span>
+                                <CheckCircle className="w-3 h-3 text-teal-500 dark:text-teal-400" />
+                                <span className="text-gray-600 dark:text-gray-400">Situation</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <CheckCircle className="w-3 h-3 text-teal-400" />
-                                <span className="text-gray-400">Task</span>
+                                <CheckCircle className="w-3 h-3 text-teal-500 dark:text-teal-400" />
+                                <span className="text-gray-600 dark:text-gray-400">Task</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <Circle className="w-3 h-3 text-gray-600" />
+                                <Circle className="w-3 h-3 text-gray-400 dark:text-gray-600" />
                                 <span className="text-gray-500">Action</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <Circle className="w-3 h-3 text-gray-600" />
+                                <Circle className="w-3 h-3 text-gray-400 dark:text-gray-600" />
                                 <span className="text-gray-500">Result</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Live Transcript */}
-                    <div className="flex-1 p-4 rounded-xl bg-[#111820] border border-white/5">
+                    <div className="flex-1 p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-2 mb-3">
-                            <MessageSquare className="w-4 h-4 text-purple-400" />
-                            <span className="text-xs text-purple-400 uppercase tracking-wider">Live Transcript</span>
+                            <MessageSquare className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                            <span className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider">Live Transcript</span>
                         </div>
-                        <div className="text-gray-400 text-sm leading-relaxed">
+                        <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                             {transcript || (
-                                <p className="text-gray-600 italic">
+                                <p className="text-gray-500 dark:text-gray-600 italic">
                                     {isRecording ? 'Listening... transcript will appear here.' : 'Start recording to see live transcript.'}
                                 </p>
                             )}

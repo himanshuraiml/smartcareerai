@@ -52,7 +52,7 @@ const PLANS: PricingPlan[] = [
             { text: "3 Resume Reviews/mo", included: true },
             { text: "1 AI Interview/mo", included: true },
             { text: "3 Skill Tests/mo", included: true },
-            { text: "Basic Job Alerts", included: false },
+            { text: "Basic Job Alerts", included: true },
             { text: "Priority Support", included: false },
             { text: "API Access", included: false },
         ],
@@ -153,7 +153,7 @@ export default function PricingPage() {
 
         try {
             // 1. Create Subscription on Backend
-            const response = await fetch(`${API_URL}/billing/subscribe`, {
+            const response = await fetch(`${API_URL}/billing/subscriptions/subscribe`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

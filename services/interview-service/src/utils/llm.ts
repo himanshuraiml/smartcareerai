@@ -1,9 +1,33 @@
 import Groq from 'groq-sdk';
 import { logger } from './logger';
 
+// Configurable AI model - switch between high quality and fast/free models
+const AI_MODEL_NAME = process.env.AI_MODEL_NAME || 'llama-3.1-70b-versatile';
+
 // Initialize Groq lazily to ensure env is loaded first
 let groq: Groq | null = null;
 let initialized = false;
+
+// Clean JSON response from LLM (handles markdown code blocks and whitespace)
+function cleanJsonResponse(text: string): string {
+    let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    cleaned = cleaned.trim();
+    return cleaned;
+}
+
+// Enhanced evaluation result with metrics and improved answer
+export interface EvaluationResult {
+    score: number;
+    feedback: string;
+    improvedAnswer: string;
+    metrics: {
+        clarity: number;
+        relevance: number;
+        confidence: number;
+        wpm?: number;
+        sentiment?: string;
+    };
+}
 
 function getGroq(): Groq | null {
     if (!initialized) {
@@ -55,7 +79,7 @@ Return ONLY the JSON array, no other text.`;
         }
 
         const response = await client.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: AI_MODEL_NAME,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
@@ -77,17 +101,26 @@ Return ONLY the JSON array, no other text.`;
     }
 }
 
-// Evaluate a candidate's answer
+// Evaluate a candidate's answer with enhanced metrics and improved answer
 export async function evaluateAnswer(
     question: string,
     answer: string,
     targetRole: string,
     interviewType: string,
     metrics?: { wpm?: number; eyeContactScore?: number; sentiment?: string }
-): Promise<{ score: number; feedback: string }> {
+): Promise<EvaluationResult> {
     const systemPrompt = `You are an expert interviewer evaluating candidate responses.
-Score from 0-100 and provide constructive feedback.
-Return JSON: {"score": number, "feedback": "string"}`;
+Provide comprehensive evaluation with score, feedback, improved answer, and detailed metrics.
+Return JSON: {
+  "score": number (0-100),
+  "feedback": "constructive feedback string",
+  "improved_answer": "a better version of the candidate's answer demonstrating ideal response",
+  "detailed_metrics": {
+    "clarity": number (0-100, how clear and well-structured the answer is),
+    "relevance": number (0-100, how relevant the answer is to the question),
+    "confidence": number (0-100, how confident the response appears)
+  }
+}`;
 
     let metricContext = '';
     if (metrics) {
@@ -110,35 +143,67 @@ Evaluate based on:
 3. Communication clarity
 4. Use of examples (if applicable)
 
-Return JSON with score (0-100) and specific, constructive feedback.`;
+Provide:
+- A score from 0-100
+- Specific, constructive feedback
+- An improved "model answer" showing how the candidate could have answered better
+- Detailed metrics for clarity, relevance, and confidence
+
+Return ONLY the JSON object.`;
+
+    // Default fallback result
+    const fallbackResult: EvaluationResult = {
+        score: 70,
+        feedback: 'Answer recorded. Detailed evaluation requires AI configuration.',
+        improvedAnswer: '',
+        metrics: {
+            clarity: 70,
+            relevance: 70,
+            confidence: 70,
+            wpm: metrics?.wpm,
+            sentiment: metrics?.sentiment,
+        },
+    };
 
     try {
         const client = getGroq();
         if (!client) {
-            return { score: 70, feedback: 'Answer recorded. Detailed evaluation requires AI configuration.' };
+            return fallbackResult;
         }
 
         const response = await client.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: AI_MODEL_NAME,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
-            max_tokens: 500,
+            max_tokens: 1000,
             response_format: { type: 'json_object' },
         });
 
         const text = response.choices[0]?.message?.content || '{}';
-        const result = JSON.parse(text);
+        const cleanedText = cleanJsonResponse(text);
+        const result = JSON.parse(cleanedText);
 
         return {
             score: Math.min(100, Math.max(0, result.score || 70)),
             feedback: result.feedback || 'Good response.',
+            improvedAnswer: result.improved_answer || '',
+            metrics: {
+                clarity: Math.min(100, Math.max(0, result.detailed_metrics?.clarity || 70)),
+                relevance: Math.min(100, Math.max(0, result.detailed_metrics?.relevance || 70)),
+                confidence: Math.min(100, Math.max(0, result.detailed_metrics?.confidence || 70)),
+                wpm: metrics?.wpm,
+                sentiment: metrics?.sentiment,
+            },
         };
     } catch (error) {
         logger.error('Failed to evaluate answer:', error);
-        return { score: 70, feedback: 'Answer recorded. Please review manually.' };
+        return {
+            ...fallbackResult,
+            feedback: 'Answer recorded. Please review manually.',
+        };
     }
 }
 
@@ -178,7 +243,7 @@ Be encouraging but honest.`;
         }
 
         const response = await client.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: AI_MODEL_NAME,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
@@ -224,7 +289,7 @@ Return ONLY the JSON, no other text.`;
         }
 
         const response = await client.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: AI_MODEL_NAME,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
@@ -273,7 +338,7 @@ Return ONLY the JSON.`;
         }
 
         const response = await client.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
+            model: AI_MODEL_NAME,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },

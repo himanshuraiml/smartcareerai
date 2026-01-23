@@ -4,48 +4,8 @@ import { useState } from "react";
 import { Activity, User, Briefcase, FileText, CheckCircle, AlertCircle } from "lucide-react";
 
 // Mock data for activity log
-const MOCK_ACTIVITIES = [
-    {
-        id: 1,
-        type: "USER_REGISTER",
-        message: "New user registration: john.doe@example.com",
-        user: "John Doe",
-        time: "2 minutes ago",
-        status: "success"
-    },
-    {
-        id: 2,
-        type: "JOB_POST",
-        message: "New job posted: Senior React Developer",
-        user: "Tech Hunters Inc.",
-        time: "15 minutes ago",
-        status: "success"
-    },
-    {
-        id: 3,
-        type: "SYSTEM_ALERT",
-        message: "High API latency detected in Scoring Service",
-        user: "System",
-        time: "1 hour ago",
-        status: "warning"
-    },
-    {
-        id: 4,
-        type: "USER_LOGIN",
-        message: "Admin login detected",
-        user: "System Administrator",
-        time: "2 hours ago",
-        status: "success"
-    },
-    {
-        id: 5,
-        type: "RESUME_ANALYSIS",
-        message: "Resume analysis completed for specialized role",
-        user: "Sarah Smith",
-        time: "3 hours ago",
-        status: "success"
-    }
-];
+// Mock data removed - pending backend integration
+const MOCK_ACTIVITIES: any[] = [];
 
 export default function ActivityPage() {
     const [filter, setFilter] = useState("ALL");
@@ -85,37 +45,44 @@ export default function ActivityPage() {
 
             {/* Activity Timeline */}
             <div className="glass rounded-xl p-6 space-y-8">
-                {MOCK_ACTIVITIES.map((activity, index) => (
-                    <div key={activity.id} className="relative flex gap-4">
-                        {/* Connecting Line */}
-                        {index !== MOCK_ACTIVITIES.length - 1 && (
-                            <div className="absolute left-[19px] top-10 bottom-[-32px] w-[2px] bg-white/5" />
-                        )}
+                {MOCK_ACTIVITIES.length > 0 ? (
+                    MOCK_ACTIVITIES.map((activity, index) => (
+                        <div key={activity.id} className="relative flex gap-4">
+                            {/* Connecting Line */}
+                            {index !== MOCK_ACTIVITIES.length - 1 && (
+                                <div className="absolute left-[19px] top-10 bottom-[-32px] w-[2px] bg-white/5" />
+                            )}
 
-                        <div className="relative z-10 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                            {getIcon(activity.type)}
-                        </div>
+                            <div className="relative z-10 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                                {getIcon(activity.type)}
+                            </div>
 
-                        <div className="flex-1 pt-1">
-                            <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-white font-medium">{activity.message}</h3>
-                                <span className="text-xs text-gray-500">{activity.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="text-gray-400">by {activity.user}</span>
-                                {activity.status === 'success' ? (
-                                    <span className="flex items-center gap-1 text-xs text-green-500/50 bg-green-500/10 px-2 py-0.5 rounded-full">
-                                        <CheckCircle className="w-3 h-3" /> Success
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center gap-1 text-xs text-yellow-500/50 bg-yellow-500/10 px-2 py-0.5 rounded-full">
-                                        <AlertCircle className="w-3 h-3" /> Warning
-                                    </span>
-                                )}
+                            <div className="flex-1 pt-1">
+                                <div className="flex items-center justify-between mb-1">
+                                    <h3 className="text-white font-medium">{activity.message}</h3>
+                                    <span className="text-xs text-gray-500">{activity.time}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-400">by {activity.user}</span>
+                                    {activity.status === 'success' ? (
+                                        <span className="flex items-center gap-1 text-xs text-green-500/50 bg-green-500/10 px-2 py-0.5 rounded-full">
+                                            <CheckCircle className="w-3 h-3" /> Success
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-1 text-xs text-yellow-500/50 bg-yellow-500/10 px-2 py-0.5 rounded-full">
+                                            <AlertCircle className="w-3 h-3" /> Warning
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                    ))
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <Activity className="w-12 h-12 mb-4 opacity-20" />
+                        <p>No recent system activity</p>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );

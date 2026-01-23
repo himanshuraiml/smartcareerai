@@ -40,6 +40,9 @@ app.use(cors({
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 86400, // 24 hours - cache preflight response
 }));
+
+// Handle preflight OPTIONS requests explicitly before proxy routes
+app.options('*', cors());
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 // Rate limiting - relaxed for development
@@ -120,6 +123,12 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
         logger.info(`Proxying ${req.method} ${req.url} -> ${target} (user: ${userId || 'anonymous'})`);
     },
     onProxyRes: (proxyRes, req) => {
+        // Add CORS headers to proxied responses
+        const origin = req.headers.origin;
+        if (origin) {
+            proxyRes.headers['access-control-allow-origin'] = origin;
+            proxyRes.headers['access-control-allow-credentials'] = 'true';
+        }
         logger.info(`Proxy response: ${proxyRes.statusCode} for ${req.method} ${req.url}`);
     },
 });
