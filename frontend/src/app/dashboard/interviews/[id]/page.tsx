@@ -12,6 +12,14 @@ import { useAudioRecorder, formatTime } from '@/hooks/useAudioRecorder';
 import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
 
 
+interface QuestionMetrics {
+    clarity: number;
+    relevance: number;
+    confidence: number;
+    wpm?: number;
+    sentiment?: string;
+}
+
 interface Question {
     id: string;
     questionText: string;
@@ -19,6 +27,8 @@ interface Question {
     userAnswer: string | null;
     score: number | null;
     feedback: string | null;
+    metrics: QuestionMetrics | null;
+    improvedAnswer: string | null;
     orderIndex: number;
 }
 
@@ -63,6 +73,7 @@ export default function InterviewRoomPage() {
     const [currentAnswer, setCurrentAnswer] = useState('');
     const [lastFeedback, setLastFeedback] = useState<{ score: number; feedback: string } | null>(null);
     const [audioAnalysis, setAudioAnalysis] = useState<AudioAnalysis | null>(null);
+    const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
 
     // Audio recording hook
     const {
@@ -384,19 +395,33 @@ export default function InterviewRoomPage() {
 
     // Completed interview view - Rich Feedback UI
     if (session.status === 'COMPLETED') {
-        // State for question tabs
-        const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
-
         // Calculate metrics from session data
         const avgScore = session.questions.reduce((sum, q) => sum + (q.score || 0), 0) / session.questions.length;
 
-        // Verbal fluency data for radar chart
-        const verbalFluencyData = [75, 68, 72, 80, 65]; // pace, tone, fluency, pauses, words
-        const verbalFluencyLabels = ['pace', 'tone', 'fluency', 'pause', 'words'];
+        // Calculate average metrics from all questions
+        const questionsWithMetrics = session.questions.filter(q => q.metrics);
+        const avgClarity = questionsWithMetrics.length > 0
+            ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.clarity || 0), 0) / questionsWithMetrics.length)
+            : 70;
+        const avgRelevance = questionsWithMetrics.length > 0
+            ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.relevance || 0), 0) / questionsWithMetrics.length)
+            : 70;
+        const avgConfidence = questionsWithMetrics.length > 0
+            ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.confidence || 0), 0) / questionsWithMetrics.length)
+            : 70;
+        const avgWpm = questionsWithMetrics.filter(q => q.metrics?.wpm).length > 0
+            ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.wpm || 0), 0) / questionsWithMetrics.filter(q => q.metrics?.wpm).length)
+            : 0;
 
-        // Content relevance data for bar chart
-        const contentRelevanceData = session.questions.map(q => q.score || 0);
-        const contentRelevanceLabels = session.questions.map((_, i) => `Q${i + 1}`);
+        // Verbal fluency data for radar chart - using actual metrics
+        const verbalFluencyData = [
+            avgWpm > 0 ? Math.min(100, Math.round((avgWpm / 150) * 100)) : 70, // pace (normalized to 150 wpm ideal)
+            avgConfidence, // tone/confidence
+            avgClarity, // fluency/clarity
+            Math.round((avgClarity + avgConfidence) / 2), // pauses (derived)
+            avgRelevance // words/relevance
+        ];
+        const verbalFluencyLabels = ['pace', 'tone', 'fluency', 'pause', 'words'];
 
         return (
             <div className="space-y-6">
@@ -607,19 +632,31 @@ export default function InterviewRoomPage() {
                                 <p className="text-white font-medium">{session.questions[selectedQuestionIndex].questionText}</p>
                             </div>
 
-                            {/* Skills Badge - Mock data */}
+                            {/* Skills Badge - Based on question type */}
                             <div>
                                 <p className="text-gray-400 text-sm mb-2">Skill Assessed</p>
                                 <div className="flex flex-wrap gap-2">
                                     <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
-                                        problem solving
+                                        {session.questions[selectedQuestionIndex].questionType}
                                     </span>
                                     <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
                                         communication
                                     </span>
-                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
-                                        technical knowledge
-                                    </span>
+                                    {session.questions[selectedQuestionIndex].questionType === 'technical' && (
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                            problem solving
+                                        </span>
+                                    )}
+                                    {session.questions[selectedQuestionIndex].questionType === 'behavioral' && (
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                            situational awareness
+                                        </span>
+                                    )}
+                                    {session.questions[selectedQuestionIndex].questionType === 'hr' && (
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                            self-awareness
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -638,36 +675,68 @@ export default function InterviewRoomPage() {
                                 <p className="text-gray-400 text-sm mb-2">Ideal Answer</p>
                                 <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/20">
                                     <p className="text-gray-300">
-                                        A well-structured response would include specific examples, demonstrate clear problem-solving methodology, and show awareness of best practices in the field.
+                                        {session.questions[selectedQuestionIndex].improvedAnswer ||
+                                            'A well-structured response would include specific examples, demonstrate clear problem-solving methodology, and show awareness of best practices in the field.'}
                                     </p>
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                                            ✓ clear structure
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                                            ✓ examples
-                                        </span>
-                                    </div>
+                                    {session.questions[selectedQuestionIndex].improvedAnswer && (
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                                ✓ AI-generated ideal response
+                                            </span>
+                                        </div>
+                                    )}
+                                    {!session.questions[selectedQuestionIndex].improvedAnswer && (
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                                ✓ clear structure
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                                                ✓ examples
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Verbal Fluency Metrics */}
                             <div>
-                                <p className="text-gray-400 text-sm mb-3">Verbal Fluency</p>
-                                <div className="grid grid-cols-5 gap-3">
-                                    {['Pace', 'Tone', 'Fluency', 'Pauses', 'Filler Words'].map((label, i) => (
-                                        <div key={label} className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
-                                            <p className="text-gray-400 text-xs mb-1">{label}</p>
-                                            <p className="text-xl font-bold text-white">{[72, 68, 75, 80, 65][i]}</p>
+                                <p className="text-gray-400 text-sm mb-3">Answer Quality Metrics</p>
+                                {session.questions[selectedQuestionIndex].metrics ? (
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
+                                            <p className="text-gray-400 text-xs mb-1">Clarity</p>
+                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.clarity || 0}</p>
                                             <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
                                                 <div
                                                     className="h-full bg-teal-500 rounded-full"
-                                                    style={{ width: `${[72, 68, 75, 80, 65][i]}%` }}
+                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.clarity || 0}%` }}
                                                 />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
+                                            <p className="text-gray-400 text-xs mb-1">Relevance</p>
+                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.relevance || 0}</p>
+                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                                <div
+                                                    className="h-full bg-teal-500 rounded-full"
+                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.relevance || 0}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
+                                            <p className="text-gray-400 text-xs mb-1">Confidence</p>
+                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.confidence || 0}</p>
+                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                                <div
+                                                    className="h-full bg-teal-500 rounded-full"
+                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.confidence || 0}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">Metrics not available for this question.</p>
+                                )}
                             </div>
 
                             {/* Feedback */}

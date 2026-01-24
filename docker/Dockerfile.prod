@@ -10,7 +10,8 @@ COPY packages/database ./packages/database
 
 # Install dependencies for the workspace
 # We need to install specifically to get prisma client generated
-RUN npm ci
+# Using npm install instead of npm ci for better compatibility with workspaces
+RUN npm install --legacy-peer-deps
 
 # Generate Prisma Client
 WORKDIR /app/packages/database
