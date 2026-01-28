@@ -50,6 +50,16 @@ interface LiveAnalytics {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
+// Normalize and validate UUID format
+const normalizeUUID = (id: string | string[] | undefined): string | null => {
+    if (!id || Array.isArray(id)) return null;
+    // Replace spaces with hyphens and lowercase
+    const normalized = id.replace(/\s+/g, '-').toLowerCase();
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(normalized) ? normalized : null;
+};
+
 // Combined keywords for mixed interview
 const MIXED_KEYWORDS = [
     // Technical
@@ -66,9 +76,13 @@ const AI_INTERVIEWERS = [
 ];
 
 export default function MixedInterviewRoomPage() {
-    const { id } = useParams();
+    const params = useParams();
     const router = useRouter();
     const { accessToken } = useAuthStore();
+
+    // Normalize the session ID
+    const sessionId = normalizeUUID(params.id);
+    const [invalidId, setInvalidId] = useState(false);
 
     const [session, setSession] = useState<InterviewSession | null>(null);
     const [loading, setLoading] = useState(true);
@@ -184,8 +198,13 @@ export default function MixedInterviewRoomPage() {
     }, [session?.startedAt, session?.status]);
 
     const fetchSession = useCallback(async () => {
+        if (!sessionId) {
+            setInvalidId(true);
+            setLoading(false);
+            return;
+        }
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
@@ -203,12 +222,13 @@ export default function MixedInterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [id, accessToken]);
+    }, [sessionId, accessToken]);
 
     const fetchHint = useCallback(async (questionId: string) => {
+        if (!sessionId) return;
         setLoadingHint(true);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/hint/${questionId}`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/hint/${questionId}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
@@ -220,11 +240,12 @@ export default function MixedInterviewRoomPage() {
         } finally {
             setLoadingHint(false);
         }
-    }, [id, accessToken]);
+    }, [sessionId, accessToken]);
 
     const fetchAnalytics = useCallback(async () => {
+        if (!sessionId) return;
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/analytics`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/analytics`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
@@ -234,13 +255,16 @@ export default function MixedInterviewRoomPage() {
         } catch (err) {
             console.error('Failed to fetch analytics:', err);
         }
-    }, [id, accessToken]);
+    }, [sessionId, accessToken]);
 
     useEffect(() => {
-        if (accessToken && id) {
+        if (accessToken && sessionId) {
             fetchSession();
+        } else if (!sessionId && params.id) {
+            setInvalidId(true);
+            setLoading(false);
         }
-    }, [accessToken, id, fetchSession]);
+    }, [accessToken, sessionId, params.id, fetchSession]);
 
     // Fetch hint when question changes
     useEffect(() => {

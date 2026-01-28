@@ -39,6 +39,16 @@ interface InterviewSession {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
+// Normalize and validate UUID format
+const normalizeUUID = (id: string | string[] | undefined): string | null => {
+    if (!id || Array.isArray(id)) return null;
+    // Replace spaces with hyphens and lowercase
+    const normalized = id.replace(/\s+/g, '-').toLowerCase();
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(normalized) ? normalized : null;
+};
+
 // HR/Behavioral keywords to detect
 const HR_KEYWORDS = [
     'leadership', 'teamwork', 'conflict resolution', 'empathy',
@@ -53,9 +63,13 @@ const AI_INTERVIEWERS = [
 ];
 
 export default function HRInterviewRoomPage() {
-    const { id } = useParams();
+    const params = useParams();
     const router = useRouter();
     const { accessToken } = useAuthStore();
+
+    // Normalize the session ID
+    const sessionId = normalizeUUID(params.id);
+    const [invalidId, setInvalidId] = useState(false);
 
     const [session, setSession] = useState<InterviewSession | null>(null);
     const [loading, setLoading] = useState(true);
@@ -150,8 +164,13 @@ export default function HRInterviewRoomPage() {
     }, [session?.startedAt, session?.status]);
 
     const fetchSession = useCallback(async () => {
+        if (!sessionId) {
+            setInvalidId(true);
+            setLoading(false);
+            return;
+        }
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
@@ -169,13 +188,16 @@ export default function HRInterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [id, accessToken]);
+    }, [sessionId, accessToken]);
 
     useEffect(() => {
-        if (accessToken && id) {
+        if (accessToken && sessionId) {
             fetchSession();
+        } else if (!sessionId && params.id) {
+            setInvalidId(true);
+            setLoading(false);
         }
-    }, [accessToken, id, fetchSession]);
+    }, [accessToken, sessionId, params.id, fetchSession]);
 
     const submitVideoAnswer = async () => {
         if (!session || !videoBlob) return;
@@ -197,7 +219,7 @@ export default function HRInterviewRoomPage() {
                 detectedKeywords: Array.from(detectedKeywords)
             }));
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/answer/video`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -233,7 +255,7 @@ export default function HRInterviewRoomPage() {
                     }, 2000);
                 } else if (data.data.isComplete) {
                     setTimeout(() => {
-                        router.push(`/dashboard/interviews/${id}`);
+                        router.push(`/dashboard/interviews/${sessionId}`);
                     }, 2000);
                 }
             }
@@ -245,14 +267,15 @@ export default function HRInterviewRoomPage() {
     };
 
     const endSession = async () => {
+        if (!sessionId) return;
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/complete`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
 
             if (response.ok) {
-                router.push(`/dashboard/interviews/${id}`);
+                router.push(`/dashboard/interviews/${sessionId}`);
             }
         } catch (err) {
             console.error('Failed to end session:', err);
@@ -284,12 +307,31 @@ export default function HRInterviewRoomPage() {
         );
     }
 
+    if (invalidId) {
+        return (
+            <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
+                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
+                    Return to Interviews
+                </Link>
+            </div>
+        );
+    }
+
     if (!session) {
         return (
             <div className="text-center py-12">
-                <p className="text-gray-400">Interview session not found</p>
-                <Link href="/dashboard/interviews" className="text-teal-400 hover:underline mt-2 inline-block">
-                    Back to Interviews
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
+                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
+                    Return to Interviews
                 </Link>
             </div>
         );

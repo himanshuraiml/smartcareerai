@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 import { generateQuestions, evaluateAnswer, generateFeedback } from '../utils/llm';
+import { AppError } from '../utils/errors';
 
 interface CreateSessionData {
     type: 'TECHNICAL' | 'BEHAVIORAL' | 'HR' | 'MIXED';
@@ -55,7 +56,7 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Interview session not found');
+            throw new AppError('Interview session not found', 404);
         }
 
         return session;
@@ -68,11 +69,11 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Interview session not found');
+            throw new AppError('Interview session not found', 404);
         }
 
         if (session.status !== 'PENDING') {
-            throw new Error('Interview has already started');
+            throw new AppError('Interview has already started', 400);
         }
 
         // Generate questions using LLM
@@ -126,7 +127,7 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Active interview session not found');
+            throw new AppError('Active interview session not found', 404);
         }
 
         const question = await prisma.interviewQuestion.findFirst({
@@ -134,7 +135,7 @@ export class InterviewService {
         });
 
         if (!question) {
-            throw new Error('Question not found');
+            throw new AppError('Question not found', 404);
         }
 
         // Evaluate the answer using LLM
@@ -190,7 +191,7 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Interview session not found');
+            throw new AppError('Interview session not found', 404);
         }
 
         // Calculate overall score
@@ -248,7 +249,7 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Interview session not found');
+            throw new AppError('Interview session not found', 404);
         }
 
         const question = await prisma.interviewQuestion.findFirst({
@@ -256,7 +257,7 @@ export class InterviewService {
         });
 
         if (!question) {
-            throw new Error('Question not found');
+            throw new AppError('Question not found', 404);
         }
 
         // Import dynamically to avoid circular deps
@@ -284,7 +285,7 @@ export class InterviewService {
         });
 
         if (!session) {
-            throw new Error('Interview session not found');
+            throw new AppError('Interview session not found', 404);
         }
 
         // Calculate analytics from answered questions
