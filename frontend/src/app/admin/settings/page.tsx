@@ -106,7 +106,7 @@ export default function SettingsPage() {
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Platform Name</label>
                                     <input
                                         type="text"
-                                        value={settings.platform_name || "SmartCareerAI"}
+                                        value={settings.platform_name || "Medhiva"}
                                         onChange={(e) => handleChange('platform_name', e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                                     />
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Welcome Email Subject</label>
                                         <input
                                             type="text"
-                                            value={settings.email_welcome_subject || 'Welcome to SmartCareerAI!'}
+                                            value={settings.email_welcome_subject || 'Welcome to Medhiva!'}
                                             onChange={(e) => handleChange('email_welcome_subject', e.target.value)}
                                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                                         />

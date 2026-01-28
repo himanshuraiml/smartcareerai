@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem("smartcareer_theme") as Theme;
+        const savedTheme = localStorage.getItem("medhiva_theme") as Theme;
         if (savedTheme) {
             setThemeState(savedTheme);
             applyTheme(savedTheme);
@@ -58,7 +58,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
         applyTheme(newTheme);
-        localStorage.setItem("smartcareer_theme", newTheme);
+        localStorage.setItem("medhiva_theme", newTheme);
     };
 
     const toggleTheme = () => {

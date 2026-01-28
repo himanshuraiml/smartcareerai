@@ -71,7 +71,7 @@ export default function CreditPurchaseModal({
                     key: razorpayKeyId,
                     amount: amount * 100, // Amount is in INR, Razorpay takes paise
                     currency: "INR",
-                    name: "SmartCareerAI",
+                    name: "Medhiva",
                     description: `Purchase ${quantity} ${creditType} Credits`,
                     order_id: orderId,
                     handler: async function (response: any) {

@@ -160,7 +160,7 @@ export default function InstitutionSettingsPage() {
                             value={logoUrl}
                             onChange={(e) => setLogoUrl(e.target.value)}
                             className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            placeholder="https://example.com/logo.png"
+                            placeholder="https://example.com/logo.svg"
                         />
                         <p className="text-xs text-gray-500 mt-1">Provide a URL to your institution&apos;s logo</p>
                     </div>

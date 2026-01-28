@@ -41,13 +41,13 @@ export default function LoginPage() {
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center gap-2">
                         <Image
-                            src="/logo.png"
-                            alt="SmartCareerAI Logo"
+                            src="/logo.svg"
+                            alt="Medhiva Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-xl"
                         />
-                        <span className="text-2xl font-bold gradient-text">SmartCareerAI</span>
+                        <span className="text-2xl font-bold gradient-text">Medhiva</span>
                     </Link>
                 </div>
 

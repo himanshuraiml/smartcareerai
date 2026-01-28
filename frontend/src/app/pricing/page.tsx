@@ -177,9 +177,9 @@ export default function PricingPage() {
                 const options = {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to frontend .env
                     subscription_id: razorpaySubscriptionId,
-                    name: "SmartCareerAI",
+                    name: "Medhiva",
                     description: `${plan.displayName} Subscription`,
-                    image: "/logo.png", // Ensure this exists
+                    image: "/logo.svg", // Ensure this exists
                     handler: function (response: any) {
                         // Payment successful
                         // You can optionally call a verification backend endpoint here

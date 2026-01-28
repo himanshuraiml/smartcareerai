@@ -1,7 +1,7 @@
 {
-  "name": "smartcareer-ai",
+  "name": "medhiva",
   "version": "1.0.0",
-  "description": "AI-Powered Career Platform for Early-Career Students",
+  "description": "Medhiva - AI Guidance. Human Success. An AI-Powered Career Platform",
   "private": true,
   "workspaces": [
     "services/*",

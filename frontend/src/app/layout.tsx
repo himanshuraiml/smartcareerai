@@ -9,9 +9,9 @@ import KeyboardShortcuts from '@/components/keyboard/KeyboardShortcuts';
 const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
-    title: 'SmartCareerAI - AI-Powered Career Platform',
-    description: 'Your unified career platform with AI-powered resume analysis, skill gap detection, and interview preparation.',
-    keywords: ['career', 'resume', 'ATS', 'job search', 'AI', 'interview'],
+    title: 'Medhiva - AI Guidance. Human Success.',
+    description: 'Your AI-powered career platform with resume analysis, skill validation, and interview preparation. AI Guidance. Human Success.',
+    keywords: ['career', 'resume', 'ATS', 'job search', 'AI', 'interview', 'Medhiva'],
 };
 
 export default function RootLayout({

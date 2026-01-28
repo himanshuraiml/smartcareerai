@@ -20,13 +20,13 @@ export default function HomePage() {
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
                             <Image
-                                src="/logo.png"
-                                alt="SmartCareerAI Logo"
+                                src="/logo.svg"
+                                alt="Medhiva Logo"
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded-lg neon-purple"
                             />
-                            <span className="text-xl font-bold gradient-text">SmartCareerAI</span>
+                            <span className="text-xl font-bold gradient-text">Medhiva</span>
                         </div>
 
                         {/* Desktop Navigation */}
@@ -331,7 +331,7 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-500" />
-                        <span className="text-gray-400">© 2026 SmartCareerAI. All rights reserved.</span>
+                        <span className="text-gray-400">© 2026 Medhiva. All rights reserved.</span>
                     </div>
                     <div className="flex items-center gap-6 text-gray-400">
                         <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>

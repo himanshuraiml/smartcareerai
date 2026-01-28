@@ -1,4 +1,4 @@
-# 🚀 SmartCareerAI
+# 🚀 Medhiva
 
 **AI-Powered Career Platform for Early-Career Students**
 
@@ -36,7 +36,7 @@ A production-grade SaaS platform that uses AI to help students and early-career 
 ## 📁 Project Structure
 
 ```
-SmartCareerAI/
+Medhiva/
 ├── frontend/                 # Next.js 14 frontend
 │   ├── src/
 │   │   ├── app/             # App router pages
@@ -73,7 +73,7 @@ SmartCareerAI/
 
 1. **Clone and install dependencies**
    ```bash
-   cd SmartCareerAI
+   cd Medhiva
    npm install
    ```
 

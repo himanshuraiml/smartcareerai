@@ -56,7 +56,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     const [hasSeenTour, setHasSeenTour] = useState(true);
 
     useEffect(() => {
-        const seen = localStorage.getItem("smartcareer_tour_completed");
+        const seen = localStorage.getItem("medhiva_tour_completed");
         if (!seen) {
             setHasSeenTour(false);
             // Auto-start tour after a short delay for first-time users
@@ -73,7 +73,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     const completeTour = () => {
         setShowTour(false);
         setHasSeenTour(true);
-        localStorage.setItem("smartcareer_tour_completed", "true");
+        localStorage.setItem("medhiva_tour_completed", "true");
     };
 
     const nextStep = () => {

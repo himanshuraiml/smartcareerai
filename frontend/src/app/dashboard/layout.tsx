@@ -198,13 +198,13 @@ export default function DashboardLayout({
                     <div className="p-6 flex items-center justify-between">
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <Image
-                                src="/logo.png"
-                                alt="SmartCareerAI Logo"
+                                src="/logo.svg"
+                                alt="Medhiva Logo"
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded-lg"
                             />
-                            <span className="text-lg font-bold gradient-text">SmartCareerAI</span>
+                            <span className="text-lg font-bold gradient-text">Medhiva</span>
                         </Link>
                         <button
                             onClick={() => setSidebarOpen(false)}
@@ -341,7 +341,7 @@ export default function DashboardLayout({
                             <Menu className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <span className="font-bold gradient-text">SmartCareerAI</span>
+                            <span className="font-bold gradient-text">Medhiva</span>
                         </div>
                         <ThemeToggle />
                     </div>

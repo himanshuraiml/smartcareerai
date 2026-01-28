@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SmartCareerAI is an AI-powered career platform for early-career students. It's a microservices-based SaaS application using Node.js/Express backend services, Next.js 14 frontend, PostgreSQL with Prisma ORM, and OpenAI GPT-4 for AI features.
+Medhiva is an AI-powered career platform for early-career students. It's a microservices-based SaaS application using Node.js/Express backend services, Next.js 14 frontend, PostgreSQL with Prisma ORM, and OpenAI GPT-4 for AI features.
 
 ## Common Commands
 

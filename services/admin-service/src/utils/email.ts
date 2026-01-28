@@ -86,7 +86,7 @@ class EmailService {
             }
 
             const config = await this.getSmtpConfig();
-            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || 'noreply@smartcareer.ai';
+            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || 'noreply@medhiva.com';
 
             await transporter.sendMail({
                 from,
@@ -129,14 +129,14 @@ class EmailService {
         <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);">
             <!-- Header -->
             <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">SmartCareerAI</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Medhiva</h1>
                 <p style="color: #a855f7; margin: 8px 0 0; font-size: 14px;">Institution Admin Invitation</p>
             </div>
 
             <!-- Content -->
             <div style="color: #e5e5e5; font-size: 16px; line-height: 1.6;">
                 <p>Hello,</p>
-                <p>You have been invited to become an <strong style="color: #a855f7;">Institution Administrator</strong> for <strong style="color: #ffffff;">${institutionName}</strong> on SmartCareerAI.</p>
+                <p>You have been invited to become an <strong style="color: #a855f7;">Institution Administrator</strong> for <strong style="color: #ffffff;">${institutionName}</strong> on Medhiva.</p>
 
                 <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; margin: 24px 0;">
                     <p style="margin: 0 0 12px; color: #a855f7; font-weight: 600;">Your Temporary Credentials:</p>
@@ -159,7 +159,7 @@ class EmailService {
 
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-                <p style="color: #6b7280; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} SmartCareerAI. All rights reserved.</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Medhiva. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -168,7 +168,7 @@ class EmailService {
         `;
 
         const text = `
-You have been invited to become an Institution Administrator for ${institutionName} on SmartCareerAI.
+You have been invited to become an Institution Administrator for ${institutionName} on Medhiva.
 
 Your Temporary Credentials:
 Email: ${email}
@@ -181,7 +181,7 @@ This invitation expires in 7 days.
 
         return this.sendEmail({
             to: email,
-            subject: `You're invited to manage ${institutionName} on SmartCareerAI`,
+            subject: `You're invited to manage ${institutionName} on Medhiva`,
             html,
             text
         });
