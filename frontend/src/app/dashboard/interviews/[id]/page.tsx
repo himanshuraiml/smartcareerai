@@ -167,7 +167,10 @@ export default function InterviewRoomPage() {
                 // Route based on interview type
                 if (session?.type === 'HR' || session?.type === 'BEHAVIORAL') {
                     router.push(`/dashboard/interviews/${id}/hr-room`);
+                } else if (session?.type === 'MIXED') {
+                    router.push(`/dashboard/interviews/${id}/mixed-room`);
                 } else {
+                    // TECHNICAL and other types
                     router.push(`/dashboard/interviews/${id}/room`);
                 }
             }

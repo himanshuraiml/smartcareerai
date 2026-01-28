@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/admin.controller';
+import { institutionsController } from '../controllers/institutions.controller';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -22,5 +23,10 @@ router.get('/analytics/user-growth', adminController.getUserGrowth);
 router.get('/analytics/subscriptions', adminController.getSubscriptionDistribution);
 router.get('/analytics/feature-usage', adminController.getFeatureUsage);
 router.get('/analytics/job-roles', adminController.getTopJobRoles);
+
+// Institutions
+router.post('/institutions', institutionsController.createInstitution);
+router.get('/institutions', institutionsController.getInstitutions);
+router.post('/institutions/:institutionId/resend-invite', institutionsController.resendInvite);
 
 export { router as adminRouter };

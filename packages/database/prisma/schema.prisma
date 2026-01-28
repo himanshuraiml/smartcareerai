@@ -479,6 +479,18 @@ model Institution {
   @@map("institutions")
 }
 
+model SystemSettings {
+  id           String   @id @default(uuid())
+  settingKey   String   @unique @map("setting_key")
+  settingValue Json     @map("setting_value")
+  description  String?
+  updatedBy    String?  @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
 // ============================================
 // PHASE 4: SUBSCRIPTIONS & BILLING (Razorpay)
 // ============================================

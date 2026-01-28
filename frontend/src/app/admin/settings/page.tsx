@@ -1,17 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, Bell, Lock, Globe, Mail } from "lucide-react";
+import { useAuthStore } from "@/store/auth.store";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function SettingsPage() {
+    const { accessToken } = useAuthStore();
     const [activeTab, setActiveTab] = useState("general");
     const [saving, setSaving] = useState(false);
+    const [settings, setSettings] = useState<Record<string, any>>({});
+    const [loading, setLoading] = useState(true);
 
-    const handleSave = () => {
-        setSaving(true);
-        // Simulate API call
-        setTimeout(() => setSaving(false), 1000);
+    useEffect(() => {
+        if (accessToken) {
+            fetchSettings();
+        }
+    }, [accessToken]);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/settings`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSettings(data.data || {});
+            }
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch(`${API_URL}/admin/settings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(settings)
+            });
+
+            if (res.ok) {
+                // Show success toast?
+            }
+        } catch (err) {
+            console.error('Failed to save:', err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleChange = (key: string, value: any) => {
+        setSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    if (loading) {
+        return <div className="p-12 text-center text-gray-500">Loading settings...</div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -52,17 +104,32 @@ export default function SettingsPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Platform Name</label>
-                                    <input type="text" defaultValue="SmartCareerAI" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500" />
+                                    <input
+                                        type="text"
+                                        value={settings.platform_name || "SmartCareerAI"}
+                                        onChange={(e) => handleChange('platform_name', e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                    />
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Support Email</label>
-                                    <input type="email" defaultValue="support@smartcareer.ai" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500" />
+                                    <input
+                                        type="email"
+                                        value={settings.support_email || "support@smartcareer.ai"}
+                                        onChange={(e) => handleChange('support_email', e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                    />
                                 </div>
 
                                 <div className="pt-4 border-t border-white/5">
                                     <label className="flex items-center gap-3 cursor-pointer">
-                                        <input type="checkbox" className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20" />
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.maintenance_mode || false}
+                                            onChange={(e) => handleChange('maintenance_mode', e.target.checked)}
+                                            className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                        />
                                         <span className="text-white">Enable Maintenance Mode</span>
                                     </label>
                                     <p className="text-sm text-gray-500 mt-1 ml-7">Prevents non-admin users from accessing the platform</p>
@@ -74,22 +141,69 @@ export default function SettingsPage() {
                     {activeTab === 'security' && (
                         <div className="space-y-6">
                             <h2 className="text-xl font-bold text-white mb-6">Security Settings</h2>
+                            <p className="text-gray-500">Security configurations logic here...</p>
+                        </div>
+                    )}
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Password Policy</label>
-                                    <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500 [&>option]:text-black">
-                                        <option>Strong (Min 12 chars, symbols, numbers)</option>
-                                        <option>Medium (Min 8 chars, numbers)</option>
-                                        <option>Weak (Min 6 chars)</option>
-                                    </select>
+                    {activeTab === 'email' && (
+                        <div className="space-y-8">
+                            <div>
+                                <h2 className="text-xl font-bold text-white mb-4">SMTP Configuration</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">SMTP Host</label>
+                                        <input
+                                            type="text"
+                                            value={settings.smtp_host || ''}
+                                            onChange={(e) => handleChange('smtp_host', e.target.value)}
+                                            placeholder="smtp.example.com"
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">SMTP Port</label>
+                                        <input
+                                            type="number"
+                                            value={settings.smtp_port || ''}
+                                            onChange={(e) => handleChange('smtp_port', e.target.value)}
+                                            placeholder="587"
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                                        <input
+                                            type="text"
+                                            value={settings.smtp_user || ''}
+                                            onChange={(e) => handleChange('smtp_user', e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                                        <input
+                                            type="password"
+                                            value={settings.smtp_pass || ''}
+                                            onChange={(e) => handleChange('smtp_pass', e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div className="pt-4 border-t border-white/5">
-                                    <label className="flex items-center gap-3 cursor-pointer">
-                                        <input type="checkbox" defaultChecked className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20" />
-                                        <span className="text-white">Require Email Verification</span>
-                                    </label>
+                            <div className="pt-6 border-t border-white/5">
+                                <h2 className="text-xl font-bold text-white mb-4">Email Templates</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Welcome Email Subject</label>
+                                        <input
+                                            type="text"
+                                            value={settings.email_welcome_subject || 'Welcome to SmartCareerAI!'}
+                                            onChange={(e) => handleChange('email_welcome_subject', e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                    </div>
+                                    {/* Add more template fields as needed */}
                                 </div>
                             </div>
                         </div>

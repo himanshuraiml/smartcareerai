@@ -276,6 +276,17 @@ Return a JSON object with:
             const systemPrompt = 'You are an expert skills analyzer. Extract skills from resumes accurately. Return JSON only.';
             const analysis = await analyzeWithGemini(systemPrompt, prompt);
 
+            // Handle case where LLM analysis fails or returns null
+            if (!analysis || !analysis.extractedSkills) {
+                logger.warn('LLM analysis returned null, falling back to keyword matching');
+                const savedSkills = await this.fallbackSkillExtraction(userId, resume.parsedText, allSkills);
+                return {
+                    extractedSkills: savedSkills,
+                    suggestedSkills: [],
+                    totalFound: savedSkills.length,
+                };
+            }
+
             // Save extracted skills to user profile
             const savedSkills: any[] = [];
             for (const extracted of analysis.extractedSkills || []) {
@@ -297,11 +308,11 @@ Return a JSON object with:
                         create: {
                             userId,
                             skillId: matchedSkill.id,
-                            proficiencyLevel: extracted.proficiency,
+                            proficiencyLevel: extracted.proficiency || 'intermediate',
                             source: 'resume',
                         },
                         update: {
-                            proficiencyLevel: extracted.proficiency,
+                            proficiencyLevel: extracted.proficiency || 'intermediate',
                         },
                         include: { skill: true },
                     });
@@ -316,10 +327,66 @@ Return a JSON object with:
                 suggestedSkills: analysis.suggestedSkills || [],
                 totalFound: analysis.extractedSkills?.length || 0,
             };
-        } catch (error) {
-            logger.error('Failed to analyze resume skills', error);
-            throw new AppError('Failed to analyze skills', 500);
+        } catch (error: any) {
+            logger.error('Failed to analyze resume skills with LLM, using fallback', { error: error.message });
+
+            // Fallback to keyword matching on any error
+            try {
+                const savedSkills = await this.fallbackSkillExtraction(userId, resume.parsedText, allSkills);
+                return {
+                    extractedSkills: savedSkills,
+                    suggestedSkills: [],
+                    totalFound: savedSkills.length,
+                };
+            } catch (fallbackError) {
+                logger.error('Fallback skill extraction also failed', fallbackError);
+                throw new AppError('Failed to analyze skills', 500);
+            }
         }
+    }
+
+    // Fallback skill extraction using keyword matching (no LLM)
+    private async fallbackSkillExtraction(
+        userId: string,
+        resumeText: string,
+        allSkills: Array<{ id: string; name: string }>
+    ): Promise<any[]> {
+        const resumeLower = resumeText.toLowerCase();
+        const savedSkills: any[] = [];
+
+        for (const skill of allSkills) {
+            const skillLower = skill.name.toLowerCase();
+            const normalizedName = this.normalizeSkillName(skill.name);
+
+            if (!normalizedName) continue;
+
+            // Check if skill name appears in resume
+            if (resumeLower.includes(skillLower)) {
+                try {
+                    const userSkill = await prisma.userSkill.upsert({
+                        where: {
+                            userId_skillId: { userId, skillId: skill.id },
+                        },
+                        create: {
+                            userId,
+                            skillId: skill.id,
+                            proficiencyLevel: 'intermediate',
+                            source: 'resume',
+                        },
+                        update: {
+                            proficiencyLevel: 'intermediate',
+                        },
+                        include: { skill: true },
+                    });
+                    savedSkills.push(userSkill);
+                } catch (e) {
+                    logger.warn(`Failed to save skill ${skill.name} for user ${userId}`);
+                }
+            }
+        }
+
+        logger.info(`Fallback extraction found ${savedSkills.length} skills for user ${userId}`);
+        return savedSkills;
     }
 
     // Get user's skills

@@ -14,6 +14,11 @@ router.post('/refresh-token', validateRequest(RefreshTokenSchema), authControlle
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/institutions', authController.getInstitutions);
+
+// Admin invite routes
+router.get('/verify-invite', authController.verifyInvite);
+router.post('/accept-invite', authController.acceptInvite);
 
 // Protected routes
 router.get('/me', authMiddleware, authController.getCurrentUser);

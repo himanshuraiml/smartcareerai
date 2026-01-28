@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { adminRouter } from './routes/admin.routes';
 import { institutionRouter } from './routes/institution.routes';
+import { settingsRouter } from './routes/settings.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
@@ -27,6 +28,7 @@ app.get('/health', (_req, res) => {
 // If adminRouter (which uses adminMiddleware requiring ADMIN role) is mounted first at '/',
 // it will intercept /institution/* requests and reject them with 403.
 app.use('/institution', institutionRouter);
+app.use('/settings', settingsRouter);
 app.use('/', adminRouter);
 
 // Error handler

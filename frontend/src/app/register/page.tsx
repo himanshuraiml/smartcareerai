@@ -22,33 +22,47 @@ const ROLE_CATEGORIES = ['Engineering', 'Data', 'Design', 'Product', 'Marketing'
 export default function RegisterPage() {
     const router = useRouter();
     const { register, isLoading, error } = useAuthStore();
-    const [step, setStep] = useState(1); // 1: Basic info, 2: Job role selection
+    const [step, setStep] = useState(1); // 1: Basic info, 2: Job role selection, 3: Institution
     const [showPassword, setShowPassword] = useState(false);
     const [jobRoles, setJobRoles] = useState<JobRole[]>([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
+    const [institutions, setInstitutions] = useState<{ id: string; name: string }[]>([]);
+    const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+
+    // Add institutionId to formData
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         targetJobRoleId: '',
+        institutionId: '',
     });
 
-    // Fetch job roles on mount
+    // Fetch job roles and institutions on mount
     useEffect(() => {
-        const fetchJobRoles = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`${API_URL}/job-roles`);
-                if (res.ok) {
-                    const data = await res.json();
+                const [rolesRes, instRes] = await Promise.all([
+                    fetch(`${API_URL}/job-roles`),
+                    fetch(`${API_URL}/institutions`)
+                ]);
+
+                if (rolesRes.ok) {
+                    const data = await rolesRes.json();
                     setJobRoles(data.data || []);
                 }
+
+                if (instRes.ok) {
+                    const data = await instRes.json();
+                    setInstitutions(data.data || []);
+                }
             } catch (err) {
-                console.error('Failed to fetch job roles:', err);
+                console.error('Failed to fetch data:', err);
             } finally {
                 setLoadingRoles(false);
             }
         };
-        fetchJobRoles();
+        fetchData();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +71,29 @@ export default function RegisterPage() {
             setStep(2);
             return;
         }
+        if (step === 2) {
+            setStep(3);
+            return;
+        }
 
+        const success = await register(
+            formData.email,
+            formData.password,
+            formData.name,
+            formData.targetJobRoleId || undefined,
+            // @ts-ignore - auth store might need update or just pass additional arg if it accepts any
+            formData.institutionId || undefined
+        );
+        if (success) {
+            router.push('/dashboard');
+        }
+    };
+
+    const handleSkipJobRole = () => {
+        setStep(3);
+    };
+
+    const handleSkipInstitution = async () => {
         const success = await register(
             formData.email,
             formData.password,
@@ -67,14 +103,7 @@ export default function RegisterPage() {
         if (success) {
             router.push('/dashboard');
         }
-    };
-
-    const handleSkipJobRole = async () => {
-        const success = await register(formData.email, formData.password, formData.name);
-        if (success) {
-            router.push('/dashboard');
-        }
-    };
+    }
 
     const passwordRequirements = [
         { label: 'At least 8 characters', met: formData.password.length >= 8 },
@@ -113,7 +142,7 @@ export default function RegisterPage() {
 
                 {/* Progress Steps */}
                 <div className="flex items-center justify-center gap-4 mb-8">
-                    {[1, 2].map((s) => (
+                    {[1, 2, 3].map((s) => (
                         <div key={s} className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
                                 ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
@@ -121,7 +150,7 @@ export default function RegisterPage() {
                                 }`}>
                                 {step > s ? <Check className="w-4 h-4" /> : s}
                             </div>
-                            {s < 2 && <div className={`w-12 h-0.5 ${step > 1 ? 'bg-purple-500' : 'bg-white/10'}`} />}
+                            {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-purple-500' : 'bg-white/10'}`} />}
                         </div>
                     ))}
                 </div>
@@ -221,12 +250,12 @@ export default function RegisterPage() {
                                     </button>
                                 </form>
                             </motion.div>
-                        ) : (
+                        ) : step === 2 ? (
                             <motion.div
                                 key="step2"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
+                                exit={{ opacity: 0, x: -20 }}
                             >
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
@@ -242,7 +271,7 @@ export default function RegisterPage() {
                                 <div className="my-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-start gap-2">
                                     <Sparkles className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
                                     <p className="text-xs text-gray-300">
-                                        This helps us curate skill tests, interview prep, and job recommendations for you. You can change this anytime.
+                                        This helps us curate skill tests, interview prep, and job recommendations for you.
                                     </p>
                                 </div>
 
@@ -282,13 +311,7 @@ export default function RegisterPage() {
                                         disabled={isLoading || !formData.targetJobRoleId}
                                         className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
-                                        {isLoading ? (
-                                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <>
-                                                Create Account <ArrowRight className="w-5 h-5" />
-                                            </>
-                                        )}
+                                        Continue <ChevronRight className="w-5 h-5" />
                                     </button>
 
                                     <button
@@ -303,6 +326,74 @@ export default function RegisterPage() {
                                     <button
                                         type="button"
                                         onClick={() => setStep(1)}
+                                        className="w-full py-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                                    >
+                                        ← Back
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                            >
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                                        <Briefcase className="w-5 h-5 text-purple-400" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl font-bold text-white">Select Institution</h1>
+                                        <p className="text-sm text-gray-400">Are you a student?</p>
+                                    </div>
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Institution</label>
+                                    <select
+                                        value={formData.institutionId}
+                                        onChange={(e) => setFormData({ ...formData, institutionId: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    >
+                                        <option value="" className="bg-gray-900">Select an Institution</option>
+                                        {institutions.map((inst) => (
+                                            <option key={inst.id} value={inst.id} className="bg-gray-900">
+                                                {inst.name}
+                                            </option>
+                                        ))}
+                                        <option value="other" className="bg-gray-900">Other</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleSubmit}
+                                        disabled={isLoading || !formData.institutionId}
+                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isLoading ? (
+                                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                Create Account <ArrowRight className="w-5 h-5" />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleSkipInstitution}
+                                        disabled={isLoading}
+                                        className="w-full py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                                    >
+                                        Skip / Not a Student
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(2)}
                                         className="w-full py-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                                     >
                                         ← Back

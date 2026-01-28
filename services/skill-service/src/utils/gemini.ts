@@ -3,15 +3,18 @@ import { logger } from './logger';
 
 
 let groq: Groq | null = null;
+let initialized = false;
 
-function getGroqClient() {
-    if (!groq) {
+function getGroqClient(): Groq | null {
+    if (!initialized) {
         const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
-            logger.error('GROQ_API_KEY is not set!');
-            throw new Error('GROQ_API_KEY is not configured');
+            logger.warn('GROQ_API_KEY is not set - LLM features will use fallback');
+            initialized = true;
+            return null;
         }
         groq = new Groq({ apiKey });
+        initialized = true;
     }
     return groq;
 }
@@ -20,11 +23,16 @@ export async function generateWithLLM(
     systemPrompt: string,
     userPrompt: string,
     options: { json?: boolean; temperature?: number } = {}
-): Promise<string> {
+): Promise<string | null> {
     const client = getGroqClient();
 
+    if (!client) {
+        logger.warn('Groq client not available, returning null');
+        return null;
+    }
+
     try {
-        logger.info('Calling Groq API (Llama 3.1)...');
+        logger.info('Calling Groq API (Llama 3.3)...');
 
         const response = await client.chat.completions.create({
             model: 'llama-3.3-70b-versatile',
@@ -46,7 +54,7 @@ export async function generateWithLLM(
             status: error.status,
             code: error.code,
         });
-        throw error;
+        return null;
     }
 }
 
@@ -56,6 +64,11 @@ export async function analyzeWithLLM(
 ): Promise<any> {
     try {
         const text = await generateWithLLM(systemPrompt, userPrompt, { json: true });
+
+        if (!text) {
+            logger.warn('LLM returned no response');
+            return null;
+        }
 
         // Clean up potential markdown code blocks
         let cleaned = text.trim();

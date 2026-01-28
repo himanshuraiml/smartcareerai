@@ -7,8 +7,8 @@ const authService = new AuthService();
 export class AuthController {
     async register(req: Request, res: Response, next: NextFunction) {
         try {
-            const { email, password, name, targetJobRoleId } = req.body;
-            const result = await authService.register(email, password, name, targetJobRoleId);
+            const { email, password, name, targetJobRoleId, institutionId } = req.body;
+            const result = await authService.register(email, password, name, targetJobRoleId, institutionId);
 
             logger.info(`User registered: ${email}`);
             res.status(201).json({
@@ -163,6 +163,69 @@ export class AuthController {
             res.json({
                 success: true,
                 message: 'Email verified successfully.',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getInstitutions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutions = await authService.getInstitutions();
+            res.json({
+                success: true,
+                data: institutions,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async verifyInvite(req: Request, res: Response, _next: NextFunction): Promise<void> {
+        try {
+            const { token } = req.query;
+            if (!token || typeof token !== 'string') {
+                res.status(400).json({
+                    success: false,
+                    valid: false,
+                    message: 'Token is required',
+                });
+                return;
+            }
+
+            const result = await authService.verifyInviteToken(token);
+            res.json({
+                success: true,
+                valid: true,
+                email: result.email,
+                institutionName: result.institutionName,
+            });
+        } catch (error: any) {
+            res.json({
+                success: false,
+                valid: false,
+                message: error.message || 'Invalid or expired token',
+            });
+        }
+    }
+
+    async acceptInvite(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { token, password } = req.body;
+            if (!token || !password) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Token and password are required',
+                });
+                return;
+            }
+
+            await authService.acceptInvite(token, password);
+
+            logger.info('Admin invite accepted');
+            res.json({
+                success: true,
+                message: 'Account activated successfully',
             });
         } catch (error) {
             next(error);

@@ -40,10 +40,14 @@ export class InstitutionController {
                 targetJobRoleId: req.query.targetJobRoleId as string,
                 minScore: req.query.minScore ? parseInt(req.query.minScore as string) : undefined,
                 maxScore: req.query.maxScore ? parseInt(req.query.maxScore as string) : undefined,
+                minAtsScore: req.query.minAtsScore ? parseInt(req.query.minAtsScore as string) : undefined,
+                minSkillScore: req.query.minSkillScore ? parseInt(req.query.minSkillScore as string) : undefined,
+                minInterviewScore: req.query.minInterviewScore ? parseInt(req.query.minInterviewScore as string) : undefined,
+                scoreType: req.query.scoreType as 'all' | 'ats' | 'skill' | 'interview' | undefined,
                 isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
                 page: parseInt(req.query.page as string) || 1,
                 limit: parseInt(req.query.limit as string) || 20,
-                sortBy: (req.query.sortBy as 'name' | 'score' | 'lastActive') || 'name',
+                sortBy: (req.query.sortBy as 'name' | 'score' | 'atsScore' | 'skillScore' | 'interviewScore' | 'lastActive') || 'name',
                 sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'asc',
             };
 

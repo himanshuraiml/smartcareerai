@@ -17,7 +17,7 @@ export class AuthService {
     private readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'; // 24 hours for development
     private readonly REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d'; // 30 days
 
-    async register(email: string, password: string, name?: string, targetJobRoleId?: string) {
+    async register(email: string, password: string, name?: string, targetJobRoleId?: string, institutionId?: string) {
         // Check if user exists
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
@@ -38,6 +38,7 @@ export class AuthService {
                 name,
                 verifyToken,
                 targetJobRoleId,
+                institutionId,
             },
             include: {
                 targetJobRole: true,
@@ -272,5 +273,83 @@ export class AuthService {
             targetJobRole: user.targetJobRole || null,
             createdAt: user.createdAt.toISOString(),
         };
+    }
+
+    async getInstitutions() {
+        return prisma.institution.findMany({
+            select: { id: true, name: true, domain: true },
+            orderBy: { name: 'asc' }
+        });
+    }
+
+    /**
+     * Verify an admin invite token is valid
+     */
+    async verifyInviteToken(token: string) {
+        const user = await prisma.user.findFirst({
+            where: {
+                verifyToken: token,
+                role: 'INSTITUTION_ADMIN',
+                isVerified: false,
+            },
+            include: {
+                adminForInstitution: {
+                    select: { name: true }
+                }
+            }
+        });
+
+        if (!user) {
+            throw new AppError('Invalid or expired invitation token', 400);
+        }
+
+        // Check if token has expired (using resetExpires as invite expiry)
+        if (user.resetExpires && new Date() > user.resetExpires) {
+            throw new AppError('Invitation has expired', 400);
+        }
+
+        return {
+            email: user.email,
+            institutionName: user.adminForInstitution?.name || 'Unknown Institution',
+        };
+    }
+
+    /**
+     * Accept an admin invite and set the password
+     */
+    async acceptInvite(token: string, password: string) {
+        const user = await prisma.user.findFirst({
+            where: {
+                verifyToken: token,
+                role: 'INSTITUTION_ADMIN',
+                isVerified: false,
+            },
+        });
+
+        if (!user) {
+            throw new AppError('Invalid or expired invitation token', 400);
+        }
+
+        // Check if token has expired
+        if (user.resetExpires && new Date() > user.resetExpires) {
+            throw new AppError('Invitation has expired', 400);
+        }
+
+        // Hash the new password
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        // Update user: set password, verify, clear tokens
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                passwordHash,
+                isVerified: true,
+                verifyToken: null,
+                resetExpires: null,
+            },
+        });
+
+        // Invalidate any existing refresh tokens
+        await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
     }
 }

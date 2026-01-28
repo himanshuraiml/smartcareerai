@@ -7,10 +7,14 @@ export interface InstitutionStudentFilters {
     targetJobRoleId?: string;
     minScore?: number;
     maxScore?: number;
+    minAtsScore?: number;
+    minSkillScore?: number;
+    minInterviewScore?: number;
+    scoreType?: 'all' | 'ats' | 'skill' | 'interview'; // Filter by specific score type
     isActive?: boolean; // Active in last 30 days
     page?: number;
     limit?: number;
-    sortBy?: 'name' | 'score' | 'lastActive';
+    sortBy?: 'name' | 'score' | 'atsScore' | 'skillScore' | 'interviewScore' | 'lastActive';
     sortOrder?: 'asc' | 'desc';
 }
 
@@ -21,6 +25,8 @@ class InstitutionService {
     async getDashboard(institutionId: string) {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         // Total students in this institution
         const totalStudents = await prisma.user.count({
@@ -37,6 +43,24 @@ class InstitutionService {
                         createdAt: { gte: thirtyDaysAgo },
                     },
                 },
+            },
+        });
+
+        // Students with resumes
+        const studentsWithResumes = await prisma.user.count({
+            where: {
+                institutionId,
+                role: UserRole.USER,
+                resumes: { some: {} },
+            },
+        });
+
+        // Students with badges
+        const studentsWithBadges = await prisma.user.count({
+            where: {
+                institutionId,
+                role: UserRole.USER,
+                skillBadges: { some: {} },
             },
         });
 
@@ -58,6 +82,97 @@ class InstitutionService {
             },
         });
 
+        // Interviews in last 7 days
+        const recentInterviewCount = await prisma.interviewSession.count({
+            where: {
+                user: { institutionId },
+                createdAt: { gte: sevenDaysAgo },
+            },
+        });
+
+        // Score distribution for interviews
+        const allScores = await prisma.interviewSession.findMany({
+            where: {
+                user: { institutionId },
+                overallScore: { not: null },
+            },
+            select: { overallScore: true },
+        });
+
+        const scoreDistribution = {
+            excellent: 0, // 80-100
+            good: 0,      // 60-79
+            average: 0,   // 40-59
+            needsWork: 0, // 0-39
+        };
+
+        allScores.forEach((s) => {
+            const score = s.overallScore || 0;
+            if (score >= 80) scoreDistribution.excellent++;
+            else if (score >= 60) scoreDistribution.good++;
+            else if (score >= 40) scoreDistribution.average++;
+            else scoreDistribution.needsWork++;
+        });
+
+        // Top performers (students with highest avg scores)
+        const studentsWithScores = await prisma.user.findMany({
+            where: {
+                institutionId,
+                role: UserRole.USER,
+                interviews: { some: { status: 'COMPLETED', overallScore: { not: null } } },
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                targetJobRole: { select: { title: true } },
+                interviews: {
+                    where: { status: 'COMPLETED', overallScore: { not: null } },
+                    select: { overallScore: true },
+                },
+                skillBadges: { select: { id: true } },
+            },
+        });
+
+        const topPerformers = studentsWithScores
+            .map((student) => {
+                const scores = student.interviews.map((i) => i.overallScore).filter((s): s is number => s !== null);
+                const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+                return {
+                    id: student.id,
+                    name: student.name || 'Unknown',
+                    email: student.email,
+                    avatarUrl: student.avatarUrl,
+                    targetRole: student.targetJobRole?.title || null,
+                    averageScore: avgScore,
+                    interviewCount: scores.length,
+                    badgeCount: student.skillBadges.length,
+                };
+            })
+            .sort((a, b) => b.averageScore - a.averageScore)
+            .slice(0, 5);
+
+        // Recent activity (latest interviews)
+        const recentActivity = await prisma.interviewSession.findMany({
+            where: {
+                user: { institutionId },
+                status: 'COMPLETED',
+            },
+            select: {
+                id: true,
+                targetRole: true,
+                type: true,
+                overallScore: true,
+                completedAt: true,
+                user: {
+                    select: { id: true, name: true, avatarUrl: true },
+                },
+            },
+            orderBy: { completedAt: 'desc' },
+            take: 8,
+        });
+
         // Role distribution
         const roleDistribution = await prisma.user.groupBy({
             by: ['targetJobRoleId'],
@@ -68,7 +183,6 @@ class InstitutionService {
             _count: { id: true },
         });
 
-        // Fetch role names for the distribution
         const roleIds = roleDistribution.map((r) => r.targetJobRoleId).filter(Boolean) as string[];
         const roles = await prisma.jobRole.findMany({
             where: { id: { in: roleIds } },
@@ -76,35 +190,93 @@ class InstitutionService {
         });
         const roleMap = Object.fromEntries(roles.map((r) => [r.id, r.title]));
 
-        const formattedRoleDistribution = roleDistribution.map((r) => ({
-            roleName: r.targetJobRoleId ? roleMap[r.targetJobRoleId] || 'Unknown' : 'Not Set',
-            count: r._count.id,
+        const formattedRoleDistribution = roleDistribution
+            .map((r) => ({
+                roleName: r.targetJobRoleId ? roleMap[r.targetJobRoleId] || 'Unknown' : 'Not Set',
+                count: r._count.id,
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 6);
+
+        // Top skills among students
+        const skillDistribution = await prisma.userSkill.groupBy({
+            by: ['skillId'],
+            where: {
+                user: { institutionId },
+            },
+            _count: { skillId: true },
+            orderBy: { _count: { skillId: 'desc' } },
+            take: 8,
+        });
+
+        const skillIds = skillDistribution.map((s) => s.skillId);
+        const skills = await prisma.skill.findMany({
+            where: { id: { in: skillIds } },
+            select: { id: true, name: true, category: true },
+        });
+        const skillMap = Object.fromEntries(skills.map((s) => [s.id, s]));
+
+        const topSkills = skillDistribution.map((s) => ({
+            name: skillMap[s.skillId]?.name || 'Unknown',
+            category: skillMap[s.skillId]?.category || 'Other',
+            count: s._count.skillId,
         }));
 
-        // Activity trend (last 7 days)
-        const activityTrend: { date: string; count: number }[] = [];
-        for (let i = 6; i >= 0; i--) {
+        // Activity trend (last 14 days for better visualization)
+        const activityTrend: { date: string; interviews: number; signups: number }[] = [];
+        for (let i = 13; i >= 0; i--) {
             const date = new Date();
             date.setDate(date.getDate() - i);
             date.setHours(0, 0, 0, 0);
             const nextDate = new Date(date);
             nextDate.setDate(nextDate.getDate() + 1);
 
-            const count = await prisma.interviewSession.count({
-                where: {
-                    user: { institutionId },
-                    createdAt: { gte: date, lt: nextDate },
-                },
+            const [interviews, signups] = await Promise.all([
+                prisma.interviewSession.count({
+                    where: {
+                        user: { institutionId },
+                        createdAt: { gte: date, lt: nextDate },
+                    },
+                }),
+                prisma.user.count({
+                    where: {
+                        institutionId,
+                        role: UserRole.USER,
+                        createdAt: { gte: date, lt: nextDate },
+                    },
+                }),
+            ]);
+            activityTrend.push({
+                date: date.toISOString().split('T')[0],
+                interviews,
+                signups,
             });
-            activityTrend.push({ date: date.toISOString().split('T')[0], count });
         }
 
         return {
+            // Core stats
             totalStudents,
             activeStudents,
+            studentsWithResumes,
+            studentsWithBadges,
             averageScore,
             totalInterviews,
+            recentInterviewCount,
+            // Distributions
+            scoreDistribution,
             roleDistribution: formattedRoleDistribution,
+            topSkills,
+            // Lists
+            topPerformers,
+            recentActivity: recentActivity.map((a) => ({
+                id: a.id,
+                targetRole: a.targetRole,
+                type: a.type,
+                score: a.overallScore,
+                completedAt: a.completedAt,
+                student: a.user,
+            })),
+            // Trends
             activityTrend,
         };
     }
@@ -117,6 +289,10 @@ class InstitutionService {
             search,
             targetJobRoleId,
             minScore,
+            minAtsScore,
+            minSkillScore,
+            minInterviewScore,
+            scoreType,
             isActive,
             page = 1,
             limit = 20,
@@ -151,7 +327,7 @@ class InstitutionService {
             }
         }
 
-        // Build orderBy
+        // Build orderBy for DB-level sorting
         let orderBy: any = {};
         if (sortBy === 'name') {
             orderBy = { name: sortOrder };
@@ -170,27 +346,69 @@ class InstitutionService {
                     createdAt: true,
                     updatedAt: true,
                     targetJobRole: { select: { id: true, title: true } },
+                    // Interview scores
                     interviews: {
                         select: { overallScore: true, status: true },
                         where: { status: 'COMPLETED' },
                         orderBy: { createdAt: 'desc' },
-                        take: 10,
+                        take: 20,
+                    },
+                    // ATS scores
+                    atsScores: {
+                        select: { overallScore: true },
+                        orderBy: { createdAt: 'desc' },
+                        take: 5,
+                    },
+                    // Skill validation scores (test attempts)
+                    testAttempts: {
+                        select: { score: true, passed: true },
+                        where: { completedAt: { not: null } },
+                        orderBy: { completedAt: 'desc' },
+                        take: 20,
+                    },
+                    // Skill badges count
+                    skillBadges: {
+                        select: { id: true },
                     },
                 },
                 orderBy,
                 skip: (page - 1) * limit,
-                take: limit,
+                take: limit * 3, // Fetch more to account for post-filtering
             }),
             prisma.user.count({ where }),
         ]);
 
-        // Calculate average score for each student
-        const studentsWithScore = students.map((student) => {
-            const completedInterviews = student.interviews;
-            const scores = completedInterviews
+        // Calculate all score types for each student
+        const studentsWithScores = students.map((student) => {
+            // Interview score
+            const interviewScores = student.interviews
                 .map((i) => i.overallScore)
                 .filter((s): s is number => s !== null);
-            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+            const interviewScore = interviewScores.length > 0
+                ? Math.round(interviewScores.reduce((a, b) => a + b, 0) / interviewScores.length)
+                : null;
+
+            // ATS score (latest or average)
+            const atsScores = student.atsScores
+                .map((a) => a.overallScore)
+                .filter((s): s is number => s !== null);
+            const atsScore = atsScores.length > 0
+                ? Math.round(atsScores.reduce((a, b) => a + b, 0) / atsScores.length)
+                : null;
+
+            // Skill validation score (average of test attempts)
+            const skillScores = student.testAttempts
+                .map((t) => t.score)
+                .filter((s): s is number => s !== null);
+            const skillScore = skillScores.length > 0
+                ? Math.round(skillScores.reduce((a, b) => a + b, 0) / skillScores.length)
+                : null;
+
+            // Combined average (only include scores that exist)
+            const allScores = [interviewScore, atsScore, skillScore].filter((s): s is number => s !== null);
+            const combinedScore = allScores.length > 0
+                ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+                : null;
 
             return {
                 id: student.id,
@@ -198,37 +416,92 @@ class InstitutionService {
                 email: student.email,
                 avatarUrl: student.avatarUrl,
                 targetJobRole: student.targetJobRole,
-                averageScore: avgScore,
-                interviewCount: completedInterviews.length,
+                // All score types
+                interviewScore,
+                atsScore,
+                skillScore,
+                combinedScore,
+                // Counts
+                interviewCount: student.interviews.length,
+                testCount: student.testAttempts.length,
+                badgeCount: student.skillBadges.length,
+                // Metadata
                 lastActive: student.updatedAt,
                 createdAt: student.createdAt,
             };
         });
 
-        // Filter by score if provided (post-query filter as it's computed)
-        let filteredStudents = studentsWithScore;
-        if (minScore !== undefined) {
-            filteredStudents = studentsWithScore.filter(
-                (s) => s.averageScore !== null && s.averageScore >= minScore
+        // Apply score filters
+        let filteredStudents = studentsWithScores;
+
+        // Filter by specific score type
+        if (scoreType === 'ats' && minAtsScore !== undefined) {
+            filteredStudents = filteredStudents.filter(
+                (s) => s.atsScore !== null && s.atsScore >= minAtsScore
             );
+        } else if (scoreType === 'skill' && minSkillScore !== undefined) {
+            filteredStudents = filteredStudents.filter(
+                (s) => s.skillScore !== null && s.skillScore >= minSkillScore
+            );
+        } else if (scoreType === 'interview' && minInterviewScore !== undefined) {
+            filteredStudents = filteredStudents.filter(
+                (s) => s.interviewScore !== null && s.interviewScore >= minInterviewScore
+            );
+        } else {
+            // Combined filters - apply all that are specified
+            if (minAtsScore !== undefined) {
+                filteredStudents = filteredStudents.filter(
+                    (s) => s.atsScore !== null && s.atsScore >= minAtsScore
+                );
+            }
+            if (minSkillScore !== undefined) {
+                filteredStudents = filteredStudents.filter(
+                    (s) => s.skillScore !== null && s.skillScore >= minSkillScore
+                );
+            }
+            if (minInterviewScore !== undefined) {
+                filteredStudents = filteredStudents.filter(
+                    (s) => s.interviewScore !== null && s.interviewScore >= minInterviewScore
+                );
+            }
+            if (minScore !== undefined) {
+                filteredStudents = filteredStudents.filter(
+                    (s) => s.combinedScore !== null && s.combinedScore >= minScore
+                );
+            }
         }
 
-        // Sort by score if requested (post-query sort)
-        if (sortBy === 'score') {
+        // Sort by score type if requested
+        if (sortBy === 'score' || sortBy === 'interviewScore') {
             filteredStudents.sort((a, b) => {
-                const scoreA = a.averageScore ?? -1;
-                const scoreB = b.averageScore ?? -1;
+                const scoreA = a.interviewScore ?? -1;
+                const scoreB = b.interviewScore ?? -1;
+                return sortOrder === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+            });
+        } else if (sortBy === 'atsScore') {
+            filteredStudents.sort((a, b) => {
+                const scoreA = a.atsScore ?? -1;
+                const scoreB = b.atsScore ?? -1;
+                return sortOrder === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+            });
+        } else if (sortBy === 'skillScore') {
+            filteredStudents.sort((a, b) => {
+                const scoreA = a.skillScore ?? -1;
+                const scoreB = b.skillScore ?? -1;
                 return sortOrder === 'asc' ? scoreA - scoreB : scoreB - scoreA;
             });
         }
 
+        // Apply pagination after filtering
+        const paginatedStudents = filteredStudents.slice(0, limit);
+
         return {
-            students: filteredStudents,
+            students: paginatedStudents,
             pagination: {
-                total,
+                total: filteredStudents.length,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit),
+                totalPages: Math.ceil(filteredStudents.length / limit),
             },
         };
     }

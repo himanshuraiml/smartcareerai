@@ -17,9 +17,11 @@ import {
     X,
     CreditCard,
     Lock,
-    Sparkles
+    Sparkles,
+    User
 } from 'lucide-react';
 import Image from 'next/image';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
@@ -54,6 +56,7 @@ export default function DashboardLayout({
     const { user, logout, accessToken, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
 
     // Idle Timeout Logic (10 minutes)
     useEffect(() => {
@@ -174,7 +177,7 @@ export default function DashboardLayout({
     const isNewUser = userStage === 0;
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex bg-gray-950">
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div
@@ -185,11 +188,11 @@ export default function DashboardLayout({
 
             {/* Sidebar */}
             <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-64 glass border-r border-white/5
-        transform transition-transform duration-200 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+    fixed lg:static inset-y-0 left-0 z-50
+    w-64 glass border-r border-white/5
+    transform transition-transform duration-200 ease-in-out
+    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+  `}>
                 <div className="flex flex-col h-full">
                     {/* Logo */}
                     <div className="p-6 flex items-center justify-between">
@@ -234,11 +237,11 @@ export default function DashboardLayout({
                                     href={item.href}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                    ${isActive
+                flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                ${isActive
                                             ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border border-purple-500/30'
                                             : 'text-gray-400 hover:text-white hover:bg-white/5'}
-                  `}
+              `}
                                 >
                                     <item.icon className="w-5 h-5" />
                                     <span className="font-medium">{item.label}</span>
@@ -267,9 +270,12 @@ export default function DashboardLayout({
                         )}
                     </nav>
 
-                    {/* User section */}
-                    <div className="p-4 border-t border-white/5">
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 mb-3">
+                    {/* User Profile Dropdown Trigger (Replaced Bottom Bar) */}
+                    <div className="p-4 border-t border-white/5 relative">
+                        <button
+                            onClick={() => setUserMenuOpen(!userMenuOpen)}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left"
+                        >
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-medium">
                                     {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
@@ -279,30 +285,52 @@ export default function DashboardLayout({
                                 <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
                                 <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <ThemeToggle />
-                            <Link
-                                href="/dashboard/settings"
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                            >
-                                <Settings className="w-4 h-4" />
-                                <span className="text-sm">Settings</span>
-                            </Link>
-                            <button
-                                onClick={handleLogout}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="text-sm">Logout</span>
-                            </button>
-                        </div>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        <AnimatePresence>
+                            {userMenuOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute bottom-full left-4 right-4 mb-2 p-2 rounded-xl bg-gray-900 border border-white/10 shadow-xl backdrop-blur-xl z-50"
+                                >
+                                    <Link href="/dashboard/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                        <User className="w-4 h-4" />
+                                        <span className="text-sm">Profile</span>
+                                    </Link>
+                                    <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                        <Settings className="w-4 h-4" />
+                                        <span className="text-sm">Settings</span>
+                                    </Link>
+                                    <div className="h-px bg-white/10 my-1" />
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span className="text-sm">Logout</span>
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 lg:ml-0">
+            <main className="flex-1 lg:ml-0 flex flex-col min-w-0">
+                {/* Desktop Header */}
+                <header className="hidden lg:flex items-center justify-between px-8 py-4 glass border-b border-white/5 sticky top-0 z-40">
+                    <h1 className="text-xl font-bold text-white capitalize">
+                        {pathname?.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
+                    </h1>
+                    <div className="flex items-center gap-4">
+                        <ThemeToggle />
+                    </div>
+                </header>
+
                 {/* Mobile header */}
                 <header className="lg:hidden sticky top-0 z-30 glass border-b border-white/5">
                     <div className="flex items-center justify-between px-4 py-3">
@@ -313,20 +341,13 @@ export default function DashboardLayout({
                             <Menu className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Image
-                                src="/logo.png"
-                                alt="SmartCareerAI Logo"
-                                width={24}
-                                height={24}
-                                className="w-6 h-6 rounded"
-                            />
                             <span className="font-bold gradient-text">SmartCareerAI</span>
                         </div>
-                        <div className="w-6" />
+                        <ThemeToggle />
                     </div>
                 </header>
 
-                <div className="p-6 lg:p-8">
+                <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
                     {children}
                 </div>
             </main>
