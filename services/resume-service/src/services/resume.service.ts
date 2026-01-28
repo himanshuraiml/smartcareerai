@@ -108,11 +108,27 @@ export class ResumeService {
             throw new AppError('Resume not found', 404);
         }
 
-        // Soft delete
+        // Soft delete the resume
         await prisma.resume.update({
             where: { id: resumeId },
             data: { isActive: false },
         });
+
+        // Check if user has any other active resumes
+        const activeResumesCount = await prisma.resume.count({
+            where: { userId, isActive: true },
+        });
+
+        // If no active resumes remain, clear all resume-sourced skills
+        if (activeResumesCount === 0) {
+            const deletedSkills = await prisma.userSkill.deleteMany({
+                where: {
+                    userId,
+                    source: 'resume',
+                },
+            });
+            logger.info(`Cleared ${deletedSkills.count} resume-sourced skills for user ${userId} (no active resumes)`);
+        }
     }
 
     async parseResume(resumeId: string, userId: string) {

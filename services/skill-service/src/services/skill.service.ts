@@ -242,6 +242,18 @@ export class SkillService {
         return skill;
     }
 
+    // Clear all resume-sourced skills for a user
+    async clearResumeSkills(userId: string) {
+        const deleted = await prisma.userSkill.deleteMany({
+            where: {
+                userId,
+                source: 'resume',
+            },
+        });
+        logger.info(`Cleared ${deleted.count} resume-sourced skills for user ${userId}`);
+        return deleted.count;
+    }
+
     // Analyze resume to extract skills using LLM
     async analyzeResumeSkills(userId: string, resumeId: string) {
         const resume = await prisma.resume.findFirst({
@@ -251,6 +263,10 @@ export class SkillService {
         if (!resume || !resume.parsedText) {
             throw new AppError('Resume not found or not parsed', 404);
         }
+
+        // Clear existing resume-sourced skills before extracting new ones
+        // This ensures we don't accumulate skills from multiple resume versions
+        await this.clearResumeSkills(userId);
 
         // Get all available skills for matching
         const allSkills = await prisma.skill.findMany({ where: { isActive: true } });
