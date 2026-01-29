@@ -2,13 +2,34 @@
 const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
-    output: 'standalone', // Required for Docker deployment
+    // Use 'standalone' only for Docker deployments, Vercel handles this automatically
+    output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
     images: {
-        domains: ['localhost'],
-        unoptimized: process.env.NODE_ENV === 'production', // For standalone build
+        remotePatterns: [
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.vercel.app',
+            },
+            {
+                protocol: 'https',
+                hostname: 'medhiva.com',
+            },
+            {
+                protocol: 'https',
+                hostname: '**.medhiva.com',
+            },
+        ],
     },
     async rewrites() {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        // Only apply rewrites if API URL is configured (for local dev proxy)
+        if (!apiUrl || process.env.VERCEL) {
+            return [];
+        }
         return [
             {
                 source: '/api/:path*',
