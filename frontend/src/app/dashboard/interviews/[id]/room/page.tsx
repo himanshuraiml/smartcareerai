@@ -60,13 +60,25 @@ const normalizeUUID = (id: string | string[] | undefined): string | null => {
     return uuidRegex.test(normalized) ? normalized : null;
 };
 
-// AI Interviewer avatars with realistic images
+// AI Interviewer avatars - Technical interviewers only (no HR)
 const AI_INTERVIEWERS = [
-    { name: 'Sarah', role: 'Lead UX', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face', gender: 'female' },
+    { name: 'Sarah', role: 'Lead Engineer', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face', gender: 'female' },
     { name: 'Alex', role: 'Tech Lead', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face', gender: 'male' },
-    { name: 'Maya', role: 'HR Manager', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face', gender: 'female' },
-    { name: 'James', role: 'Senior Dev', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face', gender: 'male' },
+    { name: 'Priya', role: 'Senior Architect', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face', gender: 'female' },
+    { name: 'James', role: 'Staff Engineer', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face', gender: 'male' },
 ];
+
+// Text-to-speech function
+const speakQuestion = (text: string) => {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+};
 
 export default function InterviewRoomPage() {
     const params = useParams();
@@ -417,6 +429,19 @@ export default function InterviewRoomPage() {
     const currentQuestion = session.questions[currentQuestionIndex];
     const progress = analytics?.progress || { current: currentQuestionIndex + 1, total: session.questions.length, answered: 0 };
 
+    // Auto-speak question when it changes (after proctoring modal closes)
+    useEffect(() => {
+        if (!showProctoringModal && currentQuestion?.questionText) {
+            speakQuestion(currentQuestion.questionText);
+        }
+        // Cleanup: stop speech when unmounting or question changes
+        return () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [currentQuestion?.questionText, showProctoringModal]);
+
     // Handle screen share request with entire screen detection
     const handleRequestScreenShare = async () => {
         setScreenShareError(null);
@@ -633,6 +658,17 @@ export default function InterviewRoomPage() {
             <div className="flex h-[calc(100vh-80px)]">
                 {/* Left side - Video Area */}
                 <div className="flex-1 p-6 flex flex-col">
+                    {/* Question Overlay - Top of Video Area */}
+                    <div className="mb-4 p-6 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-purple-400 uppercase tracking-wider font-medium">Current Question</span>
+                            <span className="text-sm text-gray-400 font-medium">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
+                        </div>
+                        <p className="text-white font-bold text-2xl text-center leading-relaxed">
+                            "{currentQuestion?.questionText || 'Loading question...'}"
+                        </p>
+                    </div>
+
                     {/* Split Video View */}
                     <div className="flex-1 grid grid-cols-2 gap-4 mb-4">
                         {/* AI Interviewer */}
@@ -819,17 +855,6 @@ export default function InterviewRoomPage() {
                             <p className="text-xs text-teal-600 dark:text-teal-400 uppercase">AI Interviewer</p>
                             <p className="text-gray-900 dark:text-white font-medium">{interviewer.name} ({interviewer.role})</p>
                         </div>
-                    </div>
-
-                    {/* Current Question */}
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-red-500 dark:text-red-400 uppercase tracking-wider">Current Question</span>
-                            <span className="text-xs text-gray-500">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
-                        </div>
-                        <p className="text-gray-900 dark:text-white font-medium text-lg leading-relaxed">
-                            "{currentQuestion?.questionText || 'Loading question...'}"
-                        </p>
                     </div>
 
                     {/* AI Hint */}

@@ -75,6 +75,18 @@ const AI_INTERVIEWERS = [
     { name: 'Maya', role: 'VP Engineering', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face' },
 ];
 
+// Text-to-speech function
+const speakQuestion = (text: string) => {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+};
+
 export default function MixedInterviewRoomPage() {
     const params = useParams();
     const router = useRouter();
@@ -450,6 +462,19 @@ export default function MixedInterviewRoomPage() {
     const progress = analytics?.progress || { current: currentQuestionIndex + 1, total: session.questions.length, answered: 0 };
     const questionBadge = currentQuestion ? getQuestionTypeBadge(currentQuestion.questionType) : null;
 
+    // Auto-speak question when it changes (after proctoring modal closes)
+    useEffect(() => {
+        if (!showProctoringModal && currentQuestion?.questionText) {
+            speakQuestion(currentQuestion.questionText);
+        }
+        // Cleanup: stop speech when unmounting or question changes
+        return () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [currentQuestion?.questionText, showProctoringModal]);
+
     // Handle screen share request with entire screen detection
     const handleRequestScreenShare = async () => {
         setScreenShareError(null);
@@ -688,6 +713,24 @@ export default function MixedInterviewRoomPage() {
             <div className="flex h-[calc(100vh-80px)]">
                 {/* Left side - Video Area */}
                 <div className="flex-1 p-6 flex flex-col">
+                    {/* Question Overlay - Top of Video Area */}
+                    <div className="mb-4 p-6 rounded-2xl bg-gradient-to-r from-purple-500/20 via-teal-500/20 to-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-purple-400 uppercase tracking-wider font-medium">Current Question</span>
+                                {questionBadge && (
+                                    <span className={`px-2 py-0.5 rounded text-xs ${questionBadge.color}`}>
+                                        {questionBadge.label}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-sm text-gray-400 font-medium">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
+                        </div>
+                        <p className="text-white font-bold text-2xl text-center leading-relaxed">
+                            "{currentQuestion?.questionText || 'Loading question...'}"
+                        </p>
+                    </div>
+
                     {/* Split Video View */}
                     <div className="flex-1 grid grid-cols-2 gap-4 mb-4">
                         {/* AI Interviewer */}
@@ -871,24 +914,6 @@ export default function MixedInterviewRoomPage() {
                             <p className="text-xs text-purple-600 dark:text-purple-400 uppercase">AI Interviewer</p>
                             <p className="text-gray-900 dark:text-white font-medium">{interviewer.name} ({interviewer.role})</p>
                         </div>
-                    </div>
-
-                    {/* Current Question */}
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-red-500 dark:text-red-400 uppercase tracking-wider">Current Question</span>
-                                {questionBadge && (
-                                    <span className={`px-2 py-0.5 rounded text-xs ${questionBadge.color}`}>
-                                        {questionBadge.label}
-                                    </span>
-                                )}
-                            </div>
-                            <span className="text-xs text-gray-500">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
-                        </div>
-                        <p className="text-gray-900 dark:text-white font-medium text-lg leading-relaxed">
-                            &quot;{currentQuestion?.questionText || 'Loading question...'}&quot;
-                        </p>
                     </div>
 
                     {/* AI Hint */}

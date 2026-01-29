@@ -56,11 +56,23 @@ const HR_KEYWORDS = [
     'initiative', 'responsibility', 'decision making', 'time management'
 ];
 
-// AI Interviewer avatars
+// AI Interviewer avatars - HR focused interviewers
 const AI_INTERVIEWERS = [
-    { name: 'Sarah', role: 'HR Manager', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face' },
+    { name: 'Sarah', role: 'HR Director', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face' },
     { name: 'Maya', role: 'People Lead', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face' },
 ];
+
+// Text-to-speech function
+const speakQuestion = (text: string) => {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+};
 
 export default function HRInterviewRoomPage() {
     const params = useParams();
@@ -345,6 +357,19 @@ export default function HRInterviewRoomPage() {
     };
     const toneInfo = getToneInfo();
 
+    // Auto-speak question when it changes (after proctoring modal closes)
+    useEffect(() => {
+        if (!showProctoringModal && currentQuestion?.questionText) {
+            speakQuestion(currentQuestion.questionText);
+        }
+        // Cleanup: stop speech when unmounting or question changes
+        return () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [currentQuestion?.questionText, showProctoringModal]);
+
     // Handle screen share request with entire screen detection
     const handleRequestScreenShare = async () => {
         setScreenShareError(null);
@@ -580,6 +605,17 @@ export default function HRInterviewRoomPage() {
             <div className="flex h-[calc(100vh-80px)]">
                 {/* Left side - Video Area */}
                 <div className="flex-1 p-6 flex flex-col">
+                    {/* Question Overlay - Top of Video Area */}
+                    <div className="mb-4 p-6 rounded-2xl bg-gradient-to-r from-teal-500/20 via-cyan-500/20 to-teal-500/20 border border-teal-500/30 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-teal-400 uppercase tracking-wider font-medium">Current Question</span>
+                            <span className="text-sm text-gray-400 font-medium">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
+                        </div>
+                        <p className="text-white font-bold text-2xl text-center leading-relaxed">
+                            "{currentQuestion?.questionText || 'Loading question...'}"
+                        </p>
+                    </div>
+
                     {/* Split Video View */}
                     <div className="flex-1 grid grid-cols-2 gap-4 mb-4">
                         {/* AI Interviewer */}
@@ -758,17 +794,6 @@ export default function HRInterviewRoomPage() {
                             <p className="text-xs text-teal-600 dark:text-teal-400 uppercase">AI Interviewer</p>
                             <p className="text-gray-900 dark:text-white font-medium">{interviewer.name} ({interviewer.role})</p>
                         </div>
-                    </div>
-
-                    {/* Current Question */}
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-red-500 dark:text-red-400 uppercase tracking-wider">Current Question</span>
-                            <span className="text-xs text-gray-500">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
-                        </div>
-                        <p className="text-gray-900 dark:text-white font-medium text-lg leading-relaxed">
-                            "{currentQuestion?.questionText || 'Loading question...'}"
-                        </p>
                     </div>
 
                     {/* STAR Method Tip */}
