@@ -20,6 +20,7 @@ interface DashboardStats {
     avgScore: number | null;
     interviewCount?: number;
     testsTaken?: number;
+    badgesEarned?: number;
 }
 
 export default function DashboardPage() {
@@ -31,7 +32,8 @@ export default function DashboardPage() {
         jobsApplied: 0,
         avgScore: null,
         interviewCount: 0,
-        testsTaken: 0
+        testsTaken: 0,
+        badgesEarned: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -41,12 +43,13 @@ export default function DashboardPage() {
         try {
             const headers = { 'Authorization': `Bearer ${accessToken}` };
 
-            const [resumeRes, atsRes, appRes, interviewRes, testsRes] = await Promise.all([
+            const [resumeRes, atsRes, appRes, interviewRes, testsRes, badgesRes] = await Promise.all([
                 fetch(`${API_URL}/resumes`, { headers }),
                 fetch(`${API_URL}/scores/history`, { headers }),
                 fetch(`${API_URL}/applications/stats`, { headers }),
                 fetch(`${API_URL}/interviews/sessions`, { headers }),
                 fetch(`${API_URL}/validation/attempts`, { headers }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
+                fetch(`${API_URL}/validation/badges`, { headers }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
             ]);
 
             const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
@@ -55,6 +58,8 @@ export default function DashboardPage() {
             const interviewData = interviewRes.ok ? await interviewRes.json() : { data: [] };
             // @ts-ignore
             const testsData = testsRes.ok ? await testsRes.json() : { data: [] };
+            // @ts-ignore
+            const badgesData = badgesRes.ok ? await badgesRes.json() : { data: [] };
 
             const scores = atsData.data || [];
             const avgScore = scores.length > 0
@@ -68,6 +73,7 @@ export default function DashboardPage() {
                 avgScore,
                 interviewCount: interviewData.data?.length || 0,
                 testsTaken: testsData.data?.length || 0,
+                badgesEarned: badgesData.data?.length || 0,
             });
         } catch (err) {
             console.error('Failed to fetch stats:', err);
@@ -268,7 +274,7 @@ export default function DashboardPage() {
                 {[
                     { icon: FileText, value: stats.resumeCount, label: 'Resumes', color: 'purple' },
                     { icon: Target, value: stats.avgScore ? `${stats.avgScore}%` : '--', label: 'ATS Score', color: 'blue' },
-                    { icon: Award, value: stats.testsTaken || 0, label: 'Badges', color: 'amber' },
+                    { icon: Award, value: stats.badgesEarned || 0, label: 'Badges', color: 'amber' },
                     { icon: Briefcase, value: stats.jobsApplied, label: 'Applications', color: 'green' },
                 ].map((stat, i) => (
                     <motion.div
