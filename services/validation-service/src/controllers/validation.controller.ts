@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationService } from '../services/validation.service';
 import { logger } from '../utils/logger';
+import { BillingClient } from '../utils/billing-client';
 import { z } from 'zod';
 
 const validationService = new ValidationService();
@@ -39,7 +40,26 @@ export class ValidationController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
+            // Get auth header to forward to billing service
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                return res.status(401).json({ error: 'Authorization required' });
+            }
+
             const { id } = req.params;
+
+            // Consume SKILL_TEST credit before starting test
+            try {
+                await BillingClient.consumeCredit(authHeader, 'SKILL_TEST', id);
+            } catch (creditError: any) {
+                logger.warn(`Credit check failed for user ${userId}: ${creditError.message}`);
+                return res.status(creditError.statusCode || 402).json({
+                    success: false,
+                    error: creditError.message || 'Insufficient credits',
+                    code: creditError.code || 'INSUFFICIENT_CREDITS',
+                });
+            }
+
             const attempt = await validationService.startTest(userId, id);
             res.status(201).json({ success: true, data: attempt });
         } catch (error) {

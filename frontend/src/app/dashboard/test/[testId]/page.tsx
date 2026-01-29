@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, CreditCard } from 'lucide-react';
 
 interface TestQuestion {
     id: string;
@@ -44,6 +45,7 @@ export default function TestPage({ params }: { params: { testId: string } }) {
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<TestResult | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [insufficientCredits, setInsufficientCredits] = useState(false);
 
     useEffect(() => {
         if (token && user) {
@@ -85,6 +87,9 @@ export default function TestPage({ params }: { params: { testId: string } }) {
                 };
                 setTest(fullTest);
                 setTimeLeft(data.data.test.durationMinutes * 60);
+            } else if (res.status === 402) {
+                // Insufficient credits
+                setInsufficientCredits(true);
             } else {
                 setError(data.error || 'Failed to start test');
             }
@@ -136,6 +141,36 @@ export default function TestPage({ params }: { params: { testId: string } }) {
     };
 
     if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+
+    if (insufficientCredits) {
+        return (
+            <div className="container mx-auto p-6 max-w-md">
+                <Card>
+                    <CardHeader className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-red-500" />
+                        </div>
+                        <CardTitle className="text-xl">No Skill Test Credits</CardTitle>
+                        <CardDescription className="text-base mt-2">
+                            You've used all your Skill Test credits. Purchase more credits or upgrade your plan to continue taking tests.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                        <Link href="/dashboard/billing">
+                            <Button className="w-full flex items-center justify-center gap-2">
+                                <CreditCard className="w-4 h-4" />
+                                Get Credits
+                            </Button>
+                        </Link>
+                        <Button variant="outline" onClick={() => router.push('/dashboard/tests')} className="w-full">
+                            Back to Tests
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
     if (error) return <div className="text-red-500 text-center mt-10">{error}</div>;
     if (!test) return <div className="text-center mt-10">Test not found</div>;
 

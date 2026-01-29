@@ -3,6 +3,7 @@ import { InterviewService } from '../services/interview.service';
 import { audioAnalysisService } from '../services/audio-analysis.service';
 import { videoAnalysisService } from '../services/video-analysis.service';
 import { logger } from '../utils/logger';
+import { BillingClient } from '../utils/billing-client';
 import { z } from 'zod';
 
 const interviewService = new InterviewService();
@@ -25,6 +26,24 @@ export class InterviewController {
             const userId = req.headers['x-user-id'] as string;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            // Get auth header to forward to billing service
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                return res.status(401).json({ error: 'Authorization required' });
+            }
+
+            // Consume AI_INTERVIEW credit before creating session
+            try {
+                await BillingClient.consumeCredit(authHeader, 'AI_INTERVIEW');
+            } catch (creditError: any) {
+                logger.warn(`Credit check failed for user ${userId}: ${creditError.message}`);
+                return res.status(creditError.statusCode || 402).json({
+                    success: false,
+                    error: creditError.message || 'Insufficient credits',
+                    code: creditError.code || 'INSUFFICIENT_CREDITS',
+                });
             }
 
             const data = createSessionSchema.parse(req.body);

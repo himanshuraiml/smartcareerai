@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X } from 'lucide-react';
+import Link from 'next/link';
+import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X, CreditCard, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import MatchRadar from '@/components/scoring/RadarChart';
 
@@ -44,6 +45,7 @@ export default function ResumesPage() {
     // Use user's registered target role
     const targetRole = user?.targetJobRole?.title || 'Software Developer';
     const [pendingResumeId, setPendingResumeId] = useState<string | null>(null);
+    const [showCreditsModal, setShowCreditsModal] = useState(false);
 
     // Fetch resumes on mount
     const fetchResumes = useCallback(async () => {
@@ -193,8 +195,11 @@ export default function ResumesPage() {
                 } catch (e) {
                     console.log('Skill extraction done in background');
                 }
+            } else if (response.status === 402) {
+                // Insufficient credits
+                setShowCreditsModal(true);
             } else {
-                setError(data.error?.message || 'Analysis failed');
+                setError(data.error?.message || data.error || 'Analysis failed');
             }
         } catch (err) {
             setError('Failed to analyze resume');
@@ -369,6 +374,38 @@ export default function ResumesPage() {
             )}
 
 
+
+            {/* Insufficient Credits Modal */}
+            {showCreditsModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+                    <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10">
+                        <div className="text-center">
+                            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle className="w-8 h-8 text-red-400" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white mb-2">No Resume Review Credits</h2>
+                            <p className="text-gray-400 mb-6">
+                                You've used all your Resume Review credits. Purchase more credits or upgrade your plan to continue analyzing resumes.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowCreditsModal(false)}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                >
+                                    Cancel
+                                </button>
+                                <Link
+                                    href="/dashboard/billing"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                                >
+                                    <CreditCard className="w-4 h-4" />
+                                    Get Credits
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ATS Score Modal */}
             {showAtsModal && atsResult && (

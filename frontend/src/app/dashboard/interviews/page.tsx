@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
     Video, Plus, Clock, Target, TrendingUp, ChevronRight,
-    Loader2, Play, CheckCircle, XCircle, MessageSquare, Mic
+    Loader2, Play, CheckCircle, XCircle, MessageSquare, Mic,
+    CreditCard, AlertTriangle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -65,8 +66,12 @@ export default function InterviewsPage() {
         }
     }, [accessToken, fetchSessions]);
 
+    const [error, setError] = useState<string | null>(null);
+    const [showCreditsModal, setShowCreditsModal] = useState(false);
+
     const createSession = async () => {
         setCreating(true);
+        setError(null);
         try {
             const response = await fetch(`${API_URL}/interviews/sessions`, {
                 method: 'POST',
@@ -77,13 +82,21 @@ export default function InterviewsPage() {
                 body: JSON.stringify(newSession),
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                const data = await response.json();
                 setShowNewModal(false);
                 window.location.href = `/dashboard/interviews/${data.data.id}`;
+            } else if (response.status === 402) {
+                // Insufficient credits
+                setShowNewModal(false);
+                setShowCreditsModal(true);
+            } else {
+                setError(data.error || 'Failed to create session');
             }
         } catch (err) {
             console.error('Failed to create session:', err);
+            setError('Failed to create session. Please try again.');
         } finally {
             setCreating(false);
         }
@@ -385,6 +398,47 @@ export default function InterviewsPage() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Insufficient Credits Modal */}
+            {showCreditsModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10">
+                        <div className="text-center">
+                            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle className="w-8 h-8 text-red-400" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white mb-2">No Interview Credits</h2>
+                            <p className="text-gray-400 mb-6">
+                                You've used all your AI Interview credits. Purchase more credits or upgrade your plan to continue practicing.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowCreditsModal(false)}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                >
+                                    Cancel
+                                </button>
+                                <Link
+                                    href="/dashboard/billing"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                                >
+                                    <CreditCard className="w-4 h-4" />
+                                    Get Credits
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Toast */}
+            {error && (
+                <div className="fixed bottom-4 right-4 bg-red-500/90 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50">
+                    <XCircle className="w-5 h-5" />
+                    {error}
+                    <button onClick={() => setError(null)} className="ml-2 hover:text-red-200">×</button>
                 </div>
             )}
         </div>
