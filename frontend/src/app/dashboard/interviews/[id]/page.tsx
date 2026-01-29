@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, Play, Send, Loader2, CheckCircle, Clock,
-    MessageSquare, Award, RefreshCw, Mic, Square, Pause, RotateCcw, Video, VideoOff
+    MessageSquare, Award, RefreshCw, Mic, Square, Pause, RotateCcw, Video, VideoOff, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
@@ -59,10 +59,24 @@ interface InterviewSession {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
+// Normalize and validate UUID format
+const normalizeUUID = (id: string | string[] | undefined): string | null => {
+    if (!id || Array.isArray(id)) return null;
+    // Replace spaces with hyphens and lowercase
+    const normalized = id.replace(/\s+/g, '-').toLowerCase();
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(normalized) ? normalized : null;
+};
+
 export default function InterviewRoomPage() {
-    const { id } = useParams();
+    const params = useParams();
     const router = useRouter();
     const { accessToken } = useAuthStore();
+
+    // Normalize the session ID
+    const sessionId = normalizeUUID(params.id);
+    const [invalidId, setInvalidId] = useState(false);
 
     const [session, setSession] = useState<InterviewSession | null>(null);
     const [loading, setLoading] = useState(true);
@@ -129,8 +143,13 @@ export default function InterviewRoomPage() {
     }, [session?.format, session?.status, startPreview, stopPreview]);
 
     const fetchSession = useCallback(async () => {
+        if (!sessionId) {
+            setInvalidId(true);
+            setLoading(false);
+            return;
+        }
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
@@ -148,30 +167,34 @@ export default function InterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [id, accessToken]);
+    }, [sessionId, accessToken]);
 
     useEffect(() => {
-        if (accessToken && id) {
+        if (accessToken && sessionId) {
             fetchSession();
+        } else if (!sessionId && params.id) {
+            setInvalidId(true);
+            setLoading(false);
         }
-    }, [accessToken, id, fetchSession]);
+    }, [accessToken, sessionId, params.id, fetchSession]);
 
     const startInterview = async () => {
+        if (!sessionId) return;
         setStarting(true);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/start`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/start`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
             if (response.ok) {
                 // Route based on interview type
                 if (session?.type === 'HR' || session?.type === 'BEHAVIORAL') {
-                    router.push(`/dashboard/interviews/${id}/hr-room`);
+                    router.push(`/dashboard/interviews/${sessionId}/hr-room`);
                 } else if (session?.type === 'MIXED') {
-                    router.push(`/dashboard/interviews/${id}/mixed-room`);
+                    router.push(`/dashboard/interviews/${sessionId}/mixed-room`);
                 } else {
                     // TECHNICAL and other types
-                    router.push(`/dashboard/interviews/${id}/room`);
+                    router.push(`/dashboard/interviews/${sessionId}/room`);
                 }
             }
         } catch (err) {
@@ -196,7 +219,7 @@ export default function InterviewRoomPage() {
             formData.append('audio', audioBlob, 'answer.webm');
             formData.append('questionId', question.id);
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/answer/audio`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/audio`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -254,7 +277,7 @@ export default function InterviewRoomPage() {
             formData.append('video', videoBlob, 'answer.webm');
             formData.append('questionId', question.id);
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/answer/video`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -306,7 +329,7 @@ export default function InterviewRoomPage() {
         setLastFeedback(null);
 
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/answer`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -353,9 +376,10 @@ export default function InterviewRoomPage() {
     };
 
     const completeInterview = async () => {
+        if (!sessionId) return;
         setCompleting(true);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/complete`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
@@ -385,12 +409,31 @@ export default function InterviewRoomPage() {
         );
     }
 
+    if (invalidId) {
+        return (
+            <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
+                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                    Return to Interviews
+                </Link>
+            </div>
+        );
+    }
+
     if (!session) {
         return (
             <div className="text-center py-12">
-                <p className="text-gray-400">Interview session not found</p>
-                <Link href="/dashboard/interviews" className="text-purple-400 hover:underline mt-2 inline-block">
-                    Back to Interviews
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
+                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                    Return to Interviews
                 </Link>
             </div>
         );

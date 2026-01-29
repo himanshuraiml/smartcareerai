@@ -302,7 +302,7 @@ export default function MixedInterviewRoomPage() {
                 detectedKeywords: Array.from(detectedKeywords)
             }));
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/answer/video`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -365,7 +365,7 @@ export default function MixedInterviewRoomPage() {
                 } else if (data.data.isComplete) {
                     // All questions answered, show completion message
                     setTimeout(() => {
-                        router.push(`/dashboard/interviews/${id}`);
+                        router.push(`/dashboard/interviews/${sessionId}`);
                     }, 2000);
                 }
             }
@@ -377,14 +377,15 @@ export default function MixedInterviewRoomPage() {
     };
 
     const endSession = async () => {
+        if (!sessionId) return;
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${id}/complete`, {
+            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
 
             if (response.ok) {
-                router.push(`/dashboard/interviews/${id}`);
+                router.push(`/dashboard/interviews/${sessionId}`);
             }
         } catch (err) {
             console.error('Failed to end session:', err);
@@ -415,12 +416,31 @@ export default function MixedInterviewRoomPage() {
         );
     }
 
+    if (invalidId) {
+        return (
+            <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
+                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                    Return to Interviews
+                </Link>
+            </div>
+        );
+    }
+
     if (!session) {
         return (
             <div className="text-center py-12">
-                <p className="text-gray-400">Interview session not found</p>
-                <Link href="/dashboard/interviews" className="text-purple-400 hover:underline mt-2 inline-block">
-                    Back to Interviews
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
+                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                    Return to Interviews
                 </Link>
             </div>
         );
