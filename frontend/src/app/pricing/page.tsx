@@ -235,15 +235,35 @@ export default function PricingPage() {
             return;
         }
 
-        if (plan.name === "free") {
-            router.push("/dashboard");
-            return;
-        }
-
         setLoading(plan.id);
 
         try {
-            // 1. Create Subscription on Backend
+            // For free plan, still need to call subscribe API to initialize credits
+            if (plan.name === "free") {
+                const response = await fetch(`${API_URL}/billing/subscriptions/subscribe`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        planName: "free",
+                        userEmail: user?.email,
+                        userName: user?.name,
+                    }),
+                });
+
+                if (response.ok) {
+                    router.push("/dashboard");
+                } else {
+                    const errorData = await response.json();
+                    console.error("Failed to subscribe to free plan:", errorData);
+                    alert("Failed to activate free plan. Please try again.");
+                }
+                return;
+            }
+
+            // 1. Create Subscription on Backend for paid plans
             const response = await fetch(`${API_URL}/billing/subscriptions/subscribe`, {
                 method: "POST",
                 headers: {
