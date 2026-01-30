@@ -159,7 +159,7 @@ export default function PricingPage() {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const res = await fetch(`${API_URL}/billing/plans`);
+                const res = await fetch(`${API_URL}/billing/subscriptions/plans`);
                 if (res.ok) {
                     const data = await res.json();
                     const dbPlans = data.data || [];
