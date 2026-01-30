@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/admin.controller';
 import { institutionsController } from '../controllers/institutions.controller';
+import { emailController } from '../controllers/email.controller';
+import { billingController } from '../controllers/billing.controller';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -28,5 +30,27 @@ router.get('/analytics/job-roles', adminController.getTopJobRoles);
 router.post('/institutions', institutionsController.createInstitution);
 router.get('/institutions', institutionsController.getInstitutions);
 router.post('/institutions/:institutionId/resend-invite', institutionsController.resendInvite);
+
+// Email Management
+router.get('/emails/logs', emailController.getEmailLogs);
+router.get('/emails/stats', emailController.getEmailStats);
+router.get('/emails/invites', emailController.getPendingInvites);
+router.get('/emails/templates', emailController.getTemplates);
+router.post('/emails/templates', emailController.createTemplate);
+router.put('/emails/templates/:id', emailController.updateTemplate);
+router.delete('/emails/templates/:id', emailController.deleteTemplate);
+router.post('/emails/send-bulk', emailController.sendBulkEmail);
+router.post('/emails/send-test', emailController.sendTestEmail);
+
+// Billing Management
+router.get('/billing/settings', billingController.getBillingSettings);
+router.put('/billing/settings', billingController.updateBillingSettings);
+router.get('/billing/plans', billingController.getSubscriptionPlans);
+router.post('/billing/plans', billingController.createSubscriptionPlan);
+router.put('/billing/plans/:id', billingController.updateSubscriptionPlan);
+router.delete('/billing/plans/:id', billingController.deleteSubscriptionPlan);
+router.get('/billing/credit-pricing', billingController.getCreditPricing);
+router.put('/billing/credit-pricing', billingController.updateCreditPricing);
+router.get('/billing/stats', billingController.getBillingStats);
 
 export { router as adminRouter };

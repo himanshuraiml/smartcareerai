@@ -11,13 +11,19 @@ import {
     Menu,
     X,
     Shield,
-    Activity
+    Activity,
+    Building,
+    Mail,
+    CreditCard
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 
 const navItems = [
     { href: "/admin", icon: BarChart, label: "Analytics" },
     { href: "/admin/users", icon: Users, label: "User Management" },
+    { href: "/admin/institutions", icon: Building, label: "Institutions" },
+    { href: "/admin/emails", icon: Mail, label: "Email Management" },
+    { href: "/admin/billing", icon: CreditCard, label: "Billing" },
     { href: "/admin/activity", icon: Activity, label: "System Activity" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];

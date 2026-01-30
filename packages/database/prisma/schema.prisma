@@ -711,3 +711,79 @@ enum TrackedEmailType {
   UPDATE
   OTHER
 }
+
+// ============================================
+// EMAIL MANAGEMENT (Admin)
+// ============================================
+
+model EmailTemplate {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  subject     String
+  htmlContent String           @map("html_content") @db.Text
+  textContent String?          @map("text_content") @db.Text
+  category    EmailCategory    @default(GENERAL)
+  variables   String[]         // e.g., ["userName", "companyName"] for dynamic content
+  isActive    Boolean          @default(true) @map("is_active")
+  createdBy   String?          @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  emailLogs   EmailLog[]
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id           String        @id @default(uuid())
+  templateId   String?       @map("template_id")
+  recipientId  String?       @map("recipient_id")  // User ID if sent to a registered user
+  recipientEmail String      @map("recipient_email")
+  subject      String
+  emailType    EmailType     @map("email_type")
+  status       EmailStatus   @default(PENDING)
+  errorMessage String?       @map("error_message")
+  metadata     Json?         // Additional data like variables used, bulk email ID, etc.
+  sentBy       String?       @map("sent_by")       // Admin user ID who triggered the email
+  sentAt       DateTime?     @map("sent_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  template     EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([recipientEmail])
+  @@index([emailType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+enum EmailCategory {
+  INVITATION
+  NEWSLETTER
+  PROMOTIONAL
+  TRANSACTIONAL
+  NOTIFICATION
+  GENERAL
+}
+
+enum EmailType {
+  INSTITUTION_ADMIN_INVITE
+  STUDENT_WELCOME
+  RECRUITER_WELCOME
+  NEWSLETTER
+  PROMOTIONAL
+  PASSWORD_RESET
+  VERIFICATION
+  NOTIFICATION
+  BULK
+  OTHER
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+}

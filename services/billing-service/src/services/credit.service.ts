@@ -6,15 +6,15 @@ import { createError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
 
-// Credit pricing in paise (INR * 100)
-const CREDIT_PRICES = {
+// Default credit pricing in paise (INR * 100) - fallback when not in database
+const DEFAULT_CREDIT_PRICES: Record<string, number> = {
     RESUME_REVIEW: 4900,    // ₹49 per credit
     AI_INTERVIEW: 9900,     // ₹99 per credit
     SKILL_TEST: 2900,       // ₹29 per credit
 };
 
-// Credit bundles
-const CREDIT_BUNDLES = {
+// Default credit bundles - fallback when not in database
+const DEFAULT_CREDIT_BUNDLES: Record<string, Array<{ quantity: number; price: number; savings: string }>> = {
     RESUME_REVIEW: [
         { quantity: 5, price: 19900, savings: '20%' },
         { quantity: 10, price: 34900, savings: '30%' },
@@ -32,27 +32,76 @@ const CREDIT_BUNDLES = {
     ],
 };
 
+// Cache for dynamic pricing (5 minute TTL)
+let pricingCache: {
+    prices: Record<string, number>;
+    bundles: Record<string, Array<{ quantity: number; price: number; savings: string }>>;
+    lastFetched: number;
+} | null = null;
+const PRICING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export class CreditService {
+    /**
+     * Fetch dynamic pricing from database with caching
+     */
+    private async getDynamicPricing(): Promise<{
+        prices: Record<string, number>;
+        bundles: Record<string, Array<{ quantity: number; price: number; savings: string }>>;
+    }> {
+        // Check cache first
+        if (pricingCache && Date.now() - pricingCache.lastFetched < PRICING_CACHE_TTL) {
+            return { prices: pricingCache.prices, bundles: pricingCache.bundles };
+        }
+
+        try {
+            const settings = await prisma.systemSettings.findMany({
+                where: {
+                    settingKey: { in: ['credit_prices', 'credit_bundles'] }
+                }
+            });
+
+            const creditPrices = settings.find(s => s.settingKey === 'credit_prices');
+            const creditBundles = settings.find(s => s.settingKey === 'credit_bundles');
+
+            const prices = (creditPrices?.settingValue as Record<string, number>) || DEFAULT_CREDIT_PRICES;
+            const bundles = (creditBundles?.settingValue as Record<string, Array<{ quantity: number; price: number; savings: string }>>) || DEFAULT_CREDIT_BUNDLES;
+
+            // Update cache
+            pricingCache = {
+                prices,
+                bundles,
+                lastFetched: Date.now()
+            };
+
+            return { prices, bundles };
+        } catch (error) {
+            logger.error('Failed to fetch dynamic pricing, using defaults', error);
+            return { prices: DEFAULT_CREDIT_PRICES, bundles: DEFAULT_CREDIT_BUNDLES };
+        }
+    }
+
     /**
      * Get credit pricing and bundles
      */
-    getPricing() {
+    async getPricing() {
+        const { prices, bundles } = await this.getDynamicPricing();
+
         return {
             perCredit: {
-                RESUME_REVIEW: CREDIT_PRICES.RESUME_REVIEW / 100,
-                AI_INTERVIEW: CREDIT_PRICES.AI_INTERVIEW / 100,
-                SKILL_TEST: CREDIT_PRICES.SKILL_TEST / 100,
+                RESUME_REVIEW: prices.RESUME_REVIEW / 100,
+                AI_INTERVIEW: prices.AI_INTERVIEW / 100,
+                SKILL_TEST: prices.SKILL_TEST / 100,
             },
             bundles: {
-                RESUME_REVIEW: CREDIT_BUNDLES.RESUME_REVIEW.map(b => ({
+                RESUME_REVIEW: (bundles.RESUME_REVIEW || []).map(b => ({
                     ...b,
                     price: b.price / 100,
                 })),
-                AI_INTERVIEW: CREDIT_BUNDLES.AI_INTERVIEW.map(b => ({
+                AI_INTERVIEW: (bundles.AI_INTERVIEW || []).map(b => ({
                     ...b,
                     price: b.price / 100,
                 })),
-                SKILL_TEST: CREDIT_BUNDLES.SKILL_TEST.map(b => ({
+                SKILL_TEST: (bundles.SKILL_TEST || []).map(b => ({
                     ...b,
                     price: b.price / 100,
                 })),
@@ -104,14 +153,17 @@ export class CreditService {
         creditType: CreditType,
         quantity: number
     ) {
+        // Get dynamic pricing
+        const { prices, bundles } = await this.getDynamicPricing();
+
         // Calculate price
-        const bundle = CREDIT_BUNDLES[creditType]?.find(b => b.quantity === quantity);
+        const bundle = bundles[creditType]?.find(b => b.quantity === quantity);
         let amount: number;
 
         if (bundle) {
             amount = bundle.price;
         } else {
-            amount = CREDIT_PRICES[creditType] * quantity;
+            amount = prices[creditType] * quantity;
         }
 
         // Create Razorpay order

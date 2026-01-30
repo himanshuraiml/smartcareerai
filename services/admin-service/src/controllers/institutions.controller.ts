@@ -29,6 +29,7 @@ export class InstitutionsController {
     async createInstitution(req: Request, res: Response, next: NextFunction) {
         try {
             const { name, domain, adminEmail } = req.body;
+            const adminUserId = req.headers['x-user-id'] as string;
 
             // Check if domain exists
             if (domain) {
@@ -75,7 +76,8 @@ export class InstitutionsController {
                         adminEmail,
                         name,
                         inviteToken,
-                        tempPassword
+                        tempPassword,
+                        adminUserId
                     );
 
                     if (!inviteSent) {
@@ -115,6 +117,7 @@ export class InstitutionsController {
     async resendInvite(req: Request, res: Response, next: NextFunction) {
         try {
             const { institutionId } = req.params;
+            const adminUserId = req.headers['x-user-id'] as string;
 
             const institution = await prisma.institution.findUnique({
                 where: { id: institutionId },
@@ -154,7 +157,8 @@ export class InstitutionsController {
                 admin.email,
                 institution.name,
                 inviteToken,
-                tempPassword
+                tempPassword,
+                adminUserId
             );
 
             if (!inviteSent) {

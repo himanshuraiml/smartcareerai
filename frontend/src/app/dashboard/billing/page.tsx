@@ -49,8 +49,8 @@ export default function BillingPage() {
 
             // Parallel fetch for speed
             const [subRes, creditsRes, transRes] = await Promise.all([
-                fetch(`${API_URL}/billing/subscription/me`, { headers }),
-                fetch(`${API_URL}/billing/credits/balance`, { headers }),
+                fetch(`${API_URL}/billing/subscriptions`, { headers }),
+                fetch(`${API_URL}/billing/credits/balances`, { headers }),
                 fetch(`${API_URL}/billing/credits/history`, { headers }),
             ]);
 

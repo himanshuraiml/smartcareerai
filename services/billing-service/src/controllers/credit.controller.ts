@@ -10,7 +10,7 @@ export class CreditController {
      */
     async getPricing(req: Request, res: Response, next: NextFunction) {
         try {
-            const pricing = creditService.getPricing();
+            const pricing = await creditService.getPricing();
             res.json({
                 success: true,
                 data: pricing,
