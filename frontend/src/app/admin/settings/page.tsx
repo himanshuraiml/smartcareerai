@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Bell, Lock, Globe, Mail } from "lucide-react";
+import { Save, Bell, Lock, Globe, Mail, Sun, Moon, Palette } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -12,12 +12,37 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
+    const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+    useEffect(() => {
+        // Load theme from localStorage on mount
+        const savedTheme = localStorage.getItem('admin_theme') as 'dark' | 'light' | null;
+        if (savedTheme) {
+            setTheme(savedTheme);
+            applyTheme(savedTheme);
+        }
+    }, []);
 
     useEffect(() => {
         if (accessToken) {
             fetchSettings();
         }
     }, [accessToken]);
+
+    const applyTheme = (newTheme: 'dark' | 'light') => {
+        if (newTheme === 'light') {
+            document.documentElement.classList.add('light-mode');
+        } else {
+            document.documentElement.classList.remove('light-mode');
+        }
+    };
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        localStorage.setItem('admin_theme', newTheme);
+        applyTheme(newTheme);
+    };
 
     const fetchSettings = async () => {
         try {
@@ -77,6 +102,7 @@ export default function SettingsPage() {
                 <div className="w-full lg:w-64 flex-shrink-0 space-y-1">
                     {[
                         { id: 'general', label: 'General', icon: Globe },
+                        { id: 'appearance', label: 'Appearance', icon: Palette },
                         { id: 'security', label: 'Security', icon: Lock },
                         { id: 'notifications', label: 'Notifications', icon: Bell },
                         { id: 'email', label: 'Email Templates', icon: Mail },
@@ -134,6 +160,98 @@ export default function SettingsPage() {
                                     </label>
                                     <p className="text-sm text-gray-500 mt-1 ml-7">Prevents non-admin users from accessing the platform</p>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'appearance' && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-bold text-white mb-6">Appearance Settings</h2>
+
+                            <div className="space-y-6">
+                                {/* Theme Toggle */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-purple-500/20' : 'bg-yellow-500/20'}`}>
+                                                {theme === 'dark' ? (
+                                                    <Moon className="w-6 h-6 text-purple-400" />
+                                                ) : (
+                                                    <Sun className="w-6 h-6 text-yellow-400" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-white">Theme Mode</p>
+                                                <p className="text-sm text-gray-400">
+                                                    Currently using {theme === 'dark' ? 'Dark' : 'Light'} theme
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={toggleTheme}
+                                            className={`relative w-16 h-8 rounded-full transition-colors ${
+                                                theme === 'dark' ? 'bg-purple-500' : 'bg-yellow-500'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-transform flex items-center justify-center ${
+                                                    theme === 'dark' ? 'left-1' : 'left-9'
+                                                }`}
+                                            >
+                                                {theme === 'dark' ? (
+                                                    <Moon className="w-3 h-3 text-purple-500" />
+                                                ) : (
+                                                    <Sun className="w-3 h-3 text-yellow-500" />
+                                                )}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Theme Preview */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={() => {
+                                            setTheme('dark');
+                                            localStorage.setItem('admin_theme', 'dark');
+                                            applyTheme('dark');
+                                        }}
+                                        className={`p-4 rounded-xl border-2 transition-all ${
+                                            theme === 'dark'
+                                                ? 'border-purple-500 bg-purple-500/10'
+                                                : 'border-white/10 hover:border-white/30'
+                                        }`}
+                                    >
+                                        <div className="w-full h-24 rounded-lg bg-gray-900 mb-3 flex items-center justify-center">
+                                            <Moon className="w-8 h-8 text-purple-400" />
+                                        </div>
+                                        <p className="font-medium text-white">Dark Mode</p>
+                                        <p className="text-xs text-gray-400">Easier on the eyes</p>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setTheme('light');
+                                            localStorage.setItem('admin_theme', 'light');
+                                            applyTheme('light');
+                                        }}
+                                        className={`p-4 rounded-xl border-2 transition-all ${
+                                            theme === 'light'
+                                                ? 'border-yellow-500 bg-yellow-500/10'
+                                                : 'border-white/10 hover:border-white/30'
+                                        }`}
+                                    >
+                                        <div className="w-full h-24 rounded-lg bg-gray-100 mb-3 flex items-center justify-center">
+                                            <Sun className="w-8 h-8 text-yellow-500" />
+                                        </div>
+                                        <p className="font-medium text-white">Light Mode</p>
+                                        <p className="text-xs text-gray-400">Classic bright look</p>
+                                    </button>
+                                </div>
+
+                                <p className="text-sm text-gray-500">
+                                    Theme preference is saved locally to your browser and will persist across sessions.
+                                </p>
                             </div>
                         </div>
                     )}

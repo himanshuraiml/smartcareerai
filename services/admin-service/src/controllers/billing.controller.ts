@@ -68,7 +68,7 @@ export class BillingController {
         try {
             const { billing_enabled, subscription_enabled, credit_pricing_enabled } = req.body;
 
-            const updates = [];
+            const updates: Promise<any>[] = [];
 
             if (billing_enabled !== undefined) {
                 updates.push(
@@ -311,7 +311,7 @@ export class BillingController {
         try {
             const { perCredit, bundles } = req.body;
 
-            const updates = [];
+            const updates: Promise<any>[] = [];
 
             if (perCredit) {
                 updates.push(
