@@ -3,7 +3,6 @@ import { Outfit } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/providers/ThemeProvider';
-import { OnboardingProvider } from '@/components/onboarding/OnboardingTour';
 import KeyboardShortcuts from '@/components/keyboard/KeyboardShortcuts';
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
@@ -23,11 +22,9 @@ export default function RootLayout({
         <html lang="en" className="dark dark-mode">
             <body className={outfit.className}>
                 <ThemeProvider>
-                    <OnboardingProvider>
-                        {children}
-                        <KeyboardShortcuts />
-                        <Toaster />
-                    </OnboardingProvider>
+                    {children}
+                    <KeyboardShortcuts />
+                    <Toaster />
                 </ThemeProvider>
             </body>
         </html>

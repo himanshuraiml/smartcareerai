@@ -15,11 +15,17 @@ export default function SettingsPage() {
     const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
     useEffect(() => {
-        // Load theme from localStorage on mount
+        // Load theme from localStorage, or detect browser preference
         const savedTheme = localStorage.getItem('admin_theme') as 'dark' | 'light' | null;
         if (savedTheme) {
             setTheme(savedTheme);
             applyTheme(savedTheme);
+        } else {
+            // Detect browser/system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const detectedTheme = prefersDark ? 'dark' : 'light';
+            setTheme(detectedTheme);
+            applyTheme(detectedTheme);
         }
     }, []);
 

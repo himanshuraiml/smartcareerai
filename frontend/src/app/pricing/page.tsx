@@ -114,6 +114,21 @@ const PLANS: PricingPlan[] = [
     },
 ];
 
+// Icon mapping for dynamic plans
+const PLAN_ICONS: Record<string, any> = {
+    free: Zap,
+    starter: Star,
+    pro: Briefcase,
+    enterprise: Gem,
+};
+
+const PLAN_COLORS: Record<string, string> = {
+    free: "from-blue-400 to-cyan-400",
+    starter: "from-purple-400 to-pink-400",
+    pro: "from-amber-400 to-orange-400",
+    enterprise: "from-emerald-400 to-teal-400",
+};
+
 export default function PricingPage() {
     const router = useRouter();
     const { accessToken, user } = useAuthStore();
@@ -121,6 +136,8 @@ export default function PricingPage() {
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
     const [loading, setLoading] = useState<string | null>(null);
     const [isLightMode, setIsLightMode] = useState(false);
+    const [plans, setPlans] = useState<PricingPlan[]>(PLANS);
+    const [plansLoading, setPlansLoading] = useState(true);
 
     // Detect light mode
     useEffect(() => {
@@ -137,6 +154,80 @@ export default function PricingPage() {
 
         return () => observer.disconnect();
     }, []);
+
+    // Fetch plans from API to stay in sync with admin/billing
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await fetch(`${API_URL}/billing/plans`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const dbPlans = data.data || [];
+                    if (dbPlans.length > 0) {
+                        // Map database plans to pricing display format
+                        const mappedPlans: PricingPlan[] = dbPlans
+                            .filter((p: any) => p.isActive)
+                            .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+                            .map((p: any) => {
+                                const features = p.features || {};
+                                return {
+                                    id: p.id,
+                                    name: p.name,
+                                    displayName: p.displayName,
+                                    priceMonthly: Number(p.priceMonthly),
+                                    priceYearly: Number(p.priceYearly),
+                                    description: getDescriptionForPlan(p.name),
+                                    color: PLAN_COLORS[p.name] || "from-gray-400 to-gray-500",
+                                    icon: PLAN_ICONS[p.name] || Star,
+                                    popular: p.name === "starter",
+                                    features: formatFeatures(features),
+                                };
+                            });
+                        if (mappedPlans.length > 0) {
+                            setPlans(mappedPlans);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch plans, using defaults", err);
+            } finally {
+                setPlansLoading(false);
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    // Helper to get description based on plan name
+    const getDescriptionForPlan = (name: string): string => {
+        const descriptions: Record<string, string> = {
+            free: "Essential tools to get started with your career journey",
+            starter: "Perfect for active job seekers needing more practice",
+            pro: "Unlimited access for serious professionals",
+            enterprise: "For institutions and power users requiring API access",
+        };
+        return descriptions[name] || "Boost your career with premium features";
+    };
+
+    // Format features from database to display format
+    const formatFeatures = (features: any): PlanFeature[] => {
+        const featureList: PlanFeature[] = [];
+        if (features.resumeReviews !== undefined) {
+            const text = features.resumeReviews === 'unlimited' ? 'Unlimited Resume Reviews' : `${features.resumeReviews} Resume Reviews/mo`;
+            featureList.push({ text, included: true });
+        }
+        if (features.interviews !== undefined) {
+            const text = features.interviews === 'unlimited' ? 'Unlimited AI Interviews' : `${features.interviews} AI Interviews/mo`;
+            featureList.push({ text, included: true });
+        }
+        if (features.skillTests !== undefined) {
+            const text = features.skillTests === 'unlimited' ? 'Unlimited Skill Tests' : `${features.skillTests} Skill Tests/mo`;
+            featureList.push({ text, included: true });
+        }
+        featureList.push({ text: features.jobAlerts ? "Job Alerts" : "Basic Job Alerts", included: true });
+        featureList.push({ text: "Priority Support", included: features.prioritySupport === true });
+        featureList.push({ text: "API Access", included: features.apiAccess === true });
+        return featureList;
+    };
 
     const handleSubscribe = async (plan: PricingPlan) => {
         if (!accessToken) {
@@ -240,7 +331,7 @@ export default function PricingPage() {
 
             {/* Plans Grid */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {PLANS.map((plan) => (
+                {plans.map((plan) => (
                     <div
                         key={plan.id}
                         className={`relative rounded-2xl p-6 pricing-card transition-all duration-300 group`}

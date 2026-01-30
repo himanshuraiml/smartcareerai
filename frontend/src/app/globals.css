@@ -813,6 +813,55 @@ body {
   backdrop-filter: blur(4px);
 }
 
+/* ============================== */
+/* MODAL FORM INPUTS LIGHT MODE   */
+/* ============================== */
+/* Fix visibility of form fields in modals (Add Institution, Edit Plan, etc.) */
+.light-mode .fixed.inset-0 input,
+.light-mode .fixed.inset-0 textarea,
+.light-mode .fixed.inset-0 select,
+.light-mode .bg-gray-900 input,
+.light-mode .bg-gray-900 textarea,
+.light-mode .bg-gray-900 select {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #0f172a !important;
+}
+
+.light-mode .fixed.inset-0 input::placeholder,
+.light-mode .fixed.inset-0 textarea::placeholder,
+.light-mode .bg-gray-900 input::placeholder,
+.light-mode .bg-gray-900 textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.light-mode .fixed.inset-0 input:focus,
+.light-mode .fixed.inset-0 textarea:focus,
+.light-mode .fixed.inset-0 select:focus,
+.light-mode .bg-gray-900 input:focus,
+.light-mode .bg-gray-900 textarea:focus,
+.light-mode .bg-gray-900 select:focus {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+.light-mode .fixed.inset-0 label,
+.light-mode .bg-gray-900 label {
+  color: #374151 !important;
+}
+
+.light-mode .fixed.inset-0 .text-gray-300,
+.light-mode .bg-gray-900 .text-gray-300 {
+  color: #374151 !important;
+}
+
+.light-mode .fixed.inset-0 .text-gray-400,
+.light-mode .bg-gray-900 .text-gray-400,
+.light-mode .fixed.inset-0 .text-gray-500,
+.light-mode .bg-gray-900 .text-gray-500 {
+  color: #6b7280 !important;
+}
+
 /* Pricing page subscription section */
 .light-mode .pricing-page .text-xl,
 .light-mode .pricing-page .text-3xl {

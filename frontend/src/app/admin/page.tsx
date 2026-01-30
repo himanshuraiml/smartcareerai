@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
                 const [overviewRes, growthRes, subRes] = await Promise.all([
                     fetch(`${API_URL}/admin/analytics/overview`, { headers }),
-                    fetch(`${API_URL}/admin/analytics/growth`, { headers }),
+                    fetch(`${API_URL}/admin/analytics/user-growth`, { headers }),
                     fetch(`${API_URL}/admin/analytics/subscriptions`, { headers })
                 ]);
 

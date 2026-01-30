@@ -56,12 +56,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     const [hasSeenTour, setHasSeenTour] = useState(true);
 
     useEffect(() => {
+        // Onboarding tour is disabled - it was blocking UI on admin pages
+        // Users can still manually trigger the tour via startTour() if needed
         const seen = localStorage.getItem("medhiva_tour_completed");
         if (!seen) {
             setHasSeenTour(false);
-            // Auto-start tour after a short delay for first-time users
-            const timer = setTimeout(() => setShowTour(true), 1500);
-            return () => clearTimeout(timer);
+            // Auto-start disabled to prevent blocking admin/billing and other pages
         }
     }, []);
 
