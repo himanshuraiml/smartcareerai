@@ -53,6 +53,27 @@ export class AuthService {
             adminForInstitutionId: user.adminForInstitutionId
         });
 
+        // Auto-create free subscription for new users
+        try {
+            const billingServiceUrl = process.env.BILLING_SERVICE_URL || 'http://localhost:3010';
+            await fetch(`${billingServiceUrl}/subscriptions/subscribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokens.accessToken}`,
+                },
+                body: JSON.stringify({
+                    planName: 'free',
+                    userEmail: user.email,
+                    userName: user.name || 'User',
+                }),
+            });
+            logger.info(`Auto-created free subscription for user ${user.id}`);
+        } catch (error) {
+            logger.error(`Failed to create free subscription for user ${user.id}:`, error);
+            // Don't fail registration if subscription creation fails
+        }
+
         // TODO: Send verification email
         logger.info(`Verification token for ${email}: ${verifyToken}`);
 

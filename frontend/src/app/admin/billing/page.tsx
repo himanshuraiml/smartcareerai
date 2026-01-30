@@ -157,26 +157,27 @@ export default function AdminBillingPage() {
         if (res.ok) {
             const data = await res.json();
             setCreditPricing(data.data);
+            // Convert paisa to rupees (divide by 100) for display
             setEditedPricing({
                 perCredit: {
-                    RESUME_REVIEW: String(data.data.perCredit.RESUME_REVIEW || 49),
-                    AI_INTERVIEW: String(data.data.perCredit.AI_INTERVIEW || 99),
-                    SKILL_TEST: String(data.data.perCredit.SKILL_TEST || 29)
+                    RESUME_REVIEW: String((data.data.perCredit.RESUME_REVIEW || 4900) / 100),
+                    AI_INTERVIEW: String((data.data.perCredit.AI_INTERVIEW || 9900) / 100),
+                    SKILL_TEST: String((data.data.perCredit.SKILL_TEST || 2900) / 100)
                 },
                 bundles: {
                     RESUME_REVIEW: (data.data.bundles.RESUME_REVIEW || []).map((b: any) => ({
                         quantity: String(b.quantity),
-                        price: String(b.price),
+                        price: String(b.price / 100),
                         savings: b.savings
                     })),
                     AI_INTERVIEW: (data.data.bundles.AI_INTERVIEW || []).map((b: any) => ({
                         quantity: String(b.quantity),
-                        price: String(b.price),
+                        price: String(b.price / 100),
                         savings: b.savings
                     })),
                     SKILL_TEST: (data.data.bundles.SKILL_TEST || []).map((b: any) => ({
                         quantity: String(b.quantity),
-                        price: String(b.price),
+                        price: String(b.price / 100),
                         savings: b.savings
                     }))
                 }
@@ -486,11 +487,10 @@ export default function AdminBillingPage() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                            activeTab === tab.id
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
                                 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
-                        }`}
+                            }`}
                     >
                         <tab.icon className="w-4 h-4" />
                         {tab.label}
@@ -505,11 +505,10 @@ export default function AdminBillingPage() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-                            toast.type === 'success'
+                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success'
                                 ? 'bg-green-500/20 border border-green-500/30'
                                 : 'bg-red-500/20 border border-red-500/30'
-                        }`}
+                            }`}
                     >
                         {toast.type === 'success' ? (
                             <CheckCircle className="w-5 h-5 text-green-400" />
@@ -554,9 +553,8 @@ export default function AdminBillingPage() {
                                 {plans.map((plan) => (
                                     <div
                                         key={plan.id}
-                                        className={`p-5 rounded-xl glass border transition-colors ${
-                                            plan.isActive ? 'border-white/10' : 'border-red-500/30 opacity-60'
-                                        }`}
+                                        className={`p-5 rounded-xl glass border transition-colors ${plan.isActive ? 'border-white/10' : 'border-red-500/30 opacity-60'
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
@@ -573,11 +571,10 @@ export default function AdminBillingPage() {
                                             <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => handleTogglePlanActive(plan)}
-                                                    className={`p-2 rounded-lg transition-colors ${
-                                                        plan.isActive
+                                                    className={`p-2 rounded-lg transition-colors ${plan.isActive
                                                             ? 'text-green-400 hover:bg-green-500/10'
                                                             : 'text-red-400 hover:bg-red-500/10'
-                                                    }`}
+                                                        }`}
                                                     title={plan.isActive ? 'Deactivate' : 'Activate'}
                                                 >
                                                     {plan.isActive ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
@@ -777,14 +774,12 @@ export default function AdminBillingPage() {
                                                 ...billingSettings,
                                                 billing_enabled: !billingSettings.billing_enabled
                                             })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                                                billingSettings.billing_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                            }`}
+                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.billing_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                }`}
                                         >
                                             <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${
-                                                    billingSettings.billing_enabled ? 'translate-x-6' : ''
-                                                }`}
+                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.billing_enabled ? 'translate-x-6' : ''
+                                                    }`}
                                             />
                                         </button>
                                     </div>
@@ -799,14 +794,12 @@ export default function AdminBillingPage() {
                                                 ...billingSettings,
                                                 subscription_enabled: !billingSettings.subscription_enabled
                                             })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                                                billingSettings.subscription_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                            }`}
+                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.subscription_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                }`}
                                         >
                                             <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${
-                                                    billingSettings.subscription_enabled ? 'translate-x-6' : ''
-                                                }`}
+                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.subscription_enabled ? 'translate-x-6' : ''
+                                                    }`}
                                             />
                                         </button>
                                     </div>
@@ -821,14 +814,12 @@ export default function AdminBillingPage() {
                                                 ...billingSettings,
                                                 credit_pricing_enabled: !billingSettings.credit_pricing_enabled
                                             })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                                                billingSettings.credit_pricing_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                            }`}
+                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.credit_pricing_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                }`}
                                         >
                                             <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${
-                                                    billingSettings.credit_pricing_enabled ? 'translate-x-6' : ''
-                                                }`}
+                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.credit_pricing_enabled ? 'translate-x-6' : ''
+                                                    }`}
                                             />
                                         </button>
                                     </div>

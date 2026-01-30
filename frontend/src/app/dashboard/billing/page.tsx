@@ -61,14 +61,13 @@ export default function BillingPage() {
 
             if (creditsRes.ok) {
                 const data = await creditsRes.json();
-                // Backend returns array of credits, robustly map to object
-                const creditMap = { resumeReviews: 0, interviews: 0, skillTests: 0 };
-                data.data.forEach((c: any) => {
-                    if (c.creditType === 'RESUME_REVIEW') creditMap.resumeReviews = c.balance;
-                    if (c.creditType === 'AI_INTERVIEW') creditMap.interviews = c.balance;
-                    if (c.creditType === 'SKILL_TEST') creditMap.skillTests = c.balance;
+                // Backend returns object like { RESUME_REVIEW: 0, AI_INTERVIEW: 0, SKILL_TEST: 0 }
+                const creditData = data.data || {};
+                setCredits({
+                    resumeReviews: creditData.RESUME_REVIEW || 0,
+                    interviews: creditData.AI_INTERVIEW || 0,
+                    skillTests: creditData.SKILL_TEST || 0,
                 });
-                setCredits(creditMap);
             }
 
             if (transRes.ok) {
