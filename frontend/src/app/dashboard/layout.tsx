@@ -296,7 +296,7 @@ export default function DashboardLayout({
                                     exit={{ opacity: 0, y: 10 }}
                                     className="absolute bottom-full left-4 right-4 mb-2 p-2 rounded-xl bg-gray-900 border border-white/10 shadow-xl backdrop-blur-xl z-50"
                                 >
-                                    <Link href="/dashboard/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                    <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                                         <User className="w-4 h-4" />
                                         <span className="text-sm">Profile</span>
                                     </Link>

@@ -127,7 +127,11 @@ export class SubscriptionService {
      * Create a free tier subscription
      */
     async createFreeSubscription(userId: string, planId: string) {
+        logger.info(`Creating free subscription for user ${userId} with plan ID: ${planId}`);
+
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
+
+        logger.info(`Found plan: ${plan ? plan.name : 'NOT FOUND'}, features: ${JSON.stringify(plan?.features)}`);
 
         const userSubscription = await prisma.userSubscription.upsert({
             where: { userId },
@@ -148,7 +152,11 @@ export class SubscriptionService {
         });
 
         if (plan) {
+            logger.info(`Initializing credits for plan ${plan.name}`);
             await this.initializeCreditsForPlan(userId, plan);
+            logger.info(`Credits initialized for user ${userId}`);
+        } else {
+            logger.error(`Plan not found with ID: ${planId} - cannot initialize credits`);
         }
 
         return {
@@ -196,14 +204,20 @@ export class SubscriptionService {
     async initializeCreditsForPlan(userId: string, plan: any) {
         const features = plan.features as any;
 
+        logger.info(`Initializing credits - Plan: ${plan.name}, Features: ${JSON.stringify(features)}`);
+
         const creditTypes = [
             { type: 'RESUME_REVIEW', amount: features.resumeReviews || 0 },
             { type: 'AI_INTERVIEW', amount: features.interviews || 0 },
             { type: 'SKILL_TEST', amount: features.skillTests || 0 },
         ];
 
+        logger.info(`Credit types to initialize: ${JSON.stringify(creditTypes)}`);
+
         for (const credit of creditTypes) {
             if (credit.amount === 'unlimited') continue; // Handle unlimited separately
+
+            logger.info(`Upserting ${credit.type} with amount ${credit.amount} for user ${userId}`);
 
             await prisma.userCredit.upsert({
                 where: {
@@ -229,6 +243,8 @@ export class SubscriptionService {
                     description: `Monthly credit refill from ${plan.displayName} plan`,
                 },
             });
+
+            logger.info(`Successfully upserted ${credit.type} credit for user ${userId}`);
         }
     }
 
