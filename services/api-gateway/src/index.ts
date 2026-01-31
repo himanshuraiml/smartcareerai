@@ -222,6 +222,12 @@ app.use(
     createProxyMiddleware(createProxyOptions(BILLING_SERVICE_URL, { [`^${API_PREFIX}/billing`]: '' }))
 );
 
+// Public Institutions route (for registration - no auth required)
+app.use(
+    `${API_PREFIX}/institutions`,
+    createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/institutions`]: '/institutions' }))
+);
+
 // Admin Service Routes (User Management & Analytics)
 // Admin Service Routes (User Management & Analytics)
 app.use(

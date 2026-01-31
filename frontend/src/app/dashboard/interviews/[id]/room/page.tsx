@@ -388,6 +388,28 @@ export default function InterviewRoomPage() {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Derive current question (safe even if session is null)
+    const currentQuestion = session?.questions?.[currentQuestionIndex] ?? null;
+    const progress = analytics?.progress || {
+        current: currentQuestionIndex + 1,
+        total: session?.questions?.length || 0,
+        answered: 0
+    };
+
+    // Auto-speak question when it changes (after proctoring modal closes)
+    // IMPORTANT: This hook must be before any conditional returns
+    useEffect(() => {
+        if (!showProctoringModal && currentQuestion?.questionText) {
+            speakQuestion(currentQuestion.questionText);
+        }
+        // Cleanup: stop speech when unmounting or question changes
+        return () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [currentQuestion?.questionText, showProctoringModal]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -425,22 +447,7 @@ export default function InterviewRoomPage() {
             </div>
         );
     }
-
-    const currentQuestion = session.questions[currentQuestionIndex];
-    const progress = analytics?.progress || { current: currentQuestionIndex + 1, total: session.questions.length, answered: 0 };
-
-    // Auto-speak question when it changes (after proctoring modal closes)
-    useEffect(() => {
-        if (!showProctoringModal && currentQuestion?.questionText) {
-            speakQuestion(currentQuestion.questionText);
-        }
-        // Cleanup: stop speech when unmounting or question changes
-        return () => {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-        };
-    }, [currentQuestion?.questionText, showProctoringModal]);
+    // currentQuestion and progress already calculated above
 
     // Handle screen share request with entire screen detection
     const handleRequestScreenShare = async () => {

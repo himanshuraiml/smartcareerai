@@ -171,9 +171,8 @@ export default function AdminInstitutionsPage() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-                            toast.type === 'success' ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'
-                        }`}
+                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'
+                            }`}
                     >
                         {toast.type === 'success' ? (
                             <CheckCircle className="w-5 h-5 text-green-400" />
@@ -289,7 +288,7 @@ export default function AdminInstitutionsPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
                                 </div>
                                 <div>
@@ -299,9 +298,9 @@ export default function AdminInstitutionsPage() {
                                         value={formData.domain}
                                         onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                                         placeholder="e.g. stanford.edu"
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">Used for auto-verification of students with email domains</p>
+                                    <p className="mt-1 text-xs text-gray-400">Used for auto-verification of students with email domains</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-1">Admin Email (Optional)</label>
@@ -309,9 +308,10 @@ export default function AdminInstitutionsPage() {
                                         type="email"
                                         value={formData.adminEmail}
                                         onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        placeholder="admin@institution.edu"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">Will be invited as Institution Admin</p>
+                                    <p className="mt-1 text-xs text-gray-400">Will be invited as Institution Admin</p>
                                 </div>
 
                                 <div className="flex justify-end gap-3 mt-6">

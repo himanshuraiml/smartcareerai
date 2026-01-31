@@ -24,6 +24,20 @@ app.get('/health', (_req, res) => {
 });
 
 // Routes
+// Public route for listing institutions (used in registration)
+app.get('/institutions', async (_req, res, next) => {
+    try {
+        const { PrismaClient } = await import('@prisma/client');
+        const prisma = new PrismaClient();
+        const institutions = await prisma.institution.findMany({
+            select: { id: true, name: true }
+        });
+        res.json({ success: true, data: institutions });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // IMPORTANT: Institution routes must be mounted FIRST because they use institutionAdminMiddleware
 // If adminRouter (which uses adminMiddleware requiring ADMIN role) is mounted first at '/',
 // it will intercept /institution/* requests and reject them with 403.

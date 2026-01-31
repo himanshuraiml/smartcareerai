@@ -184,10 +184,10 @@ export default function UserManagementPage() {
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-white font-medium">
-                                                {user.name.charAt(0)}
+                                                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{user.name}</p>
+                                                <p className="text-white font-medium">{user.name || 'No Name'}</p>
                                                 <p className="text-gray-400 text-sm">{user.email}</p>
                                             </div>
                                         </div>
