@@ -474,7 +474,7 @@ export default function InterviewRoomPage() {
     };
 
     return (
-        <div className="min-h-screen -m-6 lg:-m-8 bg-gray-50 dark:bg-[#0a0f14]">
+        <div className="min-h-screen -m-6 lg:-m-8 bg-[#0a0f14] dark:bg-[#0a0f14]" data-theme="dark">
             {/* Proctoring Modal */}
             {showProctoringModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
