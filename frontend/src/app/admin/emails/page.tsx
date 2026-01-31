@@ -445,11 +445,10 @@ export default function AdminEmailsPage() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                            activeTab === tab.id
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
                                 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
-                        }`}
+                            }`}
                     >
                         <tab.icon className="w-4 h-4" />
                         {tab.label}
@@ -464,11 +463,10 @@ export default function AdminEmailsPage() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-                            toast.type === 'success'
+                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success'
                                 ? 'bg-green-500/20 border border-green-500/30'
                                 : 'bg-red-500/20 border border-red-500/30'
-                        }`}
+                            }`}
                     >
                         {toast.type === 'success' ? (
                             <CheckCircle className="w-5 h-5 text-green-400" />
@@ -748,11 +746,10 @@ export default function AdminEmailsPage() {
                                                     key={option.id}
                                                     type="button"
                                                     onClick={() => setComposeForm({ ...composeForm, recipientType: option.id })}
-                                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                                                        composeForm.recipientType === option.id
+                                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${composeForm.recipientType === option.id
                                                             ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
                                                             : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <option.icon className="w-5 h-5" />
                                                     {option.label}
@@ -768,11 +765,11 @@ export default function AdminEmailsPage() {
                                         <select
                                             value={composeForm.templateId}
                                             onChange={(e) => setComposeForm({ ...composeForm, templateId: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                         >
-                                            <option value="">No template (compose manually)</option>
+                                            <option value="" className="bg-gray-800 text-white">No template (compose manually)</option>
                                             {templates.map((t) => (
-                                                <option key={t.id} value={t.id}>
+                                                <option key={t.id} value={t.id} className="bg-gray-800 text-white">
                                                     {t.name}
                                                 </option>
                                             ))}

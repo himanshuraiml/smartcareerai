@@ -95,6 +95,18 @@ body {
   box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
 }
 
+/* Global dark select/dropdown styling */
+select {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+
+select option {
+  background-color: #1f2937;
+  color: #ffffff;
+  padding: 8px;
+}
+
 /* Animation utilities */
 @keyframes fade-in {
   from {
