@@ -1451,3 +1451,139 @@ select option {
 .light-mode .peer:checked+div {
   background-color: #8b5cf6 !important;
 }
+
+/* ============================== */
+/* MODAL FORM GLASSMORPHISM FIX   */
+/* ============================== */
+/* Fix modal forms showing content behind due to transparent backgrounds */
+
+/* Modal overlay - make it more opaque in light mode */
+.light-mode .fixed.inset-0.z-50,
+.light-mode [class*="fixed"][class*="inset-0"][class*="bg-black"] {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Modal content container - solid background */
+.light-mode .fixed.inset-0 > div[class*="bg-gray-900"],
+.light-mode .fixed.inset-0 > div > div[class*="bg-gray-900"],
+.light-mode .fixed.inset-0.z-50 [class*="rounded-2xl"][class*="bg-gray-900"],
+.light-mode .fixed.inset-0.z-50 [class*="rounded-xl"][class*="bg-gray-900"],
+.light-mode .z-50 [class*="bg-gray-900"][class*="rounded"] {
+  background: #ffffff !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Modal form inputs - ensure solid white background */
+.light-mode .z-50 input[class*="bg-gray-800"],
+.light-mode .z-50 textarea[class*="bg-gray-800"],
+.light-mode .z-50 select[class*="bg-gray-800"],
+.light-mode .fixed.inset-0 input[class*="bg-gray-800"],
+.light-mode .fixed.inset-0 textarea[class*="bg-gray-800"],
+.light-mode .fixed.inset-0 select[class*="bg-gray-800"] {
+  background: #f9fafb !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+}
+
+.light-mode .z-50 input[class*="bg-gray-800"]:focus,
+.light-mode .z-50 textarea[class*="bg-gray-800"]:focus,
+.light-mode .z-50 select[class*="bg-gray-800"]:focus,
+.light-mode .fixed.inset-0 input[class*="bg-gray-800"]:focus,
+.light-mode .fixed.inset-0 textarea[class*="bg-gray-800"]:focus,
+.light-mode .fixed.inset-0 select[class*="bg-gray-800"]:focus {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+  background: #ffffff !important;
+}
+
+/* Modal form labels and text */
+.light-mode .z-50 label[class*="text-gray"],
+.light-mode .fixed.inset-0 label[class*="text-gray"] {
+  color: #374151 !important;
+}
+
+.light-mode .z-50 h2[class*="text-white"],
+.light-mode .z-50 h3[class*="text-white"],
+.light-mode .fixed.inset-0 h2[class*="text-white"],
+.light-mode .fixed.inset-0 h3[class*="text-white"] {
+  color: #111827 !important;
+}
+
+/* Modal helper text */
+.light-mode .z-50 p[class*="text-xs"][class*="text-gray"],
+.light-mode .fixed.inset-0 p[class*="text-xs"][class*="text-gray"] {
+  color: #6b7280 !important;
+}
+
+/* Modal close button */
+.light-mode .z-50 button[class*="text-gray-400"],
+.light-mode .fixed.inset-0 button[class*="text-gray-400"] {
+  color: #6b7280 !important;
+}
+
+.light-mode .z-50 button[class*="text-gray-400"]:hover,
+.light-mode .fixed.inset-0 button[class*="text-gray-400"]:hover {
+  color: #111827 !important;
+}
+
+/* Modal cancel button */
+.light-mode .z-50 button[class*="text-gray-400"]:not([class*="bg-"]),
+.light-mode .fixed.inset-0 button[class*="text-gray-400"]:not([class*="bg-"]) {
+  color: #4b5563 !important;
+}
+
+/* Framer Motion modal wrapper */
+.light-mode [class*="fixed"][class*="inset-0"][class*="z-50"] > [class*="motion"] {
+  background: #ffffff !important;
+}
+
+/* Glass effect cards inside modals */
+.light-mode .z-50 .glass,
+.light-mode .fixed.inset-0 .glass {
+  background: rgba(249, 250, 251, 0.95) !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Fix bg-white/5 and bg-white/10 inputs in modals - these become invisible in light mode */
+.light-mode .z-50 input[class*="bg-white"],
+.light-mode .z-50 textarea[class*="bg-white"],
+.light-mode .z-50 select[class*="bg-white"],
+.light-mode .fixed.inset-0 input[class*="bg-white"],
+.light-mode .fixed.inset-0 textarea[class*="bg-white"],
+.light-mode .fixed.inset-0 select[class*="bg-white"] {
+  background: #f3f4f6 !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+}
+
+.light-mode .z-50 input[class*="bg-white"]:focus,
+.light-mode .z-50 textarea[class*="bg-white"]:focus,
+.light-mode .z-50 select[class*="bg-white"]:focus,
+.light-mode .fixed.inset-0 input[class*="bg-white"]:focus,
+.light-mode .fixed.inset-0 textarea[class*="bg-white"]:focus,
+.light-mode .fixed.inset-0 select[class*="bg-white"]:focus {
+  background: #ffffff !important;
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+/* Select dropdown options in modals */
+.light-mode .z-50 select option,
+.light-mode .fixed.inset-0 select option {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Modal border colors - white/10 borders become invisible */
+.light-mode .z-50 [class*="border-white"],
+.light-mode .fixed.inset-0 [class*="border-white"] {
+  border-color: #e5e7eb !important;
+}
+
+/* Modal icon colors */
+.light-mode .z-50 .text-gray-500,
+.light-mode .fixed.inset-0 .text-gray-500 {
+  color: #9ca3af !important;
+}

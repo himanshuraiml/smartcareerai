@@ -14,7 +14,8 @@ import {
     Activity,
     Building,
     Mail,
-    CreditCard
+    CreditCard,
+    AlertTriangle
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -24,6 +25,7 @@ const navItems = [
     { href: "/admin/institutions", icon: Building, label: "Institutions" },
     { href: "/admin/emails", icon: Mail, label: "Email Management" },
     { href: "/admin/billing", icon: CreditCard, label: "Billing" },
+    { href: "/admin/errors", icon: AlertTriangle, label: "Error Monitoring" },
     { href: "/admin/activity", icon: Activity, label: "System Activity" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];

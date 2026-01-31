@@ -183,7 +183,9 @@ export default function InterviewRoomPage() {
         if (session?.startedAt && session.status === 'IN_PROGRESS') {
             const interval = setInterval(() => {
                 const start = new Date(session.startedAt!);
-                setElapsedTime(Math.floor((Date.now() - start.getTime()) / 1000));
+                const elapsed = Math.floor((Date.now() - start.getTime()) / 1000);
+                // Ensure timer never shows negative values
+                setElapsedTime(Math.max(0, elapsed));
             }, 1000);
             return () => clearInterval(interval);
         }
@@ -626,7 +628,7 @@ export default function InterviewRoomPage() {
             )}
 
             {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/5">
+            <header className="flex items-center justify-between px-8 py-4 border-b border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-4">
                     <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
@@ -637,7 +639,7 @@ export default function InterviewRoomPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 mr-2">
                     {/* Recording indicator */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -865,24 +867,24 @@ export default function InterviewRoomPage() {
                     </div>
 
                     {/* AI Hint */}
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                    <div className="p-4 rounded-xl bg-[#111820] border border-amber-500/30">
                         <div className="flex items-center gap-2 mb-3">
-                            <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                            <span className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider font-medium">AI Hint</span>
+                            <Lightbulb className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs text-amber-400 uppercase tracking-wider font-medium">AI Hint</span>
                         </div>
                         {loadingHint ? (
-                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-gray-400">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 <span className="text-sm">Generating hint...</span>
                             </div>
                         ) : aiHint ? (
                             <div>
-                                <p className="text-gray-700 dark:text-gray-300 text-sm">{aiHint.hint}</p>
+                                <p className="text-gray-200 text-sm">{aiHint.hint}</p>
                                 {aiHint.keyPoints && aiHint.keyPoints.length > 0 && (
                                     <ul className="mt-3 space-y-1">
                                         {aiHint.keyPoints.map((point, i) => (
-                                            <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-2">
-                                                <span className="text-amber-500 dark:text-amber-400">•</span>
+                                            <li key={i} className="text-xs text-gray-300 flex items-start gap-2">
+                                                <span className="text-amber-400">•</span>
                                                 {point}
                                             </li>
                                         ))}
@@ -890,7 +892,7 @@ export default function InterviewRoomPage() {
                                 )}
                             </div>
                         ) : (
-                            <p className="text-gray-600 dark:text-gray-400 text-sm">Focus on providing specific examples from your experience.</p>
+                            <p className="text-gray-400 text-sm">Focus on providing specific examples from your experience.</p>
                         )}
                     </div>
 

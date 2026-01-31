@@ -5,7 +5,8 @@
       "Bash(grep:*)",
       "Bash(docker logs:*)",
       "Bash(npx tsc:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

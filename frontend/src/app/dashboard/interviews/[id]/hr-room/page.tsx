@@ -169,7 +169,9 @@ export default function HRInterviewRoomPage() {
         if (session?.startedAt && session.status === 'IN_PROGRESS') {
             const interval = setInterval(() => {
                 const start = new Date(session.startedAt!);
-                setElapsedTime(Math.floor((Date.now() - start.getTime()) / 1000));
+                const elapsed = Math.floor((Date.now() - start.getTime()) / 1000);
+                // Ensure timer never shows negative values
+                setElapsedTime(Math.max(0, elapsed));
             }, 1000);
             return () => clearInterval(interval);
         }
@@ -311,53 +313,17 @@ export default function HRInterviewRoomPage() {
         return { label: 'Neutral', position: 50, color: 'text-gray-400' };
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
-            </div>
-        );
-    }
-
-    if (invalidId) {
-        return (
-            <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <AlertTriangle className="w-8 h-8 text-red-400" />
-                </div>
-                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
-                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
-                    Return to Interviews
-                </Link>
-            </div>
-        );
-    }
-
-    if (!session) {
-        return (
-            <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                    <AlertTriangle className="w-8 h-8 text-yellow-400" />
-                </div>
-                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
-                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
-                    Return to Interviews
-                </Link>
-            </div>
-        );
-    }
-
-    const currentQuestion = session.questions[currentQuestionIndex];
+    // Calculate derived state BEFORE any conditional returns (React hooks requirement)
+    const currentQuestion = session?.questions?.[currentQuestionIndex] || null;
     const progress = {
         current: currentQuestionIndex + 1,
-        total: session.questions.length,
-        percentage: Math.round(((currentQuestionIndex + 1) / session.questions.length) * 100)
+        total: session?.questions?.length || 0,
+        percentage: session?.questions?.length ? Math.round(((currentQuestionIndex + 1) / session.questions.length) * 100) : 0
     };
     const toneInfo = getToneInfo();
 
     // Auto-speak question when it changes (after proctoring modal closes)
+    // IMPORTANT: This hook must be before any conditional returns
     useEffect(() => {
         if (!showProctoringModal && currentQuestion?.questionText) {
             speakQuestion(currentQuestion.questionText);
@@ -394,8 +360,46 @@ export default function HRInterviewRoomPage() {
         await endSession();
     };
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] bg-[#0a0f14]">
+                <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+            </div>
+        );
+    }
+
+    if (invalidId) {
+        return (
+            <div className="text-center py-12 bg-[#0a0f14] min-h-screen">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
+                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
+                    Return to Interviews
+                </Link>
+            </div>
+        );
+    }
+
+    if (!session) {
+        return (
+            <div className="text-center py-12 bg-[#0a0f14] min-h-screen">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
+                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition inline-block">
+                    Return to Interviews
+                </Link>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen -m-6 lg:-m-8 bg-gray-50 dark:bg-[#0a0f14]">
+        <div className="min-h-screen -m-6 lg:-m-8 bg-[#0a0f14]" data-theme="dark">
             {/* Proctoring Modal */}
             {showProctoringModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -566,7 +570,7 @@ export default function HRInterviewRoomPage() {
             )}
 
             {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/5">
+            <header className="flex items-center justify-between px-8 py-4 border-b border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-4">
                     <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
@@ -577,7 +581,7 @@ export default function HRInterviewRoomPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 mr-2">
                     {/* Recording indicator */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -797,30 +801,30 @@ export default function HRInterviewRoomPage() {
                     </div>
 
                     {/* STAR Method Tip */}
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                    <div className="p-4 rounded-xl bg-[#111820] border border-amber-500/30">
                         <div className="flex items-center gap-2 mb-3">
-                            <Lightbulb className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                            <span className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider font-medium">STAR Method Tip</span>
+                            <Lightbulb className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs text-amber-400 uppercase tracking-wider font-medium">STAR Method Tip</span>
                         </div>
-                        <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">
-                            Don't forget to emphasize the <span className="text-amber-600 dark:text-amber-400 font-medium">Result</span>. Quantify the impact of your leadership if possible.
+                        <p className="text-gray-200 text-sm mb-2">
+                            Don't forget to emphasize the <span className="text-amber-400 font-medium">Result</span>. Quantify the impact of your leadership if possible.
                         </p>
                         <div className="mt-3 space-y-1">
                             <div className="flex items-center gap-2 text-xs">
-                                <CheckCircle className="w-3 h-3 text-teal-500 dark:text-teal-400" />
-                                <span className="text-gray-600 dark:text-gray-400">Situation</span>
+                                <CheckCircle className="w-3 h-3 text-teal-400" />
+                                <span className="text-gray-300">Situation</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <CheckCircle className="w-3 h-3 text-teal-500 dark:text-teal-400" />
-                                <span className="text-gray-600 dark:text-gray-400">Task</span>
+                                <CheckCircle className="w-3 h-3 text-teal-400" />
+                                <span className="text-gray-300">Task</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <Circle className="w-3 h-3 text-gray-400 dark:text-gray-600" />
-                                <span className="text-gray-500">Action</span>
+                                <Circle className="w-3 h-3 text-gray-500" />
+                                <span className="text-gray-400">Action</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
-                                <Circle className="w-3 h-3 text-gray-400 dark:text-gray-600" />
-                                <span className="text-gray-500">Result</span>
+                                <Circle className="w-3 h-3 text-gray-500" />
+                                <span className="text-gray-400">Result</span>
                             </div>
                         </div>
                     </div>

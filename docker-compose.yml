@@ -70,6 +70,15 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3001
       - RESUME_SERVICE_URL=http://resume-service:3002
       - SCORING_SERVICE_URL=http://scoring-service:3003
+      - SKILL_SERVICE_URL=http://skill-service:3004
+      - JOB_SERVICE_URL=http://job-service:3005
+      - APPLICATION_SERVICE_URL=http://application-service:3006
+      - INTERVIEW_SERVICE_URL=http://interview-service:3007
+      - RECRUITER_SERVICE_URL=http://recruiter-service:3008
+      - BILLING_SERVICE_URL=http://billing-service:3009
+      - VALIDATION_SERVICE_URL=http://validation-service:3010
+      - ADMIN_SERVICE_URL=http://admin-service:3011
+      - EMAIL_SERVICE_URL=http://email-tracking-service:3012
       - REDIS_URL=redis://redis:6379
     depends_on:
       redis:
@@ -195,6 +204,119 @@ services:
       postgres:
         condition: service_healthy
 
+  # Interview Service
+  interview-service:
+    build:
+      context: ./services/interview-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-interview
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Recruiter Service
+  recruiter-service:
+    build:
+      context: ./services/recruiter-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-recruiter
+    restart: unless-stopped
+    ports:
+      - "3008:3008"
+    environment:
+      - NODE_ENV=development
+      - PORT=3008
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Billing Service
+  billing-service:
+    build:
+      context: ./services/billing-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-billing
+    restart: unless-stopped
+    ports:
+      - "3009:3009"
+    environment:
+      - NODE_ENV=development
+      - PORT=3009
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Validation Service
+  validation-service:
+    build:
+      context: ./services/validation-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-validation
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=development
+      - PORT=3010
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Admin Service
+  admin-service:
+    build:
+      context: ./services/admin-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-admin
+    restart: unless-stopped
+    ports:
+      - "3011:3011"
+    environment:
+      - NODE_ENV=development
+      - PORT=3011
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - ADMIN_EMAILS=${ADMIN_EMAILS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Email Tracking Service
+  email-tracking-service:
+    build:
+      context: ./services/email-tracking-service
+      dockerfile: Dockerfile
+    container_name: smartcareer-email
+    restart: unless-stopped
+    ports:
+      - "3012:3012"
+    environment:
+      - NODE_ENV=development
+      - PORT=3012
+      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
@@ -203,3 +325,4 @@ volumes:
 networks:
   default:
     name: smartcareer-network
+

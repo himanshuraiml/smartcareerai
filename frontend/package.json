@@ -7,7 +7,10 @@
         "build": "next build",
         "start": "next start -p 3100",
         "lint": "next lint",
-        "test": "jest"
+        "test": "jest",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed"
     },
     "dependencies": {
         "@mediapipe/camera_utils": "^0.3.1675466862",
@@ -36,6 +39,7 @@
         "zustand": "^4.4.7"
     },
     "devDependencies": {
+        "@playwright/test": "^1.40.0",
         "@testing-library/jest-dom": "^6.9.1",
         "@testing-library/react": "^16.3.2",
         "@types/jest": "^30.0.0",

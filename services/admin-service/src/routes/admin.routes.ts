@@ -3,6 +3,7 @@ import { adminController } from '../controllers/admin.controller';
 import { institutionsController } from '../controllers/institutions.controller';
 import { emailController } from '../controllers/email.controller';
 import { billingController } from '../controllers/billing.controller';
+import { errorMonitoringController } from '../controllers/error-monitoring.controller';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -53,4 +54,15 @@ router.get('/billing/credit-pricing', billingController.getCreditPricing);
 router.put('/billing/credit-pricing', billingController.updateCreditPricing);
 router.get('/billing/stats', billingController.getBillingStats);
 
+// Error Monitoring
+router.get('/errors/logs', errorMonitoringController.getErrorLogs);
+router.get('/errors/stats', errorMonitoringController.getErrorStats);
+router.post('/errors/log', errorMonitoringController.logError);
+router.put('/errors/:id/resolve', errorMonitoringController.resolveError);
+router.post('/errors/resolve-multiple', errorMonitoringController.resolveMultiple);
+router.delete('/errors/clear-resolved', errorMonitoringController.clearResolved);
+router.get('/errors/circuit-breakers', errorMonitoringController.getCircuitBreakers);
+router.post('/errors/circuit-breaker', errorMonitoringController.updateCircuitBreaker);
+
 export { router as adminRouter };
+
