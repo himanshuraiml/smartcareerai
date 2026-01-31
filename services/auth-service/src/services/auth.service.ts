@@ -373,4 +373,55 @@ export class AuthService {
         // Invalidate any existing refresh tokens
         await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
     }
+
+    /**
+     * Change user password (requires current password verification)
+     */
+    async changePassword(userId: string, currentPassword: string, newPassword: string) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        // Verify current password
+        const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!isValidPassword) {
+            throw new AppError('Current password is incorrect', 401);
+        }
+
+        // Hash new password
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        await prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash },
+        });
+
+        // Invalidate all refresh tokens (logout from all devices)
+        await prisma.refreshToken.deleteMany({ where: { userId } });
+
+        logger.info(`Password changed for user ${userId}`);
+    }
+
+    /**
+     * Delete user account and all associated data
+     */
+    async deleteAccount(userId: string, password: string) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        // Verify password before deletion
+        const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+        if (!isValidPassword) {
+            throw new AppError('Password is incorrect', 401);
+        }
+
+        // Delete user (cascading deletes will handle related records)
+        await prisma.user.delete({ where: { id: userId } });
+
+        logger.info(`Account deleted for user ${userId}`);
+    }
 }

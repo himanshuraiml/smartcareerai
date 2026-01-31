@@ -231,4 +231,62 @@ export class AuthController {
             next(error);
         }
     }
+
+    async changePassword(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { currentPassword, newPassword } = req.body;
+
+            if (!currentPassword || !newPassword) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Current password and new password are required',
+                });
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                res.status(400).json({
+                    success: false,
+                    error: 'New password must be at least 8 characters',
+                });
+                return;
+            }
+
+            await authService.changePassword(userId, currentPassword, newPassword);
+
+            logger.info(`Password changed for user: ${userId}`);
+            res.json({
+                success: true,
+                message: 'Password changed successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async deleteAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { password } = req.body;
+
+            if (!password) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Password is required to delete account',
+                });
+                return;
+            }
+
+            await authService.deleteAccount(userId, password);
+
+            logger.info(`Account deleted for user: ${userId}`);
+            res.json({
+                success: true,
+                message: 'Account deleted successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

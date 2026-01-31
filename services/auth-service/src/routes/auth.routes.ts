@@ -26,5 +26,7 @@ router.get('/me/target-role', authMiddleware, authController.getTargetRole);
 router.put('/me/target-role', authMiddleware, authController.updateTargetRole);
 router.post('/logout', authMiddleware, authController.logout);
 router.put('/profile', authMiddleware, authController.updateProfile);
+router.put('/change-password', authMiddleware, authController.changePassword);
+router.delete('/me', authMiddleware, authController.deleteAccount);
 
 export { router as authRouter };

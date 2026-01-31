@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
     User, Mail, Briefcase, Camera, Save, Check, Loader2,
-    ChevronDown, Shield, Bell, Key, Trash2
+    ChevronDown, Shield, Bell, Key, Trash2, AlertTriangle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -17,7 +18,8 @@ interface JobRole {
 }
 
 export default function SettingsPage() {
-    const { user, accessToken, updateTargetJobRole } = useAuthStore();
+    const router = useRouter();
+    const { user, accessToken, updateTargetJobRole, logout } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -28,6 +30,30 @@ export default function SettingsPage() {
         name: '',
         email: '',
         targetJobRoleId: '',
+    });
+
+    // Password change state
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    // Delete account state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    // Notification preferences state (local only, not connected to backend)
+    const [notifications, setNotifications] = useState({
+        'job-alerts': true,
+        'skill-tips': true,
+        'interview-reminders': true,
+        'marketing': false,
     });
 
     // Fetch job roles
@@ -90,6 +116,91 @@ export default function SettingsPage() {
             alert('Failed to save changes');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!accessToken) return;
+
+        setPasswordError(null);
+        setPasswordSuccess(false);
+
+        // Validation
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            setPasswordError('All fields are required');
+            return;
+        }
+
+        if (passwordData.newPassword.length < 8) {
+            setPasswordError('New password must be at least 8 characters');
+            return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordError('New passwords do not match');
+            return;
+        }
+
+        setPasswordLoading(true);
+
+        try {
+            const res = await fetch(`${API_URL}/auth/change-password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    currentPassword: passwordData.currentPassword,
+                    newPassword: passwordData.newPassword,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to change password');
+            }
+
+            setPasswordSuccess(true);
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setTimeout(() => setPasswordSuccess(false), 3000);
+        } catch (error: any) {
+            setPasswordError(error.message || 'Failed to change password');
+        } finally {
+            setPasswordLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!accessToken || !deletePassword) return;
+
+        setDeleteError(null);
+        setDeleteLoading(true);
+
+        try {
+            const res = await fetch(`${API_URL}/auth/me`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ password: deletePassword }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to delete account');
+            }
+
+            // Logout and redirect
+            logout();
+            router.push('/');
+        } catch (error: any) {
+            setDeleteError(error.message || 'Failed to delete account');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -266,11 +377,26 @@ export default function SettingsPage() {
                 >
                     <div className="p-6 rounded-2xl glass-card">
                         <h2 className="text-lg font-bold text-white mb-4">Change Password</h2>
+
+                        {passwordError && (
+                            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                                {passwordError}
+                            </div>
+                        )}
+
+                        {passwordSuccess && (
+                            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+                                Password changed successfully!
+                            </div>
+                        )}
+
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
                                 <input
                                     type="password"
+                                    value={passwordData.currentPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     placeholder="••••••••"
                                 />
@@ -279,6 +405,8 @@ export default function SettingsPage() {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
                                 <input
                                     type="password"
+                                    value={passwordData.newPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     placeholder="••••••••"
                                 />
@@ -287,13 +415,19 @@ export default function SettingsPage() {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
                                 <input
                                     type="password"
+                                    value={passwordData.confirmPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     placeholder="••••••••"
                                 />
                             </div>
-                            <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors">
-                                <Key className="w-4 h-4" />
-                                Update Password
+                            <button
+                                onClick={handleChangePassword}
+                                disabled={passwordLoading}
+                                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors disabled:opacity-50"
+                            >
+                                {passwordLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+                                {passwordLoading ? 'Updating...' : 'Update Password'}
                             </button>
                         </div>
                     </div>
@@ -301,7 +435,10 @@ export default function SettingsPage() {
                     <div className="p-6 rounded-2xl glass-card border border-red-500/20">
                         <h2 className="text-lg font-bold text-red-400 mb-2">Danger Zone</h2>
                         <p className="text-gray-400 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-                        <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20 transition-colors border border-red-500/30">
+                        <button
+                            onClick={() => setShowDeleteModal(true)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20 transition-colors border border-red-500/30"
+                        >
                             <Trash2 className="w-4 h-4" />
                             Delete Account
                         </button>
@@ -319,10 +456,10 @@ export default function SettingsPage() {
                     <h2 className="text-lg font-bold text-white mb-4">Notification Preferences</h2>
                     <div className="space-y-4">
                         {[
-                            { id: 'job-alerts', label: 'Job Alerts', description: 'New job matches based on your profile' },
-                            { id: 'skill-tips', label: 'Skill Tips', description: 'Weekly recommendations to improve your skills' },
-                            { id: 'interview-reminders', label: 'Interview Reminders', description: 'Reminders for scheduled mock interviews' },
-                            { id: 'marketing', label: 'Marketing Emails', description: 'Occasional updates about new features' },
+                            { id: 'job-alerts' as keyof typeof notifications, label: 'Job Alerts', description: 'New job matches based on your profile' },
+                            { id: 'skill-tips' as keyof typeof notifications, label: 'Skill Tips', description: 'Weekly recommendations to improve your skills' },
+                            { id: 'interview-reminders' as keyof typeof notifications, label: 'Interview Reminders', description: 'Reminders for scheduled mock interviews' },
+                            { id: 'marketing' as keyof typeof notifications, label: 'Marketing Emails', description: 'Occasional updates about new features' },
                         ].map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                                 <div>
@@ -330,13 +467,81 @@ export default function SettingsPage() {
                                     <p className="text-sm text-gray-400">{item.description}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                                    <input
+                                        type="checkbox"
+                                        checked={notifications[item.id]}
+                                        onChange={(e) => setNotifications({ ...notifications, [item.id]: e.target.checked })}
+                                        className="sr-only peer"
+                                    />
                                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                                 </label>
                             </div>
                         ))}
                     </div>
                 </motion.div>
+            )}
+
+            {/* Delete Account Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-red-500/30"
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                                <AlertTriangle className="w-6 h-6 text-red-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Delete Account</h2>
+                                <p className="text-gray-400 text-sm">This action cannot be undone</p>
+                            </div>
+                        </div>
+
+                        <p className="text-gray-300 mb-4">
+                            All your data, including resumes, interview history, and preferences will be permanently deleted.
+                        </p>
+
+                        {deleteError && (
+                            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                                {deleteError}
+                            </div>
+                        )}
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Enter your password to confirm</label>
+                            <input
+                                type="password"
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setDeletePassword('');
+                                    setDeleteError(null);
+                                }}
+                                className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteAccount}
+                                disabled={deleteLoading || !deletePassword}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition disabled:opacity-50"
+                            >
+                                {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                {deleteLoading ? 'Deleting...' : 'Delete Account'}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
             )}
         </div>
     );

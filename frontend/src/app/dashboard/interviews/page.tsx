@@ -256,10 +256,12 @@ export default function InterviewsPage() {
             {/* New Interview Modal */}
             {showNewModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 rounded-2xl p-6 max-w-lg w-full border border-white/10">
-                        <h2 className="text-xl font-bold text-white mb-4">Start New Interview</h2>
+                    <div className="bg-gray-900 rounded-2xl max-w-lg w-full border border-white/10 max-h-[90vh] flex flex-col">
+                        <div className="p-6 pb-0">
+                            <h2 className="text-xl font-bold text-white mb-4">Start New Interview</h2>
+                        </div>
 
-                        <div className="space-y-4">
+                        <div className="flex-1 overflow-y-auto p-6 pt-0 space-y-4">
                             {/* Video Interview Mode Banner */}
                             <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
                                 <div className="flex items-center gap-3">
@@ -282,8 +284,8 @@ export default function InterviewsPage() {
                                         type="button"
                                         onClick={() => setNewSession({ ...newSession, type: 'MIXED' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'MIXED'
-                                                ? 'border-purple-500 bg-purple-500/10'
-                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            ? 'border-purple-500 bg-purple-500/10'
+                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -307,8 +309,8 @@ export default function InterviewsPage() {
                                         type="button"
                                         onClick={() => setNewSession({ ...newSession, type: 'TECHNICAL' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'TECHNICAL'
-                                                ? 'border-blue-500 bg-blue-500/10'
-                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -332,8 +334,8 @@ export default function InterviewsPage() {
                                         type="button"
                                         onClick={() => setNewSession({ ...newSession, type: 'BEHAVIORAL' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'BEHAVIORAL'
-                                                ? 'border-green-500 bg-green-500/10'
-                                                : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            ? 'border-green-500 bg-green-500/10'
+                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -381,7 +383,7 @@ export default function InterviewsPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 mt-6">
+                        <div className="flex gap-3 p-6 pt-4 border-t border-white/10">
                             <button
                                 onClick={() => setShowNewModal(false)}
                                 className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"

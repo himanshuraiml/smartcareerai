@@ -1096,19 +1096,25 @@ body {
 
 /* Fluid Gradient Background Animation */
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .bg-gradient-animated {
-  background: linear-gradient(
-    -45deg, 
-    rgba(139, 92, 246, 0.1), 
-    rgba(236, 72, 153, 0.1), 
-    rgba(34, 211, 238, 0.1),
-    rgba(139, 92, 246, 0.1)
-  );
+  background: linear-gradient(-45deg,
+      rgba(139, 92, 246, 0.1),
+      rgba(236, 72, 153, 0.1),
+      rgba(34, 211, 238, 0.1),
+      rgba(139, 92, 246, 0.1));
   background-size: 400% 400%;
   animation: gradient-shift 15s ease infinite;
 }
@@ -1120,7 +1126,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1rem;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
+  box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
@@ -1128,7 +1134,7 @@ body {
 .card-premium:hover {
   transform: translateY(-4px);
   border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(139, 92, 246, 0.15),
     0 8px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -1136,16 +1142,22 @@ body {
 
 /* Skeleton Loader */
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.03) 25%, 
-    rgba(255, 255, 255, 0.08) 50%, 
-    rgba(255, 255, 255, 0.03) 75%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.03) 75%);
   background-size: 200% 100%;
   animation: skeleton-pulse 1.5s ease-in-out infinite, shimmer 2s linear infinite;
   border-radius: 0.5rem;
@@ -1187,8 +1199,15 @@ body {
 
 /* Icon Pulse Animation */
 @keyframes icon-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .icon-pulse:hover {
@@ -1207,11 +1226,25 @@ body {
 }
 
 /* Staggered Animation Delays */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.stagger-5 {
+  animation-delay: 0.5s;
+}
 
 /* Slide Up Animation */
 @keyframes slide-up {
@@ -1219,6 +1252,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1236,6 +1270,7 @@ body {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -1248,10 +1283,13 @@ body {
 
 /* Glow Border Animation */
 @keyframes glow-border {
-  0%, 100% {
+
+  0%,
+  100% {
     border-color: rgba(139, 92, 246, 0.3);
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
   }
+
   50% {
     border-color: rgba(139, 92, 246, 0.6);
     box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
@@ -1264,9 +1302,17 @@ body {
 
 /* Text Gradient Animation */
 @keyframes text-gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .text-gradient-animated {
@@ -1323,7 +1369,9 @@ body {
 
 /* Progress Bar Animation */
 @keyframes progress-fill {
-  from { width: 0%; }
+  from {
+    width: 0%;
+  }
 }
 
 .progress-animated {
@@ -1353,11 +1401,10 @@ body {
 }
 
 .light-mode .skeleton {
-  background: linear-gradient(90deg, 
-    rgba(0, 0, 0, 0.05) 25%, 
-    rgba(0, 0, 0, 0.1) 50%, 
-    rgba(0, 0, 0, 0.05) 75%
-  );
+  background: linear-gradient(90deg,
+      rgba(0, 0, 0, 0.05) 25%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.05) 75%);
 }
 
 .light-mode .input-glass {
@@ -1368,4 +1415,27 @@ body {
 
 .light-mode .input-glass::placeholder {
   color: rgba(0, 0, 0, 0.4);
+}
+
+/* ============================== */
+/* NOTIFICATION TOGGLE LIGHT MODE */
+/* ============================== */
+/* Fix toggle visibility in light mode - gray-700 becomes too light */
+.light-mode .bg-gray-700 {
+  background-color: #cbd5e1 !important;
+}
+
+/* Toggle switch checked state - make purple visible in light mode */
+.light-mode .peer:checked~.peer-checked\:bg-purple-500 {
+  background-color: #8b5cf6 !important;
+}
+
+.light-mode .peer-checked\:bg-purple-500 {
+  background-color: #8b5cf6 !important;
+}
+
+/* Ensure toggled-on state is clearly visible */
+.light-mode input[type="checkbox"]:checked+div,
+.light-mode .peer:checked+div {
+  background-color: #8b5cf6 !important;
 }
