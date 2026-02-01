@@ -125,6 +125,24 @@ export default function UserManagementPage() {
         }
     };
 
+    const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
+        const action = currentStatus ? "unverify" : "verify";
+        if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+
+        try {
+            const response = await fetch(`${API_URL}/admin/users/${userId}/verify`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            if (response.ok) {
+                fetchUsers();
+            }
+        } catch (error) {
+            console.error("Failed to toggle verification", error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div>
@@ -209,15 +227,21 @@ export default function UserManagementPage() {
                                         </select>
                                     </td>
                                     <td className="p-4">
-                                        {user.isVerified ? (
-                                            <span className="flex items-center gap-1 text-green-400 text-sm">
-                                                <CheckCircle className="w-4 h-4" /> Verified
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1 text-gray-400 text-sm">
-                                                <XCircle className="w-4 h-4" /> Unverified
-                                            </span>
-                                        )}
+                                        <button
+                                            onClick={() => handleToggleVerification(user.id, user.isVerified)}
+                                            className={`flex items-center gap-1 text-sm px-2 py-1 rounded-lg transition hover:bg-white/10 ${
+                                                user.isVerified
+                                                    ? 'text-green-400 hover:text-green-300'
+                                                    : 'text-gray-400 hover:text-yellow-400'
+                                            }`}
+                                            title={user.isVerified ? "Click to unverify" : "Click to verify"}
+                                        >
+                                            {user.isVerified ? (
+                                                <><CheckCircle className="w-4 h-4" /> Verified</>
+                                            ) : (
+                                                <><XCircle className="w-4 h-4" /> Unverified</>
+                                            )}
+                                        </button>
                                     </td>
                                     <td className="p-4 text-gray-400 text-sm">
                                         {new Date(user.createdAt).toLocaleDateString()}
