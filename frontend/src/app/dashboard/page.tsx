@@ -56,9 +56,7 @@ export default function DashboardPage() {
             const atsData = atsRes.ok ? await atsRes.json() : { data: [] };
             const appData = appRes.ok ? await appRes.json() : { data: { applied: 0 } };
             const interviewData = interviewRes.ok ? await interviewRes.json() : { data: [] };
-            // @ts-ignore
             const testsData = testsRes.ok ? await testsRes.json() : { data: [] };
-            // @ts-ignore
             const badgesData = badgesRes.ok ? await badgesRes.json() : { data: [] };
 
             const scores = atsData.data || [];
@@ -76,7 +74,7 @@ export default function DashboardPage() {
                 badgesEarned: badgesData.data?.length || 0,
             });
         } catch (err) {
-            console.error('Failed to fetch stats:', err);
+            // Failed to fetch stats - using default values
         } finally {
             setLoading(false);
         }

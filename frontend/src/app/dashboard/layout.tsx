@@ -58,6 +58,11 @@ export default function DashboardLayout({
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
     const [userMenuOpen, setUserMenuOpen] = useState(false);
 
+    const handleLogout = useCallback(() => {
+        logout();
+        router.push('/');
+    }, [logout, router]);
+
     // Idle Timeout Logic (10 minutes)
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
@@ -66,8 +71,7 @@ export default function DashboardLayout({
             if (!accessToken) return;
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
-                console.log('💤 User inactive for 10 mins, logging out...');
-                handleLogout(); // Use existing handleLogout
+                handleLogout();
             }, 10 * 60 * 1000); // 10 minutes
         };
 
@@ -84,7 +88,7 @@ export default function DashboardLayout({
             clearTimeout(timeoutId);
             events.forEach(event => window.removeEventListener(event, resetTimer));
         };
-    }, [accessToken]); // Re-bind if login status changes
+    }, [accessToken, handleLogout]);
 
     // Fetch user progress to determine sidebar visibility
     const fetchUserProgress = useCallback(async () => {
@@ -129,11 +133,9 @@ export default function DashboardLayout({
             if (hasInterviews) stage = 4; // Unlock Jobs/Applications
             if (hasApplied) stage = 5;
 
-            console.log('User progress:', { hasResume, hasSkillsAnalyzed, hasTests, hasInterviews, hasApplied, stage });
             setUserStage(stage);
         } catch (err) {
-            console.error('Failed to fetch user progress:', err);
-            // Default to stage 1 so users aren't fully blocked
+            // Failed to fetch user progress - default to stage 1 so users aren't fully blocked
             setUserStage(1);
         }
     }, [accessToken]);
@@ -149,10 +151,7 @@ export default function DashboardLayout({
         }
     }, [accessToken, router, fetchUserProgress, _hasHydrated]);
 
-    const handleLogout = () => {
-        logout();
-        router.push('/');
-    };
+
 
     if (!_hasHydrated || !accessToken) {
         // Show nothing or a loading spinner while hydrating or redirecting

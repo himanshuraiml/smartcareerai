@@ -27,7 +27,6 @@ export default function RegisterPage() {
     const [jobRoles, setJobRoles] = useState<JobRole[]>([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
     const [institutions, setInstitutions] = useState<{ id: string; name: string }[]>([]);
-    const [loadingInstitutions, setLoadingInstitutions] = useState(false);
 
     // Add institutionId to formData
     const [formData, setFormData] = useState({
@@ -57,7 +56,7 @@ export default function RegisterPage() {
                     setInstitutions(data.data || []);
                 }
             } catch (err) {
-                console.error('Failed to fetch data:', err);
+                // Failed to fetch data - using defaults
             } finally {
                 setLoadingRoles(false);
             }
@@ -81,7 +80,7 @@ export default function RegisterPage() {
             formData.password,
             formData.name,
             formData.targetJobRoleId || undefined,
-            // @ts-ignore - auth store might need update or just pass additional arg if it accepts any
+            // @ts-expect-error - auth store signature may not include institutionId yet
             formData.institutionId || undefined
         );
         if (success) {
