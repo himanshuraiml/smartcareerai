@@ -492,6 +492,51 @@ model SystemSettings {
 }
 
 // ============================================
+// ACTIVITY LOG (System Events)
+// ============================================
+
+model ActivityLog {
+  id        String         @id @default(uuid())
+  type      ActivityType
+  message   String
+  userId    String?        @map("user_id")
+  userEmail String?        @map("user_email")
+  metadata  Json?
+  ipAddress String?        @map("ip_address")
+  status    ActivityStatus @default(SUCCESS)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+enum ActivityType {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGOUT
+  PASSWORD_RESET
+  RESUME_UPLOAD
+  RESUME_ANALYSIS
+  INTERVIEW_START
+  INTERVIEW_COMPLETE
+  TEST_START
+  TEST_COMPLETE
+  SUBSCRIPTION_CHANGE
+  CREDIT_PURCHASE
+  ADMIN_ACTION
+  SYSTEM_ALERT
+  SETTINGS_CHANGE
+}
+
+enum ActivityStatus {
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+// ============================================
 // PHASE 4: SUBSCRIPTIONS & BILLING (Razorpay)
 // ============================================
 

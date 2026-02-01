@@ -53,31 +53,10 @@ export class AuthService {
             adminForInstitutionId: user.adminForInstitutionId
         });
 
-        // Auto-create free subscription for new users
+        // Auto-create free subscription and credits for new users (directly via Prisma)
         try {
-            const billingServiceUrl = process.env.BILLING_SERVICE_URL || 'http://localhost:3010';
-            logger.info(`Attempting to create free subscription for user ${user.id} at ${billingServiceUrl}`);
-
-            const subscribeResponse = await fetch(`${billingServiceUrl}/subscriptions/subscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${tokens.accessToken}`,
-                },
-                body: JSON.stringify({
-                    planName: 'free',
-                    userEmail: user.email,
-                    userName: user.name || 'User',
-                }),
-            });
-
-            const responseData = await subscribeResponse.json().catch(() => ({}));
-
-            if (subscribeResponse.ok) {
-                logger.info(`Successfully created free subscription for user ${user.id}`);
-            } else {
-                logger.error(`Failed to create free subscription for user ${user.id}: Status ${subscribeResponse.status}, Response: ${JSON.stringify(responseData)}`);
-            }
+            await this.createFreeSubscriptionAndCredits(user.id);
+            logger.info(`Successfully created free subscription and credits for user ${user.id}`);
         } catch (error: any) {
             logger.error(`Failed to create free subscription for user ${user.id}: ${error.message}`, {
                 error: error.message,
@@ -435,5 +414,75 @@ export class AuthService {
         await prisma.user.delete({ where: { id: userId } });
 
         logger.info(`Account deleted for user ${userId}`);
+    }
+
+    /**
+     * Create free subscription and initialize credits for a new user
+     * This is called during registration to give users their free tier credits
+     */
+    private async createFreeSubscriptionAndCredits(userId: string) {
+        // Find the free plan
+        const freePlan = await prisma.subscriptionPlan.findUnique({
+            where: { name: 'free' },
+        });
+
+        if (!freePlan) {
+            throw new AppError('Free plan not found in database', 500);
+        }
+
+        const now = new Date();
+        const periodEnd = new Date(now);
+        periodEnd.setDate(periodEnd.getDate() + 30); // 30 days subscription period
+
+        // Get features from the free plan
+        const features = freePlan.features as {
+            resumeReviews?: number;
+            interviews?: number;
+            skillTests?: number;
+        };
+
+        // Use a transaction to ensure atomicity
+        await prisma.$transaction(async (tx) => {
+            // Create subscription
+            await tx.userSubscription.create({
+                data: {
+                    userId,
+                    planId: freePlan.id,
+                    status: 'ACTIVE',
+                    currentPeriodStart: now,
+                    currentPeriodEnd: periodEnd,
+                },
+            });
+
+            // Define credit types and amounts from plan features
+            const creditTypes = [
+                { type: 'RESUME_REVIEW' as const, amount: features.resumeReviews || 3 },
+                { type: 'AI_INTERVIEW' as const, amount: features.interviews || 1 },
+                { type: 'SKILL_TEST' as const, amount: features.skillTests || 3 },
+            ];
+
+            // Create credits and transactions for each type
+            for (const credit of creditTypes) {
+                // Create user credit
+                await tx.userCredit.create({
+                    data: {
+                        userId,
+                        creditType: credit.type,
+                        balance: credit.amount,
+                    },
+                });
+
+                // Log the credit grant transaction
+                await tx.creditTransaction.create({
+                    data: {
+                        userId,
+                        creditType: credit.type,
+                        amount: credit.amount,
+                        transactionType: 'GRANT',
+                        description: 'Free tier subscription credits',
+                    },
+                });
+            }
+        });
     }
 }

@@ -195,14 +195,12 @@ export default function SettingsPage() {
                                         </div>
                                         <button
                                             onClick={toggleTheme}
-                                            className={`relative w-16 h-8 rounded-full transition-colors ${
-                                                theme === 'dark' ? 'bg-purple-500' : 'bg-yellow-500'
-                                            }`}
+                                            className={`relative w-16 h-8 rounded-full transition-colors ${theme === 'dark' ? 'bg-purple-500' : 'bg-yellow-500'
+                                                }`}
                                         >
                                             <span
-                                                className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-transform flex items-center justify-center ${
-                                                    theme === 'dark' ? 'left-1' : 'left-9'
-                                                }`}
+                                                className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-transform flex items-center justify-center ${theme === 'dark' ? 'left-1' : 'left-9'
+                                                    }`}
                                             >
                                                 {theme === 'dark' ? (
                                                     <Moon className="w-3 h-3 text-purple-500" />
@@ -222,11 +220,10 @@ export default function SettingsPage() {
                                             localStorage.setItem('admin_theme', 'dark');
                                             applyTheme('dark');
                                         }}
-                                        className={`p-4 rounded-xl border-2 transition-all ${
-                                            theme === 'dark'
+                                        className={`p-4 rounded-xl border-2 transition-all ${theme === 'dark'
                                                 ? 'border-purple-500 bg-purple-500/10'
                                                 : 'border-white/10 hover:border-white/30'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="w-full h-24 rounded-lg bg-gray-900 mb-3 flex items-center justify-center">
                                             <Moon className="w-8 h-8 text-purple-400" />
@@ -241,11 +238,10 @@ export default function SettingsPage() {
                                             localStorage.setItem('admin_theme', 'light');
                                             applyTheme('light');
                                         }}
-                                        className={`p-4 rounded-xl border-2 transition-all ${
-                                            theme === 'light'
+                                        className={`p-4 rounded-xl border-2 transition-all ${theme === 'light'
                                                 ? 'border-yellow-500 bg-yellow-500/10'
                                                 : 'border-white/10 hover:border-white/30'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="w-full h-24 rounded-lg bg-gray-100 mb-3 flex items-center justify-center">
                                             <Sun className="w-8 h-8 text-yellow-500" />
@@ -265,9 +261,204 @@ export default function SettingsPage() {
                     {activeTab === 'security' && (
                         <div className="space-y-6">
                             <h2 className="text-xl font-bold text-white mb-6">Security Settings</h2>
-                            <p className="text-gray-500">Security configurations logic here...</p>
+
+                            <div className="space-y-6">
+                                {/* Password Policy */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Password Policy</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Minimum Password Length</label>
+                                            <input
+                                                type="number"
+                                                min="6"
+                                                max="32"
+                                                value={settings.min_password_length || 8}
+                                                onChange={(e) => handleChange('min_password_length', parseInt(e.target.value))}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                            />
+                                        </div>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.require_uppercase || true}
+                                                onChange={(e) => handleChange('require_uppercase', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <span className="text-white">Require uppercase letter</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.require_number || true}
+                                                onChange={(e) => handleChange('require_number', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <span className="text-white">Require number</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.require_special_char || false}
+                                                onChange={(e) => handleChange('require_special_char', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <span className="text-white">Require special character</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Session Settings */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Session Settings</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Session Timeout (minutes)</label>
+                                            <input
+                                                type="number"
+                                                min="5"
+                                                max="1440"
+                                                value={settings.session_timeout || 60}
+                                                onChange={(e) => handleChange('session_timeout', parseInt(e.target.value))}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                            />
+                                            <p className="text-sm text-gray-500 mt-1">Users will be logged out after this period of inactivity</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Max Login Attempts</label>
+                                            <input
+                                                type="number"
+                                                min="3"
+                                                max="10"
+                                                value={settings.max_login_attempts || 5}
+                                                onChange={(e) => handleChange('max_login_attempts', parseInt(e.target.value))}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                            />
+                                            <p className="text-sm text-gray-500 mt-1">Account will be locked after this many failed attempts</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Two-Factor Authentication */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Two-Factor Authentication</h3>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.enable_2fa || false}
+                                            onChange={(e) => handleChange('enable_2fa', e.target.checked)}
+                                            className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                        />
+                                        <div>
+                                            <span className="text-white">Enable 2FA for all users</span>
+                                            <p className="text-sm text-gray-500">Require two-factor authentication for all user accounts</p>
+                                        </div>
+                                    </label>
+                                    <label className="flex items-center gap-3 cursor-pointer mt-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.require_2fa_admin || true}
+                                            onChange={(e) => handleChange('require_2fa_admin', e.target.checked)}
+                                            className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                        />
+                                        <div>
+                                            <span className="text-white">Require 2FA for administrators</span>
+                                            <p className="text-sm text-gray-500">Always require 2FA for admin accounts (recommended)</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     )}
+
+                    {activeTab === 'notifications' && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-bold text-white mb-6">Notification Settings</h2>
+
+                            <div className="space-y-6">
+                                {/* Email Notifications */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Email Notifications</h3>
+                                    <div className="space-y-4">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.notify_new_user || true}
+                                                onChange={(e) => handleChange('notify_new_user', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <div>
+                                                <span className="text-white">New user registrations</span>
+                                                <p className="text-sm text-gray-500">Get notified when a new user registers</p>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.notify_payment || true}
+                                                onChange={(e) => handleChange('notify_payment', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <div>
+                                                <span className="text-white">Payment events</span>
+                                                <p className="text-sm text-gray-500">Get notified on successful payments and subscription changes</p>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.notify_error || true}
+                                                onChange={(e) => handleChange('notify_error', e.target.checked)}
+                                                className="form-checkbox text-purple-500 rounded bg-white/10 border-white/20"
+                                            />
+                                            <div>
+                                                <span className="text-white">System errors</span>
+                                                <p className="text-sm text-gray-500">Get notified when critical errors occur</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Admin Notification Email */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Notification Recipients</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
+                                        <input
+                                            type="email"
+                                            value={settings.admin_notification_email || ''}
+                                            onChange={(e) => handleChange('admin_notification_email', e.target.value)}
+                                            placeholder="admin@example.com"
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-1">Notifications will be sent to this email address</p>
+                                    </div>
+                                </div>
+
+                                {/* Digest Settings */}
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                    <h3 className="text-white font-medium mb-4">Digest Settings</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Email Digest Frequency</label>
+                                            <select
+                                                value={settings.digest_frequency || 'daily'}
+                                                onChange={(e) => handleChange('digest_frequency', e.target.value)}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                            >
+                                                <option value="realtime" className="bg-gray-900">Real-time</option>
+                                                <option value="hourly" className="bg-gray-900">Hourly</option>
+                                                <option value="daily" className="bg-gray-900">Daily</option>
+                                                <option value="weekly" className="bg-gray-900">Weekly</option>
+                                                <option value="off" className="bg-gray-900">Off</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
 
                     {activeTab === 'email' && (
                         <div className="space-y-8">

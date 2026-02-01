@@ -203,7 +203,9 @@ export default function AdminDashboard() {
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', color: '#fff' }}
                                 />
-                                <Legend />
+                                <Legend
+                                    formatter={(value) => <span className="text-gray-300">{value}</span>}
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>

@@ -36,9 +36,22 @@ class EmailService {
                 }
             });
 
+            logger.info(`Found ${settings.length} SMTP settings in database`);
+
             const config: Record<string, any> = {};
             settings.forEach(s => {
-                config[s.settingKey] = s.settingValue;
+                // settingValue is stored as JSON, so we need to handle it properly
+                let value = s.settingValue;
+                // If the value is a JSON string that's been double-encoded, parse it
+                if (typeof value === 'string') {
+                    try {
+                        value = JSON.parse(value);
+                    } catch {
+                        // It's a plain string, use as-is
+                    }
+                }
+                config[s.settingKey] = value;
+                logger.debug(`SMTP Config: ${s.settingKey} = ${s.settingKey.includes('pass') ? '***' : value}`);
             });
 
             return config;
@@ -54,18 +67,28 @@ class EmailService {
     private async getTransporter() {
         const config = await this.getSmtpConfig();
 
+        logger.info('SMTP config loaded:', {
+            hasHost: !!config?.smtp_host,
+            hasUser: !!config?.smtp_user,
+            hasPass: !!config?.smtp_pass,
+            hasPort: !!config?.smtp_port,
+            hasFrom: !!config?.smtp_from
+        });
+
         if (!config?.smtp_host || !config?.smtp_user) {
             // Fallback to environment variables
+            logger.info('Falling back to environment variables for SMTP');
             const host = process.env.SMTP_HOST;
             const port = parseInt(process.env.SMTP_PORT || '587');
             const user = process.env.SMTP_USER;
             const pass = process.env.SMTP_PASS;
 
             if (!host || !user) {
-                logger.warn('SMTP not configured');
+                logger.warn('SMTP not configured - no host or user in DB or env');
                 return null;
             }
 
+            logger.info(`Creating transporter with env config: ${host}:${port}`);
             return nodemailer.createTransport({
                 host,
                 port,
@@ -74,10 +97,13 @@ class EmailService {
             });
         }
 
+        const smtpPort = parseInt(config.smtp_port as string) || 587;
+        logger.info(`Creating transporter with DB config: ${config.smtp_host}:${smtpPort}`);
+
         return nodemailer.createTransport({
             host: config.smtp_host as string,
-            port: parseInt(config.smtp_port as string) || 587,
-            secure: parseInt(config.smtp_port as string) === 465,
+            port: smtpPort,
+            secure: smtpPort === 465,
             auth: {
                 user: config.smtp_user as string,
                 pass: config.smtp_pass as string

@@ -4,6 +4,8 @@ import { institutionsController } from '../controllers/institutions.controller';
 import { emailController } from '../controllers/email.controller';
 import { billingController } from '../controllers/billing.controller';
 import { errorMonitoringController } from '../controllers/error-monitoring.controller';
+import { activityController } from '../controllers/activity.controller';
+import { settingsController } from '../controllers/settings.controller';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -64,5 +66,12 @@ router.delete('/errors/clear-resolved', errorMonitoringController.clearResolved)
 router.get('/errors/circuit-breakers', errorMonitoringController.getCircuitBreakers);
 router.post('/errors/circuit-breaker', errorMonitoringController.updateCircuitBreaker);
 
-export { router as adminRouter };
+// Activity Logs
+router.get('/activity', activityController.getActivityLogs);
+router.get('/activity/stats', activityController.getActivityStats);
 
+// Settings
+router.get('/settings', settingsController.getSettings);
+router.post('/settings', settingsController.updateSettings);
+
+export { router as adminRouter };
