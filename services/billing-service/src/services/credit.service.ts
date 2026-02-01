@@ -185,7 +185,6 @@ export class CreditService {
                 notes: {
                     userId,
                     creditType,
-                    quantity: quantity.toString(),
                 },
             });
 
