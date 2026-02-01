@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 export interface CreateSubscriptionInput {
     userId: string;
     planName: string;
+    billingCycle?: 'monthly' | 'yearly'; // Defaults to monthly
     userEmail: string;
     userName: string;
     userContact?: string;
@@ -47,7 +48,7 @@ export class SubscriptionService {
      * Create a new subscription
      */
     async createSubscription(input: CreateSubscriptionInput) {
-        const { userId, planName, userEmail, userName, userContact } = input;
+        const { userId, planName, billingCycle = 'monthly', userEmail, userName, userContact } = input;
 
         // Check for existing subscription
         const existingSubscription = await this.getUserSubscription(userId);
@@ -89,18 +90,31 @@ export class SubscriptionService {
             return this.createFreeSubscription(userId, plan.id);
         }
 
-        // Check if plan has Razorpay plan ID
-        if (!plan.razorpayPlanId) {
-            throw createError('Plan not configured for payments', 400, 'PLAN_NOT_CONFIGURED');
+        // Get the correct Razorpay plan ID based on billing cycle
+        const razorpayPlanId = billingCycle === 'yearly'
+            ? plan.razorpayPlanIdYearly
+            : plan.razorpayPlanId;
+
+        // Check if plan has Razorpay plan ID for the selected billing cycle
+        if (!razorpayPlanId) {
+            throw createError(
+                `Plan not configured for ${billingCycle} payments. Please configure Razorpay ${billingCycle} plan ID.`,
+                400,
+                'PLAN_NOT_CONFIGURED'
+            );
         }
 
         // Create Razorpay subscription
         const { subscription, customerId } = await razorpayService.createSubscription({
-            planId: plan.razorpayPlanId,
+            planId: razorpayPlanId,
             customerEmail: userEmail,
             customerName: userName,
             customerContact: userContact,
         });
+
+        // Calculate period end based on billing cycle
+        const periodDays = billingCycle === 'yearly' ? 365 : 30;
+        const periodEndDate = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
 
         // Create subscription record in database (pending until payment)
         const userSubscription = await prisma.userSubscription.upsert({
@@ -112,7 +126,7 @@ export class SubscriptionService {
                 razorpaySubscriptionId: subscription.id,
                 status: 'ACTIVE',
                 currentPeriodStart: new Date(),
-                currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                currentPeriodEnd: periodEndDate,
             },
             update: {
                 planId: plan.id,
@@ -120,7 +134,7 @@ export class SubscriptionService {
                 razorpaySubscriptionId: subscription.id,
                 status: 'ACTIVE',
                 currentPeriodStart: new Date(),
-                currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                currentPeriodEnd: periodEndDate,
             },
             include: { plan: true },
         });

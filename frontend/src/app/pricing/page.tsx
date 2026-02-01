@@ -272,6 +272,7 @@ export default function PricingPage() {
                 },
                 body: JSON.stringify({
                     planName: plan.name,
+                    billingCycle: billingCycle, // Send selected billing cycle (monthly/yearly)
                 }),
             });
 

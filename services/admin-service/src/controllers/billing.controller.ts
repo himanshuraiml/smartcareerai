@@ -148,6 +148,7 @@ export class BillingController {
                 priceYearly,
                 features,
                 razorpayPlanId,
+                razorpayPlanIdYearly,
                 isActive,
                 sortOrder
             } = req.body;
@@ -166,6 +167,7 @@ export class BillingController {
                     priceYearly: priceYearly || 0,
                     features: features || {},
                     razorpayPlanId: razorpayPlanId || null,
+                    razorpayPlanIdYearly: razorpayPlanIdYearly || null,
                     isActive: isActive !== undefined ? isActive : true,
                     sortOrder: sortOrder || 0
                 }
@@ -195,6 +197,7 @@ export class BillingController {
                 priceYearly,
                 features,
                 razorpayPlanId,
+                razorpayPlanIdYearly,
                 isActive,
                 sortOrder
             } = req.body;
@@ -221,6 +224,7 @@ export class BillingController {
                     priceYearly,
                     features,
                     razorpayPlanId,
+                    razorpayPlanIdYearly,
                     isActive,
                     sortOrder
                 }

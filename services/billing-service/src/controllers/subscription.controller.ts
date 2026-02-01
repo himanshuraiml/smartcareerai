@@ -60,11 +60,12 @@ export class SubscriptionController {
     async subscribe(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user!.id;
-            const { planName, contact } = req.body;
+            const { planName, billingCycle, contact } = req.body;
 
             const result = await subscriptionService.createSubscription({
                 userId,
                 planName,
+                billingCycle: billingCycle || 'monthly',
                 userEmail: req.user!.email,
                 userName: req.user!.email.split('@')[0], // Use email prefix as name
                 userContact: contact,

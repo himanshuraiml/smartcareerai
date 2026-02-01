@@ -541,16 +541,17 @@ enum ActivityStatus {
 // ============================================
 
 model SubscriptionPlan {
-  id             String   @id @default(uuid())
-  name           String   @unique // 'free', 'starter', 'pro', 'enterprise'
-  displayName    String   @map("display_name")
-  priceMonthly   Decimal  @map("price_monthly") @db.Decimal(10, 2) // INR
-  priceYearly    Decimal  @map("price_yearly") @db.Decimal(10, 2) // INR
-  features       Json // { "resumeReviews": 5, "interviews": 10, "skillTests": 3 }
-  razorpayPlanId String?  @map("razorpay_plan_id")
-  isActive       Boolean  @default(true) @map("is_active")
-  sortOrder      Int      @default(0) @map("sort_order")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id                   String   @id @default(uuid())
+  name                 String   @unique // 'free', 'starter', 'pro', 'enterprise'
+  displayName          String   @map("display_name")
+  priceMonthly         Decimal  @map("price_monthly") @db.Decimal(10, 2) // INR
+  priceYearly          Decimal  @map("price_yearly") @db.Decimal(10, 2) // INR
+  features             Json // { "resumeReviews": 5, "interviews": 10, "skillTests": 3 }
+  razorpayPlanId       String?  @map("razorpay_plan_id") // Monthly Razorpay plan ID
+  razorpayPlanIdYearly String?  @map("razorpay_plan_id_yearly") // Yearly Razorpay plan ID
+  isActive             Boolean  @default(true) @map("is_active")
+  sortOrder            Int      @default(0) @map("sort_order")
+  createdAt            DateTime @default(now()) @map("created_at")
 
   // Relations
   subscriptions UserSubscription[]
