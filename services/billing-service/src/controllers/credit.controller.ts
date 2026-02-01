@@ -64,9 +64,18 @@ export class CreditController {
             const userId = req.user!.id;
             const { creditType, quantity } = req.body;
 
+            logger.info(`Credit order request: userId=${userId}, creditType=${creditType}, quantity=${quantity}`);
+
             // Validate credit type
-            if (!['RESUME_REVIEW', 'AI_INTERVIEW', 'SKILL_TEST'].includes(creditType)) {
+            if (!creditType || !['RESUME_REVIEW', 'AI_INTERVIEW', 'SKILL_TEST'].includes(creditType)) {
+                logger.error(`Invalid credit type: ${creditType}`);
                 throw createError('Invalid credit type', 400, 'INVALID_CREDIT_TYPE');
+            }
+
+            // Validate quantity
+            if (!quantity || typeof quantity !== 'number' || quantity <= 0 || !Number.isInteger(quantity)) {
+                logger.error(`Invalid quantity: ${quantity} (type: ${typeof quantity})`);
+                throw createError('Invalid quantity. Must be a positive integer.', 400, 'INVALID_QUANTITY');
             }
 
             const order = await creditService.createPurchaseOrder(
@@ -75,11 +84,14 @@ export class CreditController {
                 quantity
             );
 
+            logger.info(`Credit order created successfully: ${order.orderId}`);
+
             res.json({
                 success: true,
                 data: order,
             });
         } catch (error) {
+            logger.error('Error creating credit order:', error);
             next(error);
         }
     }

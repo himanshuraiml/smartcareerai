@@ -153,40 +153,68 @@ export class CreditService {
         creditType: CreditType,
         quantity: number
     ) {
-        // Get dynamic pricing
-        const { prices, bundles } = await this.getDynamicPricing();
+        try {
+            logger.info(`Creating purchase order: userId=${userId}, creditType=${creditType}, quantity=${quantity}`);
 
-        // Calculate price
-        const bundle = bundles[creditType]?.find(b => b.quantity === quantity);
-        let amount: number;
+            // Get dynamic pricing
+            const { prices, bundles } = await this.getDynamicPricing();
 
-        if (bundle) {
-            amount = bundle.price;
-        } else {
-            amount = prices[creditType] * quantity;
-        }
+            // Calculate price
+            const bundle = bundles[creditType]?.find(b => b.quantity === quantity);
+            let amount: number;
 
-        // Create Razorpay order
-        const order = await razorpayService.createOrder({
-            amount,
-            receipt: `credit_${userId}_${Date.now()}`,
-            notes: {
+            if (bundle) {
+                amount = bundle.price;
+                logger.info(`Using bundle pricing: ${quantity} credits for ₹${amount / 100}`);
+            } else {
+                amount = prices[creditType] * quantity;
+                logger.info(`Using per-credit pricing: ${quantity} x ₹${prices[creditType] / 100} = ₹${amount / 100}`);
+            }
+
+            // Validate amount
+            if (!amount || amount <= 0) {
+                logger.error(`Invalid amount calculated: ${amount}`);
+                throw createError('Unable to calculate order amount', 500, 'INVALID_AMOUNT');
+            }
+
+            // Create Razorpay order
+            logger.info(`Creating Razorpay order for amount: ₹${amount / 100}`);
+            const order = await razorpayService.createOrder({
+                amount,
+                receipt: `credit_${userId}_${Date.now()}`,
+                notes: {
+                    userId,
+                    creditType,
+                    quantity: quantity.toString(),
+                },
+            });
+
+            logger.info(`Created credit purchase order: ${order.id} for user ${userId}`);
+
+            return {
+                orderId: order.id,
+                amount: amount / 100,
+                currency: 'INR',
+                creditType,
+                quantity,
+                razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+            };
+        } catch (error: any) {
+            logger.error('Failed to create purchase order:', {
+                error: error.message,
+                stack: error.stack,
                 userId,
                 creditType,
-                quantity: quantity.toString(),
-            },
-        });
+                quantity
+            });
 
-        logger.info(`Created credit purchase order: ${order.id} for user ${userId}`);
+            // Re-throw with user-friendly message
+            if (error.message?.includes('Razorpay credentials')) {
+                throw createError('Payment system is currently unavailable. Please try again later.', 503, 'PAYMENT_UNAVAILABLE');
+            }
 
-        return {
-            orderId: order.id,
-            amount: amount / 100,
-            currency: 'INR',
-            creditType,
-            quantity,
-            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-        };
+            throw error;
+        }
     }
 
     /**
