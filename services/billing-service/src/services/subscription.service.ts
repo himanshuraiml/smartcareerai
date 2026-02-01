@@ -52,16 +52,30 @@ export class SubscriptionService {
         // Check for existing subscription
         const existingSubscription = await this.getUserSubscription(userId);
 
-        // Allow upgrade from free plan, block if already on a paid plan
+        // Handle existing active subscriptions
         if (existingSubscription && existingSubscription.status === 'ACTIVE') {
-            const isFreePlan = existingSubscription.plan.name === 'free';
-            const isUpgrading = planName !== 'free';
+            const currentPlanName = existingSubscription.plan.name;
+            const isCurrentlyOnFreePlan = currentPlanName === 'free';
+            const isTargetFreePlan = planName === 'free';
 
-            if (!isFreePlan && isUpgrading) {
-                // Already on a paid plan - need to cancel first or use upgrade flow
-                throw createError('Please cancel your current subscription before upgrading', 400, 'SUBSCRIPTION_EXISTS');
+            // Case 1: Already subscribed to the same plan
+            if (currentPlanName === planName) {
+                throw createError('You are already subscribed to this plan', 400, 'ALREADY_SUBSCRIBED');
             }
-            // If on free plan and upgrading to paid, allow it (continue with subscription creation)
+
+            // Case 2: On a paid plan trying to switch to another plan (upgrade/downgrade)
+            // They need to cancel their current subscription first
+            if (!isCurrentlyOnFreePlan && !isTargetFreePlan) {
+                throw createError('Please cancel your current subscription before switching plans', 400, 'SUBSCRIPTION_EXISTS');
+            }
+
+            // Case 3: On a paid plan trying to downgrade to free - need to cancel first
+            if (!isCurrentlyOnFreePlan && isTargetFreePlan) {
+                throw createError('Please cancel your current subscription to downgrade to free plan', 400, 'CANCEL_REQUIRED');
+            }
+
+            // Case 4: On free plan upgrading to paid - this is allowed, continue
+            // (This is implicitly handled by not throwing an error)
         }
 
         // Get the plan
