@@ -178,10 +178,13 @@ export class CreditService {
             }
 
             // Create Razorpay order
-            logger.info(`Creating Razorpay order for amount: ₹${amount / 100}`);
+            // Receipt must be <= 40 chars: use short userId + timestamp
+            const shortUserId = userId.replace(/-/g, '').substring(0, 8);
+            const receipt = `cr_${shortUserId}_${Date.now()}`;
+            logger.info(`Creating Razorpay order for amount: ₹${amount / 100}, receipt: ${receipt}`);
             const order = await razorpayService.createOrder({
                 amount,
-                receipt: `credit_${userId}_${Date.now()}`,
+                receipt,
                 notes: {
                     userId,
                     creditType,

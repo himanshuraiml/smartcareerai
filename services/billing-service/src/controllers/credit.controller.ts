@@ -72,16 +72,19 @@ export class CreditController {
                 throw createError('Invalid credit type', 400, 'INVALID_CREDIT_TYPE');
             }
 
+            // Parse quantity if it's a string (JSON body parser might convert it)
+            const parsedQuantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
+
             // Validate quantity
-            if (!quantity || typeof quantity !== 'number' || quantity <= 0 || !Number.isInteger(quantity)) {
-                logger.error(`Invalid quantity: ${quantity} (type: ${typeof quantity})`);
+            if (!parsedQuantity || typeof parsedQuantity !== 'number' || parsedQuantity <= 0 || !Number.isInteger(parsedQuantity) || isNaN(parsedQuantity)) {
+                logger.error(`Invalid quantity: ${quantity} (type: ${typeof quantity}, parsed: ${parsedQuantity})`);
                 throw createError('Invalid quantity. Must be a positive integer.', 400, 'INVALID_QUANTITY');
             }
 
             const order = await creditService.createPurchaseOrder(
                 userId,
                 creditType as CreditType,
-                quantity
+                parsedQuantity
             );
 
             logger.info(`Credit order created successfully: ${order.orderId}`);
