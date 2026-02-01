@@ -688,30 +688,6 @@ export default function MixedInterviewRoomPage() {
                         <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{session.targetRole} Role</h1>
                     </div>
                 </div>
-
-                <div className="flex items-center gap-3 mr-2">
-                    {/* Recording indicator */}
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatElapsedTime(elapsedTime)}</span>
-                    </div>
-
-                    {/* Mic toggle */}
-                    <button
-                        onClick={() => setIsMuted(!isMuted)}
-                        className={`p-2 rounded-lg transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
-                    >
-                        {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                    </button>
-
-                    {/* End Session */}
-                    <button
-                        onClick={handleEndInterview}
-                        className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition"
-                    >
-                        End Session
-                    </button>
-                </div>
             </header>
 
             <div className="flex h-[calc(100vh-80px)]">
@@ -909,15 +885,31 @@ export default function MixedInterviewRoomPage() {
 
                 {/* Right Panel */}
                 <div className="w-96 border-l border-gray-200 dark:border-white/5 p-6 flex flex-col gap-4 overflow-y-auto bg-gray-50 dark:bg-transparent">
-                    {/* AI Interviewer Card */}
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50">
-                            <img src={interviewer.avatar} alt={interviewer.name} className="w-full h-full object-cover" />
+                    {/* Session Controls - Timer & End Session */}
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
+                        <div className="flex items-center gap-3">
+                            {/* Recording indicator */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatElapsedTime(elapsedTime)}</span>
+                            </div>
+
+                            {/* Mic toggle */}
+                            <button
+                                onClick={() => setIsMuted(!isMuted)}
+                                className={`p-2 rounded-lg transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                            >
+                                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                            </button>
                         </div>
-                        <div>
-                            <p className="text-xs text-purple-600 dark:text-purple-400 uppercase">AI Interviewer</p>
-                            <p className="text-gray-900 dark:text-white font-medium">{interviewer.name} ({interviewer.role})</p>
-                        </div>
+
+                        {/* End Session */}
+                        <button
+                            onClick={handleEndInterview}
+                            className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition"
+                        >
+                            End Session
+                        </button>
                     </div>
 
                     {/* AI Hint */}
@@ -966,6 +958,6 @@ export default function MixedInterviewRoomPage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

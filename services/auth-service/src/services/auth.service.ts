@@ -56,7 +56,9 @@ export class AuthService {
         // Auto-create free subscription for new users
         try {
             const billingServiceUrl = process.env.BILLING_SERVICE_URL || 'http://localhost:3010';
-            await fetch(`${billingServiceUrl}/subscriptions/subscribe`, {
+            logger.info(`Attempting to create free subscription for user ${user.id} at ${billingServiceUrl}`);
+
+            const subscribeResponse = await fetch(`${billingServiceUrl}/subscriptions/subscribe`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,9 +70,19 @@ export class AuthService {
                     userName: user.name || 'User',
                 }),
             });
-            logger.info(`Auto-created free subscription for user ${user.id}`);
-        } catch (error) {
-            logger.error(`Failed to create free subscription for user ${user.id}:`, error);
+
+            const responseData = await subscribeResponse.json().catch(() => ({}));
+
+            if (subscribeResponse.ok) {
+                logger.info(`Successfully created free subscription for user ${user.id}`);
+            } else {
+                logger.error(`Failed to create free subscription for user ${user.id}: Status ${subscribeResponse.status}, Response: ${JSON.stringify(responseData)}`);
+            }
+        } catch (error: any) {
+            logger.error(`Failed to create free subscription for user ${user.id}: ${error.message}`, {
+                error: error.message,
+                stack: error.stack,
+            });
             // Don't fail registration if subscription creation fails
         }
 
