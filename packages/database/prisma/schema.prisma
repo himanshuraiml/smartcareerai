@@ -580,6 +580,7 @@ model UserSubscription {
 }
 
 enum SubscriptionStatus {
+  PENDING
   ACTIVE
   CANCELLED
   PAST_DUE
