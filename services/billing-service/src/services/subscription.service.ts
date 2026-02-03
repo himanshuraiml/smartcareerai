@@ -116,7 +116,7 @@ export class SubscriptionService {
         const periodDays = billingCycle === 'yearly' ? 365 : 30;
         const periodEndDate = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
 
-        // Create subscription record in database (pending until payment)
+        // Create subscription record in database with PENDING status until payment is confirmed
         const userSubscription = await prisma.userSubscription.upsert({
             where: { userId },
             create: {
@@ -124,7 +124,7 @@ export class SubscriptionService {
                 planId: plan.id,
                 razorpayCustomerId: customerId,
                 razorpaySubscriptionId: subscription.id,
-                status: 'ACTIVE',
+                status: 'PENDING',
                 currentPeriodStart: new Date(),
                 currentPeriodEnd: periodEndDate,
             },
@@ -132,17 +132,17 @@ export class SubscriptionService {
                 planId: plan.id,
                 razorpayCustomerId: customerId,
                 razorpaySubscriptionId: subscription.id,
-                status: 'ACTIVE',
+                status: 'PENDING',
                 currentPeriodStart: new Date(),
                 currentPeriodEnd: periodEndDate,
             },
             include: { plan: true },
         });
 
-        // Initialize credits based on plan
-        await this.initializeCreditsForPlan(userId, plan);
+        // NOTE: Credits are NOT initialized here. They will be added only after
+        // payment is confirmed via the Razorpay webhook (handlePaymentSuccess)
 
-        logger.info(`Created subscription for user ${userId} with plan ${planName}`);
+        logger.info(`Created PENDING subscription for user ${userId} with plan ${planName}. Awaiting payment confirmation.`);
 
         return {
             subscription: userSubscription,
@@ -361,6 +361,7 @@ export class SubscriptionService {
 
     /**
      * Handle subscription payment confirmation (webhook)
+     * This is called when Razorpay confirms the payment was successful
      */
     async handlePaymentSuccess(subscriptionId: string) {
         const subscription = await prisma.userSubscription.findFirst({
@@ -373,6 +374,10 @@ export class SubscriptionService {
             return;
         }
 
+        // Only initialize credits if the subscription was PENDING (first-time activation)
+        // This prevents duplicate credits on renewal webhooks
+        const wasFirstTimeActivation = subscription.status === 'PENDING';
+
         await prisma.userSubscription.update({
             where: { id: subscription.id },
             data: {
@@ -382,10 +387,14 @@ export class SubscriptionService {
             },
         });
 
-        // Refill credits
-        await this.initializeCreditsForPlan(subscription.userId, subscription.plan);
-
-        logger.info(`Subscription payment confirmed: ${subscriptionId}`);
+        // Only add credits on first-time activation (when status was PENDING)
+        // For renewals (status was already ACTIVE), credits are handled by checkAndRenewSubscription
+        if (wasFirstTimeActivation) {
+            await this.initializeCreditsForPlan(subscription.userId, subscription.plan);
+            logger.info(`Subscription activated and credits initialized: ${subscriptionId}`);
+        } else {
+            logger.info(`Subscription renewal confirmed: ${subscriptionId}`);
+        }
     }
 }
 
