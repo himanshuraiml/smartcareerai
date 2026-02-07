@@ -400,7 +400,7 @@ export class EmailController {
                     'Test Headline',
                     content,
                     'Learn More',
-                    'https://medhiva.com',
+                    'https://placenxt.com',
                     undefined,
                     userId
                 );

@@ -163,7 +163,7 @@ export default function TestsPage() {
     const getBadgeColor = (type: string) => {
         switch (type) {
             case 'EXPERT': return 'from-yellow-400 to-orange-500';
-            case 'ADVANCED': return 'from-purple-400 to-pink-500';
+            case 'ADVANCED': return 'from-indigo-400 to-pink-500';
             case 'INTERMEDIATE': return 'from-blue-400 to-cyan-500';
             case 'BEGINNER': return 'from-green-400 to-emerald-500';
             default: return 'from-gray-400 to-gray-500';
@@ -183,22 +183,24 @@ export default function TestsPage() {
         <Link
             key={test.id}
             href={`/dashboard/test/${test.id}`}
-            className={`p-6 rounded-xl glass hover:border-purple-500/30 transition-all group relative overflow-hidden ${isRecommended ? 'border-purple-500/50 bg-purple-500/5' : ''}`}
+            className={`p-6 rounded-xl glass hover:border-indigo-500/30 transition-all group relative overflow-hidden ${isRecommended ? 'border-indigo-500/50 bg-indigo-500/5' : ''}`}
         >
             {isRecommended && (
-                <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs px-2 py-1 rounded-bl-lg font-medium">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-[#cc4492] to-[#655bd4] text-white text-xs px-2 py-1 rounded-bl-lg font-medium">
                     Recommended
                 </div>
             )}
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                    <FileQuestion className="w-6 h-6 text-purple-400" />
-                </div>
-                <span className={`text-sm font-medium ${getDifficultyColor(test.difficulty)}`}>
+                {!isRecommended && (
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+                        <FileQuestion className="w-6 h-6 text-cyan-400" />
+                    </div>
+                )}
+                <span className={`text-sm font-medium ${getDifficultyColor(test.difficulty)} ${isRecommended ? 'ml-auto' : ''}`}>
                     {test.difficulty}
                 </span>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-purple-400 transition">
+            <h3 className={`font-semibold text-white mb-1 group-hover:text-cyan-400 transition ${isRecommended ? 'text-xl' : 'text-lg'}`}>
                 {test.title}
             </h3>
             <p className="text-gray-400 text-sm mb-4 line-clamp-2">{test.description}</p>
@@ -217,10 +219,10 @@ export default function TestsPage() {
                 </span>
             </div>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-                <span className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 text-xs">
+                <span className="px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 text-xs">
                     {test.skill.name}
                 </span>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-400 transition" />
             </div>
         </Link>
     );
@@ -232,7 +234,7 @@ export default function TestsPage() {
                 <h1 className="text-2xl font-bold text-white">Skill Validation</h1>
                 <p className="text-gray-400 mt-1">Take tests to verify your skills and earn badges</p>
                 {selectedRole && (
-                    <div className="mt-4 flex items-center gap-2 text-sm text-purple-300 bg-purple-500/10 w-fit px-3 py-1.5 rounded-lg border border-purple-500/20">
+                    <div className="mt-4 flex items-center gap-2 text-sm text-white bg-gradient-to-r from-[#cc4492] to-[#655bd4] w-fit px-3 py-1.5 rounded-lg shadow-md">
                         <Target className="w-4 h-4" />
                         Target Role: {selectedRole}
                     </div>
@@ -243,8 +245,8 @@ export default function TestsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-6 rounded-xl glass">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                            <FileQuestion className="w-6 h-6 text-purple-400" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+                            <FileQuestion className="w-6 h-6 text-cyan-400" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-white">{allDisplayedTests.length}</p>
@@ -282,14 +284,14 @@ export default function TestsPage() {
             <div className="flex gap-2 p-1 rounded-lg bg-white/5 w-fit">
                 <button
                     onClick={() => setActiveTab('tests')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'tests' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white'
+                    className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'tests' ? 'bg-gradient-to-r from-[#cc4492] to-[#655bd4] text-white shadow-lg shadow-[#cc4492]/20' : 'text-gray-400 hover:text-white'
                         }`}
                 >
                     Skill Tests
                 </button>
                 <button
                     onClick={() => setActiveTab('badges')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'badges' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white'
+                    className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'badges' ? 'bg-gradient-to-r from-[#cc4492] to-[#655bd4] text-white shadow-lg shadow-[#cc4492]/20' : 'text-gray-400 hover:text-white'
                         }`}
                 >
                     My Badges ({badges.length})
@@ -298,14 +300,14 @@ export default function TestsPage() {
 
             {loading ? (
                 <div className="p-12 text-center">
-                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">Loading...</p>
                 </div>
             ) : activeTab === 'tests' ? (
                 <div className="space-y-8">
                     {allDisplayedTests.length === 0 ? (
                         <div className="p-12 rounded-2xl glass text-center">
-                            <FileQuestion className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                            <FileQuestion className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-white mb-2">No tests available</h3>
                             <p className="text-gray-400">Check back soon for skill validation tests</p>
                         </div>
@@ -315,7 +317,7 @@ export default function TestsPage() {
                             {recommendedTests.length > 0 && (
                                 <div>
                                     <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                                        <Target className="w-5 h-5 text-purple-400" />
+                                        <Target className="w-5 h-5 text-cyan-400" />
                                         Recommended for You
                                         <span className="text-sm font-normal text-gray-400 ml-2">
                                             (Skills to Learn)

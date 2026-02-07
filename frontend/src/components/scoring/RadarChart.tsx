@@ -35,8 +35,8 @@ export default function MatchRadar({ data }: MatchRadarProps) {
                     <Radar
                         name="Match"
                         dataKey="value"
-                        stroke="#a855f7" // Purple-500
-                        fill="#a855f7"
+                        stroke="#6366f1" // indigo-500
+                        fill="#6366f1"
                         fillOpacity={0.5}
                     />
                 </RadarChart>

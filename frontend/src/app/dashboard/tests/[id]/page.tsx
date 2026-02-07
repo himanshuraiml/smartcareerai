@@ -152,7 +152,7 @@ export default function TestPage() {
     const getBadgeColor = (type: string) => {
         switch (type) {
             case 'EXPERT': return 'from-yellow-400 to-orange-500';
-            case 'ADVANCED': return 'from-purple-400 to-pink-500';
+            case 'ADVANCED': return 'from-indigo-400 to-pink-500';
             case 'INTERMEDIATE': return 'from-blue-400 to-cyan-500';
             case 'BEGINNER': return 'from-green-400 to-emerald-500';
             default: return 'from-gray-400 to-gray-500';
@@ -162,7 +162,7 @@ export default function TestPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
             </div>
         );
     }
@@ -171,7 +171,7 @@ export default function TestPage() {
         return (
             <div className="text-center py-12">
                 <p className="text-gray-400">Test not found</p>
-                <Link href="/dashboard/tests" className="text-purple-400 hover:underline mt-2 inline-block">
+                <Link href="/dashboard/tests" className="text-indigo-400 hover:underline mt-2 inline-block">
                     Back to Tests
                 </Link>
             </div>
@@ -260,7 +260,7 @@ export default function TestPage() {
                             setAnswers({});
                             setCurrentQuestion(0);
                         }}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium"
                     >
                         <RefreshCw className="w-4 h-4" />
                         Try Again
@@ -289,7 +289,7 @@ export default function TestPage() {
 
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="text-center p-4 rounded-xl bg-white/5">
-                            <p className="text-2xl font-bold text-purple-400">{test.questions.length}</p>
+                            <p className="text-2xl font-bold text-indigo-400">{test.questions.length}</p>
                             <p className="text-gray-400 text-sm">Questions</p>
                         </div>
                         <div className="text-center p-4 rounded-xl bg-white/5">
@@ -311,7 +311,7 @@ export default function TestPage() {
                     <button
                         onClick={startTest}
                         disabled={starting}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
                     >
                         {starting ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -346,7 +346,7 @@ export default function TestPage() {
             {/* Progress */}
             <div className="w-full h-2 rounded-full bg-white/10">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all"
                     style={{ width: `${((currentQuestion + 1) / test.questions.length) * 100}%` }}
                 />
             </div>
@@ -361,7 +361,7 @@ export default function TestPage() {
                             key={index}
                             onClick={() => setAnswers({ ...answers, [question.id]: option })}
                             className={`w-full text-left p-4 rounded-lg border transition-all ${answers[question.id] === option
-                                    ? 'border-purple-500 bg-purple-500/20 text-white'
+                                    ? 'border-indigo-500 bg-indigo-500/20 text-white'
                                     : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/30'
                                 }`}
                         >
@@ -391,7 +391,7 @@ export default function TestPage() {
                             key={q.id}
                             onClick={() => setCurrentQuestion(index)}
                             className={`w-8 h-8 rounded-full text-xs font-medium transition-all ${index === currentQuestion
-                                    ? 'bg-purple-500 text-white'
+                                    ? 'bg-indigo-500 text-white'
                                     : answers[q.id]
                                         ? 'bg-green-500/20 text-green-400'
                                         : 'bg-white/10 text-gray-400'
@@ -418,7 +418,7 @@ export default function TestPage() {
                 ) : (
                     <button
                         onClick={() => setCurrentQuestion(prev => prev + 1)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition"
                     >
                         Next
                         <ChevronRight className="w-4 h-4" />

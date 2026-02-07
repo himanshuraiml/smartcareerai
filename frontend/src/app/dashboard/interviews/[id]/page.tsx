@@ -404,7 +404,7 @@ export default function InterviewRoomPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
             </div>
         );
     }
@@ -417,7 +417,7 @@ export default function InterviewRoomPage() {
                 </div>
                 <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
                 <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
             </div>
@@ -432,7 +432,7 @@ export default function InterviewRoomPage() {
                 </div>
                 <h3 className="text-white font-medium mb-2">Session Not Found</h3>
                 <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
             </div>
@@ -806,7 +806,7 @@ export default function InterviewRoomPage() {
                     </Link>
                     <button
                         onClick={() => router.push('/dashboard/interviews')}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium"
                     >
                         <RefreshCw className="w-4 h-4" />
                         Try Another Interview
@@ -831,8 +831,8 @@ export default function InterviewRoomPage() {
                 </div>
 
                 <div className="p-8 rounded-2xl glass text-center">
-                    <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-6">
-                        <Play className="w-10 h-10 text-purple-400" />
+                    <div className="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-6">
+                        <Play className="w-10 h-10 text-indigo-400" />
                     </div>
                     <h2 className="text-xl font-bold text-white mb-2">
                         {session.type} Interview for {session.targetRole}
@@ -855,7 +855,7 @@ export default function InterviewRoomPage() {
                     <button
                         onClick={startInterview}
                         disabled={starting}
-                        className="px-8 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
+                        className="px-8 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
                     >
                         {starting ? (
                             <span className="flex items-center gap-2">
@@ -899,7 +899,7 @@ export default function InterviewRoomPage() {
                     </span>
                     <div className="w-32 h-2 rounded-full bg-white/10">
                         <div
-                            className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all"
                             style={{ width: `${(answeredCount / session.questions.length) * 100}%` }}
                         />
                     </div>
@@ -910,7 +910,7 @@ export default function InterviewRoomPage() {
             {currentQuestion && !currentQuestion.userAnswer && (
                 <div className="p-6 rounded-2xl glass">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-purple-400 text-sm">
+                        <div className="flex items-center gap-2 text-indigo-400 text-sm">
                             <MessageSquare className="w-4 h-4" />
                             {currentQuestion.questionType.charAt(0).toUpperCase() + currentQuestion.questionType.slice(1)} Question
                         </div>
@@ -931,13 +931,13 @@ export default function InterviewRoomPage() {
                                 onChange={(e) => setCurrentAnswer(e.target.value)}
                                 placeholder="Type your answer here..."
                                 rows={6}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
                             />
                             <div className="flex justify-end mt-4">
                                 <button
                                     onClick={submitAnswer}
                                     disabled={submitting || !currentAnswer.trim()}
-                                    className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
+                                    className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
                                 >
                                     {submitting ? (
                                         <>
@@ -1200,7 +1200,7 @@ export default function InterviewRoomPage() {
 
             {/* Feedback Display */}
             {lastFeedback && (
-                <div className="p-6 rounded-2xl glass border border-purple-500/30">
+                <div className="p-6 rounded-2xl glass border border-indigo-500/30">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white">Answer Feedback</h3>
                         <span className={`text-2xl font-bold ${getScoreColor(lastFeedback.score)}`}>
@@ -1286,7 +1286,7 @@ export default function InterviewRoomPage() {
                     )}
 
                     {!isLastQuestion && (
-                        <p className="text-purple-400 text-sm mt-4 flex items-center gap-2">
+                        <p className="text-indigo-400 text-sm mt-4 flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             Moving to next question...
                         </p>
@@ -1324,7 +1324,7 @@ export default function InterviewRoomPage() {
                     <div
                         key={q.id}
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${index === currentQuestionIndex
-                            ? 'bg-purple-500 text-white'
+                            ? 'bg-indigo-500 text-white'
                             : q.userAnswer
                                 ? 'bg-green-500/20 text-green-400'
                                 : 'bg-white/10 text-gray-400'

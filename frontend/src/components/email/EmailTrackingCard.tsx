@@ -26,7 +26,7 @@ interface TrackedEmail {
 
 const emailTypeConfig = {
     APPLICATION_RECEIVED: { label: 'Application Received', color: 'bg-blue-500/20 text-blue-400', icon: CheckCircle },
-    INTERVIEW: { label: 'Interview', color: 'bg-purple-500/20 text-purple-400', icon: Clock },
+    INTERVIEW: { label: 'Interview', color: 'bg-indigo-500/20 text-indigo-400', icon: Clock },
     OFFER: { label: 'Offer', color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
     REJECTION: { label: 'Rejection', color: 'bg-red-500/20 text-red-400', icon: XCircle },
     UPDATE: { label: 'Update', color: 'bg-yellow-500/20 text-yellow-400', icon: AlertCircle },
@@ -129,7 +129,7 @@ export function EmailTrackingCard() {
         return (
             <div className="p-6 rounded-2xl glass">
                 <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
                 </div>
             </div>
         );

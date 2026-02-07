@@ -14,7 +14,7 @@ import { logger } from '../utils/logger';
 // Strict rate limit for authentication endpoints
 export const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts per window
+    max: 50, // 50 attempts per window (covers login, register, refresh, leaderboard)
     message: {
         error: 'Too many authentication attempts. Please try again later.',
         retryAfter: 15 * 60

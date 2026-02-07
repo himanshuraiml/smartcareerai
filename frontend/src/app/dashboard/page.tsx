@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     FileText, Target, Briefcase, TrendingUp, ArrowRight,
-    Zap, Award, Flame, Star
+    Zap, Award, Flame, Star, Sparkles, Brain
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import CareerRoadmap, { RoadmapStage, DEFAULT_ROADMAP_STAGES } from '@/components/roadmap/CareerRoadmap';
 import Leaderboard from '@/components/gamification/Leaderboard';
+import PlacementReadyScore from '@/components/gamification/PlacementReadyScore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -105,7 +106,7 @@ export default function DashboardPage() {
             let status: RoadmapStage['status'] = 'locked';
             let progress = 0;
 
-            // Stage 1: Profile DNA
+            // Stage 1: Resume Score
             if (stage.id === 'profile') {
                 if (hasResume && hasGoodScore) {
                     status = 'completed';
@@ -146,7 +147,7 @@ export default function DashboardPage() {
                     status = 'locked';
                 }
             }
-            // Stage 3: Skill Synchronization (skills-tests)
+            // Stage 3: Skill Lab (skills-tests)
             else if (stage.id === 'skills-tests') {
                 if (hasResume) {
                     if (testCount >= 3) {
@@ -164,7 +165,7 @@ export default function DashboardPage() {
                     status = 'locked';
                 }
             }
-            // Stage 4: Simulation Training (interviews)
+            // Stage 4: Interview Arena (interviews)
             else if (stage.id === 'interviews') {
                 if (testCount >= 1) {
                     if (interviewCount >= 3) {
@@ -179,7 +180,7 @@ export default function DashboardPage() {
                     status = 'locked';
                 }
             }
-            // Stage 5: Career Launchpad (jobs)
+            // Stage 5: Job Board (jobs)
             else if (stage.id === 'jobs') {
                 if (interviewCount >= 1 && testCount >= 1) {
                     if (applicationCount >= 5) {
@@ -194,7 +195,7 @@ export default function DashboardPage() {
                     status = 'locked';
                 }
             }
-            // Stage 6: Career Ascension (growth)
+            // Stage 6: Offer Hub (growth)
             else if (stage.id === 'growth') {
                 if (applicationCount >= 1) {
                     status = 'available';
@@ -215,6 +216,60 @@ export default function DashboardPage() {
             (stats.interviewCount || 0) * 100 +
             stats.jobsApplied * 25
         );
+    }, [stats]);
+
+    // Determine AI Recommendation
+    const nextStep = useMemo(() => {
+        if (stats.resumeCount === 0) return {
+            title: 'Upload Your Resume',
+            desc: 'Start your journey by getting an instant ATS score for your CV.',
+            href: '/dashboard/resumes',
+            icon: FileText,
+            color: 'text-blue-400',
+            gradient: 'from-blue-500/20 to-cyan-500/20',
+            border: 'border-blue-500/30',
+            btn: 'bg-blue-500'
+        };
+        if ((stats.avgScore || 0) < 70) return {
+            title: 'Boost Your ATS Score',
+            desc: 'Your resume needs optimization to pass recruiter screening tools.',
+            href: '/dashboard/resumes',
+            icon: TrendingUp,
+            color: 'text-orange-400',
+            gradient: 'from-orange-500/20 to-red-500/20',
+            border: 'border-orange-500/30',
+            btn: 'bg-orange-500'
+        };
+        if ((stats.testsTaken || 0) < 1) return {
+            title: 'Verify Your Skills',
+            desc: 'Earn your first verified badge to increase profile visibility by 3x.',
+            href: '/dashboard/tests',
+            icon: Award,
+            color: 'text-purple-400',
+            gradient: 'from-purple-500/20 to-indigo-500/20',
+            border: 'border-purple-500/30',
+            btn: 'bg-purple-500'
+        };
+        if ((stats.interviewCount || 0) < 1) return {
+            title: 'Practice Interview',
+            desc: 'Build confidence with an AI mock interview before the real deal.',
+            href: '/dashboard/interviews',
+            icon: Target,
+            color: 'text-pink-400',
+            gradient: 'from-pink-500/20 to-rose-500/20',
+            border: 'border-pink-500/30',
+            btn: 'bg-pink-500'
+        };
+        return {
+            title: 'Apply for Jobs',
+            desc: 'You are placement-ready! Browse and apply to recommended roles.',
+            href: '/dashboard/jobs',
+            icon: Briefcase,
+            color: 'text-emerald-400',
+            gradient: 'from-emerald-500/20 to-green-500/20',
+            border: 'border-emerald-500/30',
+            btn: 'bg-emerald-500'
+        };
     }, [stats]);
 
     const level = Math.floor(xp / 500) + 1;
@@ -267,29 +322,14 @@ export default function DashboardPage() {
                 </div>
             </motion.div>
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                    { icon: FileText, value: stats.resumeCount, label: 'Resumes', color: 'purple' },
-                    { icon: Target, value: stats.avgScore ? `${stats.avgScore}%` : '--', label: 'ATS Score', color: 'blue' },
-                    { icon: Award, value: stats.badgesEarned || 0, label: 'Badges', color: 'amber' },
-                    { icon: Briefcase, value: stats.jobsApplied, label: 'Applications', color: 'green' },
-                ].map((stat, i) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 * i }}
-                        className="p-4 rounded-xl glass-card"
-                    >
-                        <div className={`w-10 h-10 rounded-lg bg-${stat.color}-500/20 flex items-center justify-center mb-3`}>
-                            <stat.icon className={`w-5 h-5 text-${stat.color}-400`} />
-                        </div>
-                        <p className="text-2xl font-bold text-white">{loading ? '...' : stat.value}</p>
-                        <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
-                    </motion.div>
-                ))}
-            </div>
+            {/* Placement-Ready Score */}
+            <PlacementReadyScore
+                avgScore={stats.avgScore}
+                badgesEarned={stats.badgesEarned || 0}
+                interviewCount={stats.interviewCount || 0}
+                jobsApplied={stats.jobsApplied}
+                loading={loading}
+            />
 
             {/* Main Content: Roadmap */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -297,7 +337,7 @@ export default function DashboardPage() {
                 <div className="lg:col-span-2">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-purple-400" />
+                            <Zap className="w-5 h-5 text-indigo-400" />
                             Your Career Journey
                         </h2>
                         <span className="text-xs text-gray-500 uppercase tracking-wider">
@@ -317,8 +357,8 @@ export default function DashboardPage() {
                         className="p-6 rounded-2xl glass-premium border-gradient animate-float"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                <TrendingUp className="w-5 h-5 text-purple-400" />
+                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                <TrendingUp className="w-5 h-5 text-indigo-400" />
                             </div>
                             <h3 className="text-lg font-bold text-white">Pro Tip</h3>
                         </div>
@@ -328,27 +368,57 @@ export default function DashboardPage() {
                         </p>
                     </motion.div>
 
-                    {/* Quick Actions */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Quick Actions</h3>
-                        {[
-                            { label: 'Upload Resume', href: '/dashboard/resumes', icon: FileText },
-                            { label: 'Take Skill Test', href: '/dashboard/tests', icon: Award },
-                            { label: 'Practice Interview', href: '/dashboard/interviews', icon: Target },
-                            { label: 'Browse Jobs', href: '/dashboard/jobs', icon: Briefcase },
-                        ].map((action) => (
-                            <Link
-                                key={action.label}
-                                href={action.href}
-                                className="flex items-center justify-between p-4 rounded-xl glass-card group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <action.icon className="w-5 h-5 text-gray-400" />
-                                    <span className="text-white font-medium">{action.label}</span>
+                    {/* AI Recommended Action - Replaces Quick Actions */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                                Recommended Next Step
+                            </h3>
+                            <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                AI
+                            </div>
+                        </div>
+
+                        <Link href={nextStep.href} className="block group">
+                            <div className={`p-1 rounded-2xl bg-gradient-to-br ${nextStep.gradient} ${nextStep.border} border transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-lg`}>
+                                <div className="bg-gray-900/40 backdrop-blur-xl rounded-xl p-5 h-full relative overflow-hidden">
+                                    <div className="flex items-start gap-4 z-10 relative">
+                                        <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 ${nextStep.color}`}>
+                                            <nextStep.icon className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-bold text-white mb-1 group-hover:text-white transition-colors">
+                                                {nextStep.title}
+                                            </h4>
+                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                                {nextStep.desc}
+                                            </p>
+                                            <span className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg ${nextStep.btn} text-white`}>
+                                                Start Now <ArrowRight className="w-3 h-3" />
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Decorative background icon */}
+                                    <nextStep.icon className={`absolute -bottom-4 -right-4 w-24 h-24 ${nextStep.color} opacity-5 transform -rotate-12 group-hover:scale-110 transition-transform duration-500`} />
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
-                            </Link>
-                        ))}
+                            </div>
+                        </Link>
+
+                        {/* Daily Challenge Mini-Card */}
+                        <div className="p-4 rounded-xl glass-card border border-white/5 hover:border-white/10 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                    <Brain className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold text-white">Daily Challenge</h4>
+                                    <p className="text-xs text-gray-400">Answer a quick React interview question</p>
+                                </div>
+                                <ArrowRight className="w-4 h-4 text-gray-600 ml-auto" />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Leaderboard */}

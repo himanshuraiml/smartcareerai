@@ -16,11 +16,11 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
-                hostname: 'medhiva.com',
+                hostname: 'placenxt.com',
             },
             {
                 protocol: 'https',
-                hostname: '**.medhiva.com',
+                hostname: '**.placenxt.com',
             },
         ],
     },

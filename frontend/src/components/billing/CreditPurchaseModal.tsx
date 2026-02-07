@@ -71,7 +71,7 @@ export default function CreditPurchaseModal({
                     key: razorpayKeyId,
                     amount: amount * 100, // Amount is in INR, Razorpay takes paise
                     currency: "INR",
-                    name: "Medhiva",
+                    name: "PlaceNxt",
                     description: `Purchase ${quantity} ${creditType} Credits`,
                     order_id: orderId,
                     handler: async function (response: any) {
@@ -146,7 +146,7 @@ export default function CreditPurchaseModal({
                             key={bundle.quantity}
                             onClick={() => handlePurchase(bundle.quantity)}
                             disabled={loading}
-                            className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-purple-500/50 transition flex items-center justify-between group"
+                            className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-indigo-500/50 transition flex items-center justify-between group"
                         >
                             <div className="text-left">
                                 <p className="text-white font-medium">{bundle.quantity} Credits</p>
@@ -155,10 +155,10 @@ export default function CreditPurchaseModal({
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-bold text-white">₹{bundle.price}</span>
                                 {loading ? (
-                                    <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                                    <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500 transition">
-                                        <span className="text-purple-400 group-hover:text-white text-sm font-bold">+</span>
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500 transition">
+                                        <span className="text-indigo-400 group-hover:text-white text-sm font-bold">+</span>
                                     </div>
                                 )}
                             </div>

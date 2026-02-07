@@ -395,7 +395,7 @@ export default function InstitutionDashboard() {
                             {data.roleDistribution.map((role, idx) => {
                                 const maxCount = data.roleDistribution[0]?.count || 1;
                                 const percentage = Math.round((role.count / maxCount) * 100);
-                                const colors = ["bg-emerald-500", "bg-blue-500", "bg-purple-500", "bg-amber-500", "bg-rose-500", "bg-teal-500"];
+                                const colors = ["bg-emerald-500", "bg-blue-500", "bg-indigo-500", "bg-amber-500", "bg-rose-500", "bg-teal-500"];
                                 return (
                                     <div key={idx}>
                                         <div className="flex items-center justify-between mb-1">
@@ -423,7 +423,7 @@ export default function InstitutionDashboard() {
                 <div className="p-6 rounded-xl glass border border-white/5">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <Code className="w-5 h-5 text-purple-400" />
+                            <Code className="w-5 h-5 text-indigo-400" />
                             Popular Skills
                         </h2>
                     </div>
@@ -523,7 +523,7 @@ function StatCard({
     const colorClasses = {
         emerald: "from-emerald-500/20 to-emerald-500/5 text-emerald-400",
         blue: "from-blue-500/20 to-blue-500/5 text-blue-400",
-        purple: "from-purple-500/20 to-purple-500/5 text-purple-400",
+        purple: "from-indigo-500/20 to-indigo-500/5 text-indigo-400",
         amber: "from-amber-500/20 to-amber-500/5 text-amber-400",
         teal: "from-teal-500/20 to-teal-500/5 text-teal-400",
         rose: "from-rose-500/20 to-rose-500/5 text-rose-400",
@@ -532,7 +532,7 @@ function StatCard({
     const iconColors = {
         emerald: "text-emerald-400",
         blue: "text-blue-400",
-        purple: "text-purple-400",
+        purple: "text-indigo-400",
         amber: "text-amber-400",
         teal: "text-teal-400",
         rose: "text-rose-400",

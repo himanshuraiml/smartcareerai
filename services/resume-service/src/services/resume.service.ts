@@ -83,6 +83,12 @@ export class ResumeService {
         const resumes = await prisma.resume.findMany({
             where: { userId, isActive: true },
             orderBy: { createdAt: 'desc' },
+            include: {
+                atsScores: {
+                    take: 1,
+                    orderBy: { createdAt: 'desc' },
+                },
+            },
         });
         return resumes.map(this.formatResume);
     }
@@ -90,6 +96,12 @@ export class ResumeService {
     async getResumeById(resumeId: string, userId: string) {
         const resume = await prisma.resume.findFirst({
             where: { id: resumeId, userId, isActive: true },
+            include: {
+                atsScores: {
+                    take: 1,
+                    orderBy: { createdAt: 'desc' },
+                },
+            },
         });
 
         if (!resume) {
@@ -209,6 +221,8 @@ export class ResumeService {
     }
 
     private formatResume(resume: any) {
+        const latestAnalysis = resume.atsScores?.[0];
+
         return {
             id: resume.id,
             fileName: resume.fileName,
@@ -218,6 +232,18 @@ export class ResumeService {
             parsedText: resume.parsedText,
             createdAt: resume.createdAt.toISOString(),
             updatedAt: resume.updatedAt.toISOString(),
+            latestAnalysis: latestAnalysis ? {
+                id: latestAnalysis.id,
+                overallScore: latestAnalysis.overallScore,
+                keywordMatchPercent: latestAnalysis.keywordMatchPercent,
+                formattingScore: latestAnalysis.formattingScore,
+                experienceScore: latestAnalysis.experienceScore,
+                educationScore: latestAnalysis.educationScore,
+                matchedKeywords: latestAnalysis.matchedKeywords,
+                missingKeywords: latestAnalysis.missingKeywords,
+                suggestions: latestAnalysis.suggestions,
+                createdAt: latestAnalysis.createdAt,
+            } : null,
         };
     }
 }

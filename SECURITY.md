@@ -1,6 +1,6 @@
 # Security Documentation
 
-This document outlines the security measures, firewall rules, and OWASP compliance checklist for the Medhiva application.
+This document outlines the security measures, firewall rules, and OWASP compliance checklist for the PlaceNxt application.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This document outlines the security measures, firewall rules, and OWASP complian
 
 ## Security Architecture Overview
 
-Medhiva implements a defense-in-depth security strategy with multiple layers:
+PlaceNxt implements a defense-in-depth security strategy with multiple layers:
 
 ```
 Internet → WAF/CDN → Load Balancer → API Gateway → Microservices → Database
@@ -307,7 +307,7 @@ USER
 
 ### Contact
 
-For security issues, contact: security@medhiva.com
+For security issues, contact: security@placenxt.com
 
 ---
 

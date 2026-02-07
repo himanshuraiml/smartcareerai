@@ -21,12 +21,12 @@ export default function HomePage() {
                         <div className="flex items-center gap-2">
                             <Image
                                 src="/logo.svg"
-                                alt="Medhiva Logo"
+                                alt="PlaceNxt Logo"
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded-lg neon-purple"
                             />
-                            <span className="text-xl font-bold gradient-text">Medhiva</span>
+                            <span className="text-xl font-bold gradient-text">PlaceNxt</span>
                         </div>
 
                         {/* Desktop Navigation */}
@@ -45,7 +45,7 @@ export default function HomePage() {
                             </Link>
                             <Link
                                 href="/register"
-                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity neon-purple"
+                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity neon-purple"
                             >
                                 Get Started
                             </Link>
@@ -90,7 +90,7 @@ export default function HomePage() {
                                 <Link
                                     href="/register"
                                     onClick={() => setMobileMenuOpen(false)}
-                                    className="block px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity text-center neon-purple"
+                                    className="block px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity text-center neon-purple"
                                 >
                                     Get Started
                                 </Link>
@@ -103,7 +103,7 @@ export default function HomePage() {
             {/* Hero Section */}
             <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4 relative">
                 {/* Background Glow */}
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-purple-500/20 rounded-full blur-[150px] pointer-events-none" />
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-indigo-500/20 rounded-full blur-[150px] pointer-events-none" />
 
                 <div className="max-w-7xl mx-auto text-center relative z-10">
                     <motion.div
@@ -112,7 +112,7 @@ export default function HomePage() {
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-premium mb-6"
                     >
                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        <span className="text-sm text-gray-300">AI-Powered Career Acceleration</span>
+                        <span className="text-sm text-gray-300">AI-Powered Placement Platform</span>
                     </motion.div>
 
                     <motion.h1
@@ -121,9 +121,9 @@ export default function HomePage() {
                         transition={{ delay: 0.1 }}
                         className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6"
                     >
-                        <span className="gradient-text">Your Career Journey,</span>
+                        <span className="gradient-text">Your Next Placement</span>
                         <br />
-                        <span className="text-white">One Mission at a Time</span>
+                        <span className="text-white">Starts Here</span>
                     </motion.h1>
 
                     <motion.p
@@ -132,8 +132,8 @@ export default function HomePage() {
                         transition={{ delay: 0.2 }}
                         className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10"
                     >
-                        A gamified, step-by-step roadmap that guides you from resume optimization
-                        to landing your dream job – powered by AI.
+                        One platform for resume scoring, skill validation, mock interviews,
+                        and job tracking – everything you need to get placed, powered by AI.
                     </motion.p>
 
                     <motion.div
@@ -144,15 +144,15 @@ export default function HomePage() {
                     >
                         <Link
                             href="/register"
-                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 neon-purple"
+                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 neon-purple"
                         >
-                            Start Your Journey <ArrowRight className="w-5 h-5" />
+                            Start Free <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link
                             href="#roadmap"
-                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl glass-card text-white font-semibold text-base sm:text-lg hover:border-purple-500/50 transition-colors"
+                            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl glass-card text-white font-semibold text-base sm:text-lg hover:border-indigo-500/50 transition-colors"
                         >
-                            See the Roadmap
+                            See How It Works
                         </Link>
                     </motion.div>
 
@@ -165,7 +165,7 @@ export default function HomePage() {
                     >
                         <div className="flex items-center gap-2">
                             <Users className="w-5 h-5" />
-                            <span><strong className="text-white">10,000+</strong> Career Journeys Started</span>
+                            <span><strong className="text-white">10,000+</strong> Students Placed</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Star className="w-5 h-5 text-yellow-400" />
@@ -181,7 +181,7 @@ export default function HomePage() {
 
             {/* Career Roadmap Section */}
             <section id="roadmap" className="py-12 md:py-24 px-4 relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent pointer-events-none" />
 
                 <div className="max-w-5xl mx-auto relative z-10">
                     <motion.div
@@ -191,18 +191,18 @@ export default function HomePage() {
                         className="text-center mb-16"
                     >
                         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                            <span className="gradient-text">Your Career Mission</span>
+                            <span className="gradient-text">5 Stages. One Mission. Your Career.</span>
                         </h2>
                         <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto">
                             Follow the guided path or skip ahead – the choice is yours.
-                            Each stage unlocks new AI-powered tools to accelerate your growth.
+                            Each stage unlocks new AI-powered tools to accelerate your placement.
                         </p>
                     </motion.div>
 
                     {/* Visual Roadmap */}
                     <div className="relative">
                         {/* Central Line */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500/50 via-pink-500/50 to-cyan-500/50 -translate-x-1/2 rounded-full hidden md:block" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 via-violet-500/50 to-cyan-500/50 -translate-x-1/2 rounded-full hidden md:block" />
 
                         {/* Roadmap Stages */}
                         <div className="space-y-12 md:space-y-0">
@@ -224,7 +224,7 @@ export default function HomePage() {
                                                     Stage {index + 1}
                                                 </span>
                                             </div>
-                                            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
+                                            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">
                                                 {stage.title}
                                             </h3>
                                             <p className="text-gray-400 mb-4">{stage.description}</p>
@@ -239,12 +239,12 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Center Node */}
-                                    <div className="absolute left-1/2 -translate-x-1/2 w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center neon-purple z-10 hidden md:flex">
+                                    <div className={`absolute left-1/2 -translate-x-1/2 w-16 h-16 rounded-2xl bg-gradient-to-br ${stage.color} flex items-center justify-center ${stage.shadow} z-10 hidden md:flex`}>
                                         <stage.icon className="w-8 h-8 text-white" />
                                     </div>
 
                                     {/* Mobile Icon */}
-                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 md:hidden">
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${stage.color} flex items-center justify-center flex-shrink-0 md:hidden`}>
                                         <stage.icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                                     </div>
 
@@ -284,8 +284,8 @@ export default function HomePage() {
                                 transition={{ delay: index * 0.05 }}
                                 className="p-6 rounded-2xl glass-card group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4 group-hover:neon-purple transition-all">
-                                    <feature.icon className="w-6 h-6 text-purple-400" />
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center mb-4 group-hover:neon-purple transition-all">
+                                    <feature.icon className="w-6 h-6 text-indigo-400" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
                                 <p className="text-gray-400">{feature.description}</p>
@@ -304,22 +304,22 @@ export default function HomePage() {
                         viewport={{ once: true }}
                         className="p-12 rounded-3xl glass-premium border-gradient relative overflow-hidden"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-violet-500/10" />
                         <div className="relative z-10">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-6 animate-float neon-purple">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center mx-auto mb-6 animate-float neon-purple">
                                 <Rocket className="w-10 h-10 text-white" />
                             </div>
                             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                                Ready to Launch Your Career?
+                                Ready to Get Placed?
                             </h2>
                             <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                                Join the next generation of professionals using AI to navigate their career journey.
+                                Join thousands of students using AI to ace their placements. One platform replaces three tools.
                             </p>
                             <Link
                                 href="/register"
-                                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg hover:opacity-90 transition-opacity neon-purple"
+                                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold text-lg hover:opacity-90 transition-opacity neon-purple"
                             >
-                                Start Free Today <ArrowRight className="w-5 h-5" />
+                                Start Free <ArrowRight className="w-5 h-5" />
                             </Link>
                         </div>
                     </motion.div>
@@ -330,14 +330,14 @@ export default function HomePage() {
             <footer className="py-8 px-4 border-t border-white/5">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-500" />
-                        <span className="text-gray-400">© 2026 Medhiva. All rights reserved.</span>
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-indigo-500 to-violet-500" />
+                        <span className="text-gray-400">© 2026 PlaceNxt. All rights reserved.</span>
                     </div>
                     <div className="flex items-center gap-6 text-gray-400">
                         <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+                        <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
                     </div>
                 </div>
             </footer>
@@ -347,39 +347,49 @@ export default function HomePage() {
 
 const roadmapStages = [
     {
-        id: 'profile',
-        title: 'Profile DNA',
-        description: 'Upload your resume and let AI analyze your professional DNA. Get instant ATS scores and optimization tips.',
+        id: 'resume',
+        title: 'Resume Score',
+        description: 'Upload your resume and get instant ATS scores. Know your score before HR does.',
         icon: FileText,
         tools: ['Resume Parser', 'ATS Scorer', 'Skill Extractor'],
+        color: 'from-blue-500 to-cyan-500',
+        shadow: 'neon-cyan',
     },
     {
         id: 'skills',
-        title: 'Skill Synchronization',
-        description: 'Take AI-powered assessments to validate your skills. Earn verified badges that recruiters trust.',
+        title: 'Skill Lab',
+        description: 'Prove your skills with AI-powered assessments. Earn verified badges that recruiters trust.',
         icon: Zap,
-        tools: ['Skill Tests', 'Gap Analysis', 'Learning Paths'],
+        tools: ['Skill Tests', 'Gap Analysis', 'Skill Badges'],
+        color: 'from-amber-500 to-orange-500',
+        shadow: 'neon-amber',
     },
     {
         id: 'interviews',
-        title: 'Simulation Training',
+        title: 'Interview Arena',
         description: 'Practice with AI interviewers for technical, behavioral, and HR rounds. Get real-time feedback.',
         icon: Mic,
         tools: ['Mock Interviews', 'Voice Analysis', 'Answer Coaching'],
+        color: 'from-rose-500 to-pink-500',
+        shadow: 'neon-pink',
     },
     {
         id: 'jobs',
-        title: 'Career Launchpad',
-        description: 'Access curated job matches from top sources. Track applications and never miss a deadline.',
+        title: 'Job Board',
+        description: 'Find and track opportunities from top sources. Every application, one dashboard.',
         icon: Rocket,
         tools: ['Job Matching', 'Application Tracker', 'Email Alerts'],
+        color: 'from-emerald-500 to-teal-500',
+        shadow: 'neon-emerald',
     },
     {
-        id: 'growth',
-        title: 'Career Ascension',
-        description: 'Analyze offers, negotiate salary, and plan your long-term growth with AI guidance.',
+        id: 'offers',
+        title: 'Offer Hub',
+        description: 'Compare offers, negotiate better, and plan your career growth with AI guidance.',
         icon: Gem,
         tools: ['Offer Analysis', 'Salary Insights', 'Growth Planner'],
+        color: 'from-violet-500 to-purple-500',
+        shadow: 'neon-purple',
     },
 ];
 
@@ -387,17 +397,17 @@ const features = [
     {
         icon: FileText,
         title: 'ATS Resume Scoring',
-        description: 'Get instant feedback with AI-powered ATS analysis and suggestions.',
+        description: 'Know your score before HR does. AI-powered ATS analysis and suggestions.',
     },
     {
         icon: Award,
         title: 'Verified Skill Badges',
-        description: 'Prove your expertise with digital badges trusted by recruiters.',
+        description: 'Prove it. Badge it. Show it. Digital badges trusted by recruiters.',
     },
     {
         icon: Mic,
         title: 'AI Mock Interviews',
-        description: 'Practice unlimited interviews with real-time AI feedback.',
+        description: 'Practice with AI. Perform with confidence. Real-time feedback.',
     },
     {
         icon: Zap,

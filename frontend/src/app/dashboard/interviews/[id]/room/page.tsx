@@ -415,7 +415,7 @@ export default function InterviewRoomPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
             </div>
         );
     }
@@ -428,7 +428,7 @@ export default function InterviewRoomPage() {
                 </div>
                 <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
                 <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
             </div>
@@ -443,7 +443,7 @@ export default function InterviewRoomPage() {
                 </div>
                 <h3 className="text-white font-medium mb-2">Session Not Found</h3>
                 <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
-                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition inline-block">
+                <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
             </div>
@@ -482,8 +482,8 @@ export default function InterviewRoomPage() {
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-900 rounded-2xl p-6 max-w-xl w-full border border-white/10 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                <Shield className="w-6 h-6 text-purple-400" />
+                            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                <Shield className="w-6 h-6 text-indigo-400" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">Start Assessment: {session?.targetRole}</h2>
@@ -545,7 +545,7 @@ export default function InterviewRoomPage() {
                                     ) : (
                                         <button
                                             onClick={proctoringControls.requestCamera}
-                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                            className="px-3 py-1 rounded-lg bg-indigo-500 text-white text-sm hover:bg-indigo-600 transition"
                                         >
                                             Grant
                                         </button>
@@ -563,7 +563,7 @@ export default function InterviewRoomPage() {
                                     ) : (
                                         <button
                                             onClick={proctoringControls.requestMic}
-                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                            className="px-3 py-1 rounded-lg bg-indigo-500 text-white text-sm hover:bg-indigo-600 transition"
                                         >
                                             Grant
                                         </button>
@@ -586,7 +586,7 @@ export default function InterviewRoomPage() {
                                     ) : (
                                         <button
                                             onClick={handleRequestScreenShare}
-                                            className="px-3 py-1 rounded-lg bg-purple-500 text-white text-sm hover:bg-purple-600 transition"
+                                            className="px-3 py-1 rounded-lg bg-indigo-500 text-white text-sm hover:bg-indigo-600 transition"
                                         >
                                             Share Screen
                                         </button>
@@ -601,7 +601,7 @@ export default function InterviewRoomPage() {
                                 type="checkbox"
                                 checked={agreedToGuidelines}
                                 onChange={(e) => setAgreedToGuidelines(e.target.checked)}
-                                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-900"
+                                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900"
                             />
                             <span className="text-gray-300 text-sm">
                                 I have read and understood all the instructions and guidelines.
@@ -644,9 +644,9 @@ export default function InterviewRoomPage() {
                 {/* Left side - Video Area */}
                 <div className="flex-1 p-6 flex flex-col">
                     {/* Question Overlay - Top of Video Area */}
-                    <div className="mb-4 p-6 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
+                    <div className="mb-4 p-6 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-pink-500/20 to-indigo-500/20 border border-indigo-500/30 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-purple-400 uppercase tracking-wider font-medium">Current Question</span>
+                            <span className="text-xs text-indigo-400 uppercase tracking-wider font-medium">Current Question</span>
                             <span className="text-sm text-gray-400 font-medium">{String(progress.current).padStart(2, '0')} / {String(progress.total).padStart(2, '0')}</span>
                         </div>
                         <p className="text-white font-bold text-2xl text-center leading-relaxed">
@@ -662,7 +662,7 @@ export default function InterviewRoomPage() {
                                 {/* AI Avatar with Photo */}
                                 <div className="relative">
                                     {/* Glow effect behind avatar */}
-                                    <div className={`absolute -inset-4 bg-gradient-to-r from-teal-500/30 to-purple-500/30 rounded-full blur-xl ${isRecording ? 'animate-pulse' : ''}`} />
+                                    <div className={`absolute -inset-4 bg-gradient-to-r from-teal-500/30 to-indigo-500/30 rounded-full blur-xl ${isRecording ? 'animate-pulse' : ''}`} />
 
                                     {/* Animated ring when speaking */}
                                     {isRecording && (
@@ -766,7 +766,7 @@ export default function InterviewRoomPage() {
                             <button
                                 onClick={submitVideoAnswer}
                                 disabled={submitting}
-                                className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+                                className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                                 Submit Answer
@@ -891,8 +891,8 @@ export default function InterviewRoomPage() {
                     {/* Live Transcript */}
                     <div className="flex-1 p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-2 mb-3">
-                            <MessageSquare className="w-4 h-4 text-purple-500 dark:text-purple-400" />
-                            <span className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider">Live Transcript</span>
+                            <MessageSquare className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Live Transcript</span>
                         </div>
                         <div className="text-gray-600 dark:text-gray-400 text-sm">
                             {transcript || (

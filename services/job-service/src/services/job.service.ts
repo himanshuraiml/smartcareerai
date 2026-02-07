@@ -260,26 +260,53 @@ export class JobService {
             where: { userId },
             include: { skill: true },
         });
-        const userSkillNames = userSkills.map(us => us.skill.name);
+        const userSkillNames = userSkills.map(us => us.skill.name.toLowerCase().replace(/[-\s]/g, ''));
+
+        // Helper to normalize skill names for comparison
+        const normalizeSkill = (skill: string) => skill.toLowerCase().replace(/[-\s]/g, '');
 
         // Score and rank jobs
         const scoredJobs = jobs.map(job => {
             const requiredSkills = job.requiredSkills as string[];
+            const normalizedJobSkills = requiredSkills.map(normalizeSkill);
 
             // Score based on user's skills
-            const matchedCount = requiredSkills.filter(skill =>
-                userSkillNames.some(us => us.toLowerCase() === skill.toLowerCase())
+            const matchedCount = normalizedJobSkills.filter(skill =>
+                userSkillNames.some(us => us === skill || us.includes(skill) || skill.includes(us))
             ).length;
-            const matchPercent = requiredSkills.length > 0
-                ? Math.round((matchedCount / requiredSkills.length) * 100)
-                : 0;
 
-            // Bonus for role title match
-            const titleMatch = job.title.toLowerCase().includes(roleTitle.toLowerCase().split(' ')[0]) ? 10 : 0;
+            // Calculate skill match percentage
+            let skillMatchPercent = 0;
+            if (requiredSkills.length > 0) {
+                skillMatchPercent = Math.round((matchedCount / requiredSkills.length) * 100);
+            } else if (userSkillNames.length > 0) {
+                // If job has no required skills listed, give a base score
+                skillMatchPercent = 40;
+            }
+
+            // Bonus for role title match - more generous matching
+            const normalizedTitle = job.title.toLowerCase();
+            const normalizedRoleTitle = roleTitle.toLowerCase();
+            const roleTitleWords = normalizedRoleTitle.split(' ').filter(w => w.length > 2);
+
+            let titleMatchBonus = 0;
+            if (normalizedTitle.includes(normalizedRoleTitle)) {
+                // Exact role match - 50% bonus
+                titleMatchBonus = 50;
+            } else if (roleTitleWords.some(word => normalizedTitle.includes(word))) {
+                // Partial role match - 30% bonus
+                titleMatchBonus = 30;
+            }
+
+            // Final match percentage: combination of skill match and title match
+            // If user has no skills yet, rely more on title matching
+            const finalMatch = userSkillNames.length > 0
+                ? Math.min(Math.round(skillMatchPercent * 0.5 + titleMatchBonus), 100)
+                : Math.min(titleMatchBonus + 20, 100); // Give base 20% + title bonus for new users
 
             return {
                 ...job,
-                matchPercent: Math.min(matchPercent + titleMatch, 100),
+                matchPercent: Math.max(finalMatch, userSkillNames.length === 0 && titleMatchBonus > 0 ? 50 : 0),
                 matchedSkills: matchedCount,
                 totalRequired: requiredSkills.length,
             };

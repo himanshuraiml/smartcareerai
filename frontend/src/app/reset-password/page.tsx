@@ -79,7 +79,7 @@ function ResetPasswordForm() {
                         </p>
                         <Link
                             href="/forgot-password"
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity"
                         >
                             Request New Link
                         </Link>
@@ -101,7 +101,7 @@ function ResetPasswordForm() {
                         <p className="text-gray-400 mb-6">
                             Your password has been successfully reset. Redirecting to login...
                         </p>
-                        <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mx-auto" />
+                        <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto" />
                     </div>
                 </div>
             </div>
@@ -116,12 +116,12 @@ function ResetPasswordForm() {
                     <Link href="/" className="inline-flex items-center gap-2">
                         <Image
                             src="/logo.svg"
-                            alt="Medhiva Logo"
+                            alt="PlaceNxt Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-xl"
                         />
-                        <span className="text-2xl font-bold gradient-text">Medhiva</span>
+                        <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
                     </Link>
                 </div>
 
@@ -147,7 +147,7 @@ function ResetPasswordForm() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -169,7 +169,7 @@ function ResetPasswordForm() {
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -202,7 +202,7 @@ function ResetPasswordForm() {
                         <button
                             type="submit"
                             disabled={isLoading || !allRequirementsMet}
-                            className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -223,7 +223,7 @@ function LoadingFallback() {
         <div className="min-h-screen flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 <div className="p-8 rounded-2xl glass text-center">
-                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">Loading...</p>
                 </div>
             </div>

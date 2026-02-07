@@ -236,6 +236,14 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
         }
         // Add request ID for tracing
         proxyReq.setHeader('x-request-id', (req as any).id || 'unknown');
+
+        // Re-stream body if it was already parsed by express.json()
+        if (req.body && Object.keys(req.body).length > 0) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+        }
     },
     onProxyRes: (proxyRes, req) => {
         const origin = req.headers.origin;

@@ -28,7 +28,7 @@ interface Credits {
 
 interface Transaction {
     id: string;
-    type: string;
+    transactionType: string;
     amount: number;
     status: string;
     createdAt: string;
@@ -97,12 +97,12 @@ export default function BillingPage() {
             </div>
 
             {/* Subscription Card */}
-            <div className="p-6 rounded-xl glass border-l-4 border-purple-500">
+            <div className="p-6 rounded-xl glass border-l-4 border-indigo-500">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-lg font-bold text-white">Current Plan</h2>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-2xl font-bold text-purple-400">
+                            <span className="text-2xl font-bold text-indigo-400">
                                 {subscription?.plan?.displayName || "Free"}
                             </span>
                             {subscription?.status === 'ACTIVE' && (
@@ -128,7 +128,7 @@ export default function BillingPage() {
                         {!subscription || subscription.plan.name === 'free' ? (
                             <Link
                                 href="/pricing"
-                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition shadow-lg shadow-purple-500/20"
+                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition shadow-lg shadow-indigo-500/20"
                             >
                                 Upgrade Now
                             </Link>
@@ -159,7 +159,7 @@ export default function BillingPage() {
                         type="AI Interviews"
                         balance={credits.interviews}
                         icon={Video}
-                        color="from-purple-400 to-pink-400"
+                        color="from-indigo-400 to-pink-400"
                         onPurchase={() => setPurchaseType("AI_INTERVIEW")}
                     />
                     <CreditBalanceCard
@@ -191,10 +191,10 @@ export default function BillingPage() {
                             <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition border border-white/5">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
-                                        {tx.type === 'PURCHASE' ? (
+                                        {tx.transactionType === 'PURCHASE' || tx.transactionType === 'GRANT' ? (
                                             <CreditCard className="w-5 h-5 text-green-400" />
                                         ) : (
-                                            <ArrowRight className="w-5 h-5 text-blue-400" />
+                                            <ArrowRight className="w-5 h-5 text-red-400" />
                                         )}
                                     </div>
                                     <div>
@@ -203,8 +203,8 @@ export default function BillingPage() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-white font-bold">
-                                        {tx.type === 'PURCHASE' ? '+' : '-'}{tx.amount}
+                                    <p className={`font-bold ${tx.transactionType === 'PURCHASE' || tx.transactionType === 'GRANT' ? 'text-green-400' : 'text-red-400'}`}>
+                                        {tx.transactionType === 'PURCHASE' || tx.transactionType === 'GRANT' ? '+' : '-'}{Math.abs(tx.amount)}
                                     </p>
                                     <span className={`text-xs px-2 py-0.5 rounded-full ${tx.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                                         }`}>

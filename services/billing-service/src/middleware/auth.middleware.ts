@@ -29,12 +29,21 @@ export const authMiddleware = async (
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+
+        if (!process.env.JWT_SECRET) {
+            console.error('[Auth] JWT_SECRET is not configured!');
+            throw createError('Server configuration error', 500, 'CONFIG_ERROR');
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
 
         req.user = decoded;
         next();
     } catch (error) {
-        if (error instanceof jwt.JsonWebTokenError) {
+        if (error instanceof jwt.TokenExpiredError) {
+            next(createError('Token expired', 401, 'TOKEN_EXPIRED'));
+        } else if (error instanceof jwt.JsonWebTokenError) {
+            console.error('[Auth] JWT Error:', error.message);
             next(createError('Invalid token', 401, 'INVALID_TOKEN'));
         } else {
             next(error);

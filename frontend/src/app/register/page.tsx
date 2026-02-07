@@ -122,7 +122,7 @@ export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-grid">
             {/* Background Glow */}
-            <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="w-full max-w-md relative z-10">
                 {/* Logo */}
@@ -130,12 +130,12 @@ export default function RegisterPage() {
                     <Link href="/" className="inline-flex items-center gap-2">
                         <Image
                             src="/logo.svg"
-                            alt="Medhiva Logo"
+                            alt="PlaceNxt Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-xl"
                         />
-                        <span className="text-2xl font-bold gradient-text">Medhiva</span>
+                        <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
                     </Link>
                 </div>
 
@@ -144,12 +144,12 @@ export default function RegisterPage() {
                     {[1, 2, 3].map((s) => (
                         <div key={s} className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
-                                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
+                                ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
                                 : 'bg-white/10 text-gray-500'
                                 }`}>
                                 {step > s ? <Check className="w-4 h-4" /> : s}
                             </div>
-                            {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-purple-500' : 'bg-white/10'}`} />}
+                            {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-white/10'}`} />}
                         </div>
                     ))}
                 </div>
@@ -185,7 +185,7 @@ export default function RegisterPage() {
                                                 type="text"
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                                 placeholder="John Doe"
                                             />
                                         </div>
@@ -199,7 +199,7 @@ export default function RegisterPage() {
                                                 type="email"
                                                 value={formData.email}
                                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                                 placeholder="you@example.com"
                                                 required
                                             />
@@ -214,7 +214,7 @@ export default function RegisterPage() {
                                                 type={showPassword ? 'text' : 'password'}
                                                 value={formData.password}
                                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                                className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                                className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                                 placeholder="••••••••"
                                                 required
                                             />
@@ -243,7 +243,7 @@ export default function RegisterPage() {
                                     <button
                                         type="submit"
                                         disabled={!isStep1Valid}
-                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         Continue <ChevronRight className="w-5 h-5" />
                                     </button>
@@ -257,8 +257,8 @@ export default function RegisterPage() {
                                 exit={{ opacity: 0, x: -20 }}
                             >
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                                        <Briefcase className="w-5 h-5 text-purple-400" />
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center">
+                                        <Briefcase className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
                                         <h1 className="text-xl font-bold text-white">What's your target role?</h1>
@@ -267,8 +267,8 @@ export default function RegisterPage() {
                                 </div>
 
                                 {/* Tip */}
-                                <div className="my-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-start gap-2">
-                                    <Sparkles className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                                <div className="my-4 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2">
+                                    <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
                                     <p className="text-xs text-gray-300">
                                         This helps us curate skill tests, interview prep, and job recommendations for you.
                                     </p>
@@ -289,7 +289,7 @@ export default function RegisterPage() {
                                                             type="button"
                                                             onClick={() => setFormData({ ...formData, targetJobRoleId: role.id })}
                                                             className={`p-3 rounded-lg text-left text-sm font-medium transition-all ${formData.targetJobRoleId === role.id
-                                                                ? 'bg-purple-500/20 border border-purple-500/50 text-white'
+                                                                ? 'bg-indigo-500/20 border border-indigo-500/50 text-white'
                                                                 : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
                                                                 }`}
                                                         >
@@ -308,7 +308,7 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={handleSubmit}
                                         disabled={isLoading || !formData.targetJobRoleId}
-                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         Continue <ChevronRight className="w-5 h-5" />
                                     </button>
@@ -339,8 +339,8 @@ export default function RegisterPage() {
                                 exit={{ opacity: 0, x: 20 }}
                             >
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                                        <Briefcase className="w-5 h-5 text-purple-400" />
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center">
+                                        <Briefcase className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
                                         <h1 className="text-xl font-bold text-white">Select Institution</h1>
@@ -353,7 +353,7 @@ export default function RegisterPage() {
                                     <select
                                         value={formData.institutionId}
                                         onChange={(e) => setFormData({ ...formData, institutionId: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     >
                                         <option value="" className="bg-gray-900">Select an Institution</option>
                                         {institutions.map((inst) => (
@@ -370,7 +370,7 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={handleSubmit}
                                         disabled={isLoading || !formData.institutionId}
-                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isLoading ? (
                                             <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -404,7 +404,7 @@ export default function RegisterPage() {
 
                     <p className="mt-8 text-center text-gray-400">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">
+                        <Link href="/login" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
                             Sign in
                         </Link>
                     </p>

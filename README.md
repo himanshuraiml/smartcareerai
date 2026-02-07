@@ -1,4 +1,4 @@
-# 🚀 Medhiva
+# 🚀 PlaceNxt
 
 **AI-Powered Career Platform for Early-Career Students**
 
@@ -36,7 +36,7 @@ A production-grade SaaS platform that uses AI to help students and early-career 
 ## 📁 Project Structure
 
 ```
-Medhiva/
+PlaceNxt/
 ├── frontend/                 # Next.js 14 frontend
 │   ├── src/
 │   │   ├── app/             # App router pages
@@ -73,7 +73,7 @@ Medhiva/
 
 1. **Clone and install dependencies**
    ```bash
-   cd Medhiva
+   cd PlaceNxt
    npm install
    ```
 

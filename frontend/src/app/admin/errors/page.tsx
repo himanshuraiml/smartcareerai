@@ -193,7 +193,7 @@ export default function ErrorMonitoringPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
+                <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
             </div>
         );
     }
@@ -208,7 +208,7 @@ export default function ErrorMonitoringPage() {
                 </div>
                 <button
                     onClick={() => { fetchStats(); fetchLogs(); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -217,7 +217,7 @@ export default function ErrorMonitoringPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10">
                             <AlertCircle className="w-5 h-5 text-red-500" />
@@ -229,7 +229,7 @@ export default function ErrorMonitoringPage() {
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-orange-500/10">
                             <Clock className="w-5 h-5 text-orange-500" />
@@ -241,7 +241,7 @@ export default function ErrorMonitoringPage() {
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-yellow-500/10">
                             <Activity className="w-5 h-5 text-yellow-500" />
@@ -253,10 +253,10 @@ export default function ErrorMonitoringPage() {
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/10">
-                            <Server className="w-5 h-5 text-purple-500" />
+                        <div className="p-2 rounded-lg bg-indigo-500/10">
+                            <Server className="w-5 h-5 text-indigo-500" />
                         </div>
                         <div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Services</p>
@@ -268,7 +268,7 @@ export default function ErrorMonitoringPage() {
 
             {/* Severity Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-6 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">By Severity (24h)</h3>
                     <div className="space-y-3">
                         {Object.entries(stats?.bySeverity || {}).map(([severity, count]) => {
@@ -288,7 +288,7 @@ export default function ErrorMonitoringPage() {
                 </div>
 
                 {/* Circuit Breakers */}
-                <div className="p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-6 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <Zap className="w-5 h-5 text-yellow-500" />
                         Circuit Breakers
@@ -317,7 +317,7 @@ export default function ErrorMonitoringPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                 <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-400">Filters:</span>
@@ -326,7 +326,7 @@ export default function ErrorMonitoringPage() {
                 <select
                     value={selectedSeverity}
                     onChange={(e) => setSelectedSeverity(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm border-0"
+                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm border border-gray-200 dark:border-gray-600"
                 >
                     <option value="all">All Severities</option>
                     <option value="CRITICAL">Critical</option>
@@ -338,7 +338,7 @@ export default function ErrorMonitoringPage() {
                 <select
                     value={selectedService}
                     onChange={(e) => setSelectedService(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm border-0"
+                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm border border-gray-200 dark:border-gray-600"
                 >
                     <option value="all">All Services</option>
                     {stats?.services?.map((service) => (
@@ -379,7 +379,7 @@ export default function ErrorMonitoringPage() {
             {/* Error Logs */}
             <div className="space-y-3">
                 {logs.length === 0 ? (
-                    <div className="p-12 text-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div className="p-12 text-center rounded-xl bg-white dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-md dark:shadow-none">
                         <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No errors found</h3>
                         <p className="text-gray-600 dark:text-gray-400">All systems are running smoothly</p>

@@ -218,7 +218,7 @@ export default function SkillsPage() {
 
     const getProficiencyColor = (level: string) => {
         switch (level) {
-            case 'expert': return 'bg-purple-500/20 text-purple-400';
+            case 'expert': return 'bg-indigo-500/20 text-indigo-400';
             case 'advanced': return 'bg-green-500/20 text-green-400';
             case 'intermediate': return 'bg-blue-500/20 text-blue-400';
             default: return 'bg-yellow-500/20 text-yellow-400';
@@ -250,15 +250,15 @@ export default function SkillsPage() {
             {/* Target Role Display */}
             <div className="flex items-center gap-4 p-4 rounded-xl glass">
                 <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-purple-400" />
+                    <Target className="w-5 h-5 text-indigo-400" />
                     <span className="text-gray-400">Target Role:</span>
                 </div>
-                <span className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white font-medium">
+                <span className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500/20 to-pink-500/20 border border-indigo-500/30 text-white font-medium">
                     {selectedRole}
                 </span>
                 <a
                     href="/dashboard/settings"
-                    className="text-sm text-purple-400 hover:text-purple-300 underline transition-colors"
+                    className="text-sm text-indigo-400 hover:text-indigo-300 underline transition-colors"
                 >
                     Change in Settings
                 </a>
@@ -276,7 +276,7 @@ export default function SkillsPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === tab.id
-                            ? 'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500'
+                            ? 'bg-indigo-500/20 text-indigo-400 border-b-2 border-indigo-500'
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
@@ -287,16 +287,17 @@ export default function SkillsPage() {
             </div>
 
             {/* Tabs - Mobile Dropdown */}
-            <div className="md:hidden">
+            <div className="md:hidden w-full overflow-hidden">
                 <select
                     value={activeTab}
                     onChange={(e) => setActiveTab(e.target.value as any)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-purple-500 focus:outline-none"
+                    className="w-full max-w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 focus:outline-none appearance-none cursor-pointer"
+                    style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
                 >
-                    <option value="skills" className="bg-gray-900">My Skills</option>
-                    <option value="gap" className="bg-gray-900">Gap Analysis</option>
-                    <option value="roadmap" className="bg-gray-900">Learning Roadmap</option>
-                    <option value="certifications" className="bg-gray-900">Certifications</option>
+                    <option value="skills" className="bg-gray-900 text-white">My Skills</option>
+                    <option value="gap" className="bg-gray-900 text-white">Gap Analysis</option>
+                    <option value="roadmap" className="bg-gray-900 text-white">Learning Roadmap</option>
+                    <option value="certifications" className="bg-gray-900 text-white">Certifications</option>
                 </select>
             </div>
 
@@ -305,17 +306,17 @@ export default function SkillsPage() {
                 <div className="space-y-6">
                     {loading ? (
                         <div className="p-12 text-center">
-                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Loading skills...</p>
                         </div>
                     ) : userSkills.length === 0 ? (
                         <div className="p-12 rounded-2xl glass text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Zap className="w-8 h-8 text-purple-400" />
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-8 h-8 text-indigo-400" />
                             </div>
                             <h3 className="text-lg font-medium text-white mb-2">No skills yet</h3>
                             <p className="text-gray-400 mb-4">Upload a resume to automatically extract your skills</p>
-                            <a href="/dashboard/resumes" className="text-purple-400 hover:text-purple-300">
+                            <a href="/dashboard/resumes" className="text-indigo-400 hover:text-indigo-300">
                                 Go to Resumes →
                             </a>
                         </div>
@@ -323,8 +324,8 @@ export default function SkillsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {userSkills.map((us) => (
                                 <div key={us.id} className="p-4 rounded-xl glass flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                                        <Zap className="w-5 h-5 text-purple-400" />
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                        <Zap className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-white font-medium">{us.skill.name}</p>
@@ -340,7 +341,7 @@ export default function SkillsPage() {
                                             ) : (
                                                 <button
                                                     onClick={() => handleTakeTest(us.skill.id, undefined, true)}
-                                                    className="flex items-center gap-1 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded hover:bg-purple-500/30 transition-colors"
+                                                    className="flex items-center gap-1 text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded hover:bg-indigo-500/30 transition-colors"
                                                 >
                                                     <PlayCircle className="w-3 h-3" />
                                                     <span>{getNextTestLevel(us.skill.id) === 'COMPLETED' ? 'Mastered' : `Take ${getNextTestLevel(us.skill.id)} Test`}</span>
@@ -359,7 +360,7 @@ export default function SkillsPage() {
                 <div className="space-y-6">
                     {analyzing ? (
                         <div className="p-12 text-center">
-                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Analyzing skills...</p>
                         </div>
                     ) : gapAnalysis ? (
@@ -454,14 +455,14 @@ export default function SkillsPage() {
                 <div className="space-y-6">
                     {analyzing ? (
                         <div className="p-12 text-center">
-                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Generating roadmap...</p>
                         </div>
                     ) : roadmap?.roadmap?.length > 0 ? (
                         <>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="p-4 rounded-xl glass text-center">
-                                    <p className="text-2xl font-bold text-purple-400">{roadmap.duration}</p>
+                                    <p className="text-2xl font-bold text-indigo-400">{roadmap.duration}</p>
                                     <p className="text-gray-400 text-sm">Duration</p>
                                 </div>
                                 <div className="p-4 rounded-xl glass text-center">
@@ -480,7 +481,7 @@ export default function SkillsPage() {
                                 {roadmap.roadmap.map((week: any, index: number) => (
                                     <div key={index} className="p-6 rounded-xl glass">
                                         <div className="flex items-center gap-4 mb-4">
-                                            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
                                                 {week.week}
                                             </div>
                                             <div>
@@ -490,7 +491,7 @@ export default function SkillsPage() {
                                         </div>
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {week.skills.map((skill: string, i: number) => (
-                                                <span key={i} className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 text-sm">
+                                                <span key={i} className="px-2 py-1 rounded bg-indigo-500/10 text-indigo-400 text-sm">
                                                     {skill}
                                                 </span>
                                             ))}
@@ -515,7 +516,7 @@ export default function SkillsPage() {
                                                             rel="noopener noreferrer"
                                                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 ${resource.platform === 'Coursera' ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' :
                                                                 resource.platform === 'YouTube' ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' :
-                                                                    resource.platform === 'Udemy' ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' :
+                                                                    resource.platform === 'Udemy' ? 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30' :
                                                                         'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                                                                 }`}
                                                         >
@@ -531,8 +532,8 @@ export default function SkillsPage() {
                         </>
                     ) : (
                         <div className="p-12 rounded-2xl glass text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <BookOpen className="w-8 h-8 text-purple-400" />
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                                <BookOpen className="w-8 h-8 text-indigo-400" />
                             </div>
                             <h3 className="text-lg font-medium text-white mb-2">No roadmap available</h3>
                             <p className="text-gray-400">Add skills to your profile first</p>
@@ -546,7 +547,7 @@ export default function SkillsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Award className="w-5 h-5 text-purple-400" />
+                                <Award className="w-5 h-5 text-indigo-400" />
                                 Recommended Certifications for {selectedRole}
                             </h2>
                             <p className="text-gray-400 text-sm mt-1">
@@ -557,7 +558,7 @@ export default function SkillsPage() {
 
                     {loadingCerts ? (
                         <div className="p-12 text-center">
-                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Loading certifications...</p>
                         </div>
                     ) : certifications.length > 0 ? (
@@ -565,17 +566,17 @@ export default function SkillsPage() {
                             {certifications.map((cert, index) => (
                                 <div
                                     key={index}
-                                    className="p-6 rounded-xl glass-card hover:border-purple-500/30 transition-all"
+                                    className="p-6 rounded-xl glass-card hover:border-indigo-500/30 transition-all"
                                 >
                                     <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                                            <Award className="w-6 h-6 text-purple-400" />
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                                            <Award className="w-6 h-6 text-indigo-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h3 className="text-white font-semibold mb-1">{cert.name}</h3>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-sm text-gray-400">{cert.issuer}</span>
-                                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${cert.level === 'Expert' ? 'bg-purple-500/20 text-purple-400' :
+                                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${cert.level === 'Expert' ? 'bg-indigo-500/20 text-indigo-400' :
                                                     cert.level === 'Professional' ? 'bg-blue-500/20 text-blue-400' :
                                                         'bg-green-500/20 text-green-400'
                                                     }`}>
@@ -587,7 +588,7 @@ export default function SkillsPage() {
                                                 href={cert.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                                                className="inline-flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
                                             >
                                                 View Certification <ChevronRight className="w-4 h-4" />
                                             </a>
@@ -598,8 +599,8 @@ export default function SkillsPage() {
                         </div>
                     ) : (
                         <div className="p-12 rounded-2xl glass text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Award className="w-8 h-8 text-purple-400" />
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Award className="w-8 h-8 text-indigo-400" />
                             </div>
                             <h3 className="text-lg font-medium text-white mb-2">No certifications found</h3>
                             <p className="text-gray-400">Try selecting a different role to see recommended certifications</p>

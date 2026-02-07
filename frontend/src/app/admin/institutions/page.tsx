@@ -145,7 +145,7 @@ export default function AdminInstitutionsPage() {
                 <h1 className="text-2xl font-bold text-white">Institutions</h1>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity"
                 >
                     <Plus className="w-4 h-4" />
                     Add Institution
@@ -160,7 +160,7 @@ export default function AdminInstitutionsPage() {
                     placeholder="Search institutions..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </div>
 
@@ -190,7 +190,7 @@ export default function AdminInstitutionsPage() {
             {/* List */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -201,10 +201,10 @@ export default function AdminInstitutionsPage() {
                                 key={inst.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="p-6 rounded-xl glass border border-white/5 hover:border-purple-500/30 transition-colors"
+                                className="p-6 rounded-xl glass border border-white/5 hover:border-indigo-500/30 transition-colors"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                                    <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                                         <Building className="w-6 h-6" />
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export default function AdminInstitutionsPage() {
                                                 <button
                                                     onClick={() => handleResendInvite(inst.id)}
                                                     disabled={resending === inst.id}
-                                                    className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                                                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
                                                 >
                                                     {resending === inst.id ? (
                                                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -288,7 +288,7 @@ export default function AdminInstitutionsPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
                                 <div>
@@ -298,7 +298,7 @@ export default function AdminInstitutionsPage() {
                                         value={formData.domain}
                                         onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                                         placeholder="e.g. stanford.edu"
-                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                     <p className="mt-1 text-xs text-gray-400">Used for auto-verification of students with email domains</p>
                                 </div>
@@ -309,7 +309,7 @@ export default function AdminInstitutionsPage() {
                                         value={formData.adminEmail}
                                         onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
                                         placeholder="admin@institution.edu"
-                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                     <p className="mt-1 text-xs text-gray-400">Will be invited as Institution Admin</p>
                                 </div>
@@ -325,7 +325,7 @@ export default function AdminInstitutionsPage() {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="px-6 py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 disabled:opacity-50"
+                                        className="px-6 py-2 rounded-lg bg-indigo-500 text-white font-medium hover:bg-indigo-600 disabled:opacity-50"
                                     >
                                         {submitting ? 'Creating...' : 'Create Institution'}
                                     </button>

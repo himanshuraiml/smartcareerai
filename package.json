@@ -1,7 +1,7 @@
 {
-  "name": "medhiva",
+  "name": "placenxt",
   "version": "1.0.0",
-  "description": "Medhiva - AI Guidance. Human Success. An AI-Powered Career Platform",
+  "description": "PlaceNxt - Get Placed. Get Ahead. An AI-Powered Career Platform for Students",
   "private": true,
   "workspaces": [
     "services/*",

@@ -1,6 +1,6 @@
 # 🌐 Cloud Migration Guide
 
-This guide explains how to migrate Medhiva from local Docker services to free cloud-hosted alternatives for production or if you can't run Docker locally.
+This guide explains how to migrate PlaceNxt from local Docker services to free cloud-hosted alternatives for production or if you can't run Docker locally.
 
 ---
 
@@ -218,13 +218,13 @@ SCORING_SERVICE_URL=https://api.smartcareer.com/scoring
 
 ## 🚂 Railway Deployment Guide (All-in-One)
 
-Railway is the **recommended platform** for deploying Medhiva because it supports everything in one place: PostgreSQL, Redis, and all your microservices.
+Railway is the **recommended platform** for deploying PlaceNxt because it supports everything in one place: PostgreSQL, Redis, and all your microservices.
 
 ### Prerequisites
 
 - GitHub account (Railway deploys from GitHub)
 - Railway account ([railway.app](https://railway.app))
-- Your Medhiva repo pushed to GitHub
+- Your PlaceNxt repo pushed to GitHub
 
 ---
 
@@ -232,7 +232,7 @@ Railway is the **recommended platform** for deploying Medhiva because it support
 
 1. Go to [railway.app](https://railway.app) and sign in with GitHub
 2. Click **"New Project"** → **"Deploy from GitHub repo"**
-3. Select your Medhiva repository
+3. Select your PlaceNxt repository
 4. Railway will auto-detect your monorepo structure
 
 ---
@@ -387,7 +387,7 @@ Build Command: npm install && npx prisma migrate deploy && npm run build
 After setup, your Railway project should look like:
 
 ```
-Medhiva (Project)
+PlaceNxt (Project)
 ├── 🐘 PostgreSQL (Database)
 ├── 🔴 Redis (Cache)
 ├── 🌐 api-gateway (Service)

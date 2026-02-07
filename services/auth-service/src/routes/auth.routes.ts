@@ -3,11 +3,13 @@ import { AuthController } from '../controllers/auth.controller';
 import { validateRequest } from '../middleware/validate.middleware';
 import { RegisterSchema, LoginSchema, RefreshTokenSchema } from '../schemas/auth.schema';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { leaderboardController } from '../controllers/leaderboard.controller';
 
 const router = Router();
 const authController = new AuthController();
 
 // Public routes
+router.get('/leaderboard', leaderboardController.getLeaderboard);
 router.post('/register', validateRequest(RegisterSchema), authController.register);
 router.post('/login', validateRequest(LoginSchema), authController.login);
 router.post('/refresh-token', validateRequest(RefreshTokenSchema), authController.refreshToken);

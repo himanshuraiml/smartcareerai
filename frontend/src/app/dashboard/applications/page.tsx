@@ -38,7 +38,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1
 const COLUMNS = [
     { id: 'SAVED', label: 'Saved', color: 'bg-gray-500/10 text-gray-400' },
     { id: 'APPLIED', label: 'Applied', color: 'bg-blue-500/10 text-blue-400' },
-    { id: 'SCREENING', label: 'Screening', color: 'bg-purple-500/10 text-purple-400' },
+    { id: 'SCREENING', label: 'Screening', color: 'bg-indigo-500/10 text-indigo-400' },
     { id: 'INTERVIEWING', label: 'Interview', color: 'bg-yellow-500/10 text-yellow-400' },
     { id: 'OFFER', label: 'Offer', color: 'bg-green-500/10 text-green-400' },
     { id: 'REJECTED', label: 'Rejected', color: 'bg-red-500/10 text-red-400' },
@@ -142,7 +142,7 @@ export default function ApplicationsPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsAddOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Add Application</span>
@@ -218,7 +218,7 @@ export default function ApplicationsPage() {
                                             key={app.id}
                                             draggable
                                             onDragStart={(e) => e.dataTransfer.setData('appId', app.id)}
-                                            className="w-72 flex-shrink-0 p-4 bg-gray-900 rounded-xl border border-white/5 hover:border-purple-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all flex flex-col gap-2"
+                                            className="w-72 flex-shrink-0 p-4 bg-gray-900 rounded-xl border border-white/5 hover:border-indigo-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all flex flex-col gap-2"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div>
@@ -271,7 +271,7 @@ export default function ApplicationsPage() {
                                         const appId = e.dataTransfer.getData('appId');
                                         if (appId) handleStatusChange(appId, column.id);
                                     }}
-                                    className="h-10 mt-2 border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 hover:border-purple-500/30 transition-all cursor-pointer"
+                                    className="h-10 mt-2 border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 hover:border-indigo-500/30 transition-all cursor-pointer"
                                 >
                                     Drop here to move to {column.label}
                                 </div>
@@ -342,7 +342,7 @@ export default function ApplicationsPage() {
                                 <select
                                     value={selectedApp.status}
                                     onChange={(e) => handleStatusChange(selectedApp.id, e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-purple-500 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-indigo-500 focus:outline-none"
                                 >
                                     {COLUMNS.map(col => (
                                         <option key={col.id} value={col.id} className="bg-gray-900">{col.label}</option>
@@ -353,7 +353,7 @@ export default function ApplicationsPage() {
                             <div>
                                 <label className="text-sm text-gray-400 block mb-1">Notes</label>
                                 <textarea
-                                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-purple-500 focus:outline-none h-32 resize-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-indigo-500 focus:outline-none h-32 resize-none"
                                     placeholder="Add notes about your application..."
                                     defaultValue={selectedApp.notes}
                                     onBlur={(e) => {
@@ -371,7 +371,7 @@ export default function ApplicationsPage() {
                                 </button>
                                 <a
                                     href={`/dashboard/jobs?id=${selectedApp.job.id}`}
-                                    className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
                                 >
                                     View Job
                                 </a>

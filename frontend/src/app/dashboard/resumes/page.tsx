@@ -3,9 +3,23 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Link from 'next/link';
-import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X, CreditCard, AlertTriangle } from 'lucide-react';
+import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X, CreditCard, AlertTriangle, BarChart2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
-import MatchRadar from '@/components/scoring/RadarChart';
+import ResumeAnalysisReport from '@/components/scoring/ResumeAnalysisReport';
+
+interface AtsScore {
+    id: string;
+    overallScore: number;
+    keywordMatchPercent: number;
+    formattingScore: number;
+    experienceScore?: number;
+    educationScore?: number;
+    matchedKeywords: string[];
+    missingKeywords: string[];
+    formattingIssues?: string[];
+    suggestions: string[];
+    createdAt?: string;
+}
 
 interface Resume {
     id: string;
@@ -14,19 +28,8 @@ interface Resume {
     status: 'PENDING' | 'PARSING' | 'PARSED' | 'FAILED';
     parsedText?: string;
     createdAt: string;
+    latestAnalysis?: AtsScore | null;
 }
-
-interface AtsScore {
-    id: string;
-    overallScore: number;
-    keywordMatchPercent: number;
-    formattingScore: number;
-    matchedKeywords: string[];
-    missingKeywords: string[];
-    suggestions: string[];
-}
-
-
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -41,10 +44,10 @@ export default function ResumesPage() {
     const [analyzing, setAnalyzing] = useState<string | null>(null);
     const [atsResult, setAtsResult] = useState<AtsScore | null>(null);
     const [showAtsModal, setShowAtsModal] = useState(false);
+    const [analyzedResumeId, setAnalyzedResumeId] = useState<string | null>(null);
 
     // Use user's registered target role
     const targetRole = user?.targetJobRole?.title || 'Software Developer';
-    const [pendingResumeId, setPendingResumeId] = useState<string | null>(null);
     const [showCreditsModal, setShowCreditsModal] = useState(false);
 
     // Fetch resumes on mount
@@ -157,7 +160,13 @@ export default function ResumesPage() {
         }
     };
 
-
+    const handleViewReport = (resume: Resume) => {
+        if (resume.latestAnalysis) {
+            setAtsResult(resume.latestAnalysis);
+            setAnalyzedResumeId(resume.id);
+            setShowAtsModal(true);
+        }
+    };
 
     const handleAnalyze = async (resumeId: string) => {
         setAnalyzing(resumeId);
@@ -180,7 +189,10 @@ export default function ResumesPage() {
 
             if (response.ok) {
                 setAtsResult(data.data);
+                setAnalyzedResumeId(resumeId);
                 setShowAtsModal(true);
+                // Refresh list to update latestAnalysis
+                fetchResumes();
 
                 // Also trigger skill extraction
                 try {
@@ -205,7 +217,6 @@ export default function ResumesPage() {
             setError('Failed to analyze resume');
         } finally {
             setAnalyzing(null);
-            setPendingResumeId(null);
         }
     };
 
@@ -250,22 +261,22 @@ export default function ResumesPage() {
             <div
                 {...getRootProps()}
                 className={`p-6 md:p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer
-          ${isDragActive ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-purple-500/50 hover:bg-white/5'}
+          ${isDragActive ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/5'}
           ${uploading ? 'pointer-events-none opacity-50' : ''}`}
             >
                 <input {...getInputProps()} />
                 <div className="text-center">
                     {uploading ? (
                         <>
-                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-purple-400 animate-spin" />
+                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-indigo-400 animate-spin" />
                             </div>
                             <p className="text-white font-medium">Uploading...</p>
                         </>
                     ) : (
                         <>
-                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                <Upload className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
+                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                                <Upload className="w-6 h-6 md:w-8 md:h-8 text-indigo-400" />
                             </div>
                             <p className="text-white font-medium mb-2">
                                 {isDragActive ? 'Drop your resume here' : 'Drag & drop your resume'}
@@ -289,13 +300,13 @@ export default function ResumesPage() {
 
                 {loading ? (
                     <div className="p-12 rounded-2xl glass text-center">
-                        <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                         <p className="text-gray-400">Loading resumes...</p>
                     </div>
                 ) : resumes.length === 0 ? (
                     <div className="p-12 rounded-2xl glass text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                            <FileText className="w-8 h-8 text-purple-400" />
+                        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                            <FileText className="w-8 h-8 text-indigo-400" />
                         </div>
                         <h3 className="text-lg font-medium text-white mb-2">No resumes yet</h3>
                         <p className="text-gray-400">Upload your first resume to get started</p>
@@ -303,47 +314,145 @@ export default function ResumesPage() {
                 ) : (
                     <div className="space-y-3">
                         {resumes.map((resume) => (
-                            <div key={resume.id} className="p-4 rounded-xl glass flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                                    <FileText className="w-6 h-6 text-purple-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-medium truncate">{resume.fileName}</p>
-                                    <p className="text-gray-400 text-sm">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
-                                </div>
-                                <div className="flex items-center gap-2 md:gap-3">
-                                    {getStatusBadge(resume.status)}
-                                    {resume.status === 'PARSED' && (
-                                        <button
-                                            onClick={() => handleAnalyze(resume.id)}
-                                            disabled={analyzing === resume.id}
-                                            className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-purple-500/10 text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center"
-                                            title={`Analyze for ${targetRole}`}
-                                            aria-label="Analyze resume"
-                                        >
-                                            {analyzing === resume.id ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
+                            <div key={resume.id} className="p-4 rounded-xl glass hover:bg-white/5 transition-colors group">
+                                {/* Mobile Layout: Stacked */}
+                                <div className="flex flex-col gap-4 sm:hidden">
+                                    {/* File Info Row */}
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 shrink-0 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                            <FileText className="w-5 h-5 text-indigo-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-white font-medium text-sm leading-tight break-all line-clamp-2">{resume.fileName}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <p className="text-gray-400 text-xs text-nowrap">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
+                                                {getStatusBadge(resume.status)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions Row */}
+                                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                                        {resume.status === 'PARSED' ? (
+                                            resume.latestAnalysis ? (
+                                                <button
+                                                    onClick={() => handleViewReport(resume)}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-sm font-medium transition-all group-hover:bg-emerald-500/20"
+                                                    title="View Analysis Report"
+                                                >
+                                                    <BarChart2 className="w-4 h-4" />
+                                                    <span>View Report ({resume.latestAnalysis.overallScore})</span>
+                                                </button>
                                             ) : (
-                                                <Target className="w-5 h-5" />
-                                            )}
-                                        </button>
+                                                <button
+                                                    onClick={() => handleAnalyze(resume.id)}
+                                                    disabled={analyzing === resume.id}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-sm font-medium transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                                                    title={`Analyze for ${targetRole}`}
+                                                >
+                                                    {analyzing === resume.id ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <span>Analyzing...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Target className="w-4 h-4" />
+                                                            <span>Check ATS Score</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )
+                                        ) : (
+                                            <div className="flex-1" />
+                                        )}
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleView(resume)}
+                                                className="w-10 h-10 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                                                title="View Resume"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(resume.id)}
+                                                className="w-10 h-10 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Desktop Layout: Horizontal */}
+                                <div className="hidden sm:flex items-center gap-4">
+                                    <div className="w-12 h-12 shrink-0 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-indigo-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white font-medium truncate">{resume.fileName}</p>
+                                        <p className="text-gray-400 text-sm">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
+                                    </div>
+
+                                    {resume.latestAnalysis && (
+                                        <div className="flex flex-col items-end mr-4">
+                                            <span className={`text-lg font-bold ${getScoreColor(resume.latestAnalysis.overallScore)}`}>
+                                                {resume.latestAnalysis.overallScore}
+                                            </span>
+                                            <span className="text-xs text-gray-500">ATS Score</span>
+                                        </div>
                                     )}
-                                    <button
-                                        onClick={() => handleView(resume)}
-                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
-                                        title="View"
-                                        aria-label="View resume"
-                                    >
-                                        <Eye className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(resume.id)}
-                                        className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
-                                        title="Delete"
-                                        aria-label="Delete resume"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+
+                                    <div className="flex items-center gap-3">
+                                        {getStatusBadge(resume.status)}
+                                        {resume.status === 'PARSED' && (
+                                            resume.latestAnalysis ? (
+                                                <button
+                                                    onClick={() => handleViewReport(resume)}
+                                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-sm font-medium transition-all group-hover:bg-emerald-500/20"
+                                                    title="View Analysis Report"
+                                                >
+                                                    <BarChart2 className="w-4 h-4" />
+                                                    <span>View Report</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleAnalyze(resume.id)}
+                                                    disabled={analyzing === resume.id}
+                                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-sm font-medium transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
+                                                    title={`Analyze for ${targetRole}`}
+                                                >
+                                                    {analyzing === resume.id ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <span>Analyzing...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Target className="w-4 h-4" />
+                                                            <span>Check ATS Score</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )
+                                        )}
+                                        <div className="w-px h-8 bg-white/10 mx-2" />
+                                        <button
+                                            onClick={() => handleView(resume)}
+                                            className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                                            title="View Resume Content"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(resume.id)}
+                                            className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -373,12 +482,10 @@ export default function ResumesPage() {
                 </div>
             )}
 
-
-
             {/* Insufficient Credits Modal */}
             {showCreditsModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
-                    <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-backdrop bg-black/80 backdrop-blur-sm">
+                    <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10 shadow-xl">
                         <div className="text-center">
                             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                                 <AlertTriangle className="w-8 h-8 text-red-400" />
@@ -390,13 +497,13 @@ export default function ResumesPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowCreditsModal(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                    className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition hover:bg-white/5"
                                 >
                                     Cancel
                                 </button>
                                 <Link
                                     href="/dashboard/billing"
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Get Credits
@@ -407,127 +514,14 @@ export default function ResumesPage() {
                 </div>
             )}
 
-            {/* ATS Score Modal */}
+            {/* Resume Analysis Report Modal */}
             {showAtsModal && atsResult && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
-                    <div className="resume-modal w-full max-w-2xl max-h-[80vh] overflow-hidden">
-                        <div className="resume-modal-header flex items-center justify-between">
-                            <div>
-                                <h3 className="resume-modal-title text-lg">ATS Analysis Results</h3>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Target Role: <span className="text-purple-600 font-medium">{targetRole}</span>
-                                </p>
-                            </div>
-                            <button onClick={() => setShowAtsModal(false)} className="close-btn p-1 rounded hover:bg-black/5">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="resume-modal-body overflow-y-auto max-h-[60vh] space-y-6">
-
-
-                            {/* Score & Radar Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                                {/* Left: Score Circle */}
-                                <div className="text-center">
-                                    <div className="relative inline-flex items-center justify-center">
-                                        <svg className="w-40 h-40 transform -rotate-90">
-                                            <circle
-                                                className="text-gray-700"
-                                                strokeWidth="10"
-                                                stroke="currentColor"
-                                                fill="transparent"
-                                                r="70"
-                                                cx="80"
-                                                cy="80"
-                                            />
-                                            <circle
-                                                className={`${getScoreColor(atsResult.overallScore)} transition-all duration-1000 ease-out`}
-                                                strokeWidth="10"
-                                                strokeDasharray={440}
-                                                strokeDashoffset={440 - (440 * atsResult.overallScore) / 100}
-                                                strokeLinecap="round"
-                                                stroke="currentColor"
-                                                fill="transparent"
-                                                r="70"
-                                                cx="80"
-                                                cy="80"
-                                            />
-                                        </svg>
-                                        <span className={`absolute text-5xl font-bold ${getScoreColor(atsResult.overallScore)}`}>
-                                            {atsResult.overallScore}
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-400 mt-4 font-medium">Overall Match Score</p>
-                                </div>
-
-                                {/* Right: Radar Chart */}
-                                <div className="bg-white/5 rounded-2xl p-4">
-                                    <MatchRadar data={{
-                                        overall: atsResult.overallScore,
-                                        keywords: atsResult.keywordMatchPercent,
-                                        formatting: atsResult.formattingScore,
-                                        // We assume these might be in the raw API response even if not in explicit interface
-                                        experience: (atsResult as any).experienceScore,
-                                        education: (atsResult as any).educationScore
-                                    }} />
-                                </div>
-                            </div>
-
-                            {/* Detailed Breakdown */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                    <p className="text-gray-400 text-sm mb-1">Keyword Match</p>
-                                    <p className={`text-2xl font-bold ${getScoreColor(atsResult.keywordMatchPercent)}`}>
-                                        {atsResult.keywordMatchPercent}%
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                    <p className="text-gray-400 text-sm mb-1">Formatting</p>
-                                    <p className={`text-2xl font-bold ${getScoreColor(atsResult.formattingScore)}`}>
-                                        {atsResult.formattingScore}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Keywords */}
-                            {atsResult.matchedKeywords?.length > 0 && (
-                                <div>
-                                    <h4 className="resume-modal-title font-medium mb-2">✅ Matched Keywords</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {atsResult.matchedKeywords.map((kw, i) => (
-                                            <span key={i} className="tag-success px-2 py-1 rounded text-sm">{kw}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {atsResult.missingKeywords?.length > 0 && (
-                                <div>
-                                    <h4 className="resume-modal-title font-medium mb-2">❌ Missing Keywords</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {atsResult.missingKeywords.map((kw, i) => (
-                                            <span key={i} className="tag-danger px-2 py-1 rounded text-sm">{kw}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Suggestions */}
-                            {atsResult.suggestions?.length > 0 && (
-                                <div>
-                                    <h4 className="resume-modal-title font-medium mb-2">💡 Suggestions</h4>
-                                    <ul className="space-y-2">
-                                        {atsResult.suggestions.map((s, i) => (
-                                            <li key={i} className="text-sm flex items-start gap-2">
-                                                <span style={{ color: 'var(--modal-accent)' }}>•</span> {s}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <ResumeAnalysisReport
+                    data={atsResult}
+                    fileName={resumes.find(r => r.id === analyzedResumeId)?.fileName || 'Resume'}
+                    onClose={() => setShowAtsModal(false)}
+                    onReanalyze={analyzedResumeId ? () => handleAnalyze(analyzedResumeId) : undefined}
+                />
             )}
         </div>
     );

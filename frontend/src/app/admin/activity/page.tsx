@@ -81,7 +81,7 @@ export default function ActivityPage() {
             case "USER_LOGIN": return <LogIn className="w-5 h-5 text-green-400" />;
             case "USER_LOGOUT": return <LogOut className="w-5 h-5 text-gray-400" />;
             case "RESUME_UPLOAD":
-            case "RESUME_ANALYSIS": return <FileText className="w-5 h-5 text-purple-400" />;
+            case "RESUME_ANALYSIS": return <FileText className="w-5 h-5 text-indigo-400" />;
             case "INTERVIEW_START":
             case "INTERVIEW_COMPLETE": return <Briefcase className="w-5 h-5 text-orange-400" />;
             case "TEST_START":
@@ -198,7 +198,7 @@ export default function ActivityPage() {
                         key={f}
                         onClick={() => { setFilter(f); setPage(1); }}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                            ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
                             : "text-gray-400 hover:text-white hover:bg-white/5"
                             }`}
                     >

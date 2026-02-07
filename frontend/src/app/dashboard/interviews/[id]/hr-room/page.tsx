@@ -604,7 +604,7 @@ export default function HRInterviewRoomPage() {
                                 {/* AI Avatar with Photo */}
                                 <div className="relative">
                                     {/* Glow effect behind avatar */}
-                                    <div className={`absolute -inset-4 bg-gradient-to-r from-teal-500/30 to-purple-500/30 rounded-full blur-xl ${isRecording ? 'animate-pulse' : ''}`} />
+                                    <div className={`absolute -inset-4 bg-gradient-to-r from-teal-500/30 to-indigo-500/30 rounded-full blur-xl ${isRecording ? 'animate-pulse' : ''}`} />
 
                                     {/* Animated ring when speaking */}
                                     {isRecording && (
@@ -708,7 +708,7 @@ export default function HRInterviewRoomPage() {
                             <button
                                 onClick={submitVideoAnswer}
                                 disabled={submitting}
-                                className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+                                className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                                 Submit Answer
@@ -824,8 +824,8 @@ export default function HRInterviewRoomPage() {
                     {/* Live Transcript */}
                     <div className="flex-1 p-4 rounded-xl bg-white dark:bg-[#111820] border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-2 mb-3">
-                            <MessageSquare className="w-4 h-4 text-purple-500 dark:text-purple-400" />
-                            <span className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider">Live Transcript</span>
+                            <MessageSquare className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Live Transcript</span>
                         </div>
                         <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                             {transcript || (

@@ -111,7 +111,7 @@ function AdminInviteContent() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-grid">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">Verifying your invitation...</p>
                 </div>
             </div>
@@ -131,7 +131,7 @@ function AdminInviteContent() {
                     </p>
                     <Link
                         href="/login"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 transition"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition"
                     >
                         Go to Login
                     </Link>
@@ -151,7 +151,7 @@ function AdminInviteContent() {
                     <p className="text-gray-400 mb-6">
                         Your password has been set successfully. Redirecting to your dashboard...
                     </p>
-                    <Loader2 className="w-6 h-6 text-purple-500 animate-spin mx-auto" />
+                    <Loader2 className="w-6 h-6 text-indigo-500 animate-spin mx-auto" />
                 </div>
             </div>
         );
@@ -159,7 +159,7 @@ function AdminInviteContent() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-grid px-4 py-12">
-            <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="w-full max-w-md relative z-10">
                 {/* Logo */}
@@ -167,12 +167,12 @@ function AdminInviteContent() {
                     <Link href="/" className="inline-flex items-center gap-2">
                         <Image
                             src="/logo.svg"
-                            alt="Medhiva Logo"
+                            alt="PlaceNxt Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-xl"
                         />
-                        <span className="text-2xl font-bold gradient-text">Medhiva</span>
+                        <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
                     </Link>
                 </div>
 
@@ -182,7 +182,7 @@ function AdminInviteContent() {
                         <h1 className="text-2xl font-bold text-white mb-2">Welcome!</h1>
                         <p className="text-gray-400">
                             You&apos;ve been invited as admin for{' '}
-                            <span className="text-purple-400 font-medium">{institutionName}</span>
+                            <span className="text-indigo-400 font-medium">{institutionName}</span>
                         </p>
                     </div>
 
@@ -207,7 +207,7 @@ function AdminInviteContent() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Enter your new password"
                                     required
                                 />
@@ -242,7 +242,7 @@ function AdminInviteContent() {
                                     type={showConfirm ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Confirm your password"
                                     required
                                 />
@@ -268,7 +268,7 @@ function AdminInviteContent() {
                         <button
                             type="submit"
                             disabled={submitting || !isPasswordValid || !passwordsMatch}
-                            className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {submitting ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -287,7 +287,7 @@ export default function AdminInvitePage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-grid">
-                <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
             </div>
         }>
             <AdminInviteContent />

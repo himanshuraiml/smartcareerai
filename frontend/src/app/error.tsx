@@ -20,7 +20,7 @@ export default function Error({
                 <p className="text-gray-400 mb-6">{error.message}</p>
                 <button
                     onClick={() => reset()}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                     Try again
                 </button>

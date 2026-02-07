@@ -46,12 +46,12 @@ export default function ForgotPasswordPage() {
                         <Link href="/" className="inline-flex items-center gap-2">
                             <Image
                                 src="/logo.svg"
-                                alt="Medhiva Logo"
+                                alt="PlaceNxt Logo"
                                 width={40}
                                 height={40}
                                 className="w-10 h-10 rounded-xl"
                             />
-                            <span className="text-2xl font-bold gradient-text">Medhiva</span>
+                            <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
                         </Link>
                     </div>
 
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                         </p>
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                            className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Back to login
@@ -87,12 +87,12 @@ export default function ForgotPasswordPage() {
                     <Link href="/" className="inline-flex items-center gap-2">
                         <Image
                             src="/logo.svg"
-                            alt="Medhiva Logo"
+                            alt="PlaceNxt Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-xl"
                         />
-                        <span className="text-2xl font-bold gradient-text">Medhiva</span>
+                        <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
                     </Link>
                 </div>
 
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="you@example.com"
                                     required
                                 />
@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
                     <p className="mt-8 text-center">
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                            className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Back to login

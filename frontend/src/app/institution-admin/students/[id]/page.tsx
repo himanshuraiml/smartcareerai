@@ -206,8 +206,8 @@ export default function StudentDetailPage() {
 
                 <div className="p-4 rounded-xl glass border border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/10">
-                            <Award className="w-5 h-5 text-purple-400" />
+                        <div className="p-2 rounded-lg bg-indigo-500/10">
+                            <Award className="w-5 h-5 text-indigo-400" />
                         </div>
                         <div>
                             <p className="text-sm text-gray-400">Badges Earned</p>
@@ -275,8 +275,8 @@ export default function StudentDetailPage() {
                     <h3 className="text-lg font-bold text-white mb-4">Skill Badges</h3>
                     <div className="flex flex-wrap gap-3">
                         {student.skillBadges.map((badge) => (
-                            <div key={badge.id} className="px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                                <p className="font-medium text-purple-400">{badge.skill.name}</p>
+                            <div key={badge.id} className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                                <p className="font-medium text-indigo-400">{badge.skill.name}</p>
                                 <p className="text-xs text-gray-400">{badge.badgeType}</p>
                             </div>
                         ))}

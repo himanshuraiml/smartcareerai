@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Loader2, Zap, Star, Briefcase, Gem } from "lucide-react";
+import { Check, Loader2, Zap, Star, Briefcase, Gem, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import useRazorpay from "@/hooks/useRazorpay";
 import { useRouter } from "next/navigation";
@@ -64,7 +64,7 @@ const PLANS: PricingPlan[] = [
         priceMonthly: 299,
         priceYearly: 2499,
         description: "Perfect for active job seekers needing more practice",
-        color: "from-purple-400 to-pink-400",
+        color: "from-indigo-400 to-violet-400",
         icon: Star,
         popular: true,
         features: [
@@ -124,7 +124,7 @@ const PLAN_ICONS: Record<string, any> = {
 
 const PLAN_COLORS: Record<string, string> = {
     free: "from-blue-400 to-cyan-400",
-    starter: "from-purple-400 to-pink-400",
+    starter: "from-indigo-400 to-violet-400",
     pro: "from-amber-400 to-orange-400",
     enterprise: "from-emerald-400 to-teal-400",
 };
@@ -289,7 +289,7 @@ export default function PricingPage() {
                 const options = {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to frontend .env
                     subscription_id: razorpaySubscriptionId,
-                    name: "Medhiva",
+                    name: "PlaceNxt",
                     description: `${plan.displayName} Subscription`,
                     image: "/logo.svg", // Ensure this exists
                     handler: function (response: any) {
@@ -305,7 +305,7 @@ export default function PricingPage() {
                         email: user?.email,
                     },
                     theme: {
-                        color: "#8B5CF6",
+                        color: "#6366f1",
                     },
                 };
 
@@ -326,9 +326,20 @@ export default function PricingPage() {
 
     return (
         <div className="min-h-screen bg-[#0B0F19] text-white py-20 px-4 pricing-page">
+            {/* Back Button */}
+            <div className="max-w-7xl mx-auto mb-8">
+                <button
+                    onClick={() => accessToken ? router.push('/dashboard') : router.push('/')}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back to {accessToken ? 'Dashboard' : 'Home'}</span>
+                </button>
+            </div>
+
             {/* Header */}
             <div className="max-w-4xl mx-auto text-center mb-16">
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-500">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-500">
                     Invest in Your Career Growth
                 </h1>
                 <p className="text-xl text-gray-400 mb-8">
@@ -342,7 +353,7 @@ export default function PricingPage() {
                         onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
                         className="w-14 h-7 bg-gray-800 rounded-full p-1 relative transition-colors duration-300 border border-white/10"
                     >
-                        <div className={`w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'}`} />
+                        <div className={`w-5 h-5 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'}`} />
                     </button>
                     <span className={`text-sm ${billingCycle === 'yearly' ? 'text-white font-medium' : 'text-gray-500'}`}>
                         Yearly <span className="text-green-400 text-xs ml-1">(Save ~20%)</span>
@@ -358,7 +369,7 @@ export default function PricingPage() {
                         className={`relative rounded-2xl p-6 pricing-card transition-all duration-300 group`}
                         style={isLightMode ? {
                             background: '#ffffff',
-                            border: plan.popular ? '2px solid #a855f7' : '1px solid #e2e8f0',
+                            border: plan.popular ? '2px solid #6366f1' : '1px solid #e2e8f0',
                             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
                         } : {
                             background: 'rgba(17, 24, 39, 0.5)',
@@ -367,7 +378,7 @@ export default function PricingPage() {
                         }}
                     >
                         {plan.popular && (
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                                 MOST POPULAR
                             </div>
                         )}
@@ -407,7 +418,7 @@ export default function PricingPage() {
                             disabled={loading === plan.id}
                             className={`w-full py-3 rounded-xl font-medium transition-all mb-8 flex items-center justify-center gap-2`}
                             style={plan.popular ? {
-                                background: 'linear-gradient(to right, #a855f7, #ec4899)',
+                                background: 'linear-gradient(to right, #6366f1, #ec4899)',
                                 color: '#ffffff'
                             } : {
                                 background: isLightMode ? '#f1f5f9' : 'rgba(255, 255, 255, 0.1)',

@@ -15,6 +15,6 @@ RUN npx prisma@5.22.0 generate
 COPY dist ./dist
 
 ENV NODE_ENV=production
-EXPOSE 3009
+EXPOSE 3010
 
 CMD ["node", "dist/index.js"]

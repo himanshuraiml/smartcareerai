@@ -116,6 +116,12 @@ export class CreditService {
         // Check and renew subscription if billing period has passed (lazy renewal)
         await subscriptionService.checkAndRenewSubscription(userId);
 
+        // Get user's subscription to check for unlimited features
+        const subscription = await prisma.userSubscription.findUnique({
+            where: { userId },
+            include: { plan: true },
+        });
+
         const credits = await prisma.userCredit.findMany({
             where: { userId },
         });
@@ -130,6 +136,22 @@ export class CreditService {
         credits.forEach(credit => {
             balances[credit.creditType] = credit.balance;
         });
+
+        // Check for unlimited features from subscription plan
+        if (subscription && subscription.status === 'ACTIVE' && subscription.plan) {
+            const features = subscription.plan.features as any;
+            if (features) {
+                if (features.resumeReviews === 'unlimited') {
+                    balances.RESUME_REVIEW = -1; // -1 indicates unlimited
+                }
+                if (features.interviews === 'unlimited') {
+                    balances.AI_INTERVIEW = -1;
+                }
+                if (features.skillTests === 'unlimited') {
+                    balances.SKILL_TEST = -1;
+                }
+            }
+        }
 
         return balances;
     }

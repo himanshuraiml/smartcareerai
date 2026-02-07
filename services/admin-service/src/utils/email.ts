@@ -170,7 +170,7 @@ class EmailService {
             }
 
             const config = await this.getSmtpConfig();
-            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || 'noreply@medhiva.com';
+            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || 'noreply@placenxt.com';
 
             await transporter.sendMail({
                 from,
@@ -225,7 +225,7 @@ class EmailService {
 
         const html = this.getInstitutionAdminInviteTemplate(email, institutionName, tempPassword, inviteLink);
         const text = `
-You have been invited to become an Institution Administrator for ${institutionName} on Medhiva.
+You have been invited to become an Institution Administrator for ${institutionName} on PlaceNxt.
 
 Your Temporary Credentials:
 Email: ${email}
@@ -238,7 +238,7 @@ This invitation expires in 7 days.
 
         return this.sendEmail({
             to: email,
-            subject: `You're invited to manage ${institutionName} on Medhiva`,
+            subject: `You're invited to manage ${institutionName} on PlaceNxt`,
             html,
             text,
             emailType: 'INSTITUTION_ADMIN_INVITE',
@@ -318,9 +318,9 @@ This invitation expires in 7 days.
 
         return this.sendEmail({
             to: email,
-            subject: `Welcome to Medhiva - Start Your Career Journey!`,
+            subject: `Welcome to PlaceNxt - Start Your Career Journey!`,
             html,
-            text: `Welcome to Medhiva, ${userName}! Start building your career today.`,
+            text: `Welcome to PlaceNxt, ${userName}! Start building your career today.`,
             emailType: 'STUDENT_WELCOME',
             metadata: { userName, institutionName },
             sentBy
@@ -341,9 +341,9 @@ This invitation expires in 7 days.
 
         return this.sendEmail({
             to: email,
-            subject: `Welcome to Medhiva Recruiting Platform!`,
+            subject: `Welcome to PlaceNxt Recruiting Platform!`,
             html,
-            text: `Welcome to Medhiva, ${userName}! Start finding talented candidates for ${companyName}.`,
+            text: `Welcome to PlaceNxt, ${userName}! Start finding talented candidates for ${companyName}.`,
             emailType: 'RECRUITER_WELCOME',
             metadata: { userName, companyName },
             sentBy
@@ -417,16 +417,16 @@ This invitation expires in 7 days.
         <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 40px; border: 1px solid rgba(255,255,255,0.1);">
             <!-- Header -->
             <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Medhiva</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">PlaceNxt</h1>
             </div>
 
             ${content}
 
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-                <p style="color: #6b7280; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Medhiva. All rights reserved.</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} PlaceNxt. All rights reserved.</p>
                 <p style="color: #6b7280; font-size: 12px; margin: 8px 0 0;">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3100'}/unsubscribe" style="color: #a855f7; text-decoration: none;">Unsubscribe</a>
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3100'}/unsubscribe" style="color: #6366f1; text-decoration: none;">Unsubscribe</a>
                 </p>
             </div>
         </div>
@@ -438,14 +438,14 @@ This invitation expires in 7 days.
 
     private getInstitutionAdminInviteTemplate(email: string, institutionName: string, tempPassword: string, inviteLink: string): string {
         const content = `
-            <p style="color: #a855f7; margin: 8px 0 0; font-size: 14px; text-align: center;">Institution Admin Invitation</p>
+            <p style="color: #6366f1; margin: 8px 0 0; font-size: 14px; text-align: center;">Institution Admin Invitation</p>
 
             <div style="color: #e5e5e5; font-size: 16px; line-height: 1.6; margin-top: 24px;">
                 <p>Hello,</p>
-                <p>You have been invited to become an <strong style="color: #a855f7;">Institution Administrator</strong> for <strong style="color: #ffffff;">${institutionName}</strong> on Medhiva.</p>
+                <p>You have been invited to become an <strong style="color: #6366f1;">Institution Administrator</strong> for <strong style="color: #ffffff;">${institutionName}</strong> on PlaceNxt.</p>
 
                 <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; margin: 24px 0;">
-                    <p style="margin: 0 0 12px; color: #a855f7; font-weight: 600;">Your Temporary Credentials:</p>
+                    <p style="margin: 0 0 12px; color: #6366f1; font-weight: 600;">Your Temporary Credentials:</p>
                     <p style="margin: 4px 0; color: #e5e5e5;"><strong>Email:</strong> ${email}</p>
                     <p style="margin: 4px 0; color: #e5e5e5;"><strong>Temporary Password:</strong> <code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">${tempPassword}</code></p>
                 </div>
@@ -453,12 +453,12 @@ This invitation expires in 7 days.
                 <p>Click the button below to accept your invitation and set up your account:</p>
 
                 <div style="text-align: center; margin: 32px 0;">
-                    <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                         Accept Invitation
                     </a>
                 </div>
 
-                <p style="color: #9ca3af; font-size: 14px;">Or copy this link: <a href="${inviteLink}" style="color: #a855f7; word-break: break-all;">${inviteLink}</a></p>
+                <p style="color: #9ca3af; font-size: 14px;">Or copy this link: <a href="${inviteLink}" style="color: #6366f1; word-break: break-all;">${inviteLink}</a></p>
                 <p style="color: #9ca3af; font-size: 14px; margin-top: 24px;">This invitation expires in 7 days. If you did not expect this invitation, please ignore this email.</p>
             </div>
         `;
@@ -467,7 +467,7 @@ This invitation expires in 7 days.
 
     private getNewsletterTemplate(userName: string, title: string, content: string): string {
         const templateContent = `
-            <p style="color: #a855f7; margin: 8px 0 0; font-size: 14px; text-align: center;">Newsletter</p>
+            <p style="color: #6366f1; margin: 8px 0 0; font-size: 14px; text-align: center;">Newsletter</p>
 
             <div style="color: #e5e5e5; font-size: 16px; line-height: 1.6; margin-top: 24px;">
                 <p>Hi ${userName},</p>
@@ -479,7 +479,7 @@ This invitation expires in 7 days.
                 </div>
 
                 <div style="text-align: center; margin: 32px 0;">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3100'}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3100'}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                         Visit Dashboard
                     </a>
                 </div>
@@ -501,7 +501,7 @@ This invitation expires in 7 days.
                 </div>
 
                 <div style="text-align: center; margin: 32px 0;">
-                    <a href="${ctaLink}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 18px;">
+                    <a href="${ctaLink}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #6366f1 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 18px;">
                         ${ctaText}
                     </a>
                 </div>
@@ -515,12 +515,12 @@ This invitation expires in 7 days.
     private getStudentWelcomeTemplate(userName: string, institutionName: string | undefined, frontendUrl: string): string {
         const institutionText = institutionName ? ` from ${institutionName}` : '';
         const templateContent = `
-            <p style="color: #22c55e; margin: 8px 0 0; font-size: 14px; text-align: center;">Welcome to Medhiva!</p>
+            <p style="color: #22c55e; margin: 8px 0 0; font-size: 14px; text-align: center;">Welcome to PlaceNxt!</p>
 
             <div style="color: #e5e5e5; font-size: 16px; line-height: 1.6; margin-top: 24px;">
                 <p>Hi ${userName}${institutionText},</p>
 
-                <p>Welcome to <strong style="color: #a855f7;">Medhiva</strong> - your AI-powered career companion! We're excited to help you kickstart your career journey.</p>
+                <p>Welcome to <strong style="color: #6366f1;">PlaceNxt</strong> - your AI-powered career companion! We're excited to help you kickstart your career journey.</p>
 
                 <div style="margin: 24px 0;">
                     <h3 style="color: #ffffff; font-size: 18px; margin: 0 0 16px;">Here's what you can do:</h3>
@@ -528,8 +528,8 @@ This invitation expires in 7 days.
                         <p style="margin: 0; color: #22c55e; font-weight: 600;">ATS Resume Scoring</p>
                         <p style="margin: 4px 0 0; color: #9ca3af; font-size: 14px;">Get instant feedback on your resume's ATS compatibility</p>
                     </div>
-                    <div style="background: rgba(168, 85, 247, 0.1); border-left: 4px solid #a855f7; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
-                        <p style="margin: 0; color: #a855f7; font-weight: 600;">AI Interview Practice</p>
+                    <div style="background: rgba(168, 85, 247, 0.1); border-left: 4px solid #6366f1; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
+                        <p style="margin: 0; color: #6366f1; font-weight: 600;">AI Interview Practice</p>
                         <p style="margin: 4px 0 0; color: #9ca3af; font-size: 14px;">Practice with AI-powered mock interviews</p>
                     </div>
                     <div style="background: rgba(236, 72, 153, 0.1); border-left: 4px solid #ec4899; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
@@ -544,7 +544,7 @@ This invitation expires in 7 days.
                     </a>
                 </div>
 
-                <p style="color: #9ca3af; font-size: 14px;">Need help getting started? Check out our <a href="${frontendUrl}/help" style="color: #a855f7;">getting started guide</a>.</p>
+                <p style="color: #9ca3af; font-size: 14px;">Need help getting started? Check out our <a href="${frontendUrl}/help" style="color: #6366f1;">getting started guide</a>.</p>
             </div>
         `;
         return this.getBaseTemplate(templateContent);
@@ -557,7 +557,7 @@ This invitation expires in 7 days.
             <div style="color: #e5e5e5; font-size: 16px; line-height: 1.6; margin-top: 24px;">
                 <p>Hi ${userName},</p>
 
-                <p>Welcome to <strong style="color: #a855f7;">Medhiva Recruiting</strong>! Your recruiter account for <strong style="color: #ffffff;">${companyName}</strong> is now active.</p>
+                <p>Welcome to <strong style="color: #6366f1;">PlaceNxt Recruiting</strong>! Your recruiter account for <strong style="color: #ffffff;">${companyName}</strong> is now active.</p>
 
                 <div style="margin: 24px 0;">
                     <h3 style="color: #ffffff; font-size: 18px; margin: 0 0 16px;">What you can do:</h3>
@@ -565,8 +565,8 @@ This invitation expires in 7 days.
                         <p style="margin: 0; color: #3b82f6; font-weight: 600;">Search Candidates</p>
                         <p style="margin: 4px 0 0; color: #9ca3af; font-size: 14px;">Find pre-vetted candidates with verified skills</p>
                     </div>
-                    <div style="background: rgba(168, 85, 247, 0.1); border-left: 4px solid #a855f7; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
-                        <p style="margin: 0; color: #a855f7; font-weight: 600;">Post Jobs</p>
+                    <div style="background: rgba(168, 85, 247, 0.1); border-left: 4px solid #6366f1; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
+                        <p style="margin: 0; color: #6366f1; font-weight: 600;">Post Jobs</p>
                         <p style="margin: 4px 0 0; color: #9ca3af; font-size: 14px;">Create job listings to attract top talent</p>
                     </div>
                     <div style="background: rgba(236, 72, 153, 0.1); border-left: 4px solid #ec4899; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
@@ -591,7 +591,7 @@ This invitation expires in 7 days.
     getNotificationTemplate(userName: string, title: string, message: string, ctaText?: string, ctaLink?: string): string {
         const ctaButton = ctaText && ctaLink ? `
             <div style="text-align: center; margin: 32px 0;">
-                <a href="${ctaLink}" style="display: inline-block; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                <a href="${ctaLink}" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                     ${ctaText}
                 </a>
             </div>

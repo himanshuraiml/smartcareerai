@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem("medhiva_theme") as Theme;
+        const savedTheme = localStorage.getItem("placenxt_theme") as Theme;
         if (savedTheme) {
             setThemeState(savedTheme);
             applyTheme(savedTheme);
@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--muted", "0 0% 90%");
             root.style.setProperty("--muted-foreground", "0 0% 40%");
             root.classList.add("light-mode");
-            root.classList.remove("dark-mode");
+            root.classList.remove("dark-mode", "dark");
         } else {
             root.style.setProperty("--background", "0 0% 3.9%");
             root.style.setProperty("--foreground", "0 0% 98%");
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--card-foreground", "0 0% 98%");
             root.style.setProperty("--muted", "0 0% 14.9%");
             root.style.setProperty("--muted-foreground", "0 0% 63.9%");
-            root.classList.add("dark-mode");
+            root.classList.add("dark-mode", "dark");
             root.classList.remove("light-mode");
         }
     };
@@ -58,7 +58,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
         applyTheme(newTheme);
-        localStorage.setItem("medhiva_theme", newTheme);
+        localStorage.setItem("placenxt_theme", newTheme);
     };
 
     const toggleTheme = () => {

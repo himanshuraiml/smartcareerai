@@ -33,18 +33,40 @@ interface NavItem {
     icon: any;
     label: string;
     unlockStage: number; // 0 = always visible, 1+ = unlocks at that stage
+    iconColor: string; // Tailwind text color for the icon
 }
 
 const navItems: NavItem[] = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', unlockStage: 0 },
-    { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0 },
-    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 2 }, // Unlocks with resume
-    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2 }, // Unlocks with resume
-    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3 }, // Unlocks after skills/tests
-    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3 }, // Unlocks with interviews
-    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3 }, // Unlocks with interviews
-    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0 },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', unlockStage: 0, iconColor: 'text-indigo-400' },
+    { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0, iconColor: 'text-blue-400' },
+    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 2, iconColor: 'text-cyan-400' },
+    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2, iconColor: 'text-amber-400' },
+    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3, iconColor: 'text-rose-400' },
+    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3, iconColor: 'text-emerald-400' },
+    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3, iconColor: 'text-violet-400' },
+    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0, iconColor: 'text-orange-400' },
 ];
+
+// Helper function to get proper page title from pathname
+const getPageTitle = (pathname: string | null): string => {
+    if (!pathname) return 'Dashboard';
+
+    // Sort navItems by href length (longest first) to match more specific paths first
+    const sortedNavItems = [...navItems].sort((a, b) => b.href.length - a.href.length);
+
+    // Check if it matches any nav item
+    const matchedItem = sortedNavItems.find(item => {
+        if (item.href === pathname) return true;
+        if (pathname.startsWith(`${item.href}/`)) return true;
+        return false;
+    });
+
+    if (matchedItem) return matchedItem.label;
+
+    // Fallback to formatted pathname
+    const segment = pathname.split('/').pop() || 'Dashboard';
+    return segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
 export default function DashboardLayout({
     children,
@@ -157,7 +179,7 @@ export default function DashboardLayout({
         // Show nothing or a loading spinner while hydrating or redirecting
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
         );
     }
@@ -205,12 +227,12 @@ export default function DashboardLayout({
                                 <Link href="/dashboard" className="flex items-center gap-2">
                                     <Image
                                         src="/logo.svg"
-                                        alt="Medhiva Logo"
+                                        alt="PlaceNxt Logo"
                                         width={32}
                                         height={32}
                                         className="w-8 h-8 rounded-lg"
                                     />
-                                    <span className="text-lg font-bold gradient-text">Medhiva</span>
+                                    <span className="text-lg font-bold gradient-text">PlaceNxt</span>
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
@@ -222,9 +244,9 @@ export default function DashboardLayout({
 
                             {/* New User Welcome */}
                             {isNewUser && (
-                                <div className="mx-4 mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                                <div className="mx-4 mb-4 p-4 rounded-xl bg-gradient-to-r from-indigo-500/20 to-violet-500/20 border border-indigo-500/30">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Sparkles className="w-4 h-4 text-purple-400" />
+                                        <Sparkles className="w-4 h-4 text-indigo-400" />
                                         <span className="text-sm font-bold text-white">Welcome!</span>
                                     </div>
                                     <p className="text-xs text-gray-300">
@@ -245,11 +267,11 @@ export default function DashboardLayout({
                                             className={`
                 flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                 ${isActive
-                                                    ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border border-purple-500/30'
+                                                    ? 'bg-gradient-to-r from-purple-900/60 to-purple-800/40 text-white border border-purple-700/30'
                                                     : 'text-gray-400 hover:text-white hover:bg-white/5'}
               `}
                                         >
-                                            <item.icon className="w-5 h-5" />
+                                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : item.iconColor}`} />
                                             <span className="font-medium">{item.label}</span>
                                         </Link>
                                     );
@@ -282,7 +304,7 @@ export default function DashboardLayout({
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                                     className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0">
                                         <span className="text-white font-medium">
                                             {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
                                         </span>
@@ -335,7 +357,7 @@ export default function DashboardLayout({
                         {/* Desktop Header */}
                         <header className="hidden lg:flex items-center justify-between px-8 py-4 glass border-b border-white/5 sticky top-0 z-40">
                             <h1 className="text-xl font-bold text-white capitalize">
-                                {pathname?.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
+                                {getPageTitle(pathname)}
                             </h1>
                             <div className="flex items-center gap-4">
                                 <ThemeToggle />
@@ -352,7 +374,7 @@ export default function DashboardLayout({
                                     <Menu className="w-6 h-6" />
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold gradient-text">Medhiva</span>
+                                    <span className="font-bold gradient-text">PlaceNxt</span>
                                 </div>
                                 <ThemeToggle />
                             </div>
@@ -360,7 +382,7 @@ export default function DashboardLayout({
                     </>
                 )}
 
-                <div className={`flex-1 ${isInterviewRoom ? 'p-0' : 'p-6 lg:p-8'} overflow-y-auto`}>
+                <div className={`flex-1 ${isInterviewRoom ? 'p-0' : 'p-6 lg:p-8'} overflow-y-auto overflow-x-hidden max-w-full`}>
                     {children}
                 </div>
             </main>

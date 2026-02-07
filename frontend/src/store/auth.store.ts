@@ -141,7 +141,17 @@ export const useAuthStore = create<AuthState>()(
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error('Token refresh failed');
+                        // Only logout on auth-related errors (401, 403)
+                        // Don't logout on server errors (500) or network issues
+                        if (response.status === 401 || response.status === 403) {
+                            console.log('[Auth] Refresh token invalid, logging out');
+                            set({
+                                user: null,
+                                accessToken: null,
+                                refreshToken: null,
+                            });
+                        }
+                        return false;
                     }
 
                     set({
@@ -151,11 +161,8 @@ export const useAuthStore = create<AuthState>()(
 
                     return true;
                 } catch (error) {
-                    set({
-                        user: null,
-                        accessToken: null,
-                        refreshToken: null,
-                    });
+                    // Network error - don't logout, just return false
+                    console.error('[Auth] Network error during token refresh:', error);
                     return false;
                 }
             },

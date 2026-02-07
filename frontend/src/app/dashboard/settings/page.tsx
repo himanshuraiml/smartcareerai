@@ -233,7 +233,7 @@ export default function SettingsPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                            ? 'bg-purple-500/20 text-purple-400'
+                            ? 'bg-indigo-500/20 text-indigo-400'
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
@@ -255,10 +255,10 @@ export default function SettingsPage() {
                         <h2 className="text-lg font-bold text-white mb-4">Profile Photo</h2>
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
+                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
                                     {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
                                 </div>
-                                <button className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white hover:bg-purple-600 transition-colors">
+                                <button className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white hover:bg-indigo-600 transition-colors">
                                     <Camera className="w-4 h-4" />
                                 </button>
                             </div>
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                                         type="text"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                         placeholder="Your name"
                                     />
                                 </div>
@@ -313,12 +313,12 @@ export default function SettingsPage() {
                                 <h2 className="text-lg font-bold text-white">Target Job Role</h2>
                                 <p className="text-sm text-gray-400">This personalizes your skill recommendations, job matches, and interview prep</p>
                             </div>
-                            <Briefcase className="w-5 h-5 text-purple-400" />
+                            <Briefcase className="w-5 h-5 text-indigo-400" />
                         </div>
 
                         {/* Current Selection */}
                         {selectedRole && (
-                            <div className="mb-4 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                            <div className="mb-4 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
                                 <p className="text-xs text-gray-400 mb-1">Currently targeting</p>
                                 <p className="text-lg font-bold text-white">{selectedRole.title}</p>
                                 <p className="text-sm text-gray-400">{selectedRole.category}</p>
@@ -331,7 +331,7 @@ export default function SettingsPage() {
                             <select
                                 value={formData.targetJobRoleId}
                                 onChange={(e) => setFormData({ ...formData, targetJobRoleId: e.target.value })}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
                                 style={{ backgroundImage: 'none' }}
                             >
                                 <option value="" className="bg-gray-900">Select a role...</option>
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                         <button
                             onClick={handleSaveProfile}
                             disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -397,7 +397,7 @@ export default function SettingsPage() {
                                     type="password"
                                     value={passwordData.currentPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
                                     type="password"
                                     value={passwordData.newPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -417,7 +417,7 @@ export default function SettingsPage() {
                                     type="password"
                                     value={passwordData.confirmPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -473,7 +473,7 @@ export default function SettingsPage() {
                                         onChange={(e) => setNotifications({ ...notifications, [item.id]: e.target.checked })}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
                                 </label>
                             </div>
                         ))}

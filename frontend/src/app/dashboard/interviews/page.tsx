@@ -132,7 +132,7 @@ export default function InterviewsPage() {
                 </div>
                 <button
                     onClick={() => setShowNewModal(true)}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition whitespace-nowrap"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition whitespace-nowrap"
                 >
                     <Plus className="w-4 h-4" />
                     New Interview
@@ -143,8 +143,8 @@ export default function InterviewsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-6 rounded-xl glass">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                            <Video className="w-6 h-6 text-purple-400" />
+                        <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                            <Video className="w-6 h-6 text-indigo-400" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-white">{sessions.length}</p>
@@ -189,19 +189,19 @@ export default function InterviewsPage() {
             {/* Sessions List */}
             {loading ? (
                 <div className="p-12 text-center">
-                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">Loading interviews...</p>
                 </div>
             ) : sessions.length === 0 ? (
                 <div className="p-12 rounded-2xl glass text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                        <Video className="w-8 h-8 text-purple-400" />
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                        <Video className="w-8 h-8 text-indigo-400" />
                     </div>
                     <h3 className="text-lg font-medium text-white mb-2">No interviews yet</h3>
                     <p className="text-gray-400 mb-4">Start practicing with AI interview simulations</p>
                     <button
                         onClick={() => setShowNewModal(true)}
-                        className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition"
+                        className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition"
                     >
                         Start Your First Interview
                     </button>
@@ -212,15 +212,15 @@ export default function InterviewsPage() {
                         <Link
                             key={session.id}
                             href={`/dashboard/interviews/${session.id}`}
-                            className="block p-6 rounded-xl glass hover:border-purple-500/30 transition-all group"
+                            className="block p-6 rounded-xl glass hover:border-indigo-500/30 transition-all group"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                        <Video className="w-6 h-6 text-purple-400" />
+                                    <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                        <Video className="w-6 h-6 text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-medium group-hover:text-purple-400 transition line-clamp-2 md:line-clamp-none">
+                                        <h3 className="text-white font-medium group-hover:text-indigo-400 transition line-clamp-2 md:line-clamp-none">
                                             {session.type} Interview - {session.targetRole}
                                         </h3>
                                         <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-400">
@@ -245,7 +245,7 @@ export default function InterviewsPage() {
                                         </span>
                                     )}
                                     {getStatusBadge(session.status)}
-                                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition" />
+                                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition" />
                                 </div>
                             </div>
                         </Link>
@@ -263,10 +263,10 @@ export default function InterviewsPage() {
 
                         <div className="flex-1 overflow-y-auto p-6 pt-0 space-y-4">
                             {/* Video Interview Mode Banner */}
-                            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/20 to-pink-500/20 border border-indigo-500/30">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                        <Video className="w-5 h-5 text-purple-400" />
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                        <Video className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
                                         <h3 className="text-white font-medium">Mock Interview Mode</h3>
@@ -284,14 +284,14 @@ export default function InterviewsPage() {
                                         type="button"
                                         onClick={() => setNewSession({ ...newSession, type: 'MIXED' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'MIXED'
-                                            ? 'border-purple-500 bg-purple-500/10'
+                                            ? 'border-indigo-500 bg-indigo-500/10'
                                             : 'border-white/10 hover:border-white/20 bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'MIXED' ? 'bg-purple-500/20' : 'bg-gray-700'
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'MIXED' ? 'bg-indigo-500/20' : 'bg-gray-700'
                                                 }`}>
-                                                <Video className={`w-5 h-5 ${newSession.type === 'MIXED' ? 'text-purple-400' : 'text-gray-400'}`} />
+                                                <Video className={`w-5 h-5 ${newSession.type === 'MIXED' ? 'text-indigo-400' : 'text-gray-400'}`} />
                                             </div>
                                             <div className="flex-1">
                                                 <h4 className="text-white font-medium">HR + Technical</h4>
@@ -299,7 +299,7 @@ export default function InterviewsPage() {
                                                 <span className="text-xs text-gray-500 mt-1 inline-block">~12 questions</span>
                                             </div>
                                             {newSession.type === 'MIXED' && (
-                                                <CheckCircle className="w-5 h-5 text-purple-400" />
+                                                <CheckCircle className="w-5 h-5 text-indigo-400" />
                                             )}
                                         </div>
                                     </button>
@@ -361,7 +361,7 @@ export default function InterviewsPage() {
                                 <select
                                     value={newSession.targetRole}
                                     onChange={(e) => setNewSession({ ...newSession, targetRole: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-purple-500 [&>option]:bg-gray-800 [&>option]:text-white"
+                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-800 [&>option]:text-white"
                                 >
                                     {jobRoles.map(role => (
                                         <option key={role} value={role}>{role}</option>
@@ -374,7 +374,7 @@ export default function InterviewsPage() {
                                 <select
                                     value={newSession.difficulty}
                                     onChange={(e) => setNewSession({ ...newSession, difficulty: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-purple-500 [&>option]:bg-gray-800 [&>option]:text-white"
+                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-800 [&>option]:text-white"
                                 >
                                     <option value="EASY">Easy (5 questions)</option>
                                     <option value="MEDIUM">Medium (7 questions)</option>
@@ -393,7 +393,7 @@ export default function InterviewsPage() {
                             <button
                                 onClick={createSession}
                                 disabled={creating}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
                             >
                                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                                 Start Interview
@@ -424,7 +424,7 @@ export default function InterviewsPage() {
                                 </button>
                                 <Link
                                     href="/dashboard/billing"
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Get Credits

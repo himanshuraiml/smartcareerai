@@ -18,6 +18,7 @@ import {
     AlertTriangle
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const navItems = [
     { href: "/admin", icon: BarChart, label: "Analytics" },
@@ -53,8 +54,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (!isAuthorized) {
         return (
-            <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
         );
     }
@@ -65,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-white flex">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-900 dark:text-white flex">
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div
@@ -77,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Sidebar */}
             <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-64 glass border-r border-white/5
+        w-64 glass border-r border-gray-200 dark:border-white/5
         transform transition-transform duration-200 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
@@ -88,13 +89,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                                 <Shield className="w-5 h-5 text-white" />
                             </div>
-                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500">
+                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-600">
                                 Admin Portal
                             </span>
                         </Link>
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden text-gray-400 hover:text-white"
+                            className="lg:hidden text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -112,8 +113,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                     ${isActive
-                                            ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-white border border-red-500/30"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"}
+                                            ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-gray-900 dark:text-white border border-red-500/30"
+                                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"}
                   `}
                                 >
                                     <item.icon className="w-5 h-5" />
@@ -124,19 +125,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </nav>
 
                     {/* Admin User info */}
-                    <div className="p-4 border-t border-white/5">
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 mb-2">
+                    <div className="p-4 border-t border-gray-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 dark:bg-white/5 mb-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                                 <span className="text-white font-medium">A</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">Administrator</p>
-                                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Administrator</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                             </div>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                         >
                             <LogOut className="w-4 h-4" />
                             <span className="text-sm">Logout</span>
@@ -147,20 +148,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Main content */}
             <main className="flex-1 lg:ml-0 overflow-y-auto h-screen">
+                {/* Desktop header */}
+                <header className="hidden lg:flex items-center justify-between px-8 py-4 glass border-b border-gray-200 dark:border-white/5 sticky top-0 z-40">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
+                        {pathname === '/admin' ? 'Dashboard Overview' : pathname?.split('/').pop()?.replace(/-/g, ' ') || 'Admin'}
+                    </h1>
+                    <ThemeToggle />
+                </header>
+
                 {/* Mobile header */}
-                <header className="lg:hidden sticky top-0 z-30 glass border-b border-white/5">
+                <header className="lg:hidden sticky top-0 z-30 glass border-b border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between px-4 py-3">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="text-gray-400 hover:text-white"
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         >
                             <Menu className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Shield className="w-5 h-5 text-red-500" />
-                            <span className="font-bold text-white">Admin Portal</span>
+                            <span className="font-bold text-gray-900 dark:text-white">Admin Portal</span>
                         </div>
-                        <div className="w-6" />
+                        <ThemeToggle />
                     </div>
                 </header>
 

@@ -159,13 +159,13 @@ export default function UserManagementPage() {
                         placeholder="Search users by name or email..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500"
                     />
                 </div>
                 <select
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500 [&>option]:bg-gray-900"
+                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-900"
                 >
                     <option value="ALL">All Roles</option>
                     <option value="USER">User</option>
@@ -216,7 +216,7 @@ export default function UserManagementPage() {
                                             onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                                             className={`px-3 py-1 rounded text-xs font-bold border border-transparent focus:border-white/20 focus:outline-none cursor-pointer ${user.role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
                                                 user.role === 'INSTITUTION_ADMIN' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                    user.role === 'RECRUITER' ? 'bg-purple-500/20 text-purple-400' :
+                                                    user.role === 'RECRUITER' ? 'bg-indigo-500/20 text-indigo-400' :
                                                         'bg-blue-500/20 text-blue-400'
                                                 } [&>option]:bg-gray-900 [&>option]:text-white`}
                                         >

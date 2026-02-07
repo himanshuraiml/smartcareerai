@@ -409,8 +409,8 @@ export default function AdminEmailsPage() {
                     </div>
                     <div className="p-4 rounded-xl glass border border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                <FileText className="w-5 h-5 text-purple-400" />
+                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-indigo-400" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-white">{templates.length}</p>
@@ -446,7 +446,7 @@ export default function AdminEmailsPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
@@ -486,7 +486,7 @@ export default function AdminEmailsPage() {
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
                 </div>
             ) : (
                 <>
@@ -503,13 +503,13 @@ export default function AdminEmailsPage() {
                                         value={logsSearch}
                                         onChange={(e) => setLogsSearch(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && loadLogs()}
-                                        className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
                                 <select
                                     value={logsFilter.emailType}
                                     onChange={(e) => setLogsFilter({ ...logsFilter, emailType: e.target.value })}
-                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
                                     <option value="">All Types</option>
                                     <option value="INSTITUTION_ADMIN_INVITE">Institution Admin Invite</option>
@@ -522,7 +522,7 @@ export default function AdminEmailsPage() {
                                 <select
                                     value={logsFilter.status}
                                     onChange={(e) => setLogsFilter({ ...logsFilter, status: e.target.value })}
-                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
                                     <option value="">All Status</option>
                                     <option value="SENT">Sent</option>
@@ -664,7 +664,7 @@ export default function AdminEmailsPage() {
                                         });
                                         setShowTemplateModal(true);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90"
                                 >
                                     <Plus className="w-4 h-4" />
                                     New Template
@@ -675,14 +675,14 @@ export default function AdminEmailsPage() {
                                 {templates.map((template) => (
                                     <div
                                         key={template.id}
-                                        className="p-4 rounded-xl glass border border-white/5 hover:border-purple-500/30 transition-colors"
+                                        className="p-4 rounded-xl glass border border-white/5 hover:border-indigo-500/30 transition-colors"
                                     >
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <h3 className="text-white font-medium">{template.name}</h3>
                                                 <p className="text-sm text-gray-400">{template.subject}</p>
                                             </div>
-                                            <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
+                                            <span className="px-2 py-1 rounded text-xs font-medium bg-indigo-500/20 text-indigo-400">
                                                 {template.category}
                                             </span>
                                         </div>
@@ -747,7 +747,7 @@ export default function AdminEmailsPage() {
                                                     type="button"
                                                     onClick={() => setComposeForm({ ...composeForm, recipientType: option.id })}
                                                     className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${composeForm.recipientType === option.id
-                                                            ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
+                                                            ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400'
                                                             : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                                                         }`}
                                                 >
@@ -765,7 +765,7 @@ export default function AdminEmailsPage() {
                                         <select
                                             value={composeForm.templateId}
                                             onChange={(e) => setComposeForm({ ...composeForm, templateId: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         >
                                             <option value="" className="bg-gray-800 text-white">No template (compose manually)</option>
                                             {templates.map((t) => (
@@ -785,7 +785,7 @@ export default function AdminEmailsPage() {
                                                     value={composeForm.subject}
                                                     onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
                                                     required={!composeForm.templateId}
-                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     placeholder="Email subject..."
                                                 />
                                             </div>
@@ -796,7 +796,7 @@ export default function AdminEmailsPage() {
                                                     onChange={(e) => setComposeForm({ ...composeForm, content: e.target.value })}
                                                     required={!composeForm.templateId}
                                                     rows={8}
-                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     placeholder="Email content (HTML supported)..."
                                                 />
                                             </div>
@@ -808,7 +808,7 @@ export default function AdminEmailsPage() {
                                     <button
                                         type="submit"
                                         disabled={sending}
-                                        className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                                        className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
                                     >
                                         {sending ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -860,7 +860,7 @@ export default function AdminEmailsPage() {
                                             required
                                             value={templateForm.name}
                                             onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         />
                                     </div>
                                     <div>
@@ -868,7 +868,7 @@ export default function AdminEmailsPage() {
                                         <select
                                             value={templateForm.category}
                                             onChange={(e) => setTemplateForm({ ...templateForm, category: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         >
                                             <option value="GENERAL">General</option>
                                             <option value="NEWSLETTER">Newsletter</option>
@@ -886,7 +886,7 @@ export default function AdminEmailsPage() {
                                         required
                                         value={templateForm.subject}
                                         onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Use {{variable}} for dynamic content"
                                     />
                                 </div>
@@ -896,7 +896,7 @@ export default function AdminEmailsPage() {
                                         type="text"
                                         value={templateForm.variables}
                                         onChange={(e) => setTemplateForm({ ...templateForm, variables: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="e.g., userName, companyName"
                                     />
                                 </div>
@@ -907,7 +907,7 @@ export default function AdminEmailsPage() {
                                         rows={10}
                                         value={templateForm.htmlContent}
                                         onChange={(e) => setTemplateForm({ ...templateForm, htmlContent: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="<p>Hello {{userName}},</p>..."
                                     />
                                 </div>
@@ -917,7 +917,7 @@ export default function AdminEmailsPage() {
                                         rows={4}
                                         value={templateForm.textContent}
                                         onChange={(e) => setTemplateForm({ ...templateForm, textContent: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Plain text version..."
                                     />
                                 </div>
@@ -932,7 +932,7 @@ export default function AdminEmailsPage() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600"
+                                        className="px-6 py-2 rounded-lg bg-indigo-500 text-white font-medium hover:bg-indigo-600"
                                     >
                                         {editingTemplate ? 'Update Template' : 'Create Template'}
                                     </button>

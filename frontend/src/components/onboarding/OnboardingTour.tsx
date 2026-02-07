@@ -58,7 +58,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         // Onboarding tour is disabled - it was blocking UI on admin pages
         // Users can still manually trigger the tour via startTour() if needed
-        const seen = localStorage.getItem("medhiva_tour_completed");
+        const seen = localStorage.getItem("placenxt_tour_completed");
         if (!seen) {
             setHasSeenTour(false);
             // Auto-start disabled to prevent blocking admin/billing and other pages
@@ -73,7 +73,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     const completeTour = () => {
         setShowTour(false);
         setHasSeenTour(true);
-        localStorage.setItem("medhiva_tour_completed", "true");
+        localStorage.setItem("placenxt_tour_completed", "true");
     };
 
     const nextStep = () => {
@@ -115,7 +115,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-md"
                         >
-                            <div className="p-6 rounded-2xl glass-premium border border-purple-500/30 neon-purple">
+                            <div className="p-6 rounded-2xl glass-premium border border-indigo-500/30 neon-indigo">
                                 {/* Close Button */}
                                 <button
                                     onClick={completeTour}
@@ -125,7 +125,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                 </button>
 
                                 {/* Icon */}
-                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4">
+                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center mb-4">
                                     <Sparkles className="w-7 h-7 text-white" />
                                 </div>
 
@@ -138,7 +138,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                     {TOUR_STEPS.map((_, i) => (
                                         <div
                                             key={i}
-                                            className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? "bg-purple-500" : "bg-gray-600"
+                                            className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? "bg-indigo-500" : "bg-gray-600"
                                                 }`}
                                         />
                                     ))}
@@ -156,7 +156,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                     </button>
                                     <button
                                         onClick={nextStep}
-                                        className="flex items-center gap-1 px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition"
+                                        className="flex items-center gap-1 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition"
                                     >
                                         {currentStep === TOUR_STEPS.length - 1 ? "Get Started" : "Next"}
                                         <ChevronRight className="w-4 h-4" />

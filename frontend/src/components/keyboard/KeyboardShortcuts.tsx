@@ -153,7 +153,7 @@ export default function KeyboardShortcuts() {
                                                 setSearch("");
                                             }}
                                             className={`w-full flex items-center justify-between p-3 rounded-lg transition ${index === selectedIndex
-                                                    ? "bg-purple-500/20 text-white"
+                                                    ? "bg-indigo-500/20 text-white"
                                                     : "text-gray-300 hover:bg-white/5"
                                                 }`}
                                         >

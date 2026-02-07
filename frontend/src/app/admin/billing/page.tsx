@@ -432,8 +432,8 @@ export default function AdminBillingPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-4 rounded-xl glass border border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                <Users className="w-5 h-5 text-purple-400" />
+                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                <Users className="w-5 h-5 text-indigo-400" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-white">{stats.totalSubscriptions}</p>
@@ -488,7 +488,7 @@ export default function AdminBillingPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
@@ -528,7 +528,7 @@ export default function AdminBillingPage() {
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
                 </div>
             ) : (
                 <>
@@ -542,7 +542,7 @@ export default function AdminBillingPage() {
                                         resetPlanForm();
                                         setShowPlanModal(true);
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90"
                                 >
                                     <Plus className="w-4 h-4" />
                                     New Plan
@@ -614,7 +614,7 @@ export default function AdminBillingPage() {
                                                     </span>
                                                 )}
                                                 {plan.features?.interviews && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-purple-500/20 text-purple-300">
+                                                    <span className="px-2 py-1 rounded text-xs bg-indigo-500/20 text-indigo-300">
                                                         {plan.features.interviews === 'unlimited' ? '∞' : plan.features.interviews} Interviews
                                                     </span>
                                                 )}
@@ -658,7 +658,7 @@ export default function AdminBillingPage() {
                                 <button
                                     onClick={handleSaveCreditPricing}
                                     disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
                                 >
                                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     Save Changes
@@ -683,7 +683,7 @@ export default function AdminBillingPage() {
                                                         ...editedPricing,
                                                         perCredit: { ...editedPricing.perCredit, [key]: e.target.value }
                                                     })}
-                                                    className="w-full pl-8 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full pl-8 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 />
                                             </div>
                                         </div>
@@ -713,7 +713,7 @@ export default function AdminBillingPage() {
                                                                 bundles: { ...editedPricing.bundles, [creditType]: newBundles }
                                                             });
                                                         }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     />
                                                 </div>
                                                 <div>
@@ -729,7 +729,7 @@ export default function AdminBillingPage() {
                                                                 bundles: { ...editedPricing.bundles, [creditType]: newBundles }
                                                             });
                                                         }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     />
                                                 </div>
                                                 <div>
@@ -745,7 +745,7 @@ export default function AdminBillingPage() {
                                                                 bundles: { ...editedPricing.bundles, [creditType]: newBundles }
                                                             });
                                                         }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         placeholder="e.g., 20%"
                                                     />
                                                 </div>
@@ -828,7 +828,7 @@ export default function AdminBillingPage() {
                                 <button
                                     onClick={handleSaveBillingSettings}
                                     disabled={saving}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
                                 >
                                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     Save Settings
@@ -881,7 +881,7 @@ export default function AdminBillingPage() {
                                             required
                                             value={planForm.name}
                                             onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="e.g., starter"
                                         />
                                     </div>
@@ -892,7 +892,7 @@ export default function AdminBillingPage() {
                                             required
                                             value={planForm.displayName}
                                             onChange={(e) => setPlanForm({ ...planForm, displayName: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="e.g., Starter Plan"
                                         />
                                     </div>
@@ -905,7 +905,7 @@ export default function AdminBillingPage() {
                                             type="number"
                                             value={planForm.priceMonthly}
                                             onChange={(e) => setPlanForm({ ...planForm, priceMonthly: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="0"
                                         />
                                     </div>
@@ -915,7 +915,7 @@ export default function AdminBillingPage() {
                                             type="number"
                                             value={planForm.priceYearly}
                                             onChange={(e) => setPlanForm({ ...planForm, priceYearly: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="0"
                                         />
                                     </div>
@@ -930,7 +930,7 @@ export default function AdminBillingPage() {
                                                 type="text"
                                                 value={planForm.resumeReviews}
                                                 onChange={(e) => setPlanForm({ ...planForm, resumeReviews: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="3"
                                             />
                                         </div>
@@ -940,7 +940,7 @@ export default function AdminBillingPage() {
                                                 type="text"
                                                 value={planForm.interviews}
                                                 onChange={(e) => setPlanForm({ ...planForm, interviews: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="1"
                                             />
                                         </div>
@@ -950,7 +950,7 @@ export default function AdminBillingPage() {
                                                 type="text"
                                                 value={planForm.skillTests}
                                                 onChange={(e) => setPlanForm({ ...planForm, skillTests: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="3"
                                             />
                                         </div>
@@ -961,7 +961,7 @@ export default function AdminBillingPage() {
                                                 type="checkbox"
                                                 checked={planForm.jobAlerts}
                                                 onChange={(e) => setPlanForm({ ...planForm, jobAlerts: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
+                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             Job Alerts
                                         </label>
@@ -970,7 +970,7 @@ export default function AdminBillingPage() {
                                                 type="checkbox"
                                                 checked={planForm.prioritySupport}
                                                 onChange={(e) => setPlanForm({ ...planForm, prioritySupport: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
+                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             Priority Support
                                         </label>
@@ -979,7 +979,7 @@ export default function AdminBillingPage() {
                                                 type="checkbox"
                                                 checked={planForm.apiAccess}
                                                 onChange={(e) => setPlanForm({ ...planForm, apiAccess: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
+                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             API Access
                                         </label>
@@ -993,7 +993,7 @@ export default function AdminBillingPage() {
                                             type="text"
                                             value={planForm.razorpayPlanId}
                                             onChange={(e) => setPlanForm({ ...planForm, razorpayPlanId: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="plan_xxxxx"
                                         />
                                     </div>
@@ -1003,7 +1003,7 @@ export default function AdminBillingPage() {
                                             type="number"
                                             value={planForm.sortOrder}
                                             onChange={(e) => setPlanForm({ ...planForm, sortOrder: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         />
                                     </div>
                                 </div>
@@ -1013,7 +1013,7 @@ export default function AdminBillingPage() {
                                         type="checkbox"
                                         checked={planForm.isActive}
                                         onChange={(e) => setPlanForm({ ...planForm, isActive: e.target.checked })}
-                                        className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
+                                        className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
                                     />
                                     Plan is Active
                                 </label>
@@ -1029,7 +1029,7 @@ export default function AdminBillingPage() {
                                     <button
                                         type="submit"
                                         disabled={saving}
-                                        className="px-6 py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 disabled:opacity-50"
+                                        className="px-6 py-2 rounded-lg bg-indigo-500 text-white font-medium hover:bg-indigo-600 disabled:opacity-50"
                                     >
                                         {saving ? 'Saving...' : editingPlan ? 'Update Plan' : 'Create Plan'}
                                     </button>
