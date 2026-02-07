@@ -2,6 +2,7 @@
     "name": "@smartcareer/billing-service",
     "version": "1.0.0",
     "private": true,
+    "packageManager": "npm@10.8.2",
     "scripts": {
         "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
