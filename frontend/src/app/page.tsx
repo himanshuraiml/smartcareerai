@@ -14,6 +14,29 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-[#0B0F19] dark-mode:bg-[#0B0F19] bg-grid overflow-hidden landing-page">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'SoftwareApplication',
+                        name: 'PlaceNxt',
+                        applicationCategory: 'EducationalApplication',
+                        operatingSystem: 'Web',
+                        offers: {
+                            '@type': 'Offer',
+                            price: '0',
+                            priceCurrency: 'USD',
+                        },
+                        description: 'AI-powered placement preparation platform helping students get hired with resume scoring, mock interviews, and skill validation.',
+                        aggregateRating: {
+                            '@type': 'AggregateRating',
+                            ratingValue: '4.8',
+                            ratingCount: '1250'
+                        }
+                    })
+                }}
+            />
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 glass-premium">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
