@@ -10,6 +10,17 @@ import { logger } from './utils/logger';
 
 dotenv.config();
 
+// Catch startup errors that would otherwise cause silent SIGTERM
+process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught Exception:', err.message, err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('[FATAL] Unhandled Rejection:', reason);
+    process.exit(1);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3010;
 

@@ -1,10 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Loader2, Building2, MapPin, Briefcase, Link as LinkIcon, DollarSign } from 'lucide-react';
+import { X, Loader2, Building2, MapPin, Briefcase, Link as LinkIcon, DollarSign, ChevronRight, Diamond } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+const STATUS_OPTIONS = [
+    { value: 'SAVED', label: 'Saved', color: 'bg-gray-500/20 text-gray-400' },
+    { value: 'APPLIED', label: 'Applied', color: 'bg-violet-500/20 text-violet-400' },
+    { value: 'SCREENING', label: 'Screening', color: 'bg-amber-500/20 text-amber-400' },
+    { value: 'INTERVIEWING', label: 'Interviewing', color: 'bg-blue-500/20 text-blue-400' },
+    { value: 'OFFER', label: 'Offer', color: 'bg-emerald-500/20 text-emerald-400' },
+];
 
 interface AddApplicationDialogProps {
     isOpen: boolean;
@@ -14,6 +23,8 @@ interface AddApplicationDialogProps {
 
 export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: AddApplicationDialogProps) {
     const { accessToken } = useAuthStore();
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -53,7 +64,6 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
             if (response.ok) {
                 onSuccess();
                 onClose();
-                // Reset form
                 setFormData({
                     title: '',
                     company: '',
@@ -74,123 +84,190 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         }
     };
 
+    const currentStatus = STATUS_OPTIONS.find(s => s.value === formData.status);
+
+    const cardBg = isLight ? '#ffffff' : '#111827';
+    const inputBg = isLight ? '#f3f4f6' : '#1f2937';
+    const inputBorder = isLight ? '#d1d5db' : '#374151';
+    const textColor = isLight ? '#111827' : '#f9fafb';
+    const labelColor = isLight ? '#6b7280' : '#9ca3af';
+    const iconColor = isLight ? '#9ca3af' : '#6b7280';
+    const placeholderNote = isLight ? '#9ca3af' : '#6b7280';
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-xl shadow-xl flex flex-col max-h-[90vh]">
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white">Track New Application</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        >
+            <div
+                className="w-full max-w-[680px] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] border"
+                style={{
+                    background: cardBg,
+                    color: textColor,
+                    borderColor: inputBorder,
+                }}
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between px-8 pt-8 pb-2">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight" style={{ color: textColor }}>
+                            Track New Application
+                        </h2>
+                        <p className="text-sm mt-1" style={{ color: labelColor }}>
+                            Add a new role to your pipeline and get AI insights.
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className={`p-1.5 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}
+                        style={{ color: labelColor }}
+                    >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-                    <div className="space-y-4">
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+                    {/* Row 1: Job Title + Company */}
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium text-gray-300 mb-1 block">Job Title *</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Job Title <span className="text-violet-500">*</span>
+                            </label>
                             <div className="relative">
-                                <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: iconColor }} />
                                 <input
                                     type="text"
                                     required
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                    placeholder="e.g. Senior Frontend Engineer"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
+                                    placeholder="e.g. Senior Designer"
                                 />
                             </div>
                         </div>
-
                         <div>
-                            <label className="text-sm font-medium text-gray-300 mb-1 block">Company *</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Company <span className="text-violet-500">*</span>
+                            </label>
                             <div className="relative">
-                                <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: iconColor }} />
                                 <input
                                     type="text"
                                     required
                                     value={formData.company}
                                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                                    className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                    placeholder="e.g. Google"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
+                                    placeholder="e.g. Airbnb"
                                 />
                             </div>
                         </div>
+                    </div>
 
+                    {/* Row 2: Location + Status */}
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium text-gray-300 mb-1 block">Location</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Location
+                            </label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: iconColor }} />
                                 <input
                                     type="text"
                                     value={formData.location}
                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                    placeholder="e.g. Remote / New York"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
+                                    placeholder="Remote / New York"
                                 />
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-gray-300 mb-1 block">Status</label>
+                        <div>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Status
+                            </label>
+                            <div className="relative">
+                                <Diamond className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
                                 <select
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full pl-10 pr-24 py-2.5 rounded-xl text-sm appearance-none transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
                                 >
-                                    <option value="SAVED" className="bg-gray-900">Saved</option>
-                                    <option value="APPLIED" className="bg-gray-900">Applied</option>
-                                    <option value="SCREENING" className="bg-gray-900">Screening</option>
-                                    <option value="INTERVIEWING" className="bg-gray-900">Interviewing</option>
-                                    <option value="OFFER" className="bg-gray-900">Offer</option>
+                                    {STATUS_OPTIONS.map(opt => (
+                                        <option key={opt.value} value={opt.value} style={{ background: cardBg }}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
                                 </select>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-300 mb-1 block">Salary (Optional)</label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-                                    <input
-                                        type="number"
-                                        value={formData.salaryMin}
-                                        onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
-                                        className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                        placeholder="e.g. 120000"
-                                    />
-                                </div>
+                                {currentStatus && (
+                                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md pointer-events-none ${currentStatus.color}`}>
+                                        {currentStatus.label}
+                                    </span>
+                                )}
                             </div>
                         </div>
+                    </div>
 
+                    {/* Row 3: Salary + Job Link */}
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium text-gray-300 mb-1 block">Job Link (Optional)</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Salary
+                            </label>
                             <div className="relative">
-                                <LinkIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: iconColor }} />
+                                <input
+                                    type="number"
+                                    value={formData.salaryMin}
+                                    onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
+                                    placeholder="$120k"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+                                Job Link
+                            </label>
+                            <div className="relative">
+                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: iconColor }} />
                                 <input
                                     type="url"
                                     value={formData.sourceUrl}
                                     onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
-                                    className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                    placeholder="https://..."
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                                    style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: textColor }}
+                                    placeholder="https://linkedin.com/jobs/..."
                                 />
                             </div>
                         </div>
                     </div>
                 </form>
 
-                <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+                {/* Footer */}
+                <div className="px-8 pb-8 pt-4 flex items-center justify-end gap-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg hover:bg-white/5 text-gray-300 transition-colors"
+                        className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${isLight ? 'hover:bg-gray-100' : 'hover:bg-white/10'}`}
+                        style={{ color: labelColor }}
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-6 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-violet-600/25"
                     >
-                        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : null}
                         Add Application
+                        {!loading && <ChevronRight className="w-4 h-4" />}
                     </button>
                 </div>
             </div>
