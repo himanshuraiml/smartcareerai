@@ -202,7 +202,7 @@ export default function DashboardLayout({
         (pathname?.includes('/room') || pathname?.includes('/hr-room') || pathname?.includes('/mixed-room'));
 
     return (
-        <div className="min-h-screen flex bg-gray-950">
+        <div className="h-screen overflow-hidden flex bg-gray-950">
             {/* Hide sidebar entirely when in interview room */}
             {!isInterviewRoom && (
                 <>
@@ -224,15 +224,15 @@ export default function DashboardLayout({
                         <div className="flex flex-col h-full">
                             {/* Logo */}
                             <div className="p-6 flex items-center justify-between">
-                                <Link href="/dashboard" className="flex items-center gap-2">
+                                <Link href="/dashboard" className="flex items-center gap-3">
                                     <Image
                                         src="/logo.svg"
                                         alt="PlaceNxt Logo"
-                                        width={32}
-                                        height={32}
-                                        className="w-8 h-8 rounded-lg"
+                                        width={40}
+                                        height={40}
+                                        className="w-10 h-10 rounded-xl"
                                     />
-                                    <span className="text-lg font-bold gradient-text">PlaceNxt</span>
+                                    <span className="text-2xl font-bold gradient-text tracking-tight">PlaceNxt</span>
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
@@ -374,7 +374,7 @@ export default function DashboardLayout({
                                     <Menu className="w-6 h-6" />
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold gradient-text">PlaceNxt</span>
+                                    <span className="text-xl font-bold gradient-text">PlaceNxt</span>
                                 </div>
                                 <ThemeToggle />
                             </div>
