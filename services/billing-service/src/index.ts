@@ -1,14 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { subscriptionRouter } from './routes/subscription.routes';
 import { creditRouter } from './routes/credit.routes';
 import { webhookRouter } from './routes/webhook.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
-dotenv.config();
 
 // Catch startup errors that would otherwise cause silent SIGTERM
 process.on('uncaughtException', (err) => {

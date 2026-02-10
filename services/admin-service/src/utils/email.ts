@@ -12,6 +12,7 @@ interface EmailOptions {
     templateId?: string;
     metadata?: any;
     sentBy?: string;
+    throwOnError?: boolean;
 }
 
 interface BulkEmailOptions {
@@ -106,7 +107,7 @@ class EmailService {
             secure: smtpPort === 465,
             auth: {
                 user: config.smtp_user as string,
-                pass: config.smtp_pass as string
+                pass: String(config.smtp_pass)
             }
         });
     }
@@ -166,11 +167,17 @@ class EmailService {
                     sentBy: options.sentBy
                 });
                 logger.warn('Email not sent - SMTP not configured');
+
+                if (options.throwOnError) {
+                    throw new Error('SMTP configuration missing');
+                }
+
                 return false;
             }
 
             const config = await this.getSmtpConfig();
-            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || 'noreply@placenxt.com';
+            const smtpUser = (config?.smtp_user as string) || process.env.SMTP_USER;
+            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || smtpUser || 'noreply@placenxt.com';
 
             await transporter.sendMail({
                 from,
@@ -206,6 +213,11 @@ class EmailService {
                 sentBy: options.sentBy
             });
             logger.error('Failed to send email:', error);
+
+            if (options.throwOnError) {
+                throw error;
+            }
+
             return false;
         }
     }
@@ -218,7 +230,8 @@ class EmailService {
         institutionName: string,
         inviteToken: string,
         tempPassword: string,
-        sentBy?: string
+        sentBy?: string,
+        throwOnError?: boolean
     ): Promise<boolean> {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3100';
         const inviteLink = `${frontendUrl}/admin-invite?token=${inviteToken}`;
@@ -243,7 +256,8 @@ This invitation expires in 7 days.
             text,
             emailType: 'INSTITUTION_ADMIN_INVITE',
             metadata: { institutionName, inviteLink },
-            sentBy
+            sentBy,
+            throwOnError
         });
     }
 
@@ -257,7 +271,8 @@ This invitation expires in 7 days.
         content: string,
         userId?: string,
         sentBy?: string,
-        templateId?: string
+        templateId?: string,
+        throwOnError?: boolean
     ): Promise<boolean> {
         const html = this.getNewsletterTemplate(userName, subject, content);
 
@@ -270,7 +285,8 @@ This invitation expires in 7 days.
             emailType: 'NEWSLETTER',
             templateId,
             metadata: { userName },
-            sentBy
+            sentBy,
+            throwOnError
         });
     }
 
@@ -287,7 +303,8 @@ This invitation expires in 7 days.
         ctaLink: string,
         userId?: string,
         sentBy?: string,
-        templateId?: string
+        templateId?: string,
+        throwOnError?: boolean
     ): Promise<boolean> {
         const html = this.getPromotionalTemplate(userName, headline, content, ctaText, ctaLink);
 
@@ -300,7 +317,8 @@ This invitation expires in 7 days.
             emailType: 'PROMOTIONAL',
             templateId,
             metadata: { userName, headline, ctaText, ctaLink },
-            sentBy
+            sentBy,
+            throwOnError
         });
     }
 
@@ -311,7 +329,8 @@ This invitation expires in 7 days.
         email: string,
         userName: string,
         institutionName?: string,
-        sentBy?: string
+        sentBy?: string,
+        throwOnError?: boolean
     ): Promise<boolean> {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3100';
         const html = this.getStudentWelcomeTemplate(userName, institutionName, frontendUrl);
@@ -323,7 +342,8 @@ This invitation expires in 7 days.
             text: `Welcome to PlaceNxt, ${userName}! Start building your career today.`,
             emailType: 'STUDENT_WELCOME',
             metadata: { userName, institutionName },
-            sentBy
+            sentBy,
+            throwOnError
         });
     }
 
@@ -334,7 +354,8 @@ This invitation expires in 7 days.
         email: string,
         userName: string,
         companyName: string,
-        sentBy?: string
+        sentBy?: string,
+        throwOnError?: boolean
     ): Promise<boolean> {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3100';
         const html = this.getRecruiterWelcomeTemplate(userName, companyName, frontendUrl);
@@ -346,7 +367,8 @@ This invitation expires in 7 days.
             text: `Welcome to PlaceNxt, ${userName}! Start finding talented candidates for ${companyName}.`,
             emailType: 'RECRUITER_WELCOME',
             metadata: { userName, companyName },
-            sentBy
+            sentBy,
+            throwOnError
         });
     }
 

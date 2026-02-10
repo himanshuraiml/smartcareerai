@@ -112,6 +112,125 @@ export class InstitutionsController {
     }
 
     /**
+     * Send invitation to institution admin (create if not exists)
+     */
+    async sendInvite(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { institutionId } = req.params;
+            const { email } = req.body;
+            const adminUserId = req.headers['x-user-id'] as string;
+
+            if (!email) {
+                throw new AppError('Email is required', 400);
+            }
+
+            const institution = await prisma.institution.findUnique({
+                where: { id: institutionId },
+                include: { admins: true }
+            });
+
+            if (!institution) {
+                throw new AppError('Institution not found', 404);
+            }
+
+            // Generate temp info
+            const tempPassword = generateTempPassword();
+            const inviteToken = generateInviteToken();
+            const passwordHash = await bcrypt.hash(tempPassword, 12);
+            const tokenExpires = new Date();
+            tokenExpires.setDate(tokenExpires.getDate() + 7);
+
+            let admin = institution.admins[0];
+
+            if (admin) {
+                // Update existing admin
+                admin = await prisma.user.update({
+                    where: { id: admin.id },
+                    data: {
+                        email: email, // Update email if changed
+                        passwordHash,
+                        verifyToken: inviteToken,
+                        resetExpires: tokenExpires,
+                        isVerified: false
+                    }
+                });
+            } else {
+                // Check if user with this email already exists
+                const existingUser = await prisma.user.findUnique({ where: { email } });
+
+                if (existingUser) {
+                    // Promote existing user to admin
+                    admin = await prisma.user.update({
+                        where: { id: existingUser.id },
+                        data: {
+                            role: 'INSTITUTION_ADMIN',
+                            adminForInstitutionId: institution.id,
+                            // Don't reset password/verification if they are already a user, unless we want to force re-verification
+                            // For now, let's treat them as a new admin who needs to set up
+                            passwordHash,
+                            verifyToken: inviteToken,
+                            resetExpires: tokenExpires,
+                            isVerified: false
+                        }
+                    });
+                } else {
+                    // Create new user
+                    admin = await prisma.user.create({
+                        data: {
+                            email,
+                            passwordHash,
+                            role: 'INSTITUTION_ADMIN',
+                            adminForInstitutionId: institution.id,
+                            isVerified: false,
+                            verifyToken: inviteToken,
+                            resetExpires: tokenExpires
+                        }
+                    });
+                }
+            }
+
+            // Send invite email
+            const inviteSent = await emailService.sendAdminInvite(
+                admin.email,
+                institution.name,
+                inviteToken,
+                tempPassword,
+                adminUserId,
+                true // throwOnError: true
+            );
+
+            if (!inviteSent) {
+                // This shouldn't be reached if throwOnError is true, but just in case
+                throw new AppError('Failed to send invite email', 500);
+            }
+
+            res.json({
+                success: true,
+                message: `Invitation sent to ${admin.email}`
+            });
+        } catch (error: any) {
+            // Retrieve specific SMTP errors
+            if (error.code === 'EAUTH' || error.responseCode === 535) {
+                return next(new AppError('SMTP Authentication Failed: Invalid username or password.', 400));
+            }
+            if (error.code === 'ESOCKET' || error.code === 'ECONNREFUSED') {
+                return next(new AppError('SMTP Connection Failed: Check host and port settings.', 400));
+            }
+            if (error.code === 'EENVELOPE') {
+                return next(new AppError('SMTP Error: Invalid sender or recipient address.', 400));
+            }
+
+            // If it's already an AppError, pass it through
+            if (error instanceof AppError) {
+                return next(error);
+            }
+
+            // Otherwise, wrap it or pass it
+            next(new AppError(`Failed to send invite: ${error.message}`, 500));
+        }
+    }
+
+    /**
      * Resend invitation to institution admin
      */
     async resendInvite(req: Request, res: Response, next: NextFunction) {
@@ -168,6 +287,76 @@ export class InstitutionsController {
             res.json({
                 success: true,
                 message: `Invitation resent to ${admin.email}`
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Set credentials directly for institution admin (when email fails)
+     * This allows super admin to create/reset credentials without sending email
+     */
+    async setAdminCredentials(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { institutionId } = req.params;
+            const { email, password } = req.body;
+
+            if (!email || !password) {
+                throw new AppError('Email and password are required', 400);
+            }
+
+            if (password.length < 8) {
+                throw new AppError('Password must be at least 8 characters', 400);
+            }
+
+            const institution = await prisma.institution.findUnique({
+                where: { id: institutionId },
+                include: { admins: true }
+            });
+
+            if (!institution) {
+                throw new AppError('Institution not found', 404);
+            }
+
+            const passwordHash = await bcrypt.hash(password, 12);
+
+            let admin = institution.admins[0];
+
+            if (admin) {
+                // Update existing admin
+                admin = await prisma.user.update({
+                    where: { id: admin.id },
+                    data: {
+                        email,
+                        passwordHash,
+                        isVerified: true, // Mark as verified since credentials are set directly
+                        verifyToken: null,
+                        resetExpires: null
+                    }
+                });
+            } else {
+                // Create new admin
+                admin = await prisma.user.create({
+                    data: {
+                        email,
+                        passwordHash,
+                        role: 'INSTITUTION_ADMIN',
+                        adminForInstitutionId: institution.id,
+                        isVerified: true
+                    }
+                });
+            }
+
+            logger.info(`Credentials set directly for institution admin: ${email}`);
+
+            res.json({
+                success: true,
+                message: `Credentials set for ${email}. They can now login directly.`,
+                data: {
+                    email: admin.email,
+                    isVerified: admin.isVerified
+                }
             });
         } catch (error) {
             next(error);

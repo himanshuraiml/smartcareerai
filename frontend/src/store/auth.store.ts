@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
+// Singleton promise for refresh token rotation to prevent race conditions
+let refreshPromise: Promise<boolean> | null = null;
+
 interface User {
     id: string;
     email: string;
@@ -12,6 +15,8 @@ interface User {
     role?: string;
     targetJobRoleId?: string | null;
     targetJobRole?: { id: string; title: string; category: string } | null;
+    institutionId?: string | null;
+    institution?: { id: string; name: string } | null;
 }
 
 interface AuthState {
@@ -21,6 +26,7 @@ interface AuthState {
     isLoading: boolean;
     error: string | null;
     login: (email: string, password: string) => Promise<boolean>;
+    googleLogin: (idToken: string) => Promise<boolean>;
     register: (email: string, password: string, name?: string, targetJobRoleId?: string) => Promise<boolean>;
     logout: () => void;
     refreshAccessToken: () => Promise<boolean>;
@@ -65,6 +71,38 @@ export const useAuthStore = create<AuthState>()(
                 } catch (error) {
                     set({
                         error: error instanceof Error ? error.message : 'Login failed',
+                        isLoading: false,
+                    });
+                    return false;
+                }
+            },
+
+            googleLogin: async (idToken: string) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await fetch(`${API_URL}/auth/google`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error?.message || 'Google login failed');
+                    }
+
+                    set({
+                        user: data.data.user,
+                        accessToken: data.data.accessToken,
+                        refreshToken: data.data.refreshToken,
+                        isLoading: false,
+                    });
+
+                    return true;
+                } catch (error) {
+                    set({
+                        error: error instanceof Error ? error.message : 'Google login failed',
                         isLoading: false,
                     });
                     return false;
@@ -128,43 +166,53 @@ export const useAuthStore = create<AuthState>()(
             },
 
             refreshAccessToken: async () => {
-                const { refreshToken } = get();
-                if (!refreshToken) return false;
-
-                try {
-                    const response = await fetch(`${API_URL}/auth/refresh-token`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ refreshToken }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        // Only logout on auth-related errors (401, 403)
-                        // Don't logout on server errors (500) or network issues
-                        if (response.status === 401 || response.status === 403) {
-                            console.log('[Auth] Refresh token invalid, logging out');
-                            set({
-                                user: null,
-                                accessToken: null,
-                                refreshToken: null,
-                            });
-                        }
-                        return false;
-                    }
-
-                    set({
-                        accessToken: data.data.accessToken,
-                        refreshToken: data.data.refreshToken,
-                    });
-
-                    return true;
-                } catch (error) {
-                    // Network error - don't logout, just return false
-                    console.error('[Auth] Network error during token refresh:', error);
-                    return false;
+                // If a refresh is already in progress, return the existing promise
+                if (refreshPromise) {
+                    return refreshPromise;
                 }
+
+                refreshPromise = (async () => {
+                    const { refreshToken } = get();
+                    if (!refreshToken) return false;
+
+                    try {
+                        const response = await fetch(`${API_URL}/auth/refresh-token`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refreshToken }),
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            // Only logout on auth-related errors (401, 403)
+                            // Don't logout on server errors (500) or network issues
+                            if (response.status === 401 || response.status === 403) {
+                                set({
+                                    user: null,
+                                    accessToken: null,
+                                    refreshToken: null,
+                                });
+                            }
+                            return false;
+                        }
+
+                        set({
+                            accessToken: data.data.accessToken,
+                            refreshToken: data.data.refreshToken,
+                        });
+
+                        return true;
+                    } catch (error) {
+                        // Network error - don't logout, just return false
+                        console.error('[Auth] Network error during token refresh:', error);
+                        return false;
+                    } finally {
+                        refreshPromise = null;
+                    }
+                })();
+
+                return refreshPromise;
             },
 
             clearError: () => set({ error: null }),

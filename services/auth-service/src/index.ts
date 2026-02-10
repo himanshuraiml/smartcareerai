@@ -1,13 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { authRouter } from './routes/auth.routes';
 import { adminRouter } from './routes/admin.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

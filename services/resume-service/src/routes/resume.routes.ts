@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { ResumeController } from '../controllers/resume.controller';
+import { BuilderController } from '../controllers/builder.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 const resumeController = new ResumeController();
+const builderController = new BuilderController();
 
 // Multer configuration for file uploads
 const storage = multer.memoryStorage();
@@ -27,7 +29,13 @@ const upload = multer({
     },
 });
 
-// Routes
+// Builder Routes (must be before :id routes)
+router.get('/templates', authMiddleware, builderController.getTemplates);
+router.post('/builder/optimize', authMiddleware, builderController.optimize);
+router.post('/builder/bullets', authMiddleware, builderController.generateBullets);
+router.post('/builder/tailor', authMiddleware, builderController.tailor);
+
+// Resume Routes
 router.post('/upload', authMiddleware, upload.single('resume'), resumeController.upload);
 router.get('/', authMiddleware, resumeController.getAll);
 router.get('/:id', authMiddleware, resumeController.getById);

@@ -246,11 +246,14 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
         }
     },
     onProxyRes: (proxyRes, req) => {
-        const origin = req.headers.origin;
-        if (origin) {
-            proxyRes.headers['access-control-allow-origin'] = origin;
-            proxyRes.headers['access-control-allow-credentials'] = 'true';
-        }
+        // Strip upstream CORS headers to let Gateway's cors() middleware handle it
+        delete proxyRes.headers['access-control-allow-origin'];
+        delete proxyRes.headers['access-control-allow-methods'];
+        delete proxyRes.headers['access-control-allow-headers'];
+        delete proxyRes.headers['access-control-allow-credentials'];
+
+        // Add request ID for tracing
+        proxyRes.headers['x-request-id'] = (req as any).id || 'unknown';
     },
 });
 

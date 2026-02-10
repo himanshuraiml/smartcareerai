@@ -2,7 +2,7 @@ import Groq from 'groq-sdk';
 import { logger } from './logger';
 
 // Configurable AI model - switch between high quality and fast/free models
-const AI_MODEL_NAME = process.env.AI_MODEL_NAME || 'llama-3.1-70b-versatile';
+const AI_MODEL_NAME = process.env.AI_MODEL_NAME || 'llama-3.3-70b-versatile';
 
 // Initialize Groq lazily to ensure env is loaded first
 let groq: Groq | null = null;

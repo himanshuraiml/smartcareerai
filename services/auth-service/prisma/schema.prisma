@@ -28,6 +28,7 @@ model User {
   role         UserRole  @default(USER)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
+  googleId     String?   @unique @map("google_id")
 
   // Relations
   resumes            Resume[]
@@ -653,4 +654,61 @@ model Message {
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+}
+
+model SystemSettings {
+  id           String   @id @default(uuid())
+  settingKey   String   @unique @map("setting_key")
+  settingValue Json     @map("setting_value")
+  description  String?
+  updatedBy    String?  @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+// ============================================
+// ACTIVITY LOG (System Events)
+// ============================================
+
+model ActivityLog {
+  id        String         @id @default(uuid())
+  type      ActivityType
+  message   String
+  userId    String?        @map("user_id")
+  userEmail String?        @map("user_email")
+  metadata  Json?
+  ipAddress String?        @map("ip_address")
+  status    ActivityStatus @default(SUCCESS)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+enum ActivityType {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGOUT
+  PASSWORD_RESET
+  RESUME_UPLOAD
+  RESUME_ANALYSIS
+  INTERVIEW_START
+  INTERVIEW_COMPLETE
+  TEST_START
+  TEST_COMPLETE
+  SUBSCRIPTION_CHANGE
+  CREDIT_PURCHASE
+  ADMIN_ACTION
+  SYSTEM_ALERT
+  SETTINGS_CHANGE
+}
+
+enum ActivityStatus {
+  SUCCESS
+  WARNING
+  ERROR
 }

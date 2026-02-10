@@ -32,7 +32,9 @@ router.get('/analytics/job-roles', adminController.getTopJobRoles);
 // Institutions
 router.post('/institutions', institutionsController.createInstitution);
 router.get('/institutions', institutionsController.getInstitutions);
+router.post('/institutions/:institutionId/send-invite', institutionsController.sendInvite);
 router.post('/institutions/:institutionId/resend-invite', institutionsController.resendInvite);
+router.post('/institutions/:institutionId/set-credentials', institutionsController.setAdminCredentials);
 
 // Email Management
 router.get('/emails/logs', emailController.getEmailLogs);

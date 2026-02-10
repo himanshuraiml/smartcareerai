@@ -1,6 +1,6 @@
+'use client';
+
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { FaceMesh } from '@mediapipe/face_mesh';
-import { Camera } from '@mediapipe/camera_utils';
 
 interface VisualMetrics {
     eyeContactScore: number;
@@ -8,46 +8,83 @@ interface VisualMetrics {
     isFaceDetected: boolean;
 }
 
-export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement>) {
+// Type definitions for MediaPipe (since we're dynamically importing)
+type FaceMeshType = {
+    setOptions: (options: object) => void;
+    onResults: (callback: (results: any) => void) => void;
+    send: (input: { image: HTMLVideoElement }) => Promise<void>;
+    close: () => void;
+};
+
+type CameraType = {
+    start: () => void;
+    stop: () => void;
+};
+
+export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | null>) {
     const [metrics, setMetrics] = useState<VisualMetrics>({
         eyeContactScore: 0,
         sentiment: 'neutral',
         isFaceDetected: false,
     });
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
-    const cameraRef = useRef<Camera | null>(null);
-    const faceMeshRef = useRef<FaceMesh | null>(null);
+    const cameraRef = useRef<CameraType | null>(null);
+    const faceMeshRef = useRef<FaceMeshType | null>(null);
 
     useEffect(() => {
         let isMounted = true;
 
         const initializeMediaPipe = async () => {
-            const faceMesh = new FaceMesh({
-                locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-                },
-            });
+            // Dynamically import MediaPipe modules (browser-only)
+            if (typeof window === 'undefined') return;
 
-            faceMesh.setOptions({
-                maxNumFaces: 1,
-                refineLandmarks: true,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5,
-            });
+            try {
+                const [faceMeshModule, cameraModule] = await Promise.all([
+                    import('@mediapipe/face_mesh'),
+                    import('@mediapipe/camera_utils')
+                ]);
 
-            faceMesh.onResults((results) => {
-                if (!isMounted) return;
+                // Access the default export or the named export
+                const FaceMesh = faceMeshModule.FaceMesh || (faceMeshModule as any).default?.FaceMesh;
 
-                if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                    const landmarks = results.multiFaceLandmarks[0];
-                    analyzeFace(landmarks);
-                } else {
-                    setMetrics(prev => ({ ...prev, isFaceDetected: false }));
+                if (!FaceMesh) {
+                    console.error('FaceMesh not found in module');
+                    return;
                 }
-            });
 
-            faceMeshRef.current = faceMesh;
-            setIsModelsLoaded(true);
+                const faceMesh = new FaceMesh({
+                    locateFile: (file: string) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                    },
+                });
+
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5,
+                });
+
+                faceMesh.onResults((results: any) => {
+                    if (!isMounted) return;
+
+                    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                        const landmarks = results.multiFaceLandmarks[0];
+                        analyzeFace(landmarks);
+                    } else {
+                        setMetrics(prev => ({ ...prev, isFaceDetected: false }));
+                    }
+                });
+
+                faceMeshRef.current = faceMesh;
+
+                // Store the Camera constructor for later use
+                (window as any).__mediapipeCamera = cameraModule.Camera || (cameraModule as any).default?.Camera;
+
+                setIsModelsLoaded(true);
+            } catch (error) {
+                console.error('Failed to load MediaPipe:', error);
+            }
         };
 
         initializeMediaPipe();
@@ -65,6 +102,12 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement>) {
 
     const startAnalysis = useCallback(() => {
         if (videoRef.current && faceMeshRef.current && !cameraRef.current) {
+            const Camera = (window as any).__mediapipeCamera;
+            if (!Camera) {
+                console.error('Camera not loaded');
+                return;
+            }
+
             const camera = new Camera(videoRef.current, {
                 onFrame: async () => {
                     if (faceMeshRef.current && videoRef.current) {

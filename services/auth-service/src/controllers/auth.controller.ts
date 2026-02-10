@@ -36,6 +36,21 @@ export class AuthController {
         }
     }
 
+    async googleLogin(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { idToken } = req.body;
+            const result = await authService.googleLogin(idToken);
+
+            logger.info(`User Google logged in: ${result.user.email}`);
+            res.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async refreshToken(req: Request, res: Response, next: NextFunction) {
         try {
             const { refreshToken } = req.body;
@@ -114,9 +129,8 @@ export class AuthController {
     async updateProfile(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;
-            const { name, avatarUrl } = req.body;
-
-            const user = await authService.updateProfile(userId, { name, avatarUrl });
+            const { name, avatarUrl, institutionId } = req.body;
+            const user = await authService.updateProfile(userId, { name, avatarUrl, institutionId });
 
             res.json({
                 success: true,

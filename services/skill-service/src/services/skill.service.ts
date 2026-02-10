@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { analyzeWithGemini } from '../utils/gemini';
+import { analyzeWithGemini, analyzeWithLLM } from '../utils/gemini';
 
 // Roadmap week structure for learning paths
 interface RoadmapWeek {
@@ -338,9 +338,17 @@ Return a JSON object with:
 
             logger.info(`Extracted ${savedSkills.length} skills for user ${userId}`);
 
+            // Auto-discover new skills from suggestedSkills (max 5 per resume)
+            let newlyCreatedSkills: any[] = [];
+            const suggestedSkills = analysis.suggestedSkills || [];
+            if (suggestedSkills.length > 0) {
+                newlyCreatedSkills = await this.processNewSkills(userId, suggestedSkills.slice(0, 5));
+            }
+
             return {
                 extractedSkills: savedSkills,
-                suggestedSkills: analysis.suggestedSkills || [],
+                suggestedSkills,
+                newlyCreatedSkills,
                 totalFound: analysis.extractedSkills?.length || 0,
             };
         } catch (error: any) {
@@ -949,6 +957,205 @@ Return JSON:
             certifications: result?.certifications || [],
             courseSuggestions: result?.courseSuggestions || [],
         };
+    }
+
+    // =============================================
+    // Phase 5: Auto-discover new skills from resume
+    // =============================================
+
+    // Skill category patterns for classification without LLM
+    private static CATEGORY_PATTERNS: Record<string, RegExp[]> = {
+        'Programming Language': [/^(go|rust|scala|kotlin|swift|dart|elixir|haskell|lua|perl|ruby|r|matlab|julia|groovy|clojure)$/i],
+        'Frontend': [/^(vue|svelte|angular|ember|backbone|alpine|solid|qwik|astro|htmx|tailwind|bootstrap|sass|less|webpack|vite|rollup)$/i],
+        'Backend': [/^(express|fastify|django|flask|fastapi|spring|nest\.?js|laravel|rails|gin|echo|fiber|actix)$/i],
+        'Database': [/^(mysql|mariadb|sqlite|cassandra|couchdb|neo4j|dynamodb|firestore|supabase|cockroachdb|timescaledb|clickhouse)$/i],
+        'DevOps': [/^(terraform|ansible|puppet|chef|jenkins|gitlab|circleci|github.actions|argo|helm|istio|prometheus|grafana|datadog|nagios)$/i],
+        'Cloud': [/^(gcp|google.cloud|heroku|vercel|netlify|cloudflare|digitalocean|linode|azure.devops)$/i],
+        'Data Science': [/^(pandas|scipy|statsmodels|seaborn|plotly|dask|spark|hadoop|hive|airflow|kafka|flink|tableau|power.?bi|looker)$/i],
+        'Mobile': [/^(flutter|react.native|ionic|xamarin|swiftui|jetpack.compose|expo)$/i],
+        'AI/ML': [/^(opencv|hugging.?face|langchain|llama|transformers|bert|gpt|stable.diffusion|mlflow|wandb|ray)$/i],
+        'Security': [/^(burp|nmap|wireshark|metasploit|owasp|snort|splunk|siem|nessus|qualys)$/i],
+        'Testing': [/^(cypress|playwright|puppeteer|testcafe|mocha|chai|jasmine|karma|pytest|junit|testng|cucumber|robot)$/i],
+    };
+
+    /**
+     * Process suggested skills from resume analysis.
+     * Validates, creates skill records, and generates test questions via LLM.
+     */
+    async processNewSkills(userId: string, suggestedSkills: string[]): Promise<any[]> {
+        const createdSkills: any[] = [];
+
+        for (const rawName of suggestedSkills) {
+            try {
+                // Normalize and validate
+                const normalizedName = this.normalizeSkillName(rawName);
+                if (!normalizedName) {
+                    logger.info(`Skill "${rawName}" blocked by blocklist`);
+                    continue;
+                }
+
+                // Check length/format
+                if (normalizedName.length < 2 || normalizedName.length > 50 || !/^[a-zA-Z0-9\s\-\.\/\+\#]+$/.test(normalizedName)) {
+                    logger.info(`Skill "${normalizedName}" failed format validation`);
+                    continue;
+                }
+
+                // Check if skill already exists
+                const existing = await prisma.skill.findFirst({
+                    where: { name: { equals: normalizedName, mode: 'insensitive' } },
+                });
+                if (existing) {
+                    // Skill exists — just link to user
+                    await prisma.userSkill.upsert({
+                        where: { userId_skillId: { userId, skillId: existing.id } },
+                        create: { userId, skillId: existing.id, proficiencyLevel: 'intermediate', source: 'resume' },
+                        update: { proficiencyLevel: 'intermediate' },
+                    });
+                    continue;
+                }
+
+                // Validate with LLM that this is a real skill
+                const isValid = await this.validateSkillWithLLM(normalizedName);
+                if (!isValid) {
+                    logger.info(`LLM rejected "${normalizedName}" as not a real skill`);
+                    continue;
+                }
+
+                // Categorize skill
+                const category = this.categorizeSkill(normalizedName);
+
+                // Create the skill record
+                const newSkill = await prisma.skill.create({
+                    data: {
+                        name: normalizedName,
+                        category,
+                        demandScore: 50, // Default for auto-discovered
+                        isActive: true,
+                        source: 'auto-discovered',
+                    },
+                });
+
+                // Link to user
+                await prisma.userSkill.create({
+                    data: { userId, skillId: newSkill.id, proficiencyLevel: 'intermediate', source: 'resume' },
+                });
+
+                // Create 3 skill tests (EASY/MEDIUM/HARD)
+                const testConfigs = [
+                    { difficulty: 'EASY', title: `${normalizedName} Basics`, durationMinutes: 10, passingScore: 80, questionsCount: 5 },
+                    { difficulty: 'MEDIUM', title: `${normalizedName} Intermediate`, durationMinutes: 20, passingScore: 70, questionsCount: 10 },
+                    { difficulty: 'HARD', title: `${normalizedName} Advanced`, durationMinutes: 30, passingScore: 70, questionsCount: 15 },
+                ];
+
+                for (const config of testConfigs) {
+                    const test = await prisma.skillTest.create({
+                        data: {
+                            skillId: newSkill.id,
+                            title: config.title,
+                            description: `${config.difficulty === 'EASY' ? 'Fundamentals' : config.difficulty === 'MEDIUM' ? 'Intermediate' : 'Advanced'} ${normalizedName}`,
+                            difficulty: config.difficulty as any,
+                            durationMinutes: config.durationMinutes,
+                            passingScore: config.passingScore,
+                            questionsCount: config.questionsCount,
+                        },
+                    });
+
+                    // Generate MCQ questions via LLM (async — don't block on failure)
+                    this.generateTestQuestionsForSkill(test.id, normalizedName, config.difficulty, config.questionsCount)
+                        .catch(err => logger.error(`Failed to generate questions for ${normalizedName} ${config.difficulty}:`, err));
+                }
+
+                createdSkills.push(newSkill);
+                logger.info(`Auto-discovered and created skill: ${normalizedName} (${category})`);
+            } catch (error) {
+                logger.error(`Failed to process new skill "${rawName}":`, error);
+            }
+        }
+
+        return createdSkills;
+    }
+
+    /**
+     * Validate a skill name using LLM (only called after pattern checks pass).
+     */
+    private async validateSkillWithLLM(name: string): Promise<boolean> {
+        try {
+            const result = await analyzeWithLLM(
+                'You validate whether a term is a real technical or professional skill. Return JSON only.',
+                `Is "${name}" a real, specific technical skill, programming language, framework, tool, or professional competency used in the tech industry? Return: {"isValid": true/false, "reason": "brief explanation"}`
+            );
+            return result?.isValid === true;
+        } catch {
+            // If LLM fails, allow the skill (conservative — better to create than miss)
+            return true;
+        }
+    }
+
+    /**
+     * Categorize a skill using pattern matching (no LLM cost).
+     */
+    private categorizeSkill(name: string): string {
+        const lower = name.toLowerCase();
+        for (const [category, patterns] of Object.entries(SkillService.CATEGORY_PATTERNS)) {
+            for (const pattern of patterns) {
+                if (pattern.test(lower)) {
+                    return category;
+                }
+            }
+        }
+        return 'Other';
+    }
+
+    /**
+     * Generate MCQ test questions for a skill using LLM.
+     */
+    private async generateTestQuestionsForSkill(
+        testId: string,
+        skillName: string,
+        difficulty: string,
+        count: number
+    ): Promise<void> {
+        const result = await analyzeWithLLM(
+            'You are an expert quiz creator for technical skills assessment. Return JSON only.',
+            `Generate ${count} ${difficulty.toLowerCase()} multiple-choice questions for "${skillName}".
+
+Each question must have exactly 4 options with 1 correct answer.
+
+Return JSON:
+{
+  "questions": [
+    {
+      "questionText": "What is...?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Brief explanation why this is correct"
+    }
+  ]
+}`
+        );
+
+        if (!result?.questions || !Array.isArray(result.questions)) {
+            logger.warn(`LLM did not return valid questions for ${skillName} ${difficulty}`);
+            return;
+        }
+
+        for (let i = 0; i < result.questions.length; i++) {
+            const q = result.questions[i];
+            if (!q.questionText || !q.options || !q.correctAnswer) continue;
+
+            await prisma.testQuestion.create({
+                data: {
+                    testId,
+                    questionText: q.questionText,
+                    options: q.options,
+                    correctAnswer: q.correctAnswer,
+                    explanation: q.explanation || '',
+                    orderIndex: i + 1,
+                },
+            });
+        }
+
+        logger.info(`Generated ${result.questions.length} questions for ${skillName} ${difficulty}`);
     }
 }
 

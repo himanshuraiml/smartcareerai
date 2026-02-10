@@ -190,6 +190,13 @@ async function main() {
             preferredSkills: ['Penetration Testing', 'Python', 'Cloud Security', 'Compliance'],
             keywords: ['security', 'cyber', 'infosec', 'threat detection'],
         },
+        {
+            title: 'Cybersecurity Engineer',
+            category: 'Security',
+            requiredSkills: ['Network Security', 'Firewalls', 'OWASP', 'Python', 'Linux'],
+            preferredSkills: ['CISSP', 'CEH', 'Cloud Security', 'Kubernetes'],
+            keywords: ['cyber', 'security', 'engineer', 'firewall', 'pentest'],
+        },
     ];
 
     for (const role of jobRoles) {

@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 import { generateQuestions, evaluateAnswer, generateFeedback } from '../utils/llm';
+import { selectQuestionsFromBank } from '../utils/question-bank';
 import { AppError } from '../utils/errors';
 
 interface CreateSessionData {
@@ -76,28 +77,57 @@ export class InterviewService {
             throw new AppError('Interview has already started', 400);
         }
 
-        // Generate questions using LLM
         const questionCount = session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10;
-        const questions = await generateQuestions(
+
+        // Try question bank first (zero LLM cost)
+        const bankQuestions = await selectQuestionsFromBank(
             session.type,
             session.targetRole,
             session.difficulty,
             questionCount
         );
 
-        // Create questions in database
-        const createdQuestions = await Promise.all(
-            questions.map((q, index) =>
-                prisma.interviewQuestion.create({
-                    data: {
-                        sessionId,
-                        questionText: q.question,
-                        questionType: q.type,
-                        orderIndex: index,
-                    },
-                })
-            )
-        );
+        let createdQuestions;
+
+        if (bankQuestions.length >= questionCount) {
+            // Use curated bank questions — no LLM call needed
+            logger.info(`Using ${questionCount} bank questions for session ${sessionId}`);
+            createdQuestions = await Promise.all(
+                bankQuestions.slice(0, questionCount).map((q, index) =>
+                    prisma.interviewQuestion.create({
+                        data: {
+                            sessionId,
+                            questionText: q.questionText,
+                            questionType: q.questionType.toLowerCase(),
+                            orderIndex: index,
+                            bankQuestionId: q.id,
+                        },
+                    })
+                )
+            );
+        } else {
+            // Fallback to LLM generation (backward compatible)
+            logger.info(`Bank has ${bankQuestions.length}/${questionCount} questions, falling back to LLM for session ${sessionId}`);
+            const questions = await generateQuestions(
+                session.type,
+                session.targetRole,
+                session.difficulty,
+                questionCount
+            );
+
+            createdQuestions = await Promise.all(
+                questions.map((q, index) =>
+                    prisma.interviewQuestion.create({
+                        data: {
+                            sessionId,
+                            questionText: q.question,
+                            questionType: q.type,
+                            orderIndex: index,
+                        },
+                    })
+                )
+            );
+        }
 
         // Update session status
         await prisma.interviewSession.update({
@@ -138,7 +168,7 @@ export class InterviewService {
             throw new AppError('Question not found', 404);
         }
 
-        // Evaluate the answer using LLM
+        // Evaluate the answer using LLM (scoring + personalized feedback still needs LLM)
         const evaluation = await evaluateAnswer(
             question.questionText,
             answer,
@@ -146,6 +176,17 @@ export class InterviewService {
             session.type,
             metrics
         );
+
+        // If question came from the bank, use the curated ideal answer instead of LLM-generated one
+        if (question.bankQuestionId) {
+            const bankQuestion = await prisma.interviewBankQuestion.findUnique({
+                where: { id: question.bankQuestionId },
+                select: { idealAnswer: true },
+            });
+            if (bankQuestion) {
+                evaluation.improvedAnswer = bankQuestion.idealAnswer;
+            }
+        }
 
         // Update question with answer, score, metrics, and improved answer
         await prisma.interviewQuestion.update({

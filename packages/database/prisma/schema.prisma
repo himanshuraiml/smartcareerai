@@ -29,6 +29,7 @@ model User {
   role         UserRole  @default(USER)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
+  googleId     String?   @unique @map("google_id")
 
   // Relations
   resumes            Resume[]
@@ -148,9 +149,11 @@ model JobRole {
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Users targeting this job role
-  usersTargeting User[]
+  usersTargeting         User[]
   // Cache for LLM-generated content
-  cache          JobRoleCache?
+  cache                  JobRoleCache?
+  // Interview question bank
+  interviewBankQuestions  InterviewBankQuestion[]
 
   @@map("job_roles")
 }
@@ -180,6 +183,7 @@ model Skill {
   name        String   @unique
   category    String // e.g., "Programming", "Framework", "Soft Skill"
   demandScore Int      @default(50) @map("demand_score") // 0-100 market demand
+  source      String   @default("seeded") // "seeded", "auto-discovered"
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -334,14 +338,38 @@ model InterviewQuestion {
   score          Int?
   feedback       String?  @db.Text
   metrics        Json?    // Stores WPM, clarity, relevance, confidence, sentiment
-  improvedAnswer String?  @map("improved_answer") @db.Text // AI-suggested better version
-  orderIndex     Int      @default(0) @map("order_index")
-  createdAt      DateTime @default(now()) @map("created_at")
+  improvedAnswer  String?  @map("improved_answer") @db.Text // AI-suggested better version
+  bankQuestionId  String?  @map("bank_question_id") // Reference to curated question bank
+  orderIndex      Int      @default(0) @map("order_index")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
   session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("interview_questions")
+}
+
+// ============================================
+// INTERVIEW QUESTION BANK (Curated Q&A)
+// ============================================
+
+model InterviewBankQuestion {
+  id            String        @id @default(uuid())
+  questionText  String        @map("question_text") @db.Text
+  idealAnswer   String        @map("ideal_answer") @db.Text
+  category      String        // e.g., "JavaScript", "System Design", "HR", "Behavioral"
+  difficulty    Difficulty    @default(MEDIUM)
+  questionType  InterviewType @map("question_type") // TECHNICAL, HR, BEHAVIORAL
+  jobRoleId     String?       @map("job_role_id")   // NULL for HR/shared questions
+  tags          String[]
+  isActive      Boolean       @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  jobRole       JobRole?      @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
+
+  @@index([jobRoleId, questionType, difficulty])
+  @@map("interview_bank_questions")
 }
 
 enum InterviewType {

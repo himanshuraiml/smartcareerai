@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    swcMinify: true,
     // Use 'standalone' only for Docker deployments, Vercel handles this automatically
     output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
     images: {
@@ -32,7 +31,7 @@ const nextConfig = {
         }
         return [
             {
-                source: '/api/:path*',
+                source: '/api/:path((?!keystatic).*)',
                 destination: `${apiUrl}/api/:path*`,
             },
         ];

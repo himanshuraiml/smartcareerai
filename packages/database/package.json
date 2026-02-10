@@ -9,6 +9,7 @@
         "migrate:deploy": "prisma migrate deploy",
         "generate": "prisma generate",
         "seed": "ts-node prisma/seed.ts",
+        "seed:interviews": "ts-node prisma/seed-interview-questions.ts",
         "start": "prisma migrate deploy",
         "studio": "prisma studio",
         "test": "jest"

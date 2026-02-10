@@ -2,14 +2,14 @@ import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 
 export class ValidationService {
-    // Get all available tests
+    // Get all available tests (only those with real curated questions)
     async getTests(skillId?: string) {
         const where: any = { isActive: true };
         if (skillId) {
             where.skillId = skillId;
         }
 
-        return prisma.skillTest.findMany({
+        const tests = await prisma.skillTest.findMany({
             where,
             include: {
                 skill: {
@@ -21,6 +21,24 @@ export class ValidationService {
             },
             orderBy: { createdAt: 'desc' },
         });
+
+        // Filter out tests with only generic fallback questions
+        // Generic questions follow the pattern "Sample EASY/MEDIUM/HARD question N for {skill}?"
+        const testsWithRealQuestions: typeof tests = [];
+        for (const test of tests) {
+            if (test._count.questions === 0) continue;
+
+            const sampleQuestion = await prisma.testQuestion.findFirst({
+                where: { testId: test.id },
+                select: { questionText: true },
+            });
+
+            if (sampleQuestion && !sampleQuestion.questionText.startsWith('Sample ')) {
+                testsWithRealQuestions.push(test);
+            }
+        }
+
+        return testsWithRealQuestions;
     }
 
     // Get test details (without answers for taking)

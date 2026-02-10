@@ -4,6 +4,7 @@ import mammoth from 'mammoth';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { parseResumeContent } from '../utils/ai';
 
 interface UploadedFile {
     originalname: string;
@@ -43,12 +44,12 @@ export class ResumeService {
     async uploadResume(userId: string, file: UploadedFile) {
         // Generate unique filename
         const timestamp = Date.now();
-        const fileName = `${userId}/${timestamp}-${file.originalname}`;
+        const storageKey = `${userId}/${timestamp}-${file.originalname}`;
 
         // Upload to MinIO
         await this.minioClient.putObject(
             this.bucketName,
-            fileName,
+            storageKey,
             file.buffer,
             file.size,
             { 'Content-Type': file.mimetype }
@@ -57,7 +58,7 @@ export class ResumeService {
         // Generate presigned URL (valid for 7 days)
         const fileUrl = await this.minioClient.presignedGetObject(
             this.bucketName,
-            fileName,
+            storageKey,
             7 * 24 * 60 * 60
         );
 
@@ -65,7 +66,7 @@ export class ResumeService {
         const resume = await prisma.resume.create({
             data: {
                 userId,
-                fileName: file.originalname,
+                fileName: storageKey, // Store the full storage key to ensure retrievability
                 fileUrl,
                 fileSize: file.size,
                 mimeType: file.mimetype,
@@ -153,9 +154,12 @@ export class ResumeService {
         }
 
         // Download file from MinIO
+        // Use resume.fileName as the object key. 
+        // Note: For older uploads where fileName was just the original name, this may fail if the key format was different.
+        // However, since we now store the full storage key in fileName, this is the correct approach for new uploads.
         const objectStream = await this.minioClient.getObject(
             this.bucketName,
-            `${userId}/${resume.fileName}`
+            resume.fileName
         );
 
         const chunks: Buffer[] = [];
@@ -176,9 +180,9 @@ export class ResumeService {
             },
         });
 
-        return this.formatResume(updatedResume);
+        const structuredData = await parseResumeContent(parsedText);
+        return { ...this.formatResume(updatedResume), ...structuredData };
     }
-
     private async parseResumeAsync(resumeId: string, buffer: Buffer, mimeType: string) {
         try {
             await prisma.resume.update({

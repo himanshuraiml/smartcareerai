@@ -42,8 +42,6 @@ export async function authFetch(
 
     // If we get a 401 and haven't skipped refresh, try to refresh the token
     if (response.status === 401 && !skipRefresh && !skipAuth) {
-        console.log('[authFetch] Token expired, attempting refresh...');
-
         const refreshed = await refreshAccessToken();
 
         if (refreshed) {
@@ -56,11 +54,8 @@ export async function authFetch(
                 ...fetchOptions,
                 headers,
             });
-
-            console.log('[authFetch] Token refreshed, retried request');
         } else {
             // Refresh failed, logout the user
-            console.log('[authFetch] Token refresh failed, logging out');
             logout();
         }
     }

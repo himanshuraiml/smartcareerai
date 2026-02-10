@@ -388,10 +388,11 @@ export class EmailController {
                     text: template.textContent || undefined,
                     emailType: 'OTHER',
                     metadata: { isTest: true },
-                    sentBy: userId
+                    sentBy: userId,
+                    throwOnError: true
                 });
             } else if (emailType === 'newsletter' && subject && content) {
-                sent = await emailService.sendNewsletter(email, 'Test User', subject, content, undefined, userId);
+                sent = await emailService.sendNewsletter(email, 'Test User', subject, content, undefined, userId, undefined, true);
             } else if (emailType === 'promotional' && subject && content) {
                 sent = await emailService.sendPromotionalEmail(
                     email,
@@ -402,26 +403,41 @@ export class EmailController {
                     'Learn More',
                     'https://placenxt.com',
                     undefined,
-                    userId
+                    userId,
+                    undefined,
+                    true
                 );
             } else if (emailType === 'student_welcome') {
-                sent = await emailService.sendStudentWelcome(email, 'Test User', 'Test Institution', userId);
+                sent = await emailService.sendStudentWelcome(email, 'Test User', 'Test Institution', userId, true);
             } else if (emailType === 'recruiter_welcome') {
-                sent = await emailService.sendRecruiterWelcome(email, 'Test User', 'Test Company', userId);
+                sent = await emailService.sendRecruiterWelcome(email, 'Test User', 'Test Company', userId, true);
             } else {
                 throw new AppError('Invalid email type or missing content', 400);
             }
 
-            if (sent) {
-                res.json({
-                    success: true,
-                    message: `Test email sent to ${email}`
-                });
-            } else {
-                throw new AppError('Failed to send test email. Check SMTP settings.', 500);
+            res.json({
+                success: true,
+                message: `Test email sent to ${email}`
+            });
+        } catch (error: any) {
+            // Retrieve specific SMTP errors
+            if (error.code === 'EAUTH' || error.responseCode === 535) {
+                return next(new AppError('SMTP Authentication Failed: Invalid username or password.', 400));
             }
-        } catch (error) {
-            next(error);
+            if (error.code === 'ESOCKET' || error.code === 'ECONNREFUSED') {
+                return next(new AppError('SMTP Connection Failed: Check host and port settings.', 400));
+            }
+            if (error.code === 'EENVELOPE') {
+                return next(new AppError('SMTP Error: Invalid sender or recipient address.', 400));
+            }
+
+            // If it's already an AppError, pass it through
+            if (error instanceof AppError) {
+                return next(error);
+            }
+
+            // Otherwise, wrap it or pass it
+            next(new AppError(`Failed to send email: ${error.message}`, 500));
         }
     }
 

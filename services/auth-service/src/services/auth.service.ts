@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
+import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
@@ -68,6 +69,21 @@ export class AuthService {
         // TODO: Send verification email
         logger.info(`Verification token for ${email}: ${verifyToken}`);
 
+        // Log registration activity
+        try {
+            await prisma.activityLog.create({
+                data: {
+                    type: 'USER_REGISTER',
+                    message: `User ${email} registered`,
+                    userId: user.id,
+                    userEmail: user.email,
+                    status: 'SUCCESS'
+                }
+            });
+        } catch (error) {
+            logger.error('Failed to log registration activity', error);
+        }
+
         return {
             user: this.sanitizeUser(user),
             ...tokens,
@@ -78,7 +94,7 @@ export class AuthService {
         // Find user
         const user = await prisma.user.findUnique({
             where: { email },
-            include: { targetJobRole: true },
+            include: { targetJobRole: true, institution: true },
         });
         if (!user) {
             throw new AppError('Invalid email or password', 401);
@@ -97,6 +113,120 @@ export class AuthService {
             role: user.role,
             adminForInstitutionId: user.adminForInstitutionId
         });
+
+        // Log login activity
+        try {
+            await prisma.activityLog.create({
+                data: {
+                    type: 'USER_LOGIN',
+                    message: `User ${email} logged in`,
+                    userId: user.id,
+                    userEmail: user.email,
+                    status: 'SUCCESS'
+                }
+            });
+        } catch (error) {
+            logger.error('Failed to log login activity', error);
+        }
+
+        return {
+            user: this.sanitizeUser(user),
+            ...tokens,
+        };
+    }
+
+    async googleLogin(idToken: string) {
+        // Verify Google Token
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            throw new AppError('Invalid Google Token', 400);
+        }
+
+        let { email, sub: googleId, name, picture: avatarUrl } = payload;
+
+        // Check if user exists
+        let user = await prisma.user.findUnique({
+            where: { email },
+            include: { targetJobRole: true, institution: true }
+        });
+
+        if (!user) {
+            // Create user
+            // Generate a random password hash as it is required
+            const randomPassword = crypto.randomBytes(32).toString('hex');
+            const passwordHash = await bcrypt.hash(randomPassword, 12);
+
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    googleId,
+                    name,
+                    avatarUrl,
+                    passwordHash,
+                    isVerified: true, // Google emails are verified
+                    verifyToken: null,
+                },
+                include: {
+                    targetJobRole: true,
+                    institution: true,
+                },
+            });
+
+            // Auto-create free subscription and credits for new users
+            try {
+                await this.createFreeSubscriptionAndCredits(user.id);
+                logger.info(`Successfully created free subscription for google user ${user.id}`);
+            } catch (error: any) {
+                logger.error(`Failed to create free subscription for google user ${user.id}: ${error.message}`, {
+                    error: error.message,
+                    stack: error.stack,
+                });
+            }
+        } else {
+            // Update googleId if not set
+            if (!user.googleId) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        googleId,
+                        avatarUrl: user.avatarUrl || avatarUrl,
+                        isVerified: true
+                    },
+                    include: {
+                        targetJobRole: true,
+                        institution: true,
+                    },
+                });
+            }
+        }
+
+        // Generate tokens
+        const tokens = await this.generateTokens({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            adminForInstitutionId: user.adminForInstitutionId
+        });
+
+        // Log login activity
+        try {
+            await prisma.activityLog.create({
+                data: {
+                    type: 'USER_LOGIN',
+                    message: `User ${email} logged in with Google`,
+                    userId: user.id,
+                    userEmail: user.email,
+                    status: 'SUCCESS'
+                }
+            });
+        } catch (error) {
+            logger.error('Failed to log google login activity', error);
+        }
 
         return {
             user: this.sanitizeUser(user),
@@ -144,12 +274,22 @@ export class AuthService {
             // Logout from all devices
             await prisma.refreshToken.deleteMany({ where: { userId } });
         }
+
+        // Log logout activity (fire and forget)
+        prisma.activityLog.create({
+            data: {
+                type: 'USER_LOGOUT',
+                message: `User ${userId} logged out`,
+                userId: userId,
+                status: 'SUCCESS'
+            }
+        }).catch(err => logger.error('Failed to log logout activity', err));
     }
 
     async getUserById(userId: string) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { targetJobRole: true },
+            include: { targetJobRole: true, institution: true },
         });
         if (!user) {
             throw new AppError('User not found', 404);
@@ -173,11 +313,11 @@ export class AuthService {
         return userWithoutPassword;
     }
 
-    async updateProfile(userId: string, data: { name?: string; avatarUrl?: string }) {
+    async updateProfile(userId: string, data: { name?: string; avatarUrl?: string; institutionId?: string | null }) {
         const user = await prisma.user.update({
             where: { id: userId },
             data,
-            include: { targetJobRole: true },
+            include: { targetJobRole: true, institution: true },
         });
         return this.sanitizeUser(user);
     }
@@ -283,6 +423,8 @@ export class AuthService {
             role: user.role,
             targetJobRoleId: user.targetJobRoleId,
             targetJobRole: user.targetJobRole || null,
+            institutionId: user.institutionId,
+            institution: user.institution || null,
             createdAt: user.createdAt.toISOString(),
         };
     }
