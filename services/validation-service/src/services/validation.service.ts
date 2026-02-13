@@ -1,9 +1,14 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
+import { cacheGet, cacheSet } from '@smartcareer/shared';
 
 export class ValidationService {
     // Get all available tests (only those with real curated questions)
     async getTests(skillId?: string) {
+        const cacheKey = skillId ? `validation:tests:${skillId}` : 'validation:tests';
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
         const where: any = { isActive: true };
         if (skillId) {
             where.skillId = skillId;
@@ -38,11 +43,16 @@ export class ValidationService {
             }
         }
 
+        await cacheSet(cacheKey, testsWithRealQuestions, 1800); // 30 minutes
         return testsWithRealQuestions;
     }
 
     // Get test details (without answers for taking)
     async getTest(testId: string) {
+        const cacheKey = `validation:test:${testId}`;
+        const cached = await cacheGet<any>(cacheKey);
+        if (cached) return cached;
+
         const test = await prisma.skillTest.findUnique({
             where: { id: testId },
             include: {
@@ -65,6 +75,7 @@ export class ValidationService {
             throw new Error('Test not found');
         }
 
+        await cacheSet(cacheKey, test, 3600); // 1 hour
         return test;
     }
 

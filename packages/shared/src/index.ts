@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 // ============================================
+// REDIS CACHE
+// ============================================
+
+export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache';
+
+// ============================================
 // AUTH SCHEMAS
 // ============================================
 

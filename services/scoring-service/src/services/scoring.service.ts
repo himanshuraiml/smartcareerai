@@ -3,6 +3,7 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
+import { cacheGet, cacheSet } from '@smartcareer/shared';
 
 interface ATSAnalysisResult {
     overallScore: number;
@@ -37,10 +38,17 @@ export class ScoringService {
             throw new AppError('Resume has not been parsed yet', 400);
         }
 
-        // Get job role info for context
-        const roleInfo = await prisma.jobRole.findFirst({
-            where: { title: { contains: jobRole, mode: 'insensitive' } },
-        });
+        // Get job role info for context (cached)
+        const roleCacheKey = `job-role:title:${jobRole.toLowerCase().trim()}`;
+        let roleInfo = await cacheGet<any>(roleCacheKey);
+        if (!roleInfo) {
+            roleInfo = await prisma.jobRole.findFirst({
+                where: { title: { contains: jobRole, mode: 'insensitive' } },
+            });
+            if (roleInfo) {
+                await cacheSet(roleCacheKey, roleInfo, 3600); // 1 hour
+            }
+        }
 
         // Perform LLM analysis
         const analysis = await this.performATSAnalysis(
@@ -115,6 +123,10 @@ export class ScoringService {
     }
 
     async getJobRoles() {
+        const cacheKey = 'scoring:job-roles';
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
         const roles = await prisma.jobRole.findMany({
             where: { isActive: true },
             select: {
@@ -126,6 +138,7 @@ export class ScoringService {
             orderBy: { title: 'asc' },
         });
 
+        await cacheSet(cacheKey, roles, 3600); // 1 hour
         return roles;
     }
 

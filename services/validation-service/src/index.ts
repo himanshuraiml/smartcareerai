@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load env with fallbacks (for both local and Railway deployment)
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-dotenv.config(); // Also try default location
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: path.resolve(__dirname, '../.env') });
+    dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+}
 
 import express from 'express';
 import cors from 'cors';

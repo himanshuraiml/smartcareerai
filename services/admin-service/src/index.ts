@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 import path from 'path';
-const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+if (process.env.NODE_ENV !== 'production') {
+    const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+    if (result.error) {
+        console.error('❌ [AdminService] Failed to load .env file:', result.error);
+    }
+}
 
 import express from 'express';
 import cors from 'cors';
@@ -12,9 +17,6 @@ import { settingsRouter } from './routes/settings.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
-if (result.error) {
-    console.error('❌ [AdminService] Failed to load .env file:', result.error);
-}
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined in environment variables');
 }

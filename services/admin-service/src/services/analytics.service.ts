@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { cacheGet, cacheSet } from '@smartcareer/shared';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,10 @@ export class AnalyticsService {
      * Get dashboard overview metrics
      */
     async getOverview() {
+        const cacheKey = 'admin:overview';
+        const cached = await cacheGet<any>(cacheKey);
+        if (cached) return cached;
+
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -43,7 +48,7 @@ export class AnalyticsService {
             this.getRevenueStats(thirtyDaysAgo),
         ]);
 
-        return {
+        const result = {
             users: {
                 total: totalUsers,
                 newThisMonth: newUsersThisMonth,
@@ -59,12 +64,19 @@ export class AnalyticsService {
             },
             revenue: revenueStats,
         };
+
+        await cacheSet(cacheKey, result, 300); // 5 minutes
+        return result;
     }
 
     /**
      * Get user growth over time
      */
     async getUserGrowth(days = 30) {
+        const cacheKey = `admin:user-growth:${days}`;
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
@@ -81,26 +93,41 @@ export class AnalyticsService {
             growth[date] = (growth[date] || 0) + 1;
         });
 
-        return Object.entries(growth).map(([date, count]) => ({ date, count }));
+        const result = Object.entries(growth).map(([date, count]) => ({ date, count }));
+        await cacheSet(cacheKey, result, 3600); // 1 hour
+        return result;
     }
 
     /**
      * Get subscription distribution
      */
     async getSubscriptionDistribution() {
+        const cacheKey = 'admin:sub-distribution';
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
         const subscriptions = await prisma.userSubscription.groupBy({
             by: ['planId'],
             where: { status: 'ACTIVE' },
             _count: { planId: true },
         });
 
-        const plans = await prisma.subscriptionPlan.findMany();
-        const planMap = new Map(plans.map(p => [p.id, p.displayName]));
+        // Cache subscription plans separately (static data)
+        let plans = await cacheGet<any[]>('admin:plans');
+        if (!plans) {
+            plans = await prisma.subscriptionPlan.findMany();
+            await cacheSet('admin:plans', plans, 3600); // 1 hour
+        }
 
-        return subscriptions.map(sub => ({
+        const planMap = new Map(plans.map((p: any) => [p.id, p.displayName]));
+
+        const result = subscriptions.map(sub => ({
             plan: planMap.get(sub.planId) || 'Unknown',
             count: sub._count.planId,
         }));
+
+        await cacheSet(cacheKey, result, 300); // 5 minutes
+        return result;
     }
 
     /**
@@ -133,6 +160,10 @@ export class AnalyticsService {
      * Get feature usage statistics
      */
     async getFeatureUsage(days = 30) {
+        const cacheKey = `admin:feature-usage:${days}`;
+        const cached = await cacheGet<any>(cacheKey);
+        if (cached) return cached;
+
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
@@ -148,18 +179,25 @@ export class AnalyticsService {
             }),
         ]);
 
-        return {
+        const result = {
             resumeScores,
             interviews,
             tests,
             period: `Last ${days} days`,
         };
+
+        await cacheSet(cacheKey, result, 300); // 5 minutes
+        return result;
     }
 
     /**
      * Get top job roles being analyzed
      */
     async getTopJobRoles(limit = 10) {
+        const cacheKey = `admin:top-roles:${limit}`;
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
         const roles = await prisma.atsScore.groupBy({
             by: ['jobRole'],
             _count: { jobRole: true },
@@ -167,10 +205,13 @@ export class AnalyticsService {
             take: limit,
         });
 
-        return roles.map(r => ({
+        const result = roles.map(r => ({
             role: r.jobRole,
             count: r._count.jobRole,
         }));
+
+        await cacheSet(cacheKey, result, 3600); // 1 hour
+        return result;
     }
 }
 

@@ -8,10 +8,12 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Cookie options
+    // sameSite 'none' required when frontend and API are on different domains (e.g. Railway)
+    // secure must be true when sameSite is 'none'
     const cookieOptions = {
-        httpOnly: true, // Prevent JS access
-        secure: isProduction, // HTTPS only in production
-        sameSite: isProduction ? 'strict' as const : 'lax' as const, // CSRF protection
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' as const : 'lax' as const,
         path: '/',
     };
 

@@ -1,8 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
-const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
-if (result.error) {
-    console.error('❌ [AuthService] Failed to load .env file:', result.error);
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: path.resolve(__dirname, '../.env') });
 }
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined in environment variables');

@@ -2,6 +2,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini, analyzeWithLLM } from '../utils/gemini';
+import { cacheGet, cacheSet, cacheDelPattern } from '@smartcareer/shared';
 
 // Roadmap week structure for learning paths
 interface RoadmapWeek {
@@ -199,7 +200,11 @@ export class SkillService {
 
     // Get all available job roles for registration/personalization
     async getJobRoles() {
-        return prisma.jobRole.findMany({
+        const cacheKey = 'skills:job-roles';
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
+        const roles = await prisma.jobRole.findMany({
             where: { isActive: true },
             select: {
                 id: true,
@@ -208,10 +213,21 @@ export class SkillService {
             },
             orderBy: [{ category: 'asc' }, { title: 'asc' }],
         });
+
+        await cacheSet(cacheKey, roles, 3600); // 1 hour
+        return roles;
     }
 
     // Get all skills with optional filtering
     async getAllSkills(category?: string, search?: string) {
+        // Only cache when no search filter (search queries are too dynamic)
+        const cacheKey = search ? null : category ? `skills:cat:${category}` : 'skills:all';
+
+        if (cacheKey) {
+            const cached = await cacheGet<any[]>(cacheKey);
+            if (cached) return cached;
+        }
+
         const where: any = { isActive: true };
 
         if (category) {
@@ -222,10 +238,16 @@ export class SkillService {
             where.name = { contains: search, mode: 'insensitive' };
         }
 
-        return prisma.skill.findMany({
+        const skills = await prisma.skill.findMany({
             where,
             orderBy: { demandScore: 'desc' },
         });
+
+        if (cacheKey) {
+            await cacheSet(cacheKey, skills, 1800); // 30 minutes
+        }
+
+        return skills;
     }
 
     // Get skill by ID
@@ -268,8 +290,12 @@ export class SkillService {
         // This ensures we don't accumulate skills from multiple resume versions
         await this.clearResumeSkills(userId);
 
-        // Get all available skills for matching
-        const allSkills = await prisma.skill.findMany({ where: { isActive: true } });
+        // Get all available skills for matching (use cache to avoid repeated DB hits)
+        let allSkills = await cacheGet<any[]>('skills:all:full');
+        if (!allSkills) {
+            allSkills = await prisma.skill.findMany({ where: { isActive: true } });
+            await cacheSet('skills:all:full', allSkills, 1800); // 30 minutes
+        }
         const skillNames = allSkills.map(s => s.name);
 
         // Use LLM to extract skills from resume
@@ -624,13 +650,19 @@ Return a JSON object with:
     // Get course recommendations for user's missing skills
     async getCourseRecommendations(userId: string, skillId?: string, limit: number = 5) {
         if (skillId) {
-            // Recommendations for specific skill
-            return prisma.course.findMany({
+            const cacheKey = `courses:${skillId}:${limit}`;
+            const cached = await cacheGet<any[]>(cacheKey);
+            if (cached) return cached;
+
+            const courses = await prisma.course.findMany({
                 where: { skillId, isActive: true },
                 include: { skill: true },
                 orderBy: { rating: 'desc' },
                 take: limit,
             });
+
+            await cacheSet(cacheKey, courses, 1800); // 30 minutes
+            return courses;
         }
 
         // Get user skills to find gaps
@@ -1066,6 +1098,9 @@ Return JSON:
                 }
 
                 createdSkills.push(newSkill);
+                // Invalidate skills cache since new skill was added
+                await cacheDelPattern('skills:*');
+                await cacheDelPattern('courses:*');
                 logger.info(`Auto-discovered and created skill: ${normalizedName} (${category})`);
             } catch (error) {
                 logger.error(`Failed to process new skill "${rawName}":`, error);

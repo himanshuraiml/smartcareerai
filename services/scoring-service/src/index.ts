@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load env from service directory first (use __dirname for correct path when run via workspace)
-dotenv.config({ path: path.resolve(__dirname, '../.env') }); // Service's .env (src/../.env)
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Root .env as fallback
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: path.resolve(__dirname, '../.env') });
+    dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+}
 
 import express from 'express';
 import cors from 'cors';

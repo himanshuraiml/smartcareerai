@@ -29,7 +29,7 @@ export function errorHandler(err: any, req: Request, res: Response, _next: NextF
         });
     }
 
-    const statusCode = err.status || 500;
+    const statusCode = err.statusCode || err.status || 500;
 
     if (statusCode >= 500) reportError('ERROR', err.message, req, err.stack);
 

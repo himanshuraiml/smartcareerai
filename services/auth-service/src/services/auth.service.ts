@@ -6,6 +6,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { sendPasswordResetEmail } from '../utils/email';
+import { cacheGet, cacheSet } from '@smartcareer/shared';
 
 interface TokenPayload {
     id: string;
@@ -474,10 +475,17 @@ export class AuthService {
     }
 
     async getInstitutions() {
-        return prisma.institution.findMany({
+        const cacheKey = 'auth:institutions';
+        const cached = await cacheGet<any[]>(cacheKey);
+        if (cached) return cached;
+
+        const institutions = await prisma.institution.findMany({
             select: { id: true, name: true, domain: true },
             orderBy: { name: 'asc' }
         });
+
+        await cacheSet(cacheKey, institutions, 3600); // 1 hour
+        return institutions;
     }
 
     /**
@@ -621,10 +629,17 @@ export class AuthService {
      * This is called during registration to give users their free tier credits
      */
     private async createFreeSubscriptionAndCredits(userId: string) {
-        // Find the free plan
-        const freePlan = await prisma.subscriptionPlan.findUnique({
-            where: { name: 'free' },
-        });
+        // Find the free plan (cached — called every registration)
+        const cacheKey = 'plan:free';
+        let freePlan = await cacheGet<any>(cacheKey);
+        if (!freePlan) {
+            freePlan = await prisma.subscriptionPlan.findUnique({
+                where: { name: 'free' },
+            });
+            if (freePlan) {
+                await cacheSet(cacheKey, freePlan, 86400); // 24 hours
+            }
+        }
 
         if (!freePlan) {
             throw new AppError('Free plan not found in database', 500);
