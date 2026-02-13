@@ -121,13 +121,14 @@ const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
     : ['http://localhost:3100', 'http://localhost:3000'];
 
-app.use(cors({
-    origin: (origin, callback) => {
+const corsConfig = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin) return callback(null, true);
         if (corsOrigins.includes(origin) || corsOrigins.includes('*')) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            logger.warn(`CORS blocked origin: ${origin}`);
+            callback(null, false);
         }
     },
     credentials: true,
@@ -135,9 +136,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-user-id'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 86400,
-}));
+};
 
-app.options('*', cors());
+app.use(cors(corsConfig));
+app.options('*', cors(corsConfig));
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 // Request ID middleware and header cleanup for tracing
