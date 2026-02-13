@@ -22,6 +22,8 @@ interface User {
 
 interface AuthState {
     user: User | null;
+    accessToken: string | null;
+    refreshToken: string | null;
     isLoading: boolean;
     error: string | null;
     login: (email: string, password: string) => Promise<boolean>;
@@ -39,6 +41,8 @@ export const useAuthStore = create<AuthState>()(
     persist(
         (set, get) => ({
             user: null,
+            accessToken: null,
+            refreshToken: null,
             isLoading: false,
             error: null,
 
@@ -59,6 +63,8 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
+                        accessToken: data.data.accessToken || null,
+                        refreshToken: data.data.refreshToken || null,
                         isLoading: false
                     });
 
@@ -89,6 +95,8 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
+                        accessToken: data.data.accessToken || null,
+                        refreshToken: data.data.refreshToken || null,
                         isLoading: false
                     });
 
@@ -129,6 +137,8 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
+                        accessToken: data.data.accessToken || null,
+                        refreshToken: data.data.refreshToken || null,
                         isLoading: false
                     });
 
@@ -143,13 +153,17 @@ export const useAuthStore = create<AuthState>()(
             },
 
             logout: () => {
-                // Call logout endpoint (cookies sent automatically)
+                const { accessToken } = get();
                 fetch(`${API_URL}/auth/logout`, {
                     method: 'POST',
-                    credentials: 'include', headers: { 'Content-Type': 'application/json' }
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+                    }
                 }).catch(() => { });
 
-                set({ user: null });
+                set({ user: null, accessToken: null, refreshToken: null });
             },
 
             refreshAccessToken: async () => {
@@ -160,21 +174,34 @@ export const useAuthStore = create<AuthState>()(
 
                 refreshPromise = (async () => {
                     try {
+                        const { refreshToken: currentRefreshToken } = get();
+
                         const response = await fetch(`${API_URL}/auth/refresh-token`, {
                             method: 'POST',
-                            credentials: 'include', headers: { 'Content-Type': 'application/json' }
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                refreshToken: currentRefreshToken || undefined
+                            })
                         });
 
                         const data = await response.json();
 
                         if (!response.ok) {
                             if (response.status === 401 || response.status === 403) {
-                                set({ user: null });
+                                set({ user: null, accessToken: null, refreshToken: null });
                             }
                             return false;
                         }
 
-                        // Cookies updated automatically
+                        // Store new tokens from response body
+                        if (data.data?.accessToken) {
+                            set({
+                                accessToken: data.data.accessToken,
+                                refreshToken: data.data.refreshToken || get().refreshToken,
+                            });
+                        }
+
                         return true;
                     } catch (error) {
                         // Network error - don't logout, just return false
@@ -191,14 +218,17 @@ export const useAuthStore = create<AuthState>()(
             clearError: () => set({ error: null }),
 
             updateTargetJobRole: async (jobRoleId: string) => {
-                const { user } = get();
-                // Check user existence instead of token
+                const { user, accessToken } = get();
                 if (!user) return false;
 
                 try {
                     const response = await fetch(`${API_URL}/users/me/target-role`, {
                         method: 'PUT',
-                        credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+                        },
                         body: JSON.stringify({ targetJobRoleId: jobRoleId })
                     });
 
@@ -225,7 +255,9 @@ export const useAuthStore = create<AuthState>()(
         {
             name: 'auth-storage',
             partialize: (state) => ({
-                user: state.user
+                user: state.user,
+                accessToken: state.accessToken,
+                refreshToken: state.refreshToken,
             }),
             onRehydrateStorage: () => (state) => {
                 state?.setHasHydrated(true);
@@ -233,4 +265,3 @@ export const useAuthStore = create<AuthState>()(
         }
     )
 );
-

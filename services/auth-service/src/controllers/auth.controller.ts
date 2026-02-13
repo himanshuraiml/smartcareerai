@@ -40,12 +40,9 @@ export class AuthController {
 
             logger.info(`User registered: ${email}`);
 
-            // Remove tokens from response body
-            const { accessToken, refreshToken, ...userData } = result;
-
             res.status(201).json({
                 success: true,
-                data: userData,
+                data: result,
                 message: 'Registration successful. Please check your email to verify your account.',
             });
         } catch (error) {
@@ -62,12 +59,9 @@ export class AuthController {
 
             logger.info(`User logged in: ${email}`);
 
-            // Remove tokens from response body
-            const { accessToken, refreshToken, ...userData } = result;
-
             res.json({
                 success: true,
-                data: userData,
+                data: result,
             });
         } catch (error) {
             next(error);
@@ -83,12 +77,9 @@ export class AuthController {
 
             logger.info(`User Google logged in: ${result.user.email}`);
 
-            // Remove tokens from response body
-            const { accessToken, refreshToken, ...userData } = result;
-
             res.json({
                 success: true,
-                data: userData,
+                data: result,
             });
         } catch (error) {
             next(error);
@@ -112,9 +103,12 @@ export class AuthController {
 
             setAuthCookies(res, result.accessToken, result.refreshToken);
 
-            // Return minimal data, tokens are in cookies
             res.json({
                 success: true,
+                data: {
+                    accessToken: result.accessToken,
+                    refreshToken: result.refreshToken,
+                },
                 message: 'Token refreshed',
             });
         } catch (error) {

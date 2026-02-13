@@ -10,11 +10,17 @@ interface FetchOptions extends RequestInit {
 }
 
 /**
+ * Adds the Authorization header from the auth store to the headers object.
+ */
+function applyAuthHeader(headers: Headers): void {
+    const { accessToken } = useAuthStore.getState();
+    if (accessToken && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+}
+
+/**
  * Authenticated fetch wrapper that automatically handles token refresh on 401 errors.
- * 
- * @param url - The API endpoint (can be relative like '/users/me' or full URL)
- * @param options - Fetch options with optional skipAuth and skipRefresh flags
- * @returns Promise with the fetch response
  */
 export async function authFetch(
     url: string,
@@ -31,24 +37,32 @@ export async function authFetch(
     // Default headers
     const headers = new Headers(fetchOptions.headers);
 
-    // Make the initial request with credentials (cookies)
+    // Add Authorization header from stored token
+    if (!skipAuth) {
+        applyAuthHeader(headers);
+    }
+
+    // Make the initial request
     let response = await fetch(fullUrl, {
         ...fetchOptions,
         headers,
-        credentials: 'include', // Send cookies
+        credentials: 'include',
     });
 
     // If we get a 401 and haven't skipped refresh, try to refresh the token
     if (response.status === 401 && !skipRefresh && !skipAuth) {
-        // Attempt to refresh token (uses refresh token cookie)
         const refreshed = await refreshAccessToken();
 
         if (refreshed) {
-            // Retry the original request with new cookies
+            // Re-apply the new access token header
+            const retryHeaders = new Headers(fetchOptions.headers);
+            applyAuthHeader(retryHeaders);
+
             response = await fetch(fullUrl, {
                 ...fetchOptions,
-                headers,
-                credentials: 'include'});
+                headers: retryHeaders,
+                credentials: 'include',
+            });
         } else {
             // Refresh failed, logout the user
             logout();
@@ -68,9 +82,11 @@ export async function authFetchJson<T = any>(
     try {
         const response = await authFetch(url, {
             ...options,
-            credentials: 'include', headers: {
+            headers: {
                 'Content-Type': 'application/json',
-                ...options.headers}});
+                ...options.headers,
+            },
+        });
 
         const json = await response.json();
 
@@ -78,18 +94,20 @@ export async function authFetchJson<T = any>(
             return {
                 data: null,
                 error: json.error?.message || json.message || 'Request failed',
-                response};
+                response,
+            };
         }
 
         return {
             data: json.data || json,
             error: null,
-            response};
+            response,
+        };
     } catch (error) {
         return {
             data: null,
             error: error instanceof Error ? error.message : 'Network error',
-            response: new Response(null, { status: 0 })};
+            response: new Response(null, { status: 0 }),
+        };
     }
 }
-
