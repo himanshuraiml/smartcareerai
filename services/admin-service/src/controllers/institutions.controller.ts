@@ -142,18 +142,50 @@ export class InstitutionsController {
 
             let admin = institution.admins[0];
 
-            if (admin) {
-                // Update existing admin
+            if (admin && admin.email === email) {
+                // Same admin, just refresh invite credentials
                 admin = await prisma.user.update({
                     where: { id: admin.id },
                     data: {
-                        email: email, // Update email if changed
                         passwordHash,
                         verifyToken: inviteToken,
                         resetExpires: tokenExpires,
                         isVerified: false
                     }
                 });
+            } else if (admin && admin.email !== email) {
+                // Different email — remove old admin role, then assign new one
+                await prisma.user.update({
+                    where: { id: admin.id },
+                    data: { role: 'USER', adminForInstitutionId: null }
+                });
+
+                const existingUser = await prisma.user.findUnique({ where: { email } });
+                if (existingUser) {
+                    admin = await prisma.user.update({
+                        where: { id: existingUser.id },
+                        data: {
+                            role: 'INSTITUTION_ADMIN',
+                            adminForInstitutionId: institution.id,
+                            passwordHash,
+                            verifyToken: inviteToken,
+                            resetExpires: tokenExpires,
+                            isVerified: false
+                        }
+                    });
+                } else {
+                    admin = await prisma.user.create({
+                        data: {
+                            email,
+                            passwordHash,
+                            role: 'INSTITUTION_ADMIN',
+                            adminForInstitutionId: institution.id,
+                            isVerified: false,
+                            verifyToken: inviteToken,
+                            resetExpires: tokenExpires
+                        }
+                    });
+                }
             } else {
                 // Check if user with this email already exists
                 const existingUser = await prisma.user.findUnique({ where: { email } });
