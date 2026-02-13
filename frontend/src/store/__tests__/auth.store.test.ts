@@ -14,8 +14,7 @@ const resetStore = () => {
         refreshToken: null,
         isLoading: false,
         error: null,
-        _hasHydrated: false,
-    });
+        _hasHydrated: false});
 };
 
 describe('AuthStore', () => {
@@ -42,8 +41,7 @@ describe('AuthStore', () => {
                 email: 'test@example.com',
                 name: 'Test User',
                 avatarUrl: null,
-                isVerified: true,
-            };
+                isVerified: true};
 
             mockFetch.mockResolvedValueOnce({
                 ok: true,
@@ -51,10 +49,7 @@ describe('AuthStore', () => {
                     data: {
                         user: mockUser,
                         accessToken: 'mock-access-token',
-                        refreshToken: 'mock-refresh-token',
-                    },
-                }),
-            });
+                        refreshToken: 'mock-refresh-token'}})});
 
             const { login } = useAuthStore.getState();
             const result = await act(async () => {
@@ -75,9 +70,7 @@ describe('AuthStore', () => {
             mockFetch.mockResolvedValueOnce({
                 ok: false,
                 json: () => Promise.resolve({
-                    error: { message: 'Invalid credentials' },
-                }),
-            });
+                    error: { message: 'Invalid credentials' }})});
 
             const { login } = useAuthStore.getState();
             const result = await act(async () => {
@@ -127,9 +120,7 @@ describe('AuthStore', () => {
             resolvePromise!({
                 ok: true,
                 json: () => Promise.resolve({
-                    data: { user: null, accessToken: 'token', refreshToken: 'refresh' },
-                }),
-            });
+                    data: { user: null, accessToken: 'token', refreshToken: 'refresh' }})});
 
             await loginPromise;
 
@@ -145,8 +136,7 @@ describe('AuthStore', () => {
                 email: 'new@example.com',
                 name: 'New User',
                 avatarUrl: null,
-                isVerified: false,
-            };
+                isVerified: false};
 
             mockFetch.mockResolvedValueOnce({
                 ok: true,
@@ -154,10 +144,7 @@ describe('AuthStore', () => {
                     data: {
                         user: mockUser,
                         accessToken: 'new-access-token',
-                        refreshToken: 'new-refresh-token',
-                    },
-                }),
-            });
+                        refreshToken: 'new-refresh-token'}})});
 
             const { register } = useAuthStore.getState();
             const result = await act(async () => {
@@ -175,9 +162,7 @@ describe('AuthStore', () => {
             mockFetch.mockResolvedValueOnce({
                 ok: false,
                 json: () => Promise.resolve({
-                    error: { message: 'Email already exists' },
-                }),
-            });
+                    error: { message: 'Email already exists' }})});
 
             const { register } = useAuthStore.getState();
             const result = await act(async () => {
@@ -195,8 +180,7 @@ describe('AuthStore', () => {
             useAuthStore.setState({
                 user: { id: '123', email: 'test@example.com', name: 'Test', avatarUrl: null, isVerified: true },
                 accessToken: 'token',
-                refreshToken: 'refresh',
-            });
+                refreshToken: 'refresh'});
 
             mockFetch.mockResolvedValueOnce({ ok: true });
 
@@ -215,8 +199,7 @@ describe('AuthStore', () => {
             useAuthStore.setState({
                 user: { id: '123', email: 'test@example.com', name: 'Test', avatarUrl: null, isVerified: true },
                 accessToken: 'test-token',
-                refreshToken: 'test-refresh',
-            });
+                refreshToken: 'test-refresh'});
 
             mockFetch.mockResolvedValueOnce({ ok: true });
 
@@ -228,9 +211,7 @@ describe('AuthStore', () => {
                 expect.objectContaining({
                     method: 'POST',
                     headers: expect.objectContaining({
-                        'Authorization': 'Bearer test-token',
-                    }),
-                })
+                        'Authorization': 'Bearer test-token'})})
             );
         });
     });
@@ -238,18 +219,14 @@ describe('AuthStore', () => {
     describe('refreshAccessToken', () => {
         it('successfully refreshes token', async () => {
             useAuthStore.setState({
-                refreshToken: 'old-refresh-token',
-            });
+                refreshToken: 'old-refresh-token'});
 
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: () => Promise.resolve({
                     data: {
                         accessToken: 'new-access-token',
-                        refreshToken: 'new-refresh-token',
-                    },
-                }),
-            });
+                        refreshToken: 'new-refresh-token'}})});
 
             const { refreshAccessToken } = useAuthStore.getState();
             const result = await act(async () => {
@@ -276,13 +253,11 @@ describe('AuthStore', () => {
             useAuthStore.setState({
                 user: { id: '123', email: 'test@example.com', name: 'Test', avatarUrl: null, isVerified: true },
                 accessToken: 'old-token',
-                refreshToken: 'old-refresh',
-            });
+                refreshToken: 'old-refresh'});
 
             mockFetch.mockResolvedValueOnce({
                 ok: false,
-                json: () => Promise.resolve({ error: 'Token expired' }),
-            });
+                json: () => Promise.resolve({ error: 'Token expired' })});
 
             const { refreshAccessToken } = useAuthStore.getState();
             const result = await act(async () => {
@@ -313,17 +288,13 @@ describe('AuthStore', () => {
         it('successfully updates target job role', async () => {
             useAuthStore.setState({
                 user: { id: '123', email: 'test@example.com', name: 'Test', avatarUrl: null, isVerified: true },
-                accessToken: 'test-token',
-            });
+                accessToken: 'test-token'});
 
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: () => Promise.resolve({
                     data: {
-                        targetJobRole: { id: 'role-1', title: 'Software Engineer', category: 'Engineering' },
-                    },
-                }),
-            });
+                        targetJobRole: { id: 'role-1', title: 'Software Engineer', category: 'Engineering' }}})});
 
             const { updateTargetJobRole } = useAuthStore.getState();
             const result = await act(async () => {
@@ -359,3 +330,4 @@ describe('AuthStore', () => {
         });
     });
 });
+

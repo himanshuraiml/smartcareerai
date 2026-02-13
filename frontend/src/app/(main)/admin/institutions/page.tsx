@@ -25,7 +25,7 @@ interface Institution {
 }
 
 export default function AdminInstitutionsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -47,10 +47,10 @@ export default function AdminInstitutionsPage() {
     const [inviteEmail, setInviteEmail] = useState('');
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             loadData();
         }
-    }, [accessToken]);
+    }, [user]);
 
     const showToast = (type: 'success' | 'error', message: string) => {
         setToast({ type, message });
@@ -622,3 +622,5 @@ export default function AdminInstitutionsPage() {
         </div>
     );
 }
+
+

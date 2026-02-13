@@ -1,10 +1,9 @@
-import { PrismaClient, CreditType, TransactionType } from '@prisma/client';
+import { CreditType, TransactionType } from '@prisma/client';
 import { razorpayService } from './razorpay.service';
 import { subscriptionService } from './subscription.service';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/prisma';
 
 // Default credit pricing in paise (INR * 100) - fallback when not in database
 const DEFAULT_CREDIT_PRICES: Record<string, number> = {

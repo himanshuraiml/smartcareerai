@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { InterviewController } from '../controllers/interview.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 const controller = new InterviewController();
+
+// Apply auth middleware to all routes
+router.use(authMiddleware);
 
 // Configure multer for memory storage (files stored in buffer)
 const storage = multer.memoryStorage();

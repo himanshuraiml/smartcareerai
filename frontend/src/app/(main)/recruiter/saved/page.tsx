@@ -30,7 +30,7 @@ interface SavedCandidate {
 }
 
 export default function SavedCandidatesPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [candidates, setCandidates] = useState<SavedCandidate[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ export default function SavedCandidatesPage() {
         const fetchSaved = async () => {
             try {
                 const response = await fetch(`${API_URL}/recruiter/candidates/saved`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
 
                 if (response.ok) {
@@ -52,14 +52,14 @@ export default function SavedCandidatesPage() {
             }
         };
 
-        if (accessToken) fetchSaved();
-    }, [accessToken]);
+        if (user) fetchSaved();
+    }, [user]);
 
     const removeCandidate = async (candidateId: string) => {
         try {
             const response = await fetch(`${API_URL}/recruiter/candidates/${candidateId}`, {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -74,11 +74,10 @@ export default function SavedCandidatesPage() {
         try {
             const response = await fetch(`${API_URL}/recruiter/candidates/${candidateId}/status`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ status }),
+                body: JSON.stringify({ status })
             });
 
             if (response.ok) {
@@ -163,3 +162,6 @@ export default function SavedCandidatesPage() {
         </div>
     );
 }
+
+
+

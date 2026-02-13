@@ -22,7 +22,7 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ currentUserXp = 0 }: LeaderboardProps) {
-    const { user, accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [userRank, setUserRank] = useState<number | null>(null);
     const [userXp, setUserXp] = useState<number>(currentUserXp);
@@ -36,8 +36,7 @@ export default function Leaderboard({ currentUserXp = 0 }: LeaderboardProps) {
             setError(null);
             try {
                 const headers: Record<string, string> = {};
-                if (accessToken) {
-                    headers['Authorization'] = `Bearer ${accessToken}`;
+                if (user) {
                 }
 
                 const res = await fetch(`${API_URL}/auth/leaderboard?limit=20`, { headers });
@@ -59,7 +58,7 @@ export default function Leaderboard({ currentUserXp = 0 }: LeaderboardProps) {
         };
 
         fetchLeaderboard();
-    }, [accessToken]);
+    }, [user]);
 
     const getRankIcon = (rank: number) => {
         switch (rank) {
@@ -189,3 +188,6 @@ export default function Leaderboard({ currentUserXp = 0 }: LeaderboardProps) {
         </div>
     );
 }
+
+
+

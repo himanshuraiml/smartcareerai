@@ -22,7 +22,7 @@ interface AddApplicationDialogProps {
 }
 
 export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: AddApplicationDialogProps) {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const { theme } = useTheme();
     const isLight = theme === 'light';
     const [loading, setLoading] = useState(false);
@@ -32,8 +32,7 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         location: '',
         sourceUrl: '',
         salaryMin: '',
-        status: 'APPLIED',
-    });
+        status: 'APPLIED'});
 
     if (!isOpen) return null;
 
@@ -44,10 +43,8 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         try {
             const response = await fetch(`${API_URL}/applications`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     status: formData.status,
                     job: {
@@ -56,10 +53,8 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                         location: formData.location,
                         sourceUrl: formData.sourceUrl,
                         salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
-                        description: 'Manual entry',
-                    }
-                }),
-            });
+                        description: 'Manual entry'}
+                })});
 
             if (response.ok) {
                 onSuccess();
@@ -70,8 +65,7 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                     location: '',
                     sourceUrl: '',
                     salaryMin: '',
-                    status: 'APPLIED',
-                });
+                    status: 'APPLIED'});
             } else {
                 console.error('Failed to create application');
                 const data = await response.json();
@@ -104,8 +98,7 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                 style={{
                     background: cardBg,
                     color: textColor,
-                    borderColor: inputBorder,
-                }}
+                    borderColor: inputBorder}}
             >
                 {/* Header */}
                 <div className="flex items-start justify-between px-8 pt-8 pb-2">
@@ -274,3 +267,6 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         </div>
     );
 }
+
+
+

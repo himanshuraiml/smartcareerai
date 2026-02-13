@@ -24,7 +24,7 @@ interface InterviewSession {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function InterviewsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [sessions, setSessions] = useState<InterviewSession[]>([]);
     const [loading, setLoading] = useState(true);
     const [showNewModal, setShowNewModal] = useState(false);
@@ -47,7 +47,7 @@ export default function InterviewsPage() {
     const fetchSessions = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -58,13 +58,13 @@ export default function InterviewsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchSessions();
         }
-    }, [accessToken, fetchSessions]);
+    }, [user, fetchSessions]);
 
     const [error, setError] = useState<string | null>(null);
     const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -75,11 +75,10 @@ export default function InterviewsPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(newSession),
+                body: JSON.stringify(newSession)
             });
 
             const data = await response.json();
@@ -446,3 +445,6 @@ export default function InterviewsPage() {
         </div>
     );
 }
+
+
+

@@ -8,8 +8,8 @@ import { subscriptionRouter } from './routes/subscription.routes';
 import { creditRouter } from './routes/credit.routes';
 import { webhookRouter } from './routes/webhook.routes';
 import { errorHandler } from './middleware/error.middleware';
+import { contextMiddleware } from './middleware/context.middleware';
 import { logger } from './utils/logger';
-
 
 // Catch startup errors that would otherwise cause silent SIGTERM
 process.on('uncaughtException', (err) => {
@@ -32,6 +32,7 @@ app.use(cors());
 // Webhook route needs raw body for signature verification
 app.use('/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
+app.use(contextMiddleware);
 
 // Health check
 app.get('/health', (_req, res) => {

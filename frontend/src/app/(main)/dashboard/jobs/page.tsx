@@ -31,7 +31,7 @@ interface Job {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function JobsPage() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ export default function JobsPage() {
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/jobs/for-me?limit=20`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -62,7 +62,7 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchJobs = useCallback(async () => {
         setLoading(true);
@@ -79,7 +79,7 @@ export default function JobsPage() {
             }
 
             const response = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -91,13 +91,13 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, searchQuery, locationFilter, remoteOnly]);
+    }, [user, searchQuery, locationFilter, remoteOnly]);
 
     const fetchMatchingJobs = useCallback(async () => {
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/jobs/match?limit=20`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -109,7 +109,7 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchFromAggregator = useCallback(async (query?: string) => {
         setLoading(true);
@@ -117,7 +117,7 @@ export default function JobsPage() {
             const defaultQuery = query || user?.targetJobRole?.title || 'Software Engineer';
             const response = await fetch(`${API_URL}/jobs/aggregate?q=${encodeURIComponent(defaultQuery)}&limit=10`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -129,12 +129,12 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, user?.targetJobRole?.title, fetchPersonalizedJobs]);
+    }, [user, user?.targetJobRole?.title, fetchPersonalizedJobs]);
 
     const fetchSavedJobs = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/jobs/saved`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -145,15 +145,15 @@ export default function JobsPage() {
         } catch (err) {
             console.error('Failed to fetch saved jobs:', err);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             // Always fetch personalized jobs first based on user's target role
             fetchPersonalizedJobs();
             fetchSavedJobs();
         }
-    }, [accessToken, fetchPersonalizedJobs, fetchSavedJobs]);
+    }, [user, fetchPersonalizedJobs, fetchSavedJobs]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -172,7 +172,7 @@ export default function JobsPage() {
             if (isSaved) {
                 await fetch(`${API_URL}/jobs/jobs/${jobId}/save`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
                 setSavedJobIds(prev => {
                     const next = new Set(prev);
@@ -182,7 +182,7 @@ export default function JobsPage() {
             } else {
                 await fetch(`${API_URL}/jobs/jobs/${jobId}/save`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
                 setSavedJobIds(prev => new Set([...Array.from(prev), jobId]));
             }
@@ -205,7 +205,7 @@ export default function JobsPage() {
         const colors: Record<string, string> = {
             remote: 'bg-green-500/10 text-green-400',
             hybrid: 'bg-blue-500/10 text-blue-400',
-            onsite: 'bg-gray-500/10 text-gray-400',
+            onsite: 'bg-gray-500/10 text-gray-400'
         };
         return colors[type] || colors.onsite;
     };
@@ -218,9 +218,8 @@ export default function JobsPage() {
         try {
             await fetch(`${API_URL}/applications`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     jobId: selectedJob.id,
@@ -547,3 +546,6 @@ export default function JobsPage() {
         </div>
     );
 }
+
+
+

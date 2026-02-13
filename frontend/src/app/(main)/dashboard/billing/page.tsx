@@ -36,7 +36,7 @@ interface Transaction {
 }
 
 export default function BillingPage() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [subscription, setSubscription] = useState<Subscription | null>(null);
     const [credits, setCredits] = useState<Credits>({ resumeReviews: 0, interviews: 0, skillTests: 0 });
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -45,13 +45,12 @@ export default function BillingPage() {
 
     const fetchBillingData = useCallback(async () => {
         try {
-            const headers = { Authorization: `Bearer ${accessToken}` };
 
             // Parallel fetch for speed
             const [subRes, creditsRes, transRes] = await Promise.all([
-                fetch(`${API_URL}/billing/subscriptions`, { headers }),
-                fetch(`${API_URL}/billing/credits/balances`, { headers }),
-                fetch(`${API_URL}/billing/credits/history`, { headers }),
+                fetch(`${API_URL}/billing/subscriptions`, { credentials: 'include' }),
+                fetch(`${API_URL}/billing/credits/balances`, { credentials: 'include' }),
+                fetch(`${API_URL}/billing/credits/history`, { credentials: 'include' }),
             ]);
 
             if (subRes.ok) {
@@ -66,7 +65,7 @@ export default function BillingPage() {
                 setCredits({
                     resumeReviews: creditData.RESUME_REVIEW || 0,
                     interviews: creditData.AI_INTERVIEW || 0,
-                    skillTests: creditData.SKILL_TEST || 0,
+                    skillTests: creditData.SKILL_TEST || 0
                 });
             }
 
@@ -80,13 +79,13 @@ export default function BillingPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchBillingData();
         }
-    }, [accessToken, fetchBillingData]);
+    }, [user, fetchBillingData]);
 
     return (
         <div className="space-y-8">
@@ -232,3 +231,6 @@ export default function BillingPage() {
         </div>
     );
 }
+
+
+

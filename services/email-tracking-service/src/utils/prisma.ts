@@ -1,11 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
-declare global {
-    var prisma: PrismaClient | undefined;
-}
+const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT || '2';
+const databaseUrl = `${process.env.DATABASE_URL}${process.env.DATABASE_URL?.includes('?') ? '&' : '?'}connection_limit=${connectionLimit}`;
 
-export const prisma = global.prisma || new PrismaClient();
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+
+export const prisma =
+    globalForPrisma.prisma ??
+    new PrismaClient({
+        log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+        datasources: { db: { url: databaseUrl } },
+    });
 
 if (process.env.NODE_ENV !== 'production') {
-    global.prisma = prisma;
+    globalForPrisma.prisma = prisma;
 }

@@ -73,7 +73,7 @@ const normalizeUUID = (id: string | string[] | undefined): string | null => {
 export default function InterviewRoomPage() {
     const params = useParams();
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
 
     // Normalize the session ID
     const sessionId = normalizeUUID(params.id);
@@ -102,8 +102,7 @@ export default function InterviewRoomPage() {
         pauseRecording,
         resumeRecording,
         resetRecording,
-        error: recordingError,
-    } = useAudioRecorder({ maxDuration: 180 }); // 3 min max
+        error: recordingError } = useAudioRecorder({ maxDuration: 180 }); // 3 min max
 
     // Video recording hook
     const {
@@ -120,8 +119,7 @@ export default function InterviewRoomPage() {
         pauseRecording: pauseVideoRecording,
         resumeRecording: resumeVideoRecording,
         resetRecording: resetVideoRecording,
-        error: videoRecordingError,
-    } = useVideoRecorder({ maxDuration: 180 }); // 3 min max
+        error: videoRecordingError } = useVideoRecorder({ maxDuration: 180 }); // 3 min max
 
     // Video preview ref
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -151,7 +149,7 @@ export default function InterviewRoomPage() {
         }
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -168,16 +166,16 @@ export default function InterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [sessionId, accessToken]);
+    }, [sessionId, user]);
 
     useEffect(() => {
-        if (accessToken && sessionId) {
+        if (user && sessionId) {
             fetchSession();
         } else if (!sessionId && params.id) {
             setInvalidId(true);
             setLoading(false);
         }
-    }, [accessToken, sessionId, params.id, fetchSession]);
+    }, [user, sessionId, params.id, fetchSession]);
 
     const startInterview = async () => {
         if (!sessionId) return;
@@ -185,7 +183,7 @@ export default function InterviewRoomPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/start`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 // Route based on interview type
@@ -222,10 +220,9 @@ export default function InterviewRoomPage() {
 
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/audio`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
                 },
-                body: formData,
+                body: formData
             });
 
             if (response.ok) {
@@ -239,7 +236,7 @@ export default function InterviewRoomPage() {
                         ...updatedQuestions[currentQuestionIndex],
                         userAnswer: data.data.audioAnalysis?.transcription || '[Audio Answer]',
                         score: data.data.evaluation?.score,
-                        feedback: data.data.evaluation?.feedback,
+                        feedback: data.data.evaluation?.feedback
                     };
                     return { ...prev, questions: updatedQuestions };
                 });
@@ -280,10 +277,9 @@ export default function InterviewRoomPage() {
 
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
                 },
-                body: formData,
+                body: formData
             });
 
             if (response.ok) {
@@ -297,7 +293,7 @@ export default function InterviewRoomPage() {
                         ...updatedQuestions[currentQuestionIndex],
                         userAnswer: '[Video Answer]',
                         score: data.data.evaluation?.score || null,
-                        feedback: data.data.evaluation?.feedback || data.data.note,
+                        feedback: data.data.evaluation?.feedback || data.data.note
                     };
                     return { ...prev, questions: updatedQuestions };
                 });
@@ -332,14 +328,13 @@ export default function InterviewRoomPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     questionId: question.id,
-                    answer: currentAnswer,
-                }),
+                    answer: currentAnswer
+                })
             });
 
             if (response.ok) {
@@ -353,7 +348,7 @@ export default function InterviewRoomPage() {
                         ...updatedQuestions[currentQuestionIndex],
                         userAnswer: currentAnswer,
                         score: data.data.evaluation.score,
-                        feedback: data.data.evaluation.feedback,
+                        feedback: data.data.evaluation.feedback
                     };
                     return { ...prev, questions: updatedQuestions };
                 });
@@ -382,7 +377,7 @@ export default function InterviewRoomPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -660,10 +655,10 @@ export default function InterviewRoomPage() {
                                 key={q.id}
                                 onClick={() => setSelectedQuestionIndex(i)}
                                 className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedQuestionIndex
-                                        ? 'bg-teal-500 text-white'
-                                        : q.userAnswer
-                                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                            : 'bg-gray-800/50 text-gray-500'
+                                    ? 'bg-teal-500 text-white'
+                                    : q.userAnswer
+                                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        : 'bg-gray-800/50 text-gray-500'
                                     }`}
                             >
                                 {i + 1}
@@ -1340,3 +1335,5 @@ export default function InterviewRoomPage() {
         </div>
     );
 }
+
+

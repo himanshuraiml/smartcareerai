@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/__tests__/health.test.ts","./src/controllers/skill.controller.ts","./src/middleware/auth.middleware.ts","./src/middleware/error.middleware.ts","./src/routes/skill.routes.ts","./src/services/skill.service.ts","./src/utils/errors.ts","./src/utils/gemini.ts","./src/utils/logger.ts","./src/utils/prisma.ts"],"version":"5.9.3"}

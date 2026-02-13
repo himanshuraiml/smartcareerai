@@ -29,14 +29,14 @@ interface Job {
 }
 
 export default function JobPostingsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchJobs = async () => {
         try {
             const response = await fetch(`${API_URL}/recruiter/jobs`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -51,14 +51,14 @@ export default function JobPostingsPage() {
     };
 
     useEffect(() => {
-        if (accessToken) fetchJobs();
-    }, [accessToken]);
+        if (user) fetchJobs();
+    }, [user]);
 
     const toggleStatus = async (jobId: string) => {
         try {
             const response = await fetch(`${API_URL}/recruiter/jobs/${jobId}/toggle`, {
                 method: 'PUT',
-                headers: { Authorization: `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 fetchJobs(); // Refresh
@@ -73,7 +73,7 @@ export default function JobPostingsPage() {
         try {
             const response = await fetch(`${API_URL}/recruiter/jobs/${jobId}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 setJobs(prev => prev.filter(j => j.id !== jobId));
@@ -162,3 +162,6 @@ export default function JobPostingsPage() {
         </div>
     );
 }
+
+
+

@@ -27,7 +27,7 @@ const mockResumeData = {
         phone: '+61 412 345 678',
         linkedin: 'linkedin.com/in/michaelharris',
         portfolio: 'michael.design',
-        summary: 'Results-oriented marketing professional with 5+ years of experience in digital strategy, brand growth, and content creation. Proven ability to drive engagement and ROI.',
+        summary: 'Results-oriented marketing professional with 5+ years of experience in digital strategy, brand growth, and content creation. Proven ability to drive engagement and ROI.'
     },
     experience: [
         {
@@ -37,7 +37,7 @@ const mockResumeData = {
             startDate: 'Jan 2022',
             endDate: 'Present',
             current: true,
-            description: '• Led team of 5 in executing digital strategies.\n• Achieved 35% increase in web traffic.',
+            description: '• Led team of 5 in executing digital strategies.\n• Achieved 35% increase in web traffic.'
         },
         {
             id: '2',
@@ -46,7 +46,7 @@ const mockResumeData = {
             startDate: '2018',
             endDate: '2021',
             current: false,
-            description: '• Executed SEO/SEM strategies, +25% organic traffic.\n• Managed Google Ads campaigns.',
+            description: '• Executed SEO/SEM strategies, +25% organic traffic.\n• Managed Google Ads campaigns.'
         },
     ],
     education: [
@@ -57,7 +57,7 @@ const mockResumeData = {
             field: 'Digital Strategy',
             startDate: '2015',
             endDate: '2018',
-            grade: '3.8 GPA',
+            grade: '3.8 GPA'
         },
     ],
     skills: ['SEO', 'Google Analytics', 'Content Marketing', 'Social Media', 'Project Management'],
@@ -79,11 +79,11 @@ const mockResumeData = {
     awards: [],
     coCurricular: [],
     industrialVisits: [],
-    hobbies: ['Photography', 'Cycling'],
+    hobbies: ['Photography', 'Cycling']
 };
 
 export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [templates, setTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
         const fetchTemplates = async () => {
             try {
                 const res = await fetch(`${API_URL}/resumes/templates`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                    credentials: 'include', headers: {}
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -105,8 +105,8 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
             }
         };
 
-        if (accessToken) fetchTemplates();
-    }, [accessToken]);
+        if (user) fetchTemplates();
+    }, [user]);
 
     if (loading) {
         return (
@@ -201,3 +201,6 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
         </div>
     );
 }
+
+
+

@@ -1,6 +1,7 @@
 import { Client } from 'minio';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
+import cron from 'node-cron';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
@@ -18,15 +19,25 @@ export class ResumeService {
     private bucketName: string;
 
     constructor() {
+        const endPoint = process.env.MINIO_ENDPOINT || 'localhost';
+        const port = parseInt(process.env.MINIO_PORT || '9000');
+        const accessKey = process.env.MINIO_ACCESS_KEY;
+        const secretKey = process.env.MINIO_SECRET_KEY;
+
+        if (!accessKey || !secretKey) {
+            throw new Error('MINIO_ACCESS_KEY or MINIO_SECRET_KEY is not defined');
+        }
+
         this.minioClient = new Client({
-            endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-            port: parseInt(process.env.MINIO_PORT || '9000'),
-            useSSL: false,
-            accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-            secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin123',
+            endPoint,
+            port,
+            useSSL: process.env.NODE_ENV === 'production',
+            accessKey,
+            secretKey,
         });
         this.bucketName = process.env.MINIO_BUCKET || 'resumes';
         this.initBucket();
+        this.startCleanupTask();
     }
 
     private async initBucket() {
@@ -41,10 +52,67 @@ export class ResumeService {
         }
     }
 
+    private startCleanupTask() {
+        // Run every day at midnight
+        cron.schedule('0 0 * * *', async () => {
+            logger.info('Starting daily resume cleanup task...');
+            try {
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                // 1. Find old PENDING resumes
+                const pendingResumes = await prisma.resume.findMany({
+                    where: {
+                        status: 'PENDING',
+                        createdAt: { lt: thirtyDaysAgo },
+                    },
+                });
+
+                // 2. Find old soft-deleted resumes
+                const deletedResumes = await prisma.resume.findMany({
+                    where: {
+                        isActive: false,
+                        updatedAt: { lt: thirtyDaysAgo },
+                    },
+                });
+
+                const toDelete = [...pendingResumes, ...deletedResumes];
+
+                if (toDelete.length === 0) {
+                    logger.info('No resumes to clean up today.');
+                    return;
+                }
+
+                logger.info(`Cleaning up ${toDelete.length} resumes...`);
+
+                for (const resume of toDelete) {
+                    try {
+                        // Delete from MinIO
+                        await this.minioClient.removeObject(this.bucketName, resume.fileName);
+
+                        // Delete from Database (permanent delete)
+                        await prisma.resume.delete({
+                            where: { id: resume.id },
+                        });
+
+                        logger.info(`Permanently deleted resume ${resume.id} from storage and DB.`);
+                    } catch (err) {
+                        logger.error(`Failed to delete resume ${resume.id} during cleanup:`, err);
+                    }
+                }
+
+                logger.info('Daily resume cleanup task completed successfully.');
+            } catch (error) {
+                logger.error('Error in daily resume cleanup task:', error);
+            }
+        });
+    }
+
     async uploadResume(userId: string, file: UploadedFile) {
-        // Generate unique filename
+        // Sanitize and generate unique filename
         const timestamp = Date.now();
-        const storageKey = `${userId}/${timestamp}-${file.originalname}`;
+        const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100);
+        const storageKey = `${userId}/${timestamp}-${sanitizedName}`;
 
         // Upload to MinIO
         await this.minioClient.putObject(
@@ -55,11 +123,11 @@ export class ResumeService {
             { 'Content-Type': file.mimetype }
         );
 
-        // Generate presigned URL (valid for 7 days)
+        // Generate presigned URL (valid for 2 hours for security)
         const fileUrl = await this.minioClient.presignedGetObject(
             this.bucketName,
             storageKey,
-            7 * 24 * 60 * 60
+            2 * 60 * 60
         );
 
         // Save to database

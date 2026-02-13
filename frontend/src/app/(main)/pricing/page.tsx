@@ -131,7 +131,7 @@ const PLAN_COLORS: Record<string, string> = {
 
 export default function PricingPage() {
     const router = useRouter();
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const isRazorpayLoaded = useRazorpay();
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
     const [loading, setLoading] = useState<string | null>(null);
@@ -230,7 +230,7 @@ export default function PricingPage() {
     };
 
     const handleSubscribe = async (plan: PricingPlan) => {
-        if (!accessToken) {
+        if (!user) {
             router.push("/login?redirect=/pricing");
             return;
         }
@@ -244,13 +244,13 @@ export default function PricingPage() {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
                     },
                     body: JSON.stringify({
                         planName: "free",
                         userEmail: user?.email,
                         userName: user?.name,
                     }),
+                    credentials: 'include',
                 });
 
                 if (response.ok) {
@@ -268,12 +268,12 @@ export default function PricingPage() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     planName: plan.name,
                     billingCycle: billingCycle, // Send selected billing cycle (monthly/yearly)
                 }),
+                credentials: 'include',
             });
 
             const data = await response.json();
@@ -329,11 +329,11 @@ export default function PricingPage() {
             {/* Back Button */}
             <div className="max-w-7xl mx-auto mb-8">
                 <button
-                    onClick={() => accessToken ? router.push('/dashboard') : router.push('/')}
+                    onClick={() => user ? router.push('/dashboard') : router.push('/')}
                     className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back to {accessToken ? 'Dashboard' : 'Home'}</span>
+                    <span className="text-sm font-medium">Back to {user ? 'Dashboard' : 'Home'}</span>
                 </button>
             </div>
 
@@ -466,3 +466,5 @@ export default function PricingPage() {
         </div>
     );
 }
+
+

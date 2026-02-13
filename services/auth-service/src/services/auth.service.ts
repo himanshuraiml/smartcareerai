@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { sendPasswordResetEmail } from '../utils/email';
 
 interface TokenPayload {
     id: string;
@@ -14,8 +15,13 @@ interface TokenPayload {
 }
 
 export class AuthService {
-    private readonly JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
-    private readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'; // 24 hours for development
+    private get JWT_SECRET(): string {
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is not defined in environment variables');
+        }
+        return process.env.JWT_SECRET;
+    }
+    private readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'; // 15 minutes
     private readonly REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d'; // 30 days
 
     async register(email: string, password: string, name?: string, targetJobRoleId?: string, institutionId?: string) {
@@ -67,7 +73,9 @@ export class AuthService {
         }
 
         // TODO: Send verification email
-        logger.info(`Verification token for ${email}: ${verifyToken}`);
+        if (process.env.NODE_ENV !== 'production') {
+            logger.info(`Verification token for ${email}: ${verifyToken}`);
+        }
 
         // Log registration activity
         try {
@@ -266,24 +274,41 @@ export class AuthService {
     }
 
     async logout(userId: string, refreshToken?: string) {
+        let finalUserId = userId;
+
         if (refreshToken) {
+            // Try to find the user from the refresh token if userId is unknown
+            if (finalUserId === 'unknown' || !finalUserId) {
+                const storedToken = await prisma.refreshToken.findUnique({
+                    where: { token: refreshToken },
+                    select: { userId: true }
+                });
+                if (storedToken) {
+                    finalUserId = storedToken.userId;
+                }
+            }
+
             await prisma.refreshToken.deleteMany({
-                where: { token: refreshToken, userId },
+                where: { token: refreshToken },
             });
-        } else {
+        } else if (finalUserId && finalUserId !== 'unknown') {
             // Logout from all devices
-            await prisma.refreshToken.deleteMany({ where: { userId } });
+            await prisma.refreshToken.deleteMany({ where: { userId: finalUserId } });
         }
 
         // Log logout activity (fire and forget)
-        prisma.activityLog.create({
-            data: {
-                type: 'USER_LOGOUT',
-                message: `User ${userId} logged out`,
-                userId: userId,
-                status: 'SUCCESS'
-            }
-        }).catch(err => logger.error('Failed to log logout activity', err));
+        if (finalUserId && finalUserId !== 'unknown') {
+            prisma.activityLog.create({
+                data: {
+                    type: 'USER_LOGOUT',
+                    message: `User ${finalUserId} logged out`,
+                    userId: finalUserId,
+                    status: 'SUCCESS'
+                }
+            }).catch(err => logger.error('Failed to log logout activity', err));
+        } else {
+            logger.info('Anonymous logout or session expired');
+        }
     }
 
     async getUserById(userId: string) {
@@ -329,6 +354,12 @@ export class AuthService {
             return;
         }
 
+        // Google-only users don't have a usable password — silently skip
+        if (user.googleId) {
+            logger.info(`Forgot password skipped for Google user ${email}`);
+            return;
+        }
+
         const resetToken = crypto.randomBytes(32).toString('hex');
         const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
@@ -337,11 +368,23 @@ export class AuthService {
             data: { resetToken, resetExpires },
         });
 
-        // TODO: Send reset email
-        logger.info(`Reset token for ${email}: ${resetToken}`);
+        try {
+            await sendPasswordResetEmail(email, resetToken);
+        } catch (error: any) {
+            logger.error(`Failed to send reset email to ${email}: ${error.message}`);
+        }
+    }
+
+    private validatePasswordStrength(password: string): void {
+        if (password.length < 8) throw new AppError('Password must be at least 8 characters', 400);
+        if (!/[A-Z]/.test(password)) throw new AppError('Password must contain at least one uppercase letter', 400);
+        if (!/[a-z]/.test(password)) throw new AppError('Password must contain at least one lowercase letter', 400);
+        if (!/[0-9]/.test(password)) throw new AppError('Password must contain at least one number', 400);
     }
 
     async resetPassword(token: string, password: string) {
+        this.validatePasswordStrength(password);
+
         const user = await prisma.user.findFirst({
             where: {
                 resetToken: token,
@@ -409,7 +452,7 @@ export class AuthService {
         return {
             accessToken,
             refreshToken,
-            expiresIn: 86400, // 24 hours in seconds
+            expiresIn: 900, // 15 minutes in seconds
         };
     }
 
@@ -421,6 +464,7 @@ export class AuthService {
             avatarUrl: user.avatarUrl,
             isVerified: user.isVerified,
             role: user.role,
+            hasGoogleAuth: !!user.googleId,
             targetJobRoleId: user.targetJobRoleId,
             targetJobRole: user.targetJobRole || null,
             institutionId: user.institutionId,
@@ -472,6 +516,8 @@ export class AuthService {
      * Accept an admin invite and set the password
      */
     async acceptInvite(token: string, password: string) {
+        this.validatePasswordStrength(password);
+
         const user = await prisma.user.findFirst({
             where: {
                 verifyToken: token,
@@ -511,6 +557,8 @@ export class AuthService {
      * Change user password (requires current password verification)
      */
     async changePassword(userId: string, currentPassword: string, newPassword: string) {
+        this.validatePasswordStrength(newPassword);
+
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) {
             throw new AppError('User not found', 404);
@@ -540,16 +588,26 @@ export class AuthService {
     /**
      * Delete user account and all associated data
      */
-    async deleteAccount(userId: string, password: string) {
+    async deleteAccount(userId: string, password?: string, confirmPhrase?: string) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) {
             throw new AppError('User not found', 404);
         }
 
-        // Verify password before deletion
-        const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-        if (!isValidPassword) {
-            throw new AppError('Password is incorrect', 401);
+        if (user.googleId) {
+            // Google users confirm deletion with a typed phrase
+            if (confirmPhrase !== 'DELETE') {
+                throw new AppError('Please type DELETE to confirm account deletion', 400);
+            }
+        } else {
+            // Email users confirm with their password
+            if (!password) {
+                throw new AppError('Password is required', 400);
+            }
+            const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+            if (!isValidPassword) {
+                throw new AppError('Password is incorrect', 401);
+            }
         }
 
         // Delete user (cascading deletes will handle related records)

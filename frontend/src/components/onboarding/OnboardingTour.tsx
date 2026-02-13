@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 
@@ -53,17 +53,10 @@ export const useOnboarding = () => useContext(OnboardingContext);
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
     const [showTour, setShowTour] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
-    const [hasSeenTour, setHasSeenTour] = useState(true);
-
-    useEffect(() => {
-        // Onboarding tour is disabled - it was blocking UI on admin pages
-        // Users can still manually trigger the tour via startTour() if needed
-        const seen = localStorage.getItem("placenxt_tour_completed");
-        if (!seen) {
-            setHasSeenTour(false);
-            // Auto-start disabled to prevent blocking admin/billing and other pages
-        }
-    }, []);
+    const [hasSeenTour, setHasSeenTour] = useState(() => {
+        if (typeof window === "undefined") return true;
+        return !!localStorage.getItem("placenxt_tour_completed");
+    });
 
     const startTour = () => {
         setCurrentStep(0);
@@ -170,3 +163,5 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         </OnboardingContext.Provider>
     );
 }
+
+

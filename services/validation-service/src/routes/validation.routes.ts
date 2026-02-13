@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { ValidationController } from '../controllers/validation.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 const controller = new ValidationController();
+
+router.use(authMiddleware);
 
 // Tests
 router.get('/tests', controller.getTests);

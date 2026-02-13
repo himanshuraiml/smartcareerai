@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface UseAudioRecorderOptions {
     maxDuration?: number; // in seconds
@@ -35,11 +35,38 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
     const chunksRef = useRef<Blob[]>([]);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    const stopRecordingRef = useRef<() => void>(() => {});
+    const resetRecordingRef = useRef<() => void>(() => {});
+
+    const stopRecording = useCallback(() => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            setIsPaused(false);
+
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        }
+    }, [isRecording]);
+    useEffect(() => { stopRecordingRef.current = stopRecording; }, [stopRecording]);
+
+    const resetRecording = useCallback(() => {
+        if (audioUrl) {
+            URL.revokeObjectURL(audioUrl);
+        }
+        setAudioBlob(null);
+        setAudioUrl(null);
+        setRecordingTime(0);
+        setError(null);
+        chunksRef.current = [];
+    }, [audioUrl]);
+    useEffect(() => { resetRecordingRef.current = resetRecording; }, [resetRecording]);
 
     const startRecording = useCallback(async () => {
         try {
             setError(null);
-            resetRecording();
+            resetRecordingRef.current();
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
@@ -80,7 +107,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
             timerRef.current = setInterval(() => {
                 setRecordingTime(prev => {
                     if (prev >= maxDuration) {
-                        stopRecording();
+                        stopRecordingRef.current();
                         return prev;
                     }
                     return prev + 1;
@@ -91,18 +118,6 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
             console.error('Recording error:', err);
         }
     }, [maxDuration, onRecordingComplete]);
-
-    const stopRecording = useCallback(() => {
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
-            setIsPaused(false);
-
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
-        }
-    }, [isRecording]);
 
     const pauseRecording = useCallback(() => {
         if (mediaRecorderRef.current && isRecording && !isPaused) {
@@ -123,25 +138,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}): UseAudi
             timerRef.current = setInterval(() => {
                 setRecordingTime(prev => {
                     if (prev >= maxDuration) {
-                        stopRecording();
+                        stopRecordingRef.current();
                         return prev;
                     }
                     return prev + 1;
                 });
             }, 1000);
         }
-    }, [isRecording, isPaused, maxDuration, stopRecording]);
-
-    const resetRecording = useCallback(() => {
-        if (audioUrl) {
-            URL.revokeObjectURL(audioUrl);
-        }
-        setAudioBlob(null);
-        setAudioUrl(null);
-        setRecordingTime(0);
-        setError(null);
-        chunksRef.current = [];
-    }, [audioUrl]);
+    }, [isRecording, isPaused, maxDuration]);
 
     return {
         isRecording,

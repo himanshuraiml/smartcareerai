@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -70,24 +70,17 @@ export default function PlacementReadyScore({
     jobsApplied,
     loading,
 }: PlacementReadyScoreProps) {
-    const [dailyInsight, setDailyInsight] = useState<typeof DAILY_INSIGHTS[0] | null>(null);
-    const [isLearned, setIsLearned] = useState(false);
-
-    // Get daily insight based on day of month and check if learned
-    useEffect(() => {
+    const [dailyInsight] = useState<typeof DAILY_INSIGHTS[0]>(() => {
+        const dayOfMonth = new Date().getDate();
+        return DAILY_INSIGHTS.find(i => i.day === dayOfMonth) || DAILY_INSIGHTS[0];
+    });
+    const [isLearned, setIsLearned] = useState(() => {
+        if (typeof window === 'undefined') return false;
         const today = new Date();
-        const dayOfMonth = today.getDate();
         const monthYear = `${today.getMonth()}-${today.getFullYear()}`;
-
-        // Find insight for today (day 1-31)
-        const insight = DAILY_INSIGHTS.find(i => i.day === dayOfMonth) || DAILY_INSIGHTS[0];
-        setDailyInsight(insight);
-
-        // Check if this insight was marked as learned today
-        const learnedKey = `insight-learned-${monthYear}-${dayOfMonth}`;
-        const learned = localStorage.getItem(learnedKey) === 'true';
-        setIsLearned(learned);
-    }, []);
+        const learnedKey = `insight-learned-${monthYear}-${today.getDate()}`;
+        return localStorage.getItem(learnedKey) === 'true';
+    });
 
     const handleMarkAsLearned = () => {
         const today = new Date();
@@ -405,3 +398,5 @@ export default function PlacementReadyScore({
         </div >
     );
 }
+
+

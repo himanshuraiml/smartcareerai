@@ -9,7 +9,7 @@ import { authFetch } from "@/lib/auth-fetch";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function SettingsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const { theme } = useTheme();
     const isLightMode = theme === 'light';
 
@@ -22,10 +22,10 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchSettings();
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchSettings = async () => {
         try {
@@ -498,3 +498,5 @@ export default function SettingsPage() {
         </div>
     );
 }
+
+

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Send, Search, MoreVertical, Phone, Video, Loader2, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Message {
     id: string;
@@ -13,87 +14,115 @@ interface Message {
 }
 
 interface Conversation {
-    id: string; // User ID of contact
+    id: string;
     name: string;
-    avatarUrl?: string; // Add this line
+    avatarUrl?: string;
     lastMessage: string;
     lastMessageTime: string;
     unreadCount: number;
 }
 
 export default function MessagesPage() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeChat, setActiveChat] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [loadingConversations, setLoadingConversations] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Fetch conversations on load
-    useEffect(() => {
-        if (!accessToken) return;
-
-        // Mock data for initial render until backend connects
-        const mockConversations = [
-            {
-                id: "user1",
-                name: "Alex Johnson",
-                lastMessage: "Thanks for reaching out!",
-                lastMessageTime: new Date().toISOString(),
-                unreadCount: 2
-            },
-            {
-                id: "user2",
-                name: "Maria Garcia",
-                lastMessage: "I am available for an interview tomorrow.",
-                lastMessageTime: new Date(Date.now() - 3600000).toISOString(),
-                unreadCount: 0
+    // Fetch conversations list
+    const fetchConversations = useCallback(async () => {
+        try {
+            const res = await authFetch("/messages/conversations");
+            if (res.ok) {
+                const json = await res.json();
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- async data fetching
+                setConversations(json.data || []);
             }
-        ];
+        } catch (err) {
+            console.error("Failed to fetch conversations:", err);
+        } finally {
+            setLoadingConversations(false);
+        }
+    }, []);
 
-        // In real app: fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/messages/conversations`)
-        setConversations(mockConversations);
-        setLoading(false);
-    }, [accessToken]);
+    useEffect(() => {
+        if (user) {
+            fetchConversations();
+        }
+    }, [user, fetchConversations]);
 
     // Fetch messages when chat is selected
-    useEffect(() => {
-        if (!activeChat) return;
-
-        // Mock messages
-        setMessages([
-            {
-                id: "1",
-                senderId: user?.id || "",
-                content: "Hi " + activeChat.name + ", I reviewed your profile and I'm impressed.",
-                createdAt: new Date(Date.now() - 86400000).toISOString(),
-                isRead: true
-            },
-            {
-                id: "2",
-                senderId: activeChat.id,
-                content: activeChat.lastMessage,
-                createdAt: activeChat.lastMessageTime,
-                isRead: true
+    const fetchMessages = useCallback(async (contactId: string) => {
+        setLoadingMessages(true);
+        try {
+            const res = await authFetch(`/messages?contactId=${contactId}`);
+            if (res.ok) {
+                const json = await res.json();
+                setMessages(json.data || []);
             }
-        ]);
-    }, [activeChat, user]);
+        } catch (err) {
+            console.error("Failed to fetch messages:", err);
+        } finally {
+            setLoadingMessages(false);
+        }
+    }, []);
 
-    const handleSend = () => {
-        if (!input.trim() || !activeChat) return;
+    useEffect(() => {
+        if (activeChat) {
+            fetchMessages(activeChat.id);
+        }
+    }, [activeChat, fetchMessages]);
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            senderId: user?.id || "",
-            content: input,
-            createdAt: new Date().toISOString(),
-            isRead: false
-        };
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
-        setMessages([...messages, newMessage]);
+    const handleSend = async () => {
+        if (!input.trim() || !activeChat || sending) return;
+
+        const content = input.trim();
         setInput("");
-        // In real app: POST /api/v1/messages
+        setSending(true);
+
+        // Optimistic update
+        const optimisticMsg: Message = {
+            id: `temp-${Date.now()}`,
+            senderId: user?.id || "",
+            content,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+
+        try {
+            const res = await authFetch("/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ receiverId: activeChat.id, content }),
+            });
+
+            if (res.ok) {
+                const json = await res.json();
+                // Replace optimistic message with server response
+                setMessages(prev =>
+                    prev.map(m => m.id === optimisticMsg.id ? json.data : m)
+                );
+            } else {
+                // Remove optimistic message on failure
+                setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+                setInput(content);
+            }
+        } catch {
+            setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+            setInput(content);
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -112,29 +141,42 @@ export default function MessagesPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {conversations.map(chat => (
-                        <button
-                            key={chat.id}
-                            onClick={() => setActiveChat(chat)}
-                            className={`w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors text-left ${activeChat?.id === chat.id ? "bg-white/5 border-l-2 border-blue-500" : ""}`}
-                        >
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                                <span className="text-white font-medium">{chat.name.charAt(0)}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-0.5">
-                                    <span className="font-medium text-white truncate">{chat.name}</span>
-                                    <span className="text-xs text-gray-500">12:30 PM</span>
+                    {loadingConversations ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+                        </div>
+                    ) : conversations.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                            <MessageSquare className="w-8 h-8 mb-2 opacity-30" />
+                            <p className="text-sm">No conversations yet</p>
+                        </div>
+                    ) : (
+                        conversations.map(chat => (
+                            <button
+                                key={chat.id}
+                                onClick={() => setActiveChat(chat)}
+                                className={`w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors text-left ${activeChat?.id === chat.id ? "bg-white/5 border-l-2 border-blue-500" : ""}`}
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white font-medium">{chat.name.charAt(0)}</span>
                                 </div>
-                                <p className="text-sm text-gray-400 truncate">{chat.lastMessage}</p>
-                            </div>
-                            {chat.unreadCount > 0 && (
-                                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                                    <span className="text-xs font-bold text-white">{chat.unreadCount}</span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <span className="font-medium text-white truncate">{chat.name}</span>
+                                        <span className="text-xs text-gray-500">
+                                            {new Date(chat.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-400 truncate">{chat.lastMessage}</p>
                                 </div>
-                            )}
-                        </button>
-                    ))}
+                                {chat.unreadCount > 0 && (
+                                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                        <span className="text-xs font-bold text-white">{chat.unreadCount}</span>
+                                    </div>
+                                )}
+                            </button>
+                        ))
+                    )}
                 </div>
             </div>
 
@@ -171,22 +213,32 @@ export default function MessagesPage() {
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {messages.map((msg) => {
-                                const isMe = msg.senderId === user?.id;
-                                return (
-                                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                                        <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${isMe
-                                            ? "bg-blue-600 text-white rounded-br-sm"
-                                            : "bg-white/10 text-white rounded-bl-sm"
-                                            }`}>
-                                            <p>{msg.content}</p>
-                                            <span className={`text-xs mt-1 block ${isMe ? "text-blue-200" : "text-gray-400"}`}>
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                            {loadingMessages ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+                                </div>
+                            ) : messages.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                                    <p className="text-sm">No messages yet. Start the conversation!</p>
+                                </div>
+                            ) : (
+                                messages.map((msg) => {
+                                    const isMe = msg.senderId === user?.id;
+                                    return (
+                                        <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                                            <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${isMe
+                                                ? "bg-blue-600 text-white rounded-br-sm"
+                                                : "bg-white/10 text-white rounded-bl-sm"
+                                                }`}>
+                                                <p>{msg.content}</p>
+                                                <span className={`text-xs mt-1 block ${isMe ? "text-blue-200" : "text-gray-400"}`}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
 
@@ -205,10 +257,10 @@ export default function MessagesPage() {
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!input.trim()}
+                                    disabled={!input.trim() || sending}
                                     className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Send className="w-5 h-5" />
+                                    {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                                 </button>
                             </form>
                         </div>

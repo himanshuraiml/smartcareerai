@@ -44,3 +44,5 @@ export default function MatchRadar({ data }: MatchRadarProps) {
         </div>
     );
 }
+
+

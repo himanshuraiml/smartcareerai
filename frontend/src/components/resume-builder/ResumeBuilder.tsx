@@ -103,11 +103,11 @@ const initialResumeData: ResumeData = {
     awards: [],
     coCurricular: [],
     industrialVisits: [],
-    hobbies: [],
+    hobbies: []
 };
 
 export default function ResumeBuilder() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [step, setStep] = useState(0); // 0: Template, 1: Import, 2: Edit, 3: Preview
     const [templateId, setTemplateId] = useState('');
     const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
@@ -153,15 +153,14 @@ export default function ResumeBuilder() {
         try {
             const res = await fetch(`${API_URL}/resumes/builder/optimize`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     sectionType: sectionInfo,
                     content,
-                    targetRole: user?.targetJobRole?.title || 'Software Engineer',
-                }),
+                    targetRole: user?.targetJobRole?.title || 'Software Engineer'
+                })
             });
             const data = await res.json();
             if (data.success) {
@@ -222,8 +221,8 @@ export default function ResumeBuilder() {
             formData.append('resume', file);
             const uploadRes = await fetch(`${API_URL}/resumes/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                body: formData,
+                credentials: 'include', headers: {},
+                body: formData
             });
             const uploadData = await uploadRes.json();
 
@@ -234,7 +233,7 @@ export default function ResumeBuilder() {
             // 2. Parse
             const parseRes = await fetch(`${API_URL}/resumes/${resumeId}/parse`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             const parseData = await parseRes.json();
 
@@ -252,7 +251,7 @@ export default function ResumeBuilder() {
                             ? parsed.personalInfo.links.find((l: string) => l.includes('linkedin'))
                             : parsed.linkedin) || '',
                         portfolio: parsed.personalInfo?.portfolio || parsed.portfolio || prev.personal.portfolio || '',
-                        summary: parsed.professionalSummary || parsed.summary || prev.personal.summary || '',
+                        summary: parsed.professionalSummary || parsed.summary || prev.personal.summary || ''
                     },
                     skills: Array.isArray(parsed.skills) ? parsed.skills : [],
                     experience: Array.isArray(parsed.experience) ? parsed.experience.map((exp: any) => ({
@@ -323,7 +322,7 @@ export default function ResumeBuilder() {
                         description: iv.description || ''
                     })) : [],
                     coCurricular: Array.isArray(parsed.coCurricular) ? parsed.coCurricular : [],
-                    hobbies: Array.isArray(parsed.hobbies) ? parsed.hobbies : [],
+                    hobbies: Array.isArray(parsed.hobbies) ? parsed.hobbies : []
                 }));
             }
             setStep(2); // Go to edit
@@ -1208,3 +1207,6 @@ export default function ResumeBuilder() {
 
     return null;
 }
+
+
+

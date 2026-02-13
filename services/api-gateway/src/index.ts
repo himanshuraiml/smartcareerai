@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { createProxyMiddleware, Options } from 'http-proxy-middleware';
-import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
 import { logger } from './utils/logger';
 import {
     securityHeaders,
@@ -17,7 +21,6 @@ import {
     requestSizeLimits,
 } from './middleware/security';
 
-dotenv.config();
 
 const SERVICE_NAME = 'api-gateway';
 
@@ -111,6 +114,7 @@ app.use(express.urlencoded({ extended: true, limit: requestSizeLimits.urlencoded
 // Input sanitization and SQL injection prevention
 app.use(sanitizeInput);
 app.use(sqlInjectionPrevention);
+app.use(cookieParser());
 
 // CORS Configuration
 const corsOrigins = process.env.CORS_ORIGIN
@@ -123,7 +127,7 @@ app.use(cors({
         if (corsOrigins.includes(origin) || corsOrigins.includes('*')) {
             callback(null, true);
         } else {
-            callback(null, true);
+            callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
@@ -136,9 +140,13 @@ app.use(cors({
 app.options('*', cors());
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
-// Request ID middleware for tracing
+// Request ID middleware and header cleanup for tracing
 app.use((req, _res, next) => {
     (req as any).id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+    // Security: Strip x-user-id from client to prevent spoofing
+    delete req.headers['x-user-id'];
+
     next();
 });
 
@@ -176,18 +184,22 @@ const SKILL_SERVICE_URL = process.env.SKILL_SERVICE_URL || 'http://localhost:300
 const JOB_SERVICE_URL = process.env.JOB_SERVICE_URL || 'http://localhost:3005';
 const APPLICATION_SERVICE_URL = process.env.APPLICATION_SERVICE_URL || 'http://localhost:3006';
 
-// Helper to extract user ID from JWT token
+// Helper to extract and verify user ID from JWT token
 const extractUserIdFromToken = (authHeader: string | undefined): string | null => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     try {
         const token = authHeader.substring(7);
-        const payload = token.split('.')[1];
-        const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-        const decoded = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
-        const userId = decoded.id || decoded.userId || decoded.sub || null;
-        return userId;
+        const secret = process.env.JWT_SECRET;
+
+        if (!secret) {
+            logger.error('JWT_SECRET not found in API Gateway environment');
+            return null;
+        }
+
+        const decoded = jwt.verify(token, secret) as any;
+        return decoded.id || decoded.userId || decoded.sub || null;
     } catch (err) {
-        logger.error(`JWT decode error: ${err}`);
+        logger.error(`JWT verification error in Gateway: ${err}`);
         return null;
     }
 };
@@ -229,7 +241,14 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
         }
     },
     onProxyReq: (proxyReq, req) => {
-        const authHeader = req.headers['authorization'] || req.headers['Authorization'] as string | undefined;
+        let authHeader = req.headers['authorization'] || req.headers['Authorization'] as string | undefined;
+
+        // Check for cookie if header is missing
+        if (!authHeader && req.cookies && req.cookies.accessToken) {
+            authHeader = `Bearer ${req.cookies.accessToken}`;
+            proxyReq.setHeader('Authorization', authHeader);
+        }
+
         const userId = extractUserIdFromToken(authHeader);
         if (userId) {
             proxyReq.setHeader('x-user-id', userId);

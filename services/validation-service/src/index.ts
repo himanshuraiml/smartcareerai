@@ -1,17 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
-import { validationRouter } from './routes/validation.routes';
-import { errorHandler } from './middleware/error.middleware';
-import { logger } from './utils/logger';
-import { prisma } from './utils/prisma';
 
 // Load env with fallbacks (for both local and Railway deployment)
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config(); // Also try default location
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { validationRouter } from './routes/validation.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { logger } from './utils/logger';
+import { prisma } from './utils/prisma';
+
 
 const app = express();
 const PORT = process.env.PORT || 3008;

@@ -90,11 +90,13 @@ export default function KeyboardShortcuts() {
     }, [handleKeyDown]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reset index when search changes
         setSelectedIndex(0);
     }, [search]);
 
     // Close palette on route change
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reset UI on navigation
         setShowPalette(false);
         setSearch("");
     }, [pathname]);
@@ -193,3 +195,5 @@ export default function KeyboardShortcuts() {
         </AnimatePresence>
     );
 }
+
+

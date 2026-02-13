@@ -27,7 +27,7 @@ export default function OnboardingPage() {
 
     const [formData, setFormData] = useState({
         targetJobRoleId: '',
-        institutionId: '',
+        institutionId: ''
     });
 
     useEffect(() => {
@@ -44,7 +44,7 @@ export default function OnboardingPage() {
         // Pre-fill if available
         setFormData({
             targetJobRoleId: user.targetJobRoleId || '',
-            institutionId: user.institutionId || '',
+            institutionId: user.institutionId || ''
         });
 
         // Skip step 1 if job role is already set
@@ -97,14 +97,10 @@ export default function OnboardingPage() {
         // But since we don't have updateInstitution in store yet, we'll fetch directly
 
         try {
-            const token = useAuthStore.getState().accessToken;
-            if (!token) return;
-
             const res = await fetch(`${API_URL}/auth/profile`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ institutionId: formData.institutionId || null })
             });
@@ -125,14 +121,10 @@ export default function OnboardingPage() {
         setFormData({ ...formData, institutionId: '' });
         // Send empty/null to backend
         try {
-            const token = useAuthStore.getState().accessToken;
-            if (!token) return;
-
             await fetch(`${API_URL}/users/me/institution`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ institutionId: null })
             });
@@ -145,7 +137,7 @@ export default function OnboardingPage() {
     // Group job roles
     const groupedRoles = ROLE_CATEGORIES.map(cat => ({
         category: cat,
-        roles: jobRoles.filter(r => r.category === cat),
+        roles: jobRoles.filter(r => r.category === cat)
     })).filter(g => g.roles.length > 0);
 
     return (
@@ -279,3 +271,6 @@ export default function OnboardingPage() {
         </div>
     );
 }
+
+
+

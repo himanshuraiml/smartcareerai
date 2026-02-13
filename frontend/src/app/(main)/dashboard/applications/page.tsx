@@ -47,7 +47,7 @@ const COLUMNS = [
 
 
 export default function ApplicationsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [applications, setApplications] = useState<Application[]>([]);
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function ApplicationsPage() {
     const fetchApplications = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/applications/applications`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -67,12 +67,12 @@ export default function ApplicationsPage() {
         } catch (err) {
             console.error('Failed to fetch applications:', err);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchStats = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/applications/stats`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -81,14 +81,14 @@ export default function ApplicationsPage() {
         } catch (err) {
             console.error('Failed to fetch stats:', err);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
-        if (accessToken) {
-            setLoading(true);
+        if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- async data fetching
             Promise.all([fetchApplications(), fetchStats()]).finally(() => setLoading(false));
         }
-    }, [accessToken, fetchApplications, fetchStats]);
+    }, [user, fetchApplications, fetchStats]);
 
     const handleStatusChange = async (appId: string, newStatus: string) => {
         // Optimistic update
@@ -99,11 +99,10 @@ export default function ApplicationsPage() {
         try {
             await fetch(`${API_URL}/applications/applications/${appId}/status`, {
                 method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status: newStatus })
             });
             fetchStats(); // Refresh stats
         } catch (err) {
@@ -118,7 +117,7 @@ export default function ApplicationsPage() {
         try {
             await fetch(`${API_URL}/applications/applications/${appId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             setApplications(prev => prev.filter(app => app.id !== appId));
             fetchStats();
@@ -383,3 +382,6 @@ export default function ApplicationsPage() {
         </div>
     );
 }
+
+
+

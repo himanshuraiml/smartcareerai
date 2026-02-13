@@ -35,7 +35,7 @@ interface Resume {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function ResumesPage() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [view, setView] = useState<'list' | 'builder'>('list');
     const [resumes, setResumes] = useState<Resume[]>([]);
     const [uploading, setUploading] = useState(false);
@@ -56,10 +56,8 @@ export default function ResumesPage() {
     const fetchResumes = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/resumes`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            });
+                credentials: 'include', headers: {
+                }});
 
             if (response.ok) {
                 const data = await response.json();
@@ -70,13 +68,13 @@ export default function ResumesPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchResumes();
         }
-    }, [accessToken, fetchResumes]);
+    }, [user, fetchResumes]);
 
     // Poll for status updates
     useEffect(() => {
@@ -101,11 +99,9 @@ export default function ResumesPage() {
 
             const response = await fetch(`${API_URL}/resumes/upload`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
                 },
-                body: formData,
-            });
+                body: formData});
 
             const data = await response.json();
 
@@ -120,7 +116,7 @@ export default function ResumesPage() {
         } finally {
             setUploading(false);
         }
-    }, [accessToken, fetchResumes]);
+    }, [user, fetchResumes]);
 
     const handleDelete = async (resumeId: string) => {
         if (!confirm('Are you sure you want to delete this resume?')) return;
@@ -128,10 +124,8 @@ export default function ResumesPage() {
         try {
             const response = await fetch(`${API_URL}/resumes/${resumeId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            });
+                credentials: 'include', headers: {
+                }});
 
             if (response.ok) {
                 setResumes((prev) => prev.filter(r => r.id !== resumeId));
@@ -147,10 +141,8 @@ export default function ResumesPage() {
     const handleView = async (resume: Resume) => {
         try {
             const response = await fetch(`${API_URL}/resumes/${resume.id}`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            });
+                credentials: 'include', headers: {
+                }});
 
             if (response.ok) {
                 const data = await response.json();
@@ -177,15 +169,11 @@ export default function ResumesPage() {
         try {
             const response = await fetch(`${API_URL}/scores/analyze`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     resumeId: resumeId,
-                    jobRole: targetRole,
-                }),
-            });
+                    jobRole: targetRole})});
 
             const data = await response.json();
 
@@ -200,12 +188,9 @@ export default function ResumesPage() {
                 try {
                     await fetch(`${API_URL}/skills/analyze`, {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ resumeId: resumeId }),
-                    });
+                        credentials: 'include', headers: {
+                            'Content-Type': 'application/json'},
+                        body: JSON.stringify({ resumeId: resumeId })});
                 } catch (e) {
                     // Skill extraction done in background (silently handled)
                 }
@@ -227,19 +212,16 @@ export default function ResumesPage() {
         accept: {
             'application/pdf': ['.pdf'],
             'application/msword': ['.doc'],
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-        },
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']},
         maxFiles: 1,
-        maxSize: 10 * 1024 * 1024,
-    });
+        maxSize: 10 * 1024 * 1024});
 
     const getStatusBadge = (status: Resume['status']) => {
         const badges = {
             PENDING: { color: 'bg-yellow-500/10 text-yellow-400', icon: Loader2, label: 'Pending', spin: true },
             PARSING: { color: 'bg-blue-500/10 text-blue-400', icon: Loader2, label: 'Parsing', spin: true },
             PARSED: { color: 'bg-green-500/10 text-green-400', icon: Check, label: 'Ready', spin: false },
-            FAILED: { color: 'bg-red-500/10 text-red-400', icon: AlertCircle, label: 'Failed', spin: false },
-        };
+            FAILED: { color: 'bg-red-500/10 text-red-400', icon: AlertCircle, label: 'Failed', spin: false }};
         const badge = badges[status];
         return (
             <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
@@ -556,3 +538,6 @@ export default function ResumesPage() {
         </div>
     );
 }
+
+
+

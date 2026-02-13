@@ -248,9 +248,9 @@ export function useProctoring() {
         state,
         controls,
         allRequirementsMet,
-        cameraStream: cameraStreamRef.current,
-        micStream: micStreamRef.current,
-        screenStream: screenStreamRef.current,
+        cameraStreamRef,
+        micStreamRef,
+        screenStreamRef,
     };
 }
 

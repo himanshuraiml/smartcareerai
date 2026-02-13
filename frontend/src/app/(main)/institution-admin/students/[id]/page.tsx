@@ -64,7 +64,7 @@ interface StudentDetail {
 export default function StudentDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [student, setStudent] = useState<StudentDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export default function StudentDetailPage() {
         const fetchStudent = async () => {
             try {
                 const response = await fetch(`${API_URL}/admin/institution/students/${params.id}`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
 
                 if (!response.ok) {
@@ -90,10 +90,10 @@ export default function StudentDetailPage() {
             }
         };
 
-        if (accessToken && params.id) {
+        if (user && params.id) {
             fetchStudent();
         }
-    }, [accessToken, params.id]);
+    }, [user, params.id]);
 
     const getScoreColor = (score: number | null) => {
         if (score === null) return "text-gray-400";
@@ -286,3 +286,5 @@ export default function StudentDetailPage() {
         </div>
     );
 }
+
+

@@ -25,35 +25,30 @@ export async function authFetch(
     // Build full URL if relative path provided
     const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
 
-    // Get current access token
-    const { accessToken, refreshAccessToken, logout } = useAuthStore.getState();
+    // Get auth actions
+    const { refreshAccessToken, logout } = useAuthStore.getState();
 
-    // Add authorization header if not skipping auth
+    // Default headers
     const headers = new Headers(fetchOptions.headers);
-    if (!skipAuth && accessToken) {
-        headers.set('Authorization', `Bearer ${accessToken}`);
-    }
 
-    // Make the initial request
+    // Make the initial request with credentials (cookies)
     let response = await fetch(fullUrl, {
         ...fetchOptions,
         headers,
+        credentials: 'include', // Send cookies
     });
 
     // If we get a 401 and haven't skipped refresh, try to refresh the token
     if (response.status === 401 && !skipRefresh && !skipAuth) {
+        // Attempt to refresh token (uses refresh token cookie)
         const refreshed = await refreshAccessToken();
 
         if (refreshed) {
-            // Get the new access token after refresh
-            const { accessToken: newToken } = useAuthStore.getState();
-
-            // Retry the original request with new token
-            headers.set('Authorization', `Bearer ${newToken}`);
+            // Retry the original request with new cookies
             response = await fetch(fullUrl, {
                 ...fetchOptions,
                 headers,
-            });
+                credentials: 'include'});
         } else {
             // Refresh failed, logout the user
             logout();
@@ -73,11 +68,9 @@ export async function authFetchJson<T = any>(
     try {
         const response = await authFetch(url, {
             ...options,
-            headers: {
+            credentials: 'include', headers: {
                 'Content-Type': 'application/json',
-                ...options.headers,
-            },
-        });
+                ...options.headers}});
 
         const json = await response.json();
 
@@ -85,20 +78,18 @@ export async function authFetchJson<T = any>(
             return {
                 data: null,
                 error: json.error?.message || json.message || 'Request failed',
-                response,
-            };
+                response};
         }
 
         return {
             data: json.data || json,
             error: null,
-            response,
-        };
+            response};
     } catch (error) {
         return {
             data: null,
             error: error instanceof Error ? error.message : 'Network error',
-            response: new Response(null, { status: 0 }),
-        };
+            response: new Response(null, { status: 0 })};
     }
 }
+

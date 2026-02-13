@@ -89,20 +89,25 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
     // Enable XSS filter
     res.setHeader('X-XSS-Protection', '1; mode=block');
 
-    // Referrer policy
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // Referrer policy - allow Google to receive referrer for auth
+    res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
 
-    // Permissions policy
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    // Cross-Origin policies for Google Sign-in popups
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+
+    // Permissions policy - allow camera/microphone for interview features
+    res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
 
     // Content Security Policy
     res.setHeader('Content-Security-Policy',
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-        "style-src 'self' 'unsafe-inline'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; " +
         "img-src 'self' data: https:; " +
-        "font-src 'self' data:; " +
-        "connect-src 'self' https:; " +
+        "font-src 'self' data: https://fonts.gstatic.com; " +
+        "connect-src 'self' http://localhost:* https:; " +
+        "frame-src https://accounts.google.com; " +
         "frame-ancestors 'none';"
     );
 
@@ -156,8 +161,8 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
         } else if (Array.isArray(value)) {
             sanitized[key] = value.map(item =>
                 typeof item === 'string' ? sanitizeString(item) :
-                typeof item === 'object' && item !== null ? sanitizeObject(item as Record<string, unknown>) :
-                item
+                    typeof item === 'object' && item !== null ? sanitizeObject(item as Record<string, unknown>) :
+                        item
             );
         } else {
             sanitized[key] = value;

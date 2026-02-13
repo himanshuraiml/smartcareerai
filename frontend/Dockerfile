@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Set DOCKER_BUILD so next.config.js enables standalone output
+ENV DOCKER_BUILD=true
+
 # Copy package files
 COPY package.json package-lock.json* ./
 
@@ -21,10 +24,15 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+
 # Copy necessary files from builder
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
 
 EXPOSE 3100
 

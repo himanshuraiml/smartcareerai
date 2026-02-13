@@ -97,3 +97,5 @@ describe('CreditBalanceCard', () => {
         expect(purchaseButton).toHaveClass('hover:bg-white/10');
     });
 });
+
+

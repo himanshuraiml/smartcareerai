@@ -1,12 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { emailRoutes } from './routes/email.routes';
 import { logger } from './utils/logger';
 import { startEmailScanJob } from './jobs/email-scan.job';
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3013;

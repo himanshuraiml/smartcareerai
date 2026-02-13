@@ -292,3 +292,5 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
         </div>
     );
 }
+
+

@@ -25,7 +25,7 @@ interface InstitutionSettings {
 }
 
 export default function InstitutionSettingsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [settings, setSettings] = useState<InstitutionSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -67,11 +67,10 @@ export default function InstitutionSettingsPage() {
         try {
             const response = await fetch(`${API_URL}/auth/change-password`, {
                 method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ currentPassword, newPassword }),
+                body: JSON.stringify({ currentPassword, newPassword })
             });
 
             const result = await response.json();
@@ -97,7 +96,7 @@ export default function InstitutionSettingsPage() {
         const fetchSettings = async () => {
             try {
                 const response = await fetch(`${API_URL}/admin/institution/settings`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
 
                 if (!response.ok) {
@@ -117,10 +116,10 @@ export default function InstitutionSettingsPage() {
             }
         };
 
-        if (accessToken) {
+        if (user) {
             fetchSettings();
         }
-    }, [accessToken]);
+    }, [user]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -131,11 +130,10 @@ export default function InstitutionSettingsPage() {
         try {
             const response = await fetch(`${API_URL}/admin/institution/settings`, {
                 method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ name, logoUrl, address }),
+                body: JSON.stringify({ name, logoUrl, address })
             });
 
             if (!response.ok) {
@@ -374,3 +372,6 @@ export default function InstitutionSettingsPage() {
         </div>
     );
 }
+
+
+

@@ -7,9 +7,6 @@ import { dataScientistQuestions } from './interview-questions/data-scientist';
 import { dataAnalystQuestions } from './interview-questions/data-analyst';
 import { devopsEngineerQuestions } from './interview-questions/devops-engineer';
 import { cloudEngineerQuestions } from './interview-questions/cloud-engineer';
-import { productManagerQuestions } from './interview-questions/product-manager';
-import { projectManagerQuestions } from './interview-questions/project-manager';
-import { uiUxDesignerQuestions } from './interview-questions/ui-ux-designer';
 import { mlEngineerQuestions } from './interview-questions/ml-engineer';
 import { mobileDeveloperQuestions } from './interview-questions/mobile-developer';
 import { qaEngineerQuestions } from './interview-questions/qa-engineer';
@@ -27,9 +24,6 @@ const ROLE_QUESTIONS_MAP: Record<string, any[]> = {
   'Data Analyst': dataAnalystQuestions,
   'DevOps Engineer': devopsEngineerQuestions,
   'Cloud Engineer': cloudEngineerQuestions,
-  'Product Manager': productManagerQuestions,
-  'Project Manager': projectManagerQuestions,
-  'UI/UX Designer': uiUxDesignerQuestions,
   'Machine Learning Engineer': mlEngineerQuestions,
   'Mobile Developer': mobileDeveloperQuestions,
   'QA Engineer': qaEngineerQuestions,

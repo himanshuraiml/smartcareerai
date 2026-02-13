@@ -13,6 +13,7 @@ interface User {
     avatarUrl: string | null;
     isVerified: boolean;
     role?: string;
+    hasGoogleAuth?: boolean;
     targetJobRoleId?: string | null;
     targetJobRole?: { id: string; title: string; category: string } | null;
     institutionId?: string | null;
@@ -21,13 +22,11 @@ interface User {
 
 interface AuthState {
     user: User | null;
-    accessToken: string | null;
-    refreshToken: string | null;
     isLoading: boolean;
     error: string | null;
     login: (email: string, password: string) => Promise<boolean>;
     googleLogin: (idToken: string) => Promise<boolean>;
-    register: (email: string, password: string, name?: string, targetJobRoleId?: string) => Promise<boolean>;
+    register: (email: string, password: string, name?: string, targetJobRoleId?: string, institutionId?: string) => Promise<boolean>;
     logout: () => void;
     refreshAccessToken: () => Promise<boolean>;
     clearError: () => void;
@@ -40,8 +39,6 @@ export const useAuthStore = create<AuthState>()(
     persist(
         (set, get) => ({
             user: null,
-            accessToken: null,
-            refreshToken: null,
             isLoading: false,
             error: null,
 
@@ -50,8 +47,8 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     const response = await fetch(`${API_URL}/auth/login`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password }),
+                        credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
                     });
 
                     const data = await response.json();
@@ -62,16 +59,14 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
-                        accessToken: data.data.accessToken,
-                        refreshToken: data.data.refreshToken,
-                        isLoading: false,
+                        isLoading: false
                     });
 
                     return true;
                 } catch (error) {
                     set({
                         error: error instanceof Error ? error.message : 'Login failed',
-                        isLoading: false,
+                        isLoading: false
                     });
                     return false;
                 }
@@ -82,8 +77,8 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     const response = await fetch(`${API_URL}/auth/google`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idToken }),
+                        credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken })
                     });
 
                     const data = await response.json();
@@ -94,28 +89,36 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
-                        accessToken: data.data.accessToken,
-                        refreshToken: data.data.refreshToken,
-                        isLoading: false,
+                        isLoading: false
                     });
 
                     return true;
                 } catch (error) {
                     set({
                         error: error instanceof Error ? error.message : 'Google login failed',
-                        isLoading: false,
+                        isLoading: false
                     });
                     return false;
                 }
             },
 
-            register: async (email: string, password: string, name?: string, targetJobRoleId?: string) => {
+            register: async (email: string, password: string, name?: string, targetJobRoleId?: string, institutionId?: string) => {
                 set({ isLoading: true, error: null });
                 try {
+                    // Sanitize empty strings to undefined
+                    const sanitizedJobRoleId = targetJobRoleId === '' || targetJobRoleId === 'other' ? undefined : targetJobRoleId;
+                    const sanitizedInstId = institutionId === '' || institutionId === 'other' ? undefined : institutionId;
+
                     const response = await fetch(`${API_URL}/auth/register`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password, name, targetJobRoleId }),
+                        credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            password,
+                            name,
+                            targetJobRoleId: sanitizedJobRoleId,
+                            institutionId: sanitizedInstId
+                        })
                     });
 
                     const data = await response.json();
@@ -126,43 +129,27 @@ export const useAuthStore = create<AuthState>()(
 
                     set({
                         user: data.data.user,
-                        accessToken: data.data.accessToken,
-                        refreshToken: data.data.refreshToken,
-                        isLoading: false,
+                        isLoading: false
                     });
 
                     return true;
                 } catch (error) {
                     set({
                         error: error instanceof Error ? error.message : 'Registration failed',
-                        isLoading: false,
+                        isLoading: false
                     });
                     return false;
                 }
             },
 
             logout: () => {
-                const { accessToken, refreshToken } = get();
+                // Call logout endpoint (cookies sent automatically)
+                fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include', headers: { 'Content-Type': 'application/json' }
+                }).catch(() => { });
 
-                // Call logout endpoint
-                if (accessToken) {
-                    fetch(`${API_URL}/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({ refreshToken }),
-                    }).catch(() => {
-                        // Ignore errors during logout
-                    });
-                }
-
-                set({
-                    user: null,
-                    accessToken: null,
-                    refreshToken: null,
-                });
+                set({ user: null });
             },
 
             refreshAccessToken: async () => {
@@ -172,36 +159,22 @@ export const useAuthStore = create<AuthState>()(
                 }
 
                 refreshPromise = (async () => {
-                    const { refreshToken } = get();
-                    if (!refreshToken) return false;
-
                     try {
                         const response = await fetch(`${API_URL}/auth/refresh-token`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ refreshToken }),
+                            credentials: 'include', headers: { 'Content-Type': 'application/json' }
                         });
 
                         const data = await response.json();
 
                         if (!response.ok) {
-                            // Only logout on auth-related errors (401, 403)
-                            // Don't logout on server errors (500) or network issues
                             if (response.status === 401 || response.status === 403) {
-                                set({
-                                    user: null,
-                                    accessToken: null,
-                                    refreshToken: null,
-                                });
+                                set({ user: null });
                             }
                             return false;
                         }
 
-                        set({
-                            accessToken: data.data.accessToken,
-                            refreshToken: data.data.refreshToken,
-                        });
-
+                        // Cookies updated automatically
                         return true;
                     } catch (error) {
                         // Network error - don't logout, just return false
@@ -218,17 +191,15 @@ export const useAuthStore = create<AuthState>()(
             clearError: () => set({ error: null }),
 
             updateTargetJobRole: async (jobRoleId: string) => {
-                const { accessToken, user } = get();
-                if (!accessToken) return false;
+                const { user } = get();
+                // Check user existence instead of token
+                if (!user) return false;
 
                 try {
                     const response = await fetch(`${API_URL}/users/me/target-role`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({ targetJobRoleId: jobRoleId }),
+                        credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ targetJobRoleId: jobRoleId })
                     });
 
                     const data = await response.json();
@@ -238,7 +209,7 @@ export const useAuthStore = create<AuthState>()(
                     }
 
                     set({
-                        user: { ...user!, targetJobRoleId: jobRoleId, targetJobRole: data.data.targetJobRole },
+                        user: { ...user!, targetJobRoleId: jobRoleId, targetJobRole: data.data.targetJobRole }
                     });
 
                     return true;
@@ -249,18 +220,17 @@ export const useAuthStore = create<AuthState>()(
 
             // Hydration state
             _hasHydrated: false,
-            setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
+            setHasHydrated: (state: boolean) => set({ _hasHydrated: state })
         }),
         {
             name: 'auth-storage',
             partialize: (state) => ({
-                user: state.user,
-                accessToken: state.accessToken,
-                refreshToken: state.refreshToken,
+                user: state.user
             }),
             onRehydrateStorage: () => (state) => {
                 state?.setHasHydrated(true);
-            },
+            }
         }
     )
 );
+

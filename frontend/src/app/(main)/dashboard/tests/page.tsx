@@ -51,7 +51,7 @@ interface Badge {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function TestsPage() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [tests, setTests] = useState<SkillTest[]>([]);
     const [badges, setBadges] = useState<Badge[]>([]);
     const [attempts, setAttempts] = useState<TestAttempt[]>([]);
@@ -65,15 +65,15 @@ export default function TestsPage() {
     const fetchData = useCallback(async () => {
         try {
             const requests = [
-                fetch(`${API_URL}/validation/tests`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
-                fetch(`${API_URL}/validation/badges`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
-                fetch(`${API_URL}/validation/attempts`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
+                fetch(`${API_URL}/validation/tests`, { credentials: 'include', headers: {} }),
+                fetch(`${API_URL}/validation/badges`, { credentials: 'include', headers: {} }),
+                fetch(`${API_URL}/validation/attempts`, { credentials: 'include', headers: {} }),
             ];
 
             if (selectedRole) {
                 requests.push(
                     fetch(`${API_URL}/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`, {
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                        credentials: 'include', headers: {}
                     })
                 );
             }
@@ -102,7 +102,7 @@ export default function TestsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, selectedRole]);
+    }, [user, selectedRole]);
 
     const getNextTestLevel = (skillId: string): 'EASY' | 'MEDIUM' | 'HARD' | 'COMPLETED' => {
         const passedAttempts = attempts.filter(a => a.test.skillId === skillId && a.passed);
@@ -155,10 +155,10 @@ export default function TestsPage() {
     );
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchData();
         }
-    }, [accessToken, fetchData]);
+    }, [user, fetchData]);
 
     const getBadgeColor = (type: string) => {
         switch (type) {
@@ -380,3 +380,6 @@ export default function TestsPage() {
         </div>
     );
 }
+
+
+

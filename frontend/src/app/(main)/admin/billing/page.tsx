@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -59,7 +60,7 @@ interface BillingStats {
 }
 
 export default function AdminBillingPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<Tab>('plans');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -103,10 +104,10 @@ export default function AdminBillingPage() {
     const [stats, setStats] = useState<BillingStats | null>(null);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             loadData();
         }
-    }, [accessToken, activeTab]);
+    }, [user, activeTab]);
 
     const showToast = (type: 'success' | 'error', message: string) => {
         setToast({ type, message });
@@ -131,9 +132,7 @@ export default function AdminBillingPage() {
     };
 
     const loadPlans = async () => {
-        const res = await fetch(`${API_URL}/admin/billing/plans`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
+        const res = await authFetch('/admin/billing/plans');
         if (res.ok) {
             const data = await res.json();
             setPlans(data.data || []);
@@ -141,9 +140,7 @@ export default function AdminBillingPage() {
     };
 
     const loadStats = async () => {
-        const res = await fetch(`${API_URL}/admin/billing/stats`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
+        const res = await authFetch('/admin/billing/stats');
         if (res.ok) {
             const data = await res.json();
             setStats(data.data);
@@ -151,9 +148,7 @@ export default function AdminBillingPage() {
     };
 
     const loadCreditPricing = async () => {
-        const res = await fetch(`${API_URL}/admin/billing/credit-pricing`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
+        const res = await authFetch('/admin/billing/credit-pricing');
         if (res.ok) {
             const data = await res.json();
             setCreditPricing(data.data);
@@ -186,9 +181,7 @@ export default function AdminBillingPage() {
     };
 
     const loadBillingSettings = async () => {
-        const res = await fetch(`${API_URL}/admin/billing/settings`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
+        const res = await authFetch('/admin/billing/settings');
         if (res.ok) {
             const data = await res.json();
             setBillingSettings(data.data);
@@ -224,11 +217,10 @@ export default function AdminBillingPage() {
                 ? `${API_URL}/admin/billing/plans/${editingPlan.id}`
                 : `${API_URL}/admin/billing/plans`;
 
-            const res = await fetch(url, {
+            const res = await authFetch(url, {
                 method: editingPlan ? 'PUT' : 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body)
             });
@@ -254,9 +246,8 @@ export default function AdminBillingPage() {
         if (!confirm('Are you sure you want to delete this plan? This cannot be undone.')) return;
 
         try {
-            const res = await fetch(`${API_URL}/admin/billing/plans/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+            const res = await authFetch(`/admin/billing/plans/${id}`, {
+                method: 'DELETE'
             });
 
             if (res.ok) {
@@ -273,11 +264,10 @@ export default function AdminBillingPage() {
 
     const handleTogglePlanActive = async (plan: SubscriptionPlan) => {
         try {
-            const res = await fetch(`${API_URL}/admin/billing/plans/${plan.id}`, {
+            const res = await authFetch(`/admin/billing/plans/${plan.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ isActive: !plan.isActive })
             });
@@ -313,11 +303,10 @@ export default function AdminBillingPage() {
                 }));
             }
 
-            const res = await fetch(`${API_URL}/admin/billing/credit-pricing`, {
+            const res = await authFetch('/admin/billing/credit-pricing', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ perCredit, bundles })
             });
@@ -339,11 +328,10 @@ export default function AdminBillingPage() {
         setSaving(true);
 
         try {
-            const res = await fetch(`${API_URL}/admin/billing/settings`, {
+            const res = await authFetch('/admin/billing/settings', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(billingSettings)
             });
@@ -488,8 +476,8 @@ export default function AdminBillingPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -506,8 +494,8 @@ export default function AdminBillingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success'
-                                ? 'bg-green-500/20 border border-green-500/30'
-                                : 'bg-red-500/20 border border-red-500/30'
+                            ? 'bg-green-500/20 border border-green-500/30'
+                            : 'bg-red-500/20 border border-red-500/30'
                             }`}
                     >
                         {toast.type === 'success' ? (
@@ -572,8 +560,8 @@ export default function AdminBillingPage() {
                                                 <button
                                                     onClick={() => handleTogglePlanActive(plan)}
                                                     className={`p-2 rounded-lg transition-colors ${plan.isActive
-                                                            ? 'text-green-400 hover:bg-green-500/10'
-                                                            : 'text-red-400 hover:bg-red-500/10'
+                                                        ? 'text-green-400 hover:bg-green-500/10'
+                                                        : 'text-red-400 hover:bg-red-500/10'
                                                         }`}
                                                     title={plan.isActive ? 'Deactivate' : 'Activate'}
                                                 >
@@ -1042,3 +1030,6 @@ export default function AdminBillingPage() {
         </div>
     );
 }
+
+
+

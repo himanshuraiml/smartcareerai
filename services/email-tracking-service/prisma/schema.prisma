@@ -1,0 +1,865 @@
+// Prisma Schema for SmartCareerAI
+// Phase 1: Users, Resumes, ATS Scores
+// Phase 2: Skills, Courses, Jobs, Applications
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String?
+  avatarUrl    String?   @map("avatar_url")
+  isVerified   Boolean   @default(false) @map("is_verified")
+  verifyToken  String?   @map("verify_token")
+  resetToken   String?   @map("reset_token")
+  resetExpires DateTime? @map("reset_expires")
+  role         UserRole  @default(USER)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  googleId     String?   @unique @map("google_id")
+
+  // Relations
+  resumes            Resume[]
+  refreshTokens      RefreshToken[]
+  atsScores          AtsScore[]
+  userSkills         UserSkill[]
+  applications       Application[]
+  interviews         InterviewSession[]
+  testAttempts       TestAttempt[]
+  skillBadges        SkillBadge[]
+  // Phase 4 relations
+  subscription       UserSubscription?
+  credits            UserCredit[]
+  creditTransactions CreditTransaction[]
+  recruiterProfile   Recruiter?
+  sentMessages       Message[]           @relation("SentMessages")
+  receivedMessages   Message[]           @relation("ReceivedMessages")
+  // User's target job role for personalized content
+  targetJobRoleId    String?             @map("target_job_role_id")
+  targetJobRole      JobRole?            @relation(fields: [targetJobRoleId], references: [id])
+
+  // Institution relations (for students)
+  institutionId String?      @map("institution_id")
+  institution   Institution? @relation("InstitutionStudents", fields: [institutionId], references: [id])
+
+  // Institution admin relation
+  adminForInstitutionId String?      @map("admin_for_institution_id")
+  adminForInstitution   Institution? @relation("InstitutionAdmins", fields: [adminForInstitutionId], references: [id])
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ============================================
+// RESUME MANAGEMENT
+// ============================================
+
+model Resume {
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  fileName   String       @map("file_name")
+  fileUrl    String       @map("file_url")
+  fileSize   Int          @map("file_size")
+  mimeType   String       @map("mime_type")
+  parsedText String?      @map("parsed_text") @db.Text
+  status     ResumeStatus @default(PENDING)
+  isActive   Boolean      @default(true) @map("is_active")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  atsScores AtsScore[]
+
+  @@map("resumes")
+}
+
+enum ResumeStatus {
+  PENDING
+  PARSING
+  PARSED
+  FAILED
+}
+
+// ============================================
+// ATS SCORING
+// ============================================
+
+model AtsScore {
+  id                  String   @id @default(uuid())
+  resumeId            String   @map("resume_id")
+  userId              String   @map("user_id")
+  jobRole             String   @map("job_role")
+  jobDescription      String?  @map("job_description") @db.Text
+  overallScore        Int      @map("overall_score")
+  keywordMatchPercent Float    @map("keyword_match_percent")
+  formattingScore     Int      @map("formatting_score")
+  experienceScore     Int      @map("experience_score")
+  educationScore      Int      @map("education_score")
+  matchedKeywords     String[] @map("matched_keywords")
+  missingKeywords     String[] @map("missing_keywords")
+  formattingIssues    String[] @map("formatting_issues")
+  suggestions         String[] @map("suggestions")
+  rawAnalysis         Json?    @map("raw_analysis")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  // Relations
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ats_scores")
+}
+
+// ============================================
+// JOB ROLES (Reference Data)
+// ============================================
+
+model JobRole {
+  id              String   @id @default(uuid())
+  title           String   @unique
+  category        String
+  requiredSkills  String[] @map("required_skills")
+  preferredSkills String[] @map("preferred_skills")
+  keywords        String[]
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Users targeting this job role
+  usersTargeting         User[]
+  // Cache for LLM-generated content
+  cache                  JobRoleCache?
+  // Interview question bank
+  interviewBankQuestions  InterviewBankQuestion[]
+
+  @@map("job_roles")
+}
+
+// Cache for LLM-generated certifications and courses per job role
+model JobRoleCache {
+  id                 String   @id @default(uuid())
+  jobRoleId          String   @unique @map("job_role_id")
+  certifications     Json // Array of {name, issuer, url, level, description}
+  courseSuggestions  Json     @map("course_suggestions") // Array of {name, platform, url, skill}
+  interviewQuestions Json?    @map("interview_questions") // Array of {question, category, difficulty}
+  generatedAt        DateTime @default(now()) @map("generated_at")
+  expiresAt          DateTime @map("expires_at") // 30 days from generation
+
+  // Relations
+  jobRole JobRole @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+
+  @@map("job_role_cache")
+}
+
+// ============================================
+// PHASE 2: SKILLS
+// ============================================
+
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String // e.g., "Programming", "Framework", "Soft Skill"
+  demandScore Int      @default(50) @map("demand_score") // 0-100 market demand
+  source      String   @default("seeded") // "seeded", "auto-discovered"
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userSkills  UserSkill[]
+  courses     Course[]
+  skillTests  SkillTest[]
+  skillBadges SkillBadge[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  skillId          String   @map("skill_id")
+  proficiencyLevel String   @map("proficiency_level") // beginner, intermediate, advanced, expert
+  source           String // 'resume', 'validated', 'self-assessed'
+  isVerified       Boolean  @default(false) @map("is_verified")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@map("user_skills")
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  title         String
+  provider      String // e.g., "Coursera", "Udemy", "freeCodeCamp"
+  url           String
+  durationHours Int      @map("duration_hours")
+  difficulty    String // beginner, intermediate, advanced
+  skillId       String   @map("skill_id")
+  rating        Float?   @default(0)
+  isFree        Boolean  @default(false) @map("is_free")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@map("courses")
+}
+
+// ============================================
+// PHASE 2: JOB LISTINGS
+// ============================================
+
+model JobListing {
+  id             String    @id @default(uuid())
+  title          String
+  company        String
+  location       String
+  locationType   String    @default("onsite") @map("location_type") // onsite, remote, hybrid
+  description    String    @db.Text
+  requirements   String[]
+  requiredSkills String[]  @map("required_skills")
+  salaryMin      Int?      @map("salary_min")
+  salaryMax      Int?      @map("salary_max")
+  salaryCurrency String?   @default("USD") @map("salary_currency")
+  experienceMin  Int?      @map("experience_min") // years
+  experienceMax  Int?      @map("experience_max")
+  source         String // e.g., "linkedin", "indeed", "glassdoor", "manual"
+  sourceUrl      String?   @map("source_url")
+  externalId     String?   @map("external_id") // ID from source for deduplication
+  postedAt       DateTime? @map("posted_at")
+  expiresAt      DateTime? @map("expires_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  scrapedAt      DateTime  @default(now()) @map("scraped_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  applications Application[]
+
+  @@unique([source, externalId])
+  @@index([title, company])
+  @@index([location])
+  @@map("job_listings")
+}
+
+// ============================================
+// PHASE 2: APPLICATIONS
+// ============================================
+
+model Application {
+  id             String            @id @default(uuid())
+  userId         String            @map("user_id")
+  jobId          String            @map("job_id")
+  status         ApplicationStatus @default(SAVED)
+  appliedAt      DateTime?         @map("applied_at")
+  interviewDate  DateTime?         @map("interview_date")
+  notes          String?           @db.Text
+  resumeUsed     String?           @map("resume_used") // Resume ID used
+  coverLetter    String?           @map("cover_letter") @db.Text
+  salaryExpected Int?              @map("salary_expected")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  SAVED // Bookmarked, not applied yet
+  APPLIED // Application submitted
+  SCREENING // Resume screening phase
+  INTERVIEWING // In interview process
+  OFFER // Received offer
+  REJECTED // Application rejected
+  WITHDRAWN // User withdrew application
+}
+
+// ============================================
+// PHASE 3: AI INTERVIEWS
+// ============================================
+
+model InterviewSession {
+  id           String          @id @default(uuid())
+  userId       String          @map("user_id")
+  type         InterviewType   @default(TECHNICAL)
+  targetRole   String          @map("target_role")
+  difficulty   Difficulty      @default(MEDIUM)
+  status       InterviewStatus @default(PENDING)
+  overallScore Int?            @map("overall_score")
+  feedback     String?         @db.Text
+  startedAt    DateTime?       @map("started_at")
+  completedAt  DateTime?       @map("completed_at")
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions InterviewQuestion[]
+
+  @@map("interview_sessions")
+}
+
+model InterviewQuestion {
+  id             String   @id @default(uuid())
+  sessionId      String   @map("session_id")
+  questionText   String   @map("question_text") @db.Text
+  questionType   String   @default("technical") @map("question_type")
+  userAnswer     String?  @map("user_answer") @db.Text
+  score          Int?
+  feedback       String?  @db.Text
+  metrics        Json?    // Stores WPM, clarity, relevance, confidence, sentiment
+  improvedAnswer  String?  @map("improved_answer") @db.Text // AI-suggested better version
+  bankQuestionId  String?  @map("bank_question_id") // Reference to curated question bank
+  orderIndex      Int      @default(0) @map("order_index")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("interview_questions")
+}
+
+// ============================================
+// INTERVIEW QUESTION BANK (Curated Q&A)
+// ============================================
+
+model InterviewBankQuestion {
+  id            String        @id @default(uuid())
+  questionText  String        @map("question_text") @db.Text
+  idealAnswer   String        @map("ideal_answer") @db.Text
+  category      String        // e.g., "JavaScript", "System Design", "HR", "Behavioral"
+  difficulty    Difficulty    @default(MEDIUM)
+  questionType  InterviewType @map("question_type") // TECHNICAL, HR, BEHAVIORAL
+  jobRoleId     String?       @map("job_role_id")   // NULL for HR/shared questions
+  tags          String[]
+  isActive      Boolean       @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  jobRole       JobRole?      @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
+
+  @@index([jobRoleId, questionType, difficulty])
+  @@map("interview_bank_questions")
+}
+
+enum InterviewType {
+  TECHNICAL
+  BEHAVIORAL
+  HR
+  MIXED
+}
+
+enum InterviewStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// ============================================
+// PHASE 3: SKILL VALIDATION & BADGES
+// ============================================
+
+model SkillTest {
+  id              String     @id @default(uuid())
+  skillId         String     @map("skill_id")
+  title           String
+  description     String?    @db.Text
+  difficulty      Difficulty @default(MEDIUM)
+  durationMinutes Int        @default(30) @map("duration_minutes")
+  passingScore    Int        @default(70) @map("passing_score")
+  questionsCount  Int        @default(10) @map("questions_count")
+  isActive        Boolean    @default(true) @map("is_active")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  skill     Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  questions TestQuestion[]
+  attempts  TestAttempt[]
+
+  @@map("skill_tests")
+}
+
+model TestQuestion {
+  id            String  @id @default(uuid())
+  testId        String  @map("test_id")
+  questionText  String  @map("question_text") @db.Text
+  questionType  String  @default("mcq") @map("question_type") // mcq, true_false
+  options       Json // ["Option A", "Option B", "Option C", "Option D"]
+  correctAnswer String  @map("correct_answer")
+  explanation   String? @db.Text
+  points        Int     @default(1)
+  orderIndex    Int     @default(0) @map("order_index")
+
+  // Relations
+  test SkillTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@map("test_questions")
+}
+
+model TestAttempt {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  testId      String    @map("test_id")
+  score       Int?
+  passed      Boolean?
+  answers     Json? // {"questionId": "userAnswer"}
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test  SkillTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  badge SkillBadge?
+
+  @@map("test_attempts")
+}
+
+model SkillBadge {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  skillId       String    @map("skill_id")
+  badgeType     BadgeType @default(VERIFIED) @map("badge_type")
+  testAttemptId String?   @unique @map("test_attempt_id")
+  issuedAt      DateTime  @default(now()) @map("issued_at")
+  expiresAt     DateTime? @map("expires_at")
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill       Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  testAttempt TestAttempt? @relation(fields: [testAttemptId], references: [id])
+
+  @@unique([userId, skillId])
+  @@map("skill_badges")
+}
+
+enum BadgeType {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+  VERIFIED
+}
+
+// ============================================
+// PHASE 4: USER ROLES
+// ============================================
+
+enum UserRole {
+  USER
+  RECRUITER
+  ADMIN
+  INSTITUTION_ADMIN
+}
+
+// ============================================
+// PHASE 5: INSTITUTIONS
+// ============================================
+
+model Institution {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique // e.g., "stanford.edu" for auto-verification
+  logoUrl   String?  @map("logo_url")
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  students User[] @relation("InstitutionStudents")
+  admins   User[] @relation("InstitutionAdmins")
+
+  @@map("institutions")
+}
+
+model SystemSettings {
+  id           String   @id @default(uuid())
+  settingKey   String   @unique @map("setting_key")
+  settingValue Json     @map("setting_value")
+  description  String?
+  updatedBy    String?  @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+// ============================================
+// ACTIVITY LOG (System Events)
+// ============================================
+
+model ActivityLog {
+  id        String         @id @default(uuid())
+  type      ActivityType
+  message   String
+  userId    String?        @map("user_id")
+  userEmail String?        @map("user_email")
+  metadata  Json?
+  ipAddress String?        @map("ip_address")
+  status    ActivityStatus @default(SUCCESS)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+enum ActivityType {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGOUT
+  PASSWORD_RESET
+  RESUME_UPLOAD
+  RESUME_ANALYSIS
+  INTERVIEW_START
+  INTERVIEW_COMPLETE
+  TEST_START
+  TEST_COMPLETE
+  SUBSCRIPTION_CHANGE
+  CREDIT_PURCHASE
+  ADMIN_ACTION
+  SYSTEM_ALERT
+  SETTINGS_CHANGE
+}
+
+enum ActivityStatus {
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+// ============================================
+// PHASE 4: SUBSCRIPTIONS & BILLING (Razorpay)
+// ============================================
+
+model SubscriptionPlan {
+  id                   String   @id @default(uuid())
+  name                 String   @unique // 'free', 'starter', 'pro', 'enterprise'
+  displayName          String   @map("display_name")
+  priceMonthly         Decimal  @map("price_monthly") @db.Decimal(10, 2) // INR
+  priceYearly          Decimal  @map("price_yearly") @db.Decimal(10, 2) // INR
+  features             Json // { "resumeReviews": 5, "interviews": 10, "skillTests": 3 }
+  razorpayPlanId       String?  @map("razorpay_plan_id") // Monthly Razorpay plan ID
+  razorpayPlanIdYearly String?  @map("razorpay_plan_id_yearly") // Yearly Razorpay plan ID
+  isActive             Boolean  @default(true) @map("is_active")
+  sortOrder            Int      @default(0) @map("sort_order")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  // Relations
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model UserSubscription {
+  id                     String             @id @default(uuid())
+  userId                 String             @unique @map("user_id")
+  planId                 String             @map("plan_id")
+  razorpayCustomerId     String?            @map("razorpay_customer_id")
+  razorpaySubscriptionId String?            @map("razorpay_subscription_id")
+  status                 SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart     DateTime           @map("current_period_start")
+  currentPeriodEnd       DateTime           @map("current_period_end")
+  cancelAtPeriodEnd      Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@map("user_subscriptions")
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  HALTED
+  PAUSED
+}
+
+// ============================================
+// PHASE 4: CREDITS SYSTEM
+// ============================================
+
+model UserCredit {
+  id         String     @id @default(uuid())
+  userId     String     @map("user_id")
+  creditType CreditType @map("credit_type")
+  balance    Int        @default(0)
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, creditType])
+  @@map("user_credits")
+}
+
+model CreditTransaction {
+  id              String          @id @default(uuid())
+  userId          String          @map("user_id")
+  creditType      CreditType      @map("credit_type")
+  amount          Int // positive = purchase/grant, negative = consume
+  transactionType TransactionType @map("transaction_type")
+  description     String?
+  referenceId     String?         @map("reference_id") // Razorpay payment ID or feature ID
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, creditType])
+  @@map("credit_transactions")
+}
+
+enum CreditType {
+  RESUME_REVIEW
+  AI_INTERVIEW
+  SKILL_TEST
+}
+
+enum TransactionType {
+  PURCHASE
+  CONSUME
+  GRANT // Admin granted or subscription refill
+  REFUND
+}
+
+// ============================================
+// PHASE 4: RECRUITERS
+// ============================================
+
+model Recruiter {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  companyName String   @map("company_name")
+  companyLogo String?  @map("company_logo")
+  companySize String?  @map("company_size") // '1-10', '11-50', '51-200', '201-500', '500+'
+  industry    String?
+  website     String?
+  location    String?
+  isVerified  Boolean  @default(false) @map("is_verified")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedCandidates SavedCandidate[]
+  jobPostings     RecruiterJob[]
+
+  @@map("recruiters")
+}
+
+model SavedCandidate {
+  id          String   @id @default(uuid())
+  recruiterId String   @map("recruiter_id")
+  candidateId String   @map("candidate_id") // User ID of the candidate
+  notes       String?  @db.Text
+  tags        String[]
+  status      String   @default("saved") // 'saved', 'contacted', 'interviewing', 'hired', 'rejected'
+  savedAt     DateTime @default(now()) @map("saved_at")
+
+  // Relations
+  recruiter Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, candidateId])
+  @@map("saved_candidates")
+}
+
+model RecruiterJob {
+  id             String   @id @default(uuid())
+  recruiterId    String   @map("recruiter_id")
+  title          String
+  description    String   @db.Text
+  requirements   String[]
+  requiredSkills String[] @map("required_skills")
+  location       String
+  locationType   String   @default("onsite") @map("location_type") // 'onsite', 'remote', 'hybrid'
+  salaryMin      Int?     @map("salary_min")
+  salaryMax      Int?     @map("salary_max")
+  experienceMin  Int?     @map("experience_min")
+  experienceMax  Int?     @map("experience_max")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  recruiter Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@map("recruiter_jobs")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  content    String   @db.Text
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ============================================
+// EMAIL TRACKING
+// ============================================
+
+model EmailConnection {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  email        String
+  accessToken  String    @map("access_token") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  tokenExpiry  DateTime? @map("token_expiry")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSyncAt   DateTime? @map("last_sync_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("email_connections")
+}
+
+model TrackedEmail {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  messageId   String           @map("message_id")
+  subject     String
+  sender      String
+  snippet     String?          @db.Text
+  type        TrackedEmailType @default(OTHER)
+  companyName String?          @map("company_name")
+  receivedAt  DateTime         @map("received_at")
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@unique([userId, messageId])
+  @@map("tracked_emails")
+}
+
+enum TrackedEmailType {
+  APPLICATION_RECEIVED
+  INTERVIEW
+  OFFER
+  REJECTION
+  UPDATE
+  OTHER
+}
+
+// ============================================
+// EMAIL MANAGEMENT (Admin)
+// ============================================
+
+model EmailTemplate {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  subject     String
+  htmlContent String           @map("html_content") @db.Text
+  textContent String?          @map("text_content") @db.Text
+  category    EmailCategory    @default(GENERAL)
+  variables   String[]         // e.g., ["userName", "companyName"] for dynamic content
+  isActive    Boolean          @default(true) @map("is_active")
+  createdBy   String?          @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  emailLogs   EmailLog[]
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id           String        @id @default(uuid())
+  templateId   String?       @map("template_id")
+  recipientId  String?       @map("recipient_id")  // User ID if sent to a registered user
+  recipientEmail String      @map("recipient_email")
+  subject      String
+  emailType    EmailType     @map("email_type")
+  status       EmailStatus   @default(PENDING)
+  errorMessage String?       @map("error_message")
+  metadata     Json?         // Additional data like variables used, bulk email ID, etc.
+  sentBy       String?       @map("sent_by")       // Admin user ID who triggered the email
+  sentAt       DateTime?     @map("sent_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  template     EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([recipientEmail])
+  @@index([emailType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+enum EmailCategory {
+  INVITATION
+  NEWSLETTER
+  PROMOTIONAL
+  TRANSACTIONAL
+  NOTIFICATION
+  GENERAL
+}
+
+enum EmailType {
+  INSTITUTION_ADMIN_INVITE
+  STUDENT_WELCOME
+  RECRUITER_WELCOME
+  NEWSLETTER
+  PROMOTIONAL
+  PASSWORD_RESET
+  VERIFICATION
+  NOTIFICATION
+  BULK
+  OTHER
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+}

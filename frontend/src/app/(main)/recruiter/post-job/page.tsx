@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth.store";
 
 export default function PostJobPage() {
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
 
     // Form state
@@ -45,9 +45,9 @@ export default function PostJobPage() {
 
             const res = await fetch(`${API_URL}/recruiter/jobs`, {
                 method: "POST",
-                headers: {
+                credentials: 'include', headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`,
+
                 },
                 body: JSON.stringify(payload),
             });
@@ -212,3 +212,6 @@ export default function PostJobPage() {
         </div>
     );
 }
+
+
+

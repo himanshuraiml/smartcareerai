@@ -334,3 +334,5 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
         </div>
     );
 }
+
+

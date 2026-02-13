@@ -1,15 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
-import { skillRouter } from './routes/skill.routes';
-import { errorHandler } from './middleware/error.middleware';
-import { logger } from './utils/logger';
 
 // Load env from service directory first (use __dirname for correct path when run via workspace)
 dotenv.config({ path: path.resolve(__dirname, '../.env') }); // Service's .env (src/../.env)
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Root .env as fallback
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { skillRouter } from './routes/skill.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { logger } from './utils/logger';
+
 
 const app = express();
 const PORT = process.env.PORT || 3004;

@@ -90,7 +90,7 @@ const speakQuestion = (text: string) => {
 export default function MixedInterviewRoomPage() {
     const params = useParams();
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
 
     // Normalize the session ID
     const sessionId = normalizeUUID(params.id);
@@ -131,8 +131,7 @@ export default function MixedInterviewRoomPage() {
         stopPreview,
         startRecording,
         stopRecording,
-        resetRecording,
-    } = useVideoRecorder({ maxDuration: 180 });
+        resetRecording } = useVideoRecorder({ maxDuration: 180 });
 
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const avatarRef = useRef<HTMLDivElement>(null);
@@ -219,7 +218,7 @@ export default function MixedInterviewRoomPage() {
         }
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -236,14 +235,14 @@ export default function MixedInterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [sessionId, accessToken]);
+    }, [sessionId, user]);
 
     const fetchHint = useCallback(async (questionId: string) => {
         if (!sessionId) return;
         setLoadingHint(true);
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/hint/${questionId}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -254,13 +253,13 @@ export default function MixedInterviewRoomPage() {
         } finally {
             setLoadingHint(false);
         }
-    }, [sessionId, accessToken]);
+    }, [sessionId, user]);
 
     const fetchAnalytics = useCallback(async () => {
         if (!sessionId) return;
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/analytics`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -269,16 +268,16 @@ export default function MixedInterviewRoomPage() {
         } catch (err) {
             console.error('Failed to fetch analytics:', err);
         }
-    }, [sessionId, accessToken]);
+    }, [sessionId, user]);
 
     useEffect(() => {
-        if (accessToken && sessionId) {
+        if (user && sessionId) {
             fetchSession();
         } else if (!sessionId && params.id) {
             setInvalidId(true);
             setLoading(false);
         }
-    }, [accessToken, sessionId, params.id, fetchSession]);
+    }, [user, sessionId, params.id, fetchSession]);
 
     // Fetch hint when question changes
     useEffect(() => {
@@ -318,10 +317,9 @@ export default function MixedInterviewRoomPage() {
 
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
                 },
-                body: formData,
+                body: formData
             });
 
             if (response.ok) {
@@ -337,7 +335,7 @@ export default function MixedInterviewRoomPage() {
                     const wpm = data.data.audioAnalysis.wordsPerMinute;
                     setSpeechPacing({
                         wpm,
-                        label: wpm >= 120 && wpm <= 160 ? 'Optimal' : wpm < 120 ? 'Slow' : 'Fast',
+                        label: wpm >= 120 && wpm <= 160 ? 'Optimal' : wpm < 120 ? 'Slow' : 'Fast'
                     });
                 }
 
@@ -345,7 +343,7 @@ export default function MixedInterviewRoomPage() {
                 if (data.data.sentiment) {
                     setSentiment({
                         type: data.data.sentiment.sentiment,
-                        label: data.data.sentiment.sentiment.charAt(0).toUpperCase() + data.data.sentiment.sentiment.slice(1),
+                        label: data.data.sentiment.sentiment.charAt(0).toUpperCase() + data.data.sentiment.sentiment.slice(1)
                     });
                 }
 
@@ -357,7 +355,7 @@ export default function MixedInterviewRoomPage() {
                         ...updatedQuestions[currentQuestionIndex],
                         userAnswer: data.data.audioAnalysis?.transcription || '[Video Answer]',
                         score: data.data.evaluation?.score || null,
-                        feedback: data.data.evaluation?.feedback || null,
+                        feedback: data.data.evaluation?.feedback || null
                     };
                     return { ...prev, questions: updatedQuestions };
                 });
@@ -395,7 +393,7 @@ export default function MixedInterviewRoomPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -961,3 +959,5 @@ export default function MixedInterviewRoomPage() {
         </div >
     );
 }
+
+

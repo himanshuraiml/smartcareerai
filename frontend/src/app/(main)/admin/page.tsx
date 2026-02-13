@@ -23,6 +23,7 @@ import {
     Legend
 } from "recharts";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -36,7 +37,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [growthData, setGrowthData] = useState<any[]>([]);
     const [subscriptionData, setSubscriptionData] = useState<any[]>([]);
@@ -45,12 +46,11 @@ export default function AdminDashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const headers = { Authorization: `Bearer ${accessToken}` };
 
                 const [overviewRes, growthRes, subRes] = await Promise.all([
-                    fetch(`${API_URL}/admin/analytics/overview`, { headers }),
-                    fetch(`${API_URL}/admin/analytics/user-growth`, { headers }),
-                    fetch(`${API_URL}/admin/analytics/subscriptions`, { headers })
+                    authFetch(`/admin/analytics/overview`),
+                    authFetch(`/admin/analytics/user-growth`),
+                    authFetch(`/admin/analytics/subscriptions`)
                 ]);
 
                 if (overviewRes.ok) {
@@ -78,10 +78,10 @@ export default function AdminDashboard() {
             }
         };
 
-        if (accessToken) {
+        if (user) {
             fetchData();
         }
-    }, [accessToken]);
+    }, [user]);
 
     if (loading) {
         return <div className="text-gray-900 dark:text-white text-center py-20">Loading dashboard...</div>;
@@ -232,3 +232,6 @@ export default function AdminDashboard() {
         </div>
     );
 }
+
+
+

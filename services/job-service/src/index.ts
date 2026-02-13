@@ -1,13 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { jobRouter } from './routes/job.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import { startCronJobs } from './cron';
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3005;

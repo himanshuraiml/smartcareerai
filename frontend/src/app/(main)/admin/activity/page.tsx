@@ -28,7 +28,7 @@ interface ActivityStats {
 }
 
 export default function ActivityPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [stats, setStats] = useState<ActivityStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -37,11 +37,11 @@ export default function ActivityPage() {
     const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchActivities();
             fetchStats();
         }
-    }, [accessToken, filter, page]);
+    }, [user, filter, page]);
 
     const fetchActivities = async () => {
         try {
@@ -280,3 +280,5 @@ export default function ActivityPage() {
         </div>
     );
 }
+
+

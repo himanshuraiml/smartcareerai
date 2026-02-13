@@ -25,7 +25,7 @@ import {
     ResponsiveContainer,
     PieChart,
     Pie,
-    Cell,
+    Cell
 } from "recharts";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -69,7 +69,7 @@ interface DashboardData {
 }
 
 export default function InstitutionDashboard() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export default function InstitutionDashboard() {
         setError(null);
         try {
             const res = await fetch(`${API_URL}/admin/institution/dashboard`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (!res.ok) throw new Error("Failed to fetch dashboard");
             const result = await res.json();
@@ -93,8 +93,8 @@ export default function InstitutionDashboard() {
     };
 
     useEffect(() => {
-        if (accessToken) fetchDashboard();
-    }, [accessToken]);
+        if (user) fetchDashboard();
+    }, [user]);
 
     const getScoreColor = (score: number | null) => {
         if (score === null) return "text-gray-400";
@@ -268,7 +268,7 @@ export default function InstitutionDashboard() {
                                         backgroundColor: "#1f2937",
                                         borderColor: "#374151",
                                         borderRadius: "8px",
-                                        fontSize: "12px",
+                                        fontSize: "12px"
                                     }}
                                     labelFormatter={(v) => new Date(v).toLocaleDateString()}
                                 />
@@ -305,7 +305,7 @@ export default function InstitutionDashboard() {
                                                 backgroundColor: "#1f2937",
                                                 borderColor: "#374151",
                                                 borderRadius: "8px",
-                                                fontSize: "12px",
+                                                fontSize: "12px"
                                             }}
                                             formatter={(value: number) => [`${value} interviews`, ""]}
                                         />
@@ -358,9 +358,8 @@ export default function InstitutionDashboard() {
                                             student.name.charAt(0).toUpperCase()
                                         )}
                                         {idx < 3 && (
-                                            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                                                idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : "bg-orange-400 text-orange-900"
-                                            }`}>
+                                            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : "bg-orange-400 text-orange-900"
+                                                }`}>
                                                 {idx + 1}
                                             </span>
                                         )}
@@ -512,21 +511,20 @@ function StatCard({
     label,
     value,
     subtitle,
-    color,
-}: {
-    icon: React.ElementType;
-    label: string;
-    value: string | number;
-    subtitle?: string;
-    color: "emerald" | "blue" | "purple" | "amber" | "teal" | "rose";
-}) {
+    color }: {
+        icon: React.ElementType;
+        label: string;
+        value: string | number;
+        subtitle?: string;
+        color: "emerald" | "blue" | "purple" | "amber" | "teal" | "rose";
+    }) {
     const colorClasses = {
         emerald: "from-emerald-500/20 to-emerald-500/5 text-emerald-400",
         blue: "from-blue-500/20 to-blue-500/5 text-blue-400",
         purple: "from-indigo-500/20 to-indigo-500/5 text-indigo-400",
         amber: "from-amber-500/20 to-amber-500/5 text-amber-400",
         teal: "from-teal-500/20 to-teal-500/5 text-teal-400",
-        rose: "from-rose-500/20 to-rose-500/5 text-rose-400",
+        rose: "from-rose-500/20 to-rose-500/5 text-rose-400"
     };
 
     const iconColors = {
@@ -535,7 +533,7 @@ function StatCard({
         purple: "text-indigo-400",
         amber: "text-amber-400",
         teal: "text-teal-400",
-        rose: "text-rose-400",
+        rose: "text-rose-400"
     };
 
     return (
@@ -547,3 +545,6 @@ function StatCard({
         </div>
     );
 }
+
+
+

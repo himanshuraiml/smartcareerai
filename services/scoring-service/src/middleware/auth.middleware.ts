@@ -22,7 +22,10 @@ export const authMiddleware = (req: Request, _res: Response, next: NextFunction)
         }
 
         const token = authHeader.split(' ')[1];
-        const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is not defined in environment variables');
+        }
+        const JWT_SECRET = process.env.JWT_SECRET;
 
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
         (req as any).user = decoded;

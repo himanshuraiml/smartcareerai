@@ -37,7 +37,7 @@ interface TestResult {
 export default function TestPage({ params }: { params: Promise<{ testId: string }> }) {
     const { testId } = React.use(params);
     const router = useRouter();
-    const { user, accessToken: token } = useAuthStore();
+    const { user } = useAuthStore();
     const [test, setTest] = useState<SkillTest | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -49,10 +49,10 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
     const [insufficientCredits, setInsufficientCredits] = useState(false);
 
     useEffect(() => {
-        if (token && user) {
+        if (user) {
             startTestSession();
         }
-    }, [token, user, testId]);
+    }, [user, testId]);
 
     useEffect(() => {
         if (test && !result && timeLeft > 0) {
@@ -74,10 +74,9 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/validation/tests/${testId}/start`, {
                 method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
+                credentials: 'include', headers: {
                     'x-user-id': user?.id || '', // validation service expects x-user-id or auth token handling needs ensuring
-                },
+                }
             });
             const data = await res.json();
             if (data.success) {
@@ -115,12 +114,11 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/validation/tests/${testId}/submit`, {
                 method: 'POST',
-                headers: {
+                credentials: 'include', headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                    'x-user-id': user?.id || '',
+                    'x-user-id': user?.id || ''
                 },
-                body: JSON.stringify({ answers }),
+                body: JSON.stringify({ answers })
             });
             const data = await res.json();
             if (data.success) {
@@ -267,3 +265,5 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
         </div>
     );
 }
+
+

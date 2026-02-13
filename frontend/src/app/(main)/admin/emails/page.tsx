@@ -81,7 +81,7 @@ interface EmailStats {
 }
 
 export default function AdminEmailsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<Tab>('logs');
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -122,10 +122,10 @@ export default function AdminEmailsPage() {
     const [stats, setStats] = useState<EmailStats | null>(null);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             loadData();
         }
-    }, [accessToken, activeTab, logsPage, logsFilter]);
+    }, [user, activeTab, logsPage, logsFilter]);
 
     const showToast = (type: 'success' | 'error', message: string) => {
         setToast({ type, message });
@@ -932,3 +932,5 @@ export default function AdminEmailsPage() {
         </div>
     );
 }
+
+

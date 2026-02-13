@@ -30,7 +30,7 @@ router.post('/accept-invite', authController.acceptInvite);
 router.get('/me', authMiddleware, authController.getCurrentUser);
 router.get('/me/target-role', authMiddleware, authController.getTargetRole);
 router.put('/me/target-role', authMiddleware, authController.updateTargetRole);
-router.post('/logout', authMiddleware, authController.logout);
+router.post('/logout', authController.logout);
 router.put('/profile', authMiddleware, authController.updateProfile);
 router.put('/change-password', authMiddleware, authController.changePassword);
 router.delete('/me', authMiddleware, authController.deleteAccount);

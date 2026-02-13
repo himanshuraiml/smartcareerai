@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { razorpayService } from './razorpay.service';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/prisma';
 
 export interface CreateSubscriptionInput {
     userId: string;

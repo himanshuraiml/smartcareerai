@@ -77,7 +77,7 @@ const speakQuestion = (text: string) => {
 export default function HRInterviewRoomPage() {
     const params = useParams();
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
 
     // Normalize the session ID
     const sessionId = normalizeUUID(params.id);
@@ -113,8 +113,7 @@ export default function HRInterviewRoomPage() {
         stopPreview,
         startRecording,
         stopRecording,
-        resetRecording,
-    } = useVideoRecorder({ maxDuration: 180 });
+        resetRecording } = useVideoRecorder({ maxDuration: 180 });
 
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const avatarRef = useRef<HTMLDivElement>(null);
@@ -185,7 +184,7 @@ export default function HRInterviewRoomPage() {
         }
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -202,16 +201,16 @@ export default function HRInterviewRoomPage() {
         } finally {
             setLoading(false);
         }
-    }, [sessionId, accessToken]);
+    }, [sessionId, user]);
 
     useEffect(() => {
-        if (accessToken && sessionId) {
+        if (user && sessionId) {
             fetchSession();
         } else if (!sessionId && params.id) {
             setInvalidId(true);
             setLoading(false);
         }
-    }, [accessToken, sessionId, params.id, fetchSession]);
+    }, [user, sessionId, params.id, fetchSession]);
 
     const submitVideoAnswer = async () => {
         if (!session || !videoBlob) return;
@@ -235,10 +234,9 @@ export default function HRInterviewRoomPage() {
 
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
                 },
-                body: formData,
+                body: formData
             });
 
             if (response.ok) {
@@ -252,7 +250,7 @@ export default function HRInterviewRoomPage() {
                         ...updatedQuestions[currentQuestionIndex],
                         userAnswer: data.data.audioAnalysis?.transcription || '[Video Answer]',
                         score: data.data.evaluation?.score || null,
-                        feedback: data.data.evaluation?.feedback || null,
+                        feedback: data.data.evaluation?.feedback || null
                     };
                     return { ...prev, questions: updatedQuestions };
                 });
@@ -285,7 +283,7 @@ export default function HRInterviewRoomPage() {
         try {
             const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -840,3 +838,5 @@ export default function HRInterviewRoomPage() {
         </div >
     );
 }
+
+

@@ -24,23 +24,17 @@ const navItems = [
 export default function InstitutionAdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, accessToken } = useAuthStore();
+    const { user, logout } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const isAuthorized = !!user && user.role === "INSTITUTION_ADMIN";
 
     useEffect(() => {
-        if (!accessToken) {
+        if (!user) {
             router.push("/login");
-            return;
-        }
-
-        if (user && user.role !== "INSTITUTION_ADMIN") {
+        } else if (user.role !== "INSTITUTION_ADMIN") {
             router.push("/dashboard");
-            return;
         }
-
-        setIsAuthorized(true);
-    }, [accessToken, user, router]);
+    }, [user, router]);
 
     if (!isAuthorized) {
         return (
@@ -168,3 +162,6 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
         </div>
     );
 }
+
+
+

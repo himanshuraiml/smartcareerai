@@ -7,3 +7,5 @@ export default function BlogPage() {
 
     return <BlogList initialPosts={posts} categories={categories} />;
 }
+
+

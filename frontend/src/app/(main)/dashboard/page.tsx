@@ -26,7 +26,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-    const { user, accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [greeting, setGreeting] = useState('');
     const [stats, setStats] = useState<DashboardStats>({
         resumeCount: 0,
@@ -40,18 +40,17 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
 
     const fetchStats = useCallback(async () => {
-        if (!accessToken) return;
+        if (!user) return;
 
         try {
-            const headers = { 'Authorization': `Bearer ${accessToken}` };
 
             const [resumeRes, atsRes, appRes, interviewRes, testsRes, badgesRes] = await Promise.all([
-                fetch(`${API_URL}/resumes`, { headers }),
-                fetch(`${API_URL}/scores/history`, { headers }),
-                fetch(`${API_URL}/applications/stats`, { headers }),
-                fetch(`${API_URL}/interviews/sessions`, { headers }),
-                fetch(`${API_URL}/validation/attempts`, { headers }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
-                fetch(`${API_URL}/validation/badges`, { headers }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
+                fetch(`${API_URL}/resumes`, { credentials: 'include' }),
+                fetch(`${API_URL}/scores/history`, { credentials: 'include' }),
+                fetch(`${API_URL}/applications/stats`, { credentials: 'include' }),
+                fetch(`${API_URL}/interviews/sessions`, { credentials: 'include' }),
+                fetch(`${API_URL}/validation/attempts`, { credentials: 'include' }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
+                fetch(`${API_URL}/validation/badges`, { credentials: 'include' }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
             ]);
 
             const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };
@@ -73,14 +72,14 @@ export default function DashboardPage() {
                 avgScore,
                 interviewCount: interviewData.data?.length || 0,
                 testsTaken: testsData.data?.length || 0,
-                badgesEarned: badgesData.data?.length || 0,
+                badgesEarned: badgesData.data?.length || 0
             });
         } catch (err) {
             // Failed to fetch stats - using default values
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
         const hour = new Date().getHours();
@@ -420,4 +419,7 @@ export default function DashboardPage() {
         </div>
     );
 }
+
+
+
 

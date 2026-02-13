@@ -18,7 +18,7 @@
     "start:frontend": "npm run start -w frontend",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "npm run lint -w frontend",
     "db:migrate": "npm run migrate -w @smartcareer/database",
     "db:seed": "npm run seed -w @smartcareer/database",
     "docker:build": "docker-compose build",

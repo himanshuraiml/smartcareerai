@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useTheme } from '@/providers/ThemeProvider';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface ErrorLog {
     id: string;
@@ -59,17 +60,17 @@ const SEVERITY_CONFIG = {
     CRITICAL: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30' },
     ERROR: { icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
     WARNING: { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
-    INFO: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
+    INFO: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' }
 };
 
 const CIRCUIT_STATE_CONFIG = {
     CLOSED: { color: 'text-green-500', bg: 'bg-green-500/10', label: 'Healthy' },
     OPEN: { color: 'text-red-500', bg: 'bg-red-500/10', label: 'Open (Failing)' },
-    HALF_OPEN: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', label: 'Testing' },
+    HALF_OPEN: { color: 'text-yellow-500', bg: 'bg-yellow-500/10', label: 'Testing' }
 };
 
 export default function ErrorMonitoringPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const { theme } = useTheme();
     const isLightMode = theme === 'light';
 
@@ -89,15 +90,13 @@ export default function ErrorMonitoringPage() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const res = await fetch(`${API_BASE}/admin/errors/stats`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const res = await authFetch('/admin/errors/stats');
             const data = await res.json();
             if (data.success) setStats(data.data);
         } catch (err) {
             console.error('Failed to fetch error stats:', err);
         }
-    }, [API_BASE, accessToken]);
+    }, [API_BASE, user]);
 
     const fetchLogs = useCallback(async () => {
         try {
@@ -105,24 +104,21 @@ export default function ErrorMonitoringPage() {
                 limit: '100',
                 ...(selectedSeverity !== 'all' && { severity: selectedSeverity }),
                 ...(selectedService !== 'all' && { service: selectedService }),
-                ...(!showResolved && { resolved: 'false' }),
+                ...(!showResolved && { resolved: 'false' })
             });
 
-            const res = await fetch(`${API_BASE}/admin/errors/logs?${params}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const res = await authFetch(`/admin/errors/logs?${params}`);
             const data = await res.json();
             if (data.success) setLogs(data.data.logs);
         } catch (err) {
             console.error('Failed to fetch error logs:', err);
         }
-    }, [API_BASE, accessToken, selectedSeverity, selectedService, showResolved]);
+    }, [API_BASE, user, selectedSeverity, selectedService, showResolved]);
 
     const resolveError = async (id: string) => {
         try {
-            await fetch(`${API_BASE}/admin/errors/${id}/resolve`, {
-                method: 'PUT',
-                headers: { Authorization: `Bearer ${accessToken}` },
+            await authFetch(`/admin/errors/${id}/resolve`, {
+                method: 'PUT'
             });
             fetchLogs();
             fetchStats();
@@ -134,13 +130,12 @@ export default function ErrorMonitoringPage() {
     const resolveSelected = async () => {
         if (selectedLogs.size === 0) return;
         try {
-            await fetch(`${API_BASE}/admin/errors/resolve-multiple`, {
+            await authFetch('/admin/errors/resolve-multiple', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ids: Array.from(selectedLogs) }),
+                body: JSON.stringify({ ids: Array.from(selectedLogs) })
             });
             setSelectedLogs(new Set());
             fetchLogs();
@@ -153,9 +148,8 @@ export default function ErrorMonitoringPage() {
     const clearResolved = async () => {
         if (!confirm('Are you sure you want to clear all resolved errors?')) return;
         try {
-            await fetch(`${API_BASE}/admin/errors/clear-resolved`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${accessToken}` },
+            await authFetch('/admin/errors/clear-resolved', {
+                method: 'DELETE'
             });
             fetchLogs();
             fetchStats();
@@ -471,3 +465,6 @@ export default function ErrorMonitoringPage() {
         </div>
     );
 }
+
+
+

@@ -30,11 +30,11 @@ const emailTypeConfig = {
     OFFER: { label: 'Offer', color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
     REJECTION: { label: 'Rejection', color: 'bg-red-500/20 text-red-400', icon: XCircle },
     UPDATE: { label: 'Update', color: 'bg-yellow-500/20 text-yellow-400', icon: AlertCircle },
-    OTHER: { label: 'Other', color: 'bg-gray-500/20 text-gray-400', icon: Mail },
+    OTHER: { label: 'Other', color: 'bg-gray-500/20 text-gray-400', icon: Mail }
 };
 
 export function EmailTrackingCard() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [connection, setConnection] = useState<EmailConnection | null>(null);
     const [emails, setEmails] = useState<TrackedEmail[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,12 +43,12 @@ export function EmailTrackingCard() {
 
     useEffect(() => {
         fetchConnectionStatus();
-    }, [accessToken]);
+    }, [user]);
 
     const fetchConnectionStatus = async () => {
         try {
             const response = await fetch(`${API_URL}/connection`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -67,7 +67,7 @@ export function EmailTrackingCard() {
     const fetchTrackedEmails = async () => {
         try {
             const response = await fetch(`${API_URL}/tracked?limit=5`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -82,7 +82,7 @@ export function EmailTrackingCard() {
         setConnecting(true);
         try {
             const response = await fetch(`${API_URL}/oauth/url`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -99,7 +99,7 @@ export function EmailTrackingCard() {
         try {
             const response = await fetch(`${API_URL}/connection`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 setConnection(null);
@@ -115,7 +115,7 @@ export function EmailTrackingCard() {
         try {
             await fetch(`${API_URL}/sync`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                credentials: 'include', headers: {}
             });
             await fetchTrackedEmails();
         } catch (error) {
@@ -233,3 +233,6 @@ export function EmailTrackingCard() {
 }
 
 export default EmailTrackingCard;
+
+
+

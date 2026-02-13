@@ -26,21 +26,21 @@ interface TestAttempt {
 }
 
 export default function SkillTestSuggestion() {
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [suggestedTest, setSuggestedTest] = useState<SkillTest | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSuggestion = async () => {
-            if (!accessToken) return;
+            if (!user) return;
 
             try {
                 const [testsRes, attemptsRes] = await Promise.all([
                     fetch(`${API_URL}/validation/tests`, {
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                        credentials: 'include', headers: {}
                     }),
                     fetch(`${API_URL}/validation/attempts`, {
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                        credentials: 'include', headers: {}
                     })
                 ]);
 
@@ -73,7 +73,7 @@ export default function SkillTestSuggestion() {
         };
 
         fetchSuggestion();
-    }, [accessToken]);
+    }, [user]);
 
     if (loading) {
         return (
@@ -132,3 +132,6 @@ export default function SkillTestSuggestion() {
         </motion.div>
     );
 }
+
+
+

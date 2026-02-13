@@ -1,15 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
-import { scoringRouter } from './routes/scoring.routes';
-import { errorHandler } from './middleware/error.middleware';
-import { logger } from './utils/logger';
 
 // Load env from service directory first (use __dirname for correct path when run via workspace)
 dotenv.config({ path: path.resolve(__dirname, '../.env') }); // Service's .env (src/../.env)
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Root .env as fallback
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { scoringRouter } from './routes/scoring.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { logger } from './utils/logger';
+
 
 // Debug: Log if Groq API key is present
 logger.info(`GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'Present (' + process.env.GROQ_API_KEY.substring(0, 10) + '...)' : 'MISSING'}`);

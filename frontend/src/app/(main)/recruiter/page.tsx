@@ -25,7 +25,7 @@ interface Candidate {
 }
 
 export default function CandidateSearchPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -44,7 +44,7 @@ export default function CandidateSearchPage() {
             if (experienceMin) params.append("experienceMin", experienceMin);
 
             const response = await fetch(`${API_URL}/recruiter/candidates/search?${params}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
 
             if (response.ok) {
@@ -56,14 +56,14 @@ export default function CandidateSearchPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, skills, location, experienceMin]);
+    }, [user, skills, location, experienceMin]);
 
     // Initial load
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchCandidates();
         }
-    }, [accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -74,11 +74,10 @@ export default function CandidateSearchPage() {
         try {
             const response = await fetch(`${API_URL}/recruiter/candidates/save`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ candidateId }),
+                body: JSON.stringify({ candidateId })
             });
 
             if (response.ok) {
@@ -214,8 +213,8 @@ export default function CandidateSearchPage() {
                                         <span
                                             key={i}
                                             className={`px-2 py-1 rounded-md text-xs font-medium border ${skill.verified
-                                                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                    : 'bg-white/5 text-gray-400 border-transparent'
+                                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                : 'bg-white/5 text-gray-400 border-transparent'
                                                 }`}
                                         >
                                             {skill.name}
@@ -235,3 +234,6 @@ export default function CandidateSearchPage() {
         </div>
     );
 }
+
+
+

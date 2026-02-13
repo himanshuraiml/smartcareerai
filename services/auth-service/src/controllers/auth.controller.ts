@@ -4,16 +4,46 @@ import { logger } from '../utils/logger';
 
 const authService = new AuthService();
 
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Cookie options
+    const cookieOptions = {
+        httpOnly: true, // Prevent JS access
+        secure: isProduction, // HTTPS only in production
+        sameSite: isProduction ? 'strict' as const : 'lax' as const, // CSRF protection
+        path: '/',
+    };
+
+    // 15 minutes for access token
+    res.cookie('accessToken', accessToken, {
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000,
+    });
+
+    // 7 days for refresh token
+    res.cookie('refreshToken', refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+};
+
 export class AuthController {
     async register(req: Request, res: Response, next: NextFunction) {
         try {
             const { email, password, name, targetJobRoleId, institutionId } = req.body;
             const result = await authService.register(email, password, name, targetJobRoleId, institutionId);
 
+            setAuthCookies(res, result.accessToken, result.refreshToken);
+
             logger.info(`User registered: ${email}`);
+
+            // Remove tokens from response body
+            const { accessToken, refreshToken, ...userData } = result;
+
             res.status(201).json({
                 success: true,
-                data: result,
+                data: userData,
                 message: 'Registration successful. Please check your email to verify your account.',
             });
         } catch (error) {
@@ -26,10 +56,16 @@ export class AuthController {
             const { email, password } = req.body;
             const result = await authService.login(email, password);
 
+            setAuthCookies(res, result.accessToken, result.refreshToken);
+
             logger.info(`User logged in: ${email}`);
+
+            // Remove tokens from response body
+            const { accessToken, refreshToken, ...userData } = result;
+
             res.json({
                 success: true,
-                data: result,
+                data: userData,
             });
         } catch (error) {
             next(error);
@@ -41,10 +77,16 @@ export class AuthController {
             const { idToken } = req.body;
             const result = await authService.googleLogin(idToken);
 
+            setAuthCookies(res, result.accessToken, result.refreshToken);
+
             logger.info(`User Google logged in: ${result.user.email}`);
+
+            // Remove tokens from response body
+            const { accessToken, refreshToken, ...userData } = result;
+
             res.json({
                 success: true,
-                data: result,
+                data: userData,
             });
         } catch (error) {
             next(error);
@@ -53,12 +95,25 @@ export class AuthController {
 
     async refreshToken(req: Request, res: Response, next: NextFunction) {
         try {
-            const { refreshToken } = req.body;
-            const result = await authService.refreshToken(refreshToken);
+            // Get refresh token from cookie if not in body
+            const token = req.cookies.refreshToken || req.body.refreshToken;
 
+            if (!token) {
+                res.status(401).json({
+                    success: false,
+                    message: 'Refresh token required',
+                });
+                return;
+            }
+
+            const result = await authService.refreshToken(token);
+
+            setAuthCookies(res, result.accessToken, result.refreshToken);
+
+            // Return minimal data, tokens are in cookies
             res.json({
                 success: true,
-                data: result,
+                message: 'Token refreshed',
             });
         } catch (error) {
             next(error);
@@ -67,17 +122,29 @@ export class AuthController {
 
     async logout(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
-            const refreshToken = req.body.refreshToken;
+            // userId might be undefined if session is expired, but we still want to clear cookies
+            const userId = (req as any).user?.id;
+            const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-            await authService.logout(userId, refreshToken);
+            if (userId || refreshToken) {
+                // If we have either, we can try to clean up DB
+                // authService.logout handles optional refreshToken
+                await authService.logout(userId || 'unknown', refreshToken);
+            }
 
-            logger.info(`User logged out: ${userId}`);
+            // Clear cookies on client regardless of auth status
+            res.clearCookie('accessToken');
+            res.clearCookie('refreshToken');
+
+            logger.info(`User logout requested: ${userId || 'unknown session'}`);
             res.json({
                 success: true,
                 message: 'Logged out successfully',
             });
         } catch (error) {
+            // Even on error, try to clear cookies
+            res.clearCookie('accessToken');
+            res.clearCookie('refreshToken');
             next(error);
         }
     }
@@ -282,17 +349,17 @@ export class AuthController {
     async deleteAccount(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;
-            const { password } = req.body;
+            const { password, confirmPhrase } = req.body;
 
-            if (!password) {
+            if (!password && !confirmPhrase) {
                 res.status(400).json({
                     success: false,
-                    error: 'Password is required to delete account',
+                    error: 'Password or confirmation phrase is required to delete account',
                 });
                 return;
             }
 
-            await authService.deleteAccount(userId, password);
+            await authService.deleteAccount(userId, password, confirmPhrase);
 
             logger.info(`Account deleted for user: ${userId}`);
             res.json({

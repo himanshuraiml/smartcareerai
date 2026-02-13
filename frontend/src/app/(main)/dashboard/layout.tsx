@@ -69,13 +69,12 @@ const getPageTitle = (pathname: string | null): string => {
 };
 
 export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+    children }: {
+        children: React.ReactNode;
+    }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, accessToken, _hasHydrated } = useAuthStore();
+    const { user, logout, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -90,7 +89,7 @@ export default function DashboardLayout({
         let timeoutId: NodeJS.Timeout;
 
         const resetTimer = () => {
-            if (!accessToken) return;
+            if (!user) return;
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
                 handleLogout();
@@ -101,7 +100,7 @@ export default function DashboardLayout({
         const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
         // Add listeners
-        if (accessToken) {
+        if (user) {
             resetTimer(); // Start timer initially
             events.forEach(event => window.addEventListener(event, resetTimer));
         }
@@ -110,33 +109,32 @@ export default function DashboardLayout({
             clearTimeout(timeoutId);
             events.forEach(event => window.removeEventListener(event, resetTimer));
         };
-    }, [accessToken, handleLogout]);
+    }, [user, handleLogout]);
 
     // Fetch user progress to determine sidebar visibility
     const fetchUserProgress = useCallback(async () => {
-        if (!accessToken) return;
+        if (!user) return;
 
         try {
-            const headers = { 'Authorization': `Bearer ${accessToken}` };
 
             // Fetch each endpoint individually to avoid one failure blocking all
-            const resumeData = await fetch(`${API_URL}/resumes`, { headers })
+            const resumeData = await fetch(`${API_URL}/resumes`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const skillsData = await fetch(`${API_URL}/skills/user-skills`, { headers })
+            const skillsData = await fetch(`${API_URL}/skills/user-skills`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const testsData = await fetch(`${API_URL}/validation/attempts`, { headers })
+            const testsData = await fetch(`${API_URL}/validation/attempts`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const interviewData = await fetch(`${API_URL}/interviews/sessions`, { headers })
+            const interviewData = await fetch(`${API_URL}/interviews/sessions`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const appData = await fetch(`${API_URL}/applications/stats`, { headers })
+            const appData = await fetch(`${API_URL}/applications/stats`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : { data: { applied: 0 } })
                 .catch(() => ({ data: { applied: 0 } }));
 
@@ -160,22 +158,27 @@ export default function DashboardLayout({
             // Failed to fetch user progress - default to stage 1 so users aren't fully blocked
             setUserStage(1);
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
         // Wait for hydration before checking auth
         if (!_hasHydrated) return;
 
-        if (!accessToken) {
+        if (!user) {
             router.push('/login');
-        } else {
+        }
+    }, [user, router, _hasHydrated]);
+
+    useEffect(() => {
+        if (_hasHydrated && user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- async data fetching
             fetchUserProgress();
         }
-    }, [accessToken, router, fetchUserProgress, _hasHydrated]);
+    }, [_hasHydrated, user, fetchUserProgress]);
 
 
 
-    if (!_hasHydrated || !accessToken) {
+    if (!_hasHydrated || !user) {
         // Show nothing or a loading spinner while hydrating or redirecting
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
@@ -391,4 +394,7 @@ export default function DashboardLayout({
         </div>
     );
 }
+
+
+
 

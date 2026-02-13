@@ -49,7 +49,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1
 export default function TestPage() {
     const { id } = useParams();
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
 
     const [test, setTest] = useState<TestData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -64,7 +64,7 @@ export default function TestPage() {
     const fetchTest = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/validation/tests/${id}`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -75,13 +75,13 @@ export default function TestPage() {
         } finally {
             setLoading(false);
         }
-    }, [id, accessToken]);
+    }, [id, user]);
 
     useEffect(() => {
-        if (accessToken && id) {
+        if (user && id) {
             fetchTest();
         }
-    }, [accessToken, id, fetchTest]);
+    }, [user, id, fetchTest]);
 
     // Timer
     useEffect(() => {
@@ -105,7 +105,7 @@ export default function TestPage() {
         try {
             const response = await fetch(`${API_URL}/validation/tests/${id}/start`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 setStarted(true);
@@ -125,11 +125,10 @@ export default function TestPage() {
         try {
             const response = await fetch(`${API_URL}/validation/tests/${id}/submit`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
+                credentials: 'include', headers: {
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ answers }),
+                body: JSON.stringify({ answers })
             });
 
             if (response.ok) {
@@ -361,8 +360,8 @@ export default function TestPage() {
                             key={index}
                             onClick={() => setAnswers({ ...answers, [question.id]: option })}
                             className={`w-full text-left p-4 rounded-lg border transition-all ${answers[question.id] === option
-                                    ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                    : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/30'
+                                ? 'border-indigo-500 bg-indigo-500/20 text-white'
+                                : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/30'
                                 }`}
                         >
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-sm font-medium mr-3">
@@ -391,10 +390,10 @@ export default function TestPage() {
                             key={q.id}
                             onClick={() => setCurrentQuestion(index)}
                             className={`w-8 h-8 rounded-full text-xs font-medium transition-all ${index === currentQuestion
-                                    ? 'bg-indigo-500 text-white'
-                                    : answers[q.id]
-                                        ? 'bg-green-500/20 text-green-400'
-                                        : 'bg-white/10 text-gray-400'
+                                ? 'bg-indigo-500 text-white'
+                                : answers[q.id]
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : 'bg-white/10 text-gray-400'
                                 }`}
                         >
                             {index + 1}
@@ -428,3 +427,5 @@ export default function TestPage() {
         </div>
     );
 }
+
+

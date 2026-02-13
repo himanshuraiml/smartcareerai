@@ -6,9 +6,7 @@ export { dataScientistQuestions } from './data-scientist';
 export { dataAnalystQuestions } from './data-analyst';
 export { devopsEngineerQuestions } from './devops-engineer';
 export { cloudEngineerQuestions } from './cloud-engineer';
-export { productManagerQuestions } from './product-manager';
-export { projectManagerQuestions } from './project-manager';
-export { uiUxDesignerQuestions } from './ui-ux-designer';
+// product-manager, project-manager, ui-ux-designer — planned for future addition
 export { mlEngineerQuestions } from './ml-engineer';
 export { mobileDeveloperQuestions } from './mobile-developer';
 export { qaEngineerQuestions } from './qa-engineer';

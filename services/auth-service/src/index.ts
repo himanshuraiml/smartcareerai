@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+if (result.error) {
+    console.error('❌ [AuthService] Failed to load .env file:', result.error);
+}
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+}
 
 import express from 'express';
 import cors from 'cors';
@@ -13,10 +20,18 @@ import { logger } from './utils/logger';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+import cookieParser from 'cookie-parser';
+
+// ...
+
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Allow Gateway
+    credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // Health check
 app.get('/health', (_req, res) => {

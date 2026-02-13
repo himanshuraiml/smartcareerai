@@ -19,17 +19,11 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>("dark");
+    const [theme, setThemeState] = useState<Theme>(() => {
+        if (typeof window === "undefined") return "dark";
+        return (localStorage.getItem("placenxt_theme") as Theme) || "dark";
+    });
     const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-        const savedTheme = localStorage.getItem("placenxt_theme") as Theme;
-        if (savedTheme) {
-            setThemeState(savedTheme);
-            applyTheme(savedTheme);
-        }
-    }, []);
 
     const applyTheme = (newTheme: Theme) => {
         const root = document.documentElement;
@@ -55,6 +49,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- standard hydration-safe pattern
+        setMounted(true);
+        applyTheme(theme);
+    }, []);
+
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
         applyTheme(newTheme);
@@ -76,3 +76,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         </ThemeContext.Provider>
     );
 }
+
+

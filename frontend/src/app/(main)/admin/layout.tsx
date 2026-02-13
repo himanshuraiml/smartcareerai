@@ -34,23 +34,17 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, accessToken } = useAuthStore();
+    const { user, logout } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const isAuthorized = !!user && user.role === "ADMIN";
 
     useEffect(() => {
-        if (!accessToken) {
+        if (!user) {
             router.push("/login");
-            return;
-        }
-
-        if (user && user.role !== "ADMIN") {
+        } else if (user.role !== "ADMIN") {
             router.push("/dashboard");
-            return;
         }
-
-        setIsAuthorized(true);
-    }, [accessToken, user, router]);
+    }, [user, router]);
 
     if (!isAuthorized) {
         return (
@@ -180,3 +174,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
     );
 }
+
+
+

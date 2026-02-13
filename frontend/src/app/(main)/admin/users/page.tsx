@@ -13,6 +13,7 @@ import {
     User as UserIcon
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -26,7 +27,7 @@ interface User {
 }
 
 export default function UserManagementPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -41,12 +42,10 @@ export default function UserManagementPage() {
                 page: page.toString(),
                 limit: "10",
                 ...(search && { search }),
-                ...(roleFilter !== "ALL" && { role: roleFilter }),
+                ...(roleFilter !== "ALL" && { role: roleFilter })
             });
 
-            const response = await fetch(`${API_URL}/admin/users?${params}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const response = await authFetch(`/admin/users?${params}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -58,28 +57,27 @@ export default function UserManagementPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, page, search, roleFilter]);
+    }, [user, page, search, roleFilter]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             const timer = setTimeout(() => {
                 fetchUsers();
             }, 300); // Debounce search
             return () => clearTimeout(timer);
         }
-    }, [fetchUsers, accessToken, search, roleFilter]); // Trigger on filter change
+    }, [fetchUsers, search, roleFilter, user]); // Trigger on filter change
 
     const handleUpdateRole = async (userId: string, newRole: string) => {
         if (!confirm(`Are you sure you want to change user role to ${newRole}?`)) return;
 
         try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}/role`, {
+            const response = await authFetch(`/admin/users/${userId}/role`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ role: newRole }),
+                body: JSON.stringify({ role: newRole })
             });
 
             if (response.ok) {
@@ -94,9 +92,8 @@ export default function UserManagementPage() {
         if (!confirm("Are you sure you want to RESET this user's progress? This will delete all resumes, test attempts, and interviews. This cannot be undone.")) return;
 
         try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}/reset`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${accessToken}` },
+            const response = await authFetch(`/admin/users/${userId}/reset`, {
+                method: "POST"
             });
 
             if (response.ok) {
@@ -112,9 +109,8 @@ export default function UserManagementPage() {
         if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
         try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${accessToken}` },
+            const response = await authFetch(`/admin/users/${userId}`, {
+                method: "DELETE"
             });
 
             if (response.ok) {
@@ -130,9 +126,8 @@ export default function UserManagementPage() {
         if (!confirm(`Are you sure you want to ${action} this user?`)) return;
 
         try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}/verify`, {
-                method: "PUT",
-                headers: { Authorization: `Bearer ${accessToken}` },
+            const response = await authFetch(`/admin/users/${userId}/verify`, {
+                method: "PUT"
             });
 
             if (response.ok) {
@@ -229,11 +224,10 @@ export default function UserManagementPage() {
                                     <td className="p-4">
                                         <button
                                             onClick={() => handleToggleVerification(user.id, user.isVerified)}
-                                            className={`flex items-center gap-1 text-sm px-2 py-1 rounded-lg transition hover:bg-white/10 ${
-                                                user.isVerified
-                                                    ? 'text-green-400 hover:text-green-300'
-                                                    : 'text-gray-400 hover:text-yellow-400'
-                                            }`}
+                                            className={`flex items-center gap-1 text-sm px-2 py-1 rounded-lg transition hover:bg-white/10 ${user.isVerified
+                                                ? 'text-green-400 hover:text-green-300'
+                                                : 'text-gray-400 hover:text-yellow-400'
+                                                }`}
                                             title={user.isVerified ? "Click to unverify" : "Click to verify"}
                                         >
                                             {user.isVerified ? (
@@ -292,3 +286,6 @@ export default function UserManagementPage() {
         </div>
     );
 }
+
+
+

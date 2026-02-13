@@ -1,15 +1,23 @@
+import dotenv from 'dotenv';
+import path from 'path';
+const result = dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
+
 import { adminRouter } from './routes/admin.routes';
 import { institutionRouter } from './routes/institution.routes';
 import { settingsRouter } from './routes/settings.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
-// Load environment variables
-dotenv.config();
+if (result.error) {
+    console.error('❌ [AdminService] Failed to load .env file:', result.error);
+}
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+}
 
 const SERVICE_NAME = 'admin-service';
 

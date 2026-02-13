@@ -9,7 +9,8 @@ export const RegisterSchema = z.object({
         .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
         .regex(/[0-9]/, 'Password must contain at least one number'),
     name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-    targetJobRoleId: z.string().uuid().optional(),
+    targetJobRoleId: z.string().uuid().optional().or(z.literal('')),
+    institutionId: z.string().optional().or(z.literal('')),
 });
 
 export const LoginSchema = z.object({

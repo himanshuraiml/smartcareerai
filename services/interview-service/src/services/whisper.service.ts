@@ -50,31 +50,35 @@ export class WhisperService {
             const tempPath = path.join(tempDir, filename);
             fs.writeFileSync(tempPath, audioBuffer);
 
-            // Use Groq Whisper for transcription
-            const transcription = await client.audio.transcriptions.create({
-                file: fs.createReadStream(tempPath),
-                model: 'whisper-large-v3-turbo',
-                response_format: 'verbose_json',
-                language: 'en',
-            }) as any;
+            try {
+                // Use Groq Whisper for transcription
+                const transcription = await client.audio.transcriptions.create({
+                    file: fs.createReadStream(tempPath),
+                    model: 'whisper-large-v3-turbo',
+                    response_format: 'verbose_json',
+                    language: 'en',
+                }) as any;
 
-            // Clean up temp file
-            fs.unlinkSync(tempPath);
+                const text: string = transcription.text || '';
+                const duration: number = transcription.duration || 0;
+                const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+                const wordsPerMinute = duration > 0 ? Math.round((wordCount / duration) * 60) : 0;
 
-            const text: string = transcription.text || '';
-            const duration: number = transcription.duration || 0;
-            const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-            const wordsPerMinute = duration > 0 ? Math.round((wordCount / duration) * 60) : 0;
+                logger.info(`Transcription complete: ${wordCount} words, ${duration}s, ${wordsPerMinute} WPM`);
 
-            logger.info(`Transcription complete: ${wordCount} words, ${duration}s, ${wordsPerMinute} WPM`);
-
-            return {
-                text,
-                duration,
-                language: transcription.language || 'en',
-                wordCount,
-                wordsPerMinute,
-            };
+                return {
+                    text,
+                    duration,
+                    language: transcription.language || 'en',
+                    wordCount,
+                    wordsPerMinute,
+                };
+            } finally {
+                // Clean up temp file regardless of success/fail
+                if (fs.existsSync(tempPath)) {
+                    fs.unlinkSync(tempPath);
+                }
+            }
         } catch (error: any) {
             logger.error('Whisper transcription error:', error.message);
             throw error;

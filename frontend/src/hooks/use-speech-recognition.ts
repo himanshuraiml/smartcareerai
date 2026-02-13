@@ -14,7 +14,11 @@ export function useSpeechRecognition(): SpeechRecognitionResult {
     const [transcript, setTranscript] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [wpm, setWpm] = useState(0);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        return SR ? null : 'Browser does not support Speech Recognition';
+    });
 
     const recognitionRef = useRef<any>(null);
     const startTimeRef = useRef<number | null>(null);
@@ -53,8 +57,6 @@ export function useSpeechRecognition(): SpeechRecognitionResult {
                     console.error('Speech recognition error:', event.error);
                     setError(event.error);
                 };
-            } else {
-                setError('Browser does not support Speech Recognition');
             }
         }
     }, []);

@@ -697,3 +697,5 @@ export default function ResumeRenderer({ templateId, data, id = 'resume-preview'
     );
 }
 
+
+

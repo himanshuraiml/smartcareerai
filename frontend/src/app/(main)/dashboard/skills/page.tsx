@@ -54,7 +54,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1
 
 export default function SkillsPage() {
     const router = useRouter();
-    const { accessToken, user } = useAuthStore();
+    const { user } = useAuthStore();
     const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
     const [allSkills, setAllSkills] = useState<Skill[]>([]);
     const [attempts, setAttempts] = useState<TestAttempt[]>([]);
@@ -72,7 +72,7 @@ export default function SkillsPage() {
     const fetchUserSkills = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/skills/user-skills`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -83,12 +83,12 @@ export default function SkillsPage() {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchAllSkills = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/skills/skills`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -97,12 +97,12 @@ export default function SkillsPage() {
         } catch (err) {
             console.error('Failed to fetch all skills:', err);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const fetchAttempts = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/validation/attempts`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
+                credentials: 'include', headers: {}
             });
             if (response.ok) {
                 const data = await response.json();
@@ -111,7 +111,7 @@ export default function SkillsPage() {
         } catch (err) {
             console.error('Failed to fetch attempts:', err);
         }
-    }, [accessToken]);
+    }, [user]);
 
     const getNextTestLevel = (skillId: string): 'EASY' | 'MEDIUM' | 'HARD' | 'COMPLETED' => {
         const passedAttempts = attempts.filter(a => a.test.skillId === skillId && a.passed);
@@ -150,7 +150,7 @@ export default function SkillsPage() {
         try {
             const response = await fetch(
                 `${API_URL}/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`,
-                { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                { credentials: 'include', headers: {} }
             );
             if (response.ok) {
                 const data = await response.json();
@@ -161,14 +161,14 @@ export default function SkillsPage() {
         } finally {
             setAnalyzing(false);
         }
-    }, [accessToken, selectedRole]);
+    }, [user, selectedRole]);
 
     const fetchRoadmap = useCallback(async () => {
         setAnalyzing(true);
         try {
             const response = await fetch(
                 `${API_URL}/skills/roadmap?targetRole=${encodeURIComponent(selectedRole)}&timeframe=12`,
-                { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                { credentials: 'include', headers: {} }
             );
             if (response.ok) {
                 const data = await response.json();
@@ -179,25 +179,25 @@ export default function SkillsPage() {
         } finally {
             setAnalyzing(false);
         }
-    }, [accessToken, selectedRole]);
+    }, [user, selectedRole]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (user) {
             fetchUserSkills();
             fetchAllSkills();
             fetchAttempts();
         }
-    }, [accessToken, fetchUserSkills, fetchAllSkills, fetchAttempts]);
+    }, [user, fetchUserSkills, fetchAllSkills, fetchAttempts]);
 
     useEffect(() => {
-        if (accessToken && activeTab === 'gap') {
+        if (user && activeTab === 'gap') {
             fetchGapAnalysis();
-        } else if (accessToken && activeTab === 'roadmap') {
+        } else if (user && activeTab === 'roadmap') {
             fetchRoadmap();
         } else if (activeTab === 'certifications') {
             fetchCertifications();
         }
-    }, [accessToken, activeTab, selectedRole, fetchGapAnalysis, fetchRoadmap]);
+    }, [user, activeTab, selectedRole, fetchGapAnalysis, fetchRoadmap]);
 
     const fetchCertifications = async () => {
         setLoadingCerts(true);
@@ -611,3 +611,6 @@ export default function SkillsPage() {
         </div>
     );
 }
+
+
+

@@ -54,7 +54,7 @@ type ScoreType = "all" | "ats" | "skill" | "interview";
 type SortBy = "name" | "score" | "atsScore" | "skillScore" | "interviewScore" | "lastActive";
 
 export default function InstitutionStudentsPage() {
-    const { accessToken } = useAuthStore();
+    const { user } = useAuthStore();
     const searchParams = useSearchParams();
 
     const [students, setStudents] = useState<Student[]>([]);
@@ -89,7 +89,7 @@ export default function InstitutionStudentsPage() {
         const fetchJobRoles = async () => {
             try {
                 const response = await fetch(`${API_URL}/job-roles`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
                 if (response.ok) {
                     const data = await response.json();
@@ -100,10 +100,10 @@ export default function InstitutionStudentsPage() {
             }
         };
 
-        if (accessToken) {
+        if (user) {
             fetchJobRoles();
         }
-    }, [accessToken]);
+    }, [user]);
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -123,7 +123,7 @@ export default function InstitutionStudentsPage() {
                 params.append("limit", String(pagination.limit));
 
                 const response = await fetch(`${API_URL}/admin/institution/students?${params}`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+                    credentials: 'include', headers: {}
                 });
 
                 if (!response.ok) {
@@ -141,10 +141,10 @@ export default function InstitutionStudentsPage() {
             }
         };
 
-        if (accessToken) {
+        if (user) {
             fetchStudents();
         }
-    }, [accessToken, search, selectedRole, scoreType, minAtsScore, minSkillScore, minInterviewScore, minCombinedScore, sortBy, sortOrder, pagination.page, pagination.limit]);
+    }, [user, search, selectedRole, scoreType, minAtsScore, minSkillScore, minInterviewScore, minCombinedScore, sortBy, sortOrder, pagination.page, pagination.limit]);
 
     const handlePageChange = (newPage: number) => {
         setPagination(prev => ({ ...prev, page: newPage }));
@@ -256,11 +256,10 @@ export default function InstitutionStudentsPage() {
                             <button
                                 key={tab.value}
                                 onClick={() => setScoreType(tab.value as ScoreType)}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                    scoreType === tab.value
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${scoreType === tab.value
                                         ? "bg-emerald-500 text-white"
                                         : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                                }`}
+                                    }`}
                             >
                                 {tab.label}
                             </button>
@@ -529,3 +528,6 @@ export default function InstitutionStudentsPage() {
         </div>
     );
 }
+
+
+

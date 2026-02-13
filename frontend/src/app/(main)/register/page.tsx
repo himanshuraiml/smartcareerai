@@ -81,7 +81,6 @@ export default function RegisterPage() {
             formData.password,
             formData.name,
             formData.targetJobRoleId || undefined,
-            // @ts-expect-error - auth store signature may not include institutionId yet
             formData.institutionId || undefined
         );
         if (success) {
@@ -444,3 +443,5 @@ export default function RegisterPage() {
         </div>
     );
 }
+
+

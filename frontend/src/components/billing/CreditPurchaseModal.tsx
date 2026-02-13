@@ -29,16 +29,14 @@ const CREDIT_BUNDLES = {
         { quantity: 10, price: 249, savings: "15%" },
         { quantity: 25, price: 549, savings: "25%" },
         { quantity: 50, price: 999, savings: "35%" },
-    ],
-};
+    ]};
 
 export default function CreditPurchaseModal({
     isOpen,
     onClose,
     creditType,
-    onSuccess,
-}: CreditPurchaseModalProps) {
-    const { user, accessToken } = useAuthStore();
+    onSuccess}: CreditPurchaseModalProps) {
+    const { user } = useAuthStore();
     const isRazorpayLoaded = useRazorpay();
     const [loading, setLoading] = useState(false);
 
@@ -50,15 +48,11 @@ export default function CreditPurchaseModal({
             // 1. Create Order
             const response = await fetch(`${API_URL}/billing/credits/order`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"},
                 body: JSON.stringify({
                     creditType,
-                    quantity,
-                }),
-            });
+                    quantity})});
 
             const data = await response.json();
             if (!response.ok) throw new Error(data.error?.message || "Failed to create order");
@@ -80,12 +74,9 @@ export default function CreditPurchaseModal({
                     },
                     prefill: {
                         name: user?.name,
-                        email: user?.email,
-                    },
+                        email: user?.email},
                     theme: {
-                        color: "#8B5CF6",
-                    },
-                };
+                        color: "#8B5CF6"}};
 
                 const rzp = new window.Razorpay(options);
                 rzp.open();
@@ -101,18 +92,14 @@ export default function CreditPurchaseModal({
         try {
             const response = await fetch(`${API_URL}/billing/credits/confirm`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                credentials: 'include', headers: {
+                    "Content-Type": "application/json"},
                 body: JSON.stringify({
                     orderId,
                     paymentId: paymentResponse.razorpay_payment_id,
                     signature: paymentResponse.razorpay_signature,
                     creditType,
-                    quantity,
-                }),
-            });
+                    quantity})});
 
             if (response.ok) {
                 onSuccess();
@@ -169,3 +156,6 @@ export default function CreditPurchaseModal({
         </div>
     );
 }
+
+
+

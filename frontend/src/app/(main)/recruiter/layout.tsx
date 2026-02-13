@@ -28,23 +28,17 @@ const navItems = [
 export default function RecruiterLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, accessToken } = useAuthStore();
+    const { user, logout } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const isAuthorized = !!user && (user.role === "RECRUITER" || user.role === "ADMIN");
 
     useEffect(() => {
-        if (!accessToken) {
+        if (!user) {
             router.push("/login?redirect=/recruiter");
-            return;
+        } else if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
+            router.push("/dashboard");
         }
-
-        if (user && user.role !== "RECRUITER" && user.role !== "ADMIN") {
-            router.push("/dashboard"); // Redirect regular users
-            return;
-        }
-
-        setIsAuthorized(true);
-    }, [accessToken, user, router]);
+    }, [user, router]);
 
     if (!isAuthorized) {
         return (
@@ -166,3 +160,6 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
         </div>
     );
 }
+
+
+

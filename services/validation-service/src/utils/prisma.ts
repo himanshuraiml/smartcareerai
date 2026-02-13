@@ -1,21 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClient | undefined;
-};
+const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT || '2';
+const databaseUrl = `${process.env.DATABASE_URL}${process.env.DATABASE_URL?.includes('?') ? '&' : '?'}connection_limit=${connectionLimit}`;
 
-// Reuse prisma client in development to prevent too many connections
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+
 export const prisma =
     globalForPrisma.prisma ??
     new PrismaClient({
-        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+        log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+        datasources: { db: { url: databaseUrl } },
     });
 
 if (process.env.NODE_ENV !== 'production') {
     globalForPrisma.prisma = prisma;
 }
-
-// Log connection status
-prisma.$connect()
-    .then(() => console.log('✅ Validation service connected to database'))
-    .catch((err) => console.error('❌ Validation service database connection failed:', err.message));
