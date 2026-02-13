@@ -133,35 +133,37 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex justify-center w-full">
-                        <GoogleLogin
-                            onSuccess={async (credentialResponse) => {
-                                if (credentialResponse.credential) {
-                                    const success = await googleLogin(credentialResponse.credential);
-                                    if (success) {
-                                        const user = useAuthStore.getState().user;
-                                        if (user?.role === 'ADMIN') {
-                                            router.push('/admin');
-                                        } else if (user?.role === 'RECRUITER') {
-                                            router.push('/recruiter');
-                                        } else if (user?.role === 'INSTITUTION_ADMIN') {
-                                            router.push('/institution-admin');
-                                        } else {
-                                            // Check if onboarding is complete
-                                            if (!user?.targetJobRoleId) {
-                                                router.push('/onboarding');
+                        {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
+                            <GoogleLogin
+                                onSuccess={async (credentialResponse) => {
+                                    if (credentialResponse.credential) {
+                                        const success = await googleLogin(credentialResponse.credential);
+                                        if (success) {
+                                            const user = useAuthStore.getState().user;
+                                            if (user?.role === 'ADMIN') {
+                                                router.push('/admin');
+                                            } else if (user?.role === 'RECRUITER') {
+                                                router.push('/recruiter');
+                                            } else if (user?.role === 'INSTITUTION_ADMIN') {
+                                                router.push('/institution-admin');
                                             } else {
-                                                router.push('/dashboard');
+                                                // Check if onboarding is complete
+                                                if (!user?.targetJobRoleId) {
+                                                    router.push('/onboarding');
+                                                } else {
+                                                    router.push('/dashboard');
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }}
-                            onError={() => {
-                                console.error('Google Login Failed');
-                            }}
-                            theme="filled_black"
-                            shape="pill"
-                        />
+                                }}
+                                onError={() => {
+                                    console.error('Google Login Failed');
+                                }}
+                                theme="filled_black"
+                                shape="pill"
+                            />
+                        ) : null}
                     </div>
 
                     <p className="mt-8 text-center text-gray-400">

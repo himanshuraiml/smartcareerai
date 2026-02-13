@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { prisma } from './prisma';
 import { logger } from './logger';
 
@@ -22,94 +22,61 @@ interface BulkEmailOptions {
 }
 
 class EmailService {
-    private transporter: nodemailer.Transporter | null = null;
+    private resendClient: Resend | null = null;
 
     /**
-     * Get SMTP configuration from database settings
+     * Get Resend API key — check database settings first, then env vars
      */
-    private async getSmtpConfig() {
+    private async getResendConfig(): Promise<{ apiKey: string | null; fromEmail: string }> {
+        let apiKey: string | null = null;
+        let fromEmail = 'PlaceNxt <noreply@placenxt.com>';
+
         try {
             const settings = await prisma.systemSettings.findMany({
                 where: {
                     settingKey: {
-                        in: ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from']
+                        in: ['resend_api_key', 'smtp_from', 'email_from']
                     }
                 }
             });
 
-            logger.info(`Found ${settings.length} SMTP settings in database`);
-
-            const config: Record<string, any> = {};
-            settings.forEach(s => {
-                // settingValue is stored as JSON, so we need to handle it properly
+            for (const s of settings) {
                 let value = s.settingValue;
-                // If the value is a JSON string that's been double-encoded, parse it
                 if (typeof value === 'string') {
-                    try {
-                        value = JSON.parse(value);
-                    } catch {
-                        // It's a plain string, use as-is
-                    }
+                    try { value = JSON.parse(value); } catch { }
                 }
-                config[s.settingKey] = value;
-                logger.debug(`SMTP Config: ${s.settingKey} = ${s.settingKey.includes('pass') ? '***' : value}`);
-            });
-
-            return config;
+                if (s.settingKey === 'resend_api_key') apiKey = value as string;
+                if (s.settingKey === 'email_from' || s.settingKey === 'smtp_from') fromEmail = value as string;
+            }
         } catch (error) {
-            logger.error('Failed to get SMTP config:', error);
-            return null;
+            logger.error('Failed to get email config from database:', error);
         }
+
+        // Fallback to environment variables
+        if (!apiKey) apiKey = process.env.RESEND_API_KEY || null;
+        if (!fromEmail || fromEmail === 'PlaceNxt <noreply@placenxt.com>') {
+            fromEmail = process.env.EMAIL_FROM || process.env.SMTP_FROM || fromEmail;
+        }
+
+        return { apiKey, fromEmail };
     }
 
     /**
-     * Create or get transporter
+     * Get or create Resend client
      */
-    private async getTransporter() {
-        const config = await this.getSmtpConfig();
+    private async getClient(): Promise<{ client: Resend; fromEmail: string } | null> {
+        const { apiKey, fromEmail } = await this.getResendConfig();
 
-        logger.info('SMTP config loaded:', {
-            hasHost: !!config?.smtp_host,
-            hasUser: !!config?.smtp_user,
-            hasPass: !!config?.smtp_pass,
-            hasPort: !!config?.smtp_port,
-            hasFrom: !!config?.smtp_from
-        });
-
-        if (!config?.smtp_host || !config?.smtp_user) {
-            // Fallback to environment variables
-            logger.info('Falling back to environment variables for SMTP');
-            const host = process.env.SMTP_HOST;
-            const port = parseInt(process.env.SMTP_PORT || '587');
-            const user = process.env.SMTP_USER;
-            const pass = process.env.SMTP_PASS;
-
-            if (!host || !user) {
-                logger.warn('SMTP not configured - no host or user in DB or env');
-                return null;
-            }
-
-            logger.info(`Creating transporter with env config: ${host}:${port}`);
-            return nodemailer.createTransport({
-                host,
-                port,
-                secure: port === 465,
-                auth: { user, pass }
-            });
+        if (!apiKey) {
+            logger.warn('Resend API key not configured - no key in DB or env');
+            return null;
         }
 
-        const smtpPort = parseInt(config.smtp_port as string) || 587;
-        logger.info(`Creating transporter with DB config: ${config.smtp_host}:${smtpPort}`);
+        if (!this.resendClient) {
+            this.resendClient = new Resend(apiKey);
+        }
 
-        return nodemailer.createTransport({
-            host: config.smtp_host as string,
-            port: smtpPort,
-            secure: smtpPort === 465,
-            auth: {
-                user: config.smtp_user as string,
-                pass: String(config.smtp_pass)
-            }
-        });
+        return { client: this.resendClient, fromEmail };
     }
 
     /**
@@ -153,8 +120,8 @@ class EmailService {
         const emailType = options.emailType || 'OTHER';
 
         try {
-            const transporter = await this.getTransporter();
-            if (!transporter) {
+            const config = await this.getClient();
+            if (!config) {
                 await this.logEmail({
                     templateId: options.templateId,
                     recipientId: options.userId,
@@ -162,25 +129,21 @@ class EmailService {
                     subject: options.subject,
                     emailType,
                     status: 'FAILED',
-                    errorMessage: 'SMTP not configured',
+                    errorMessage: 'Resend API key not configured',
                     metadata: options.metadata,
                     sentBy: options.sentBy
                 });
-                logger.warn('Email not sent - SMTP not configured');
+                logger.warn('Email not sent - Resend not configured');
 
                 if (options.throwOnError) {
-                    throw new Error('SMTP configuration missing');
+                    throw new Error('Email service not configured. Set RESEND_API_KEY in environment or database settings.');
                 }
 
                 return false;
             }
 
-            const config = await this.getSmtpConfig();
-            const smtpUser = (config?.smtp_user as string) || process.env.SMTP_USER;
-            const from = (config?.smtp_from as string) || process.env.SMTP_FROM || smtpUser || 'noreply@placenxt.com';
-
-            await transporter.sendMail({
-                from,
+            await config.client.emails.send({
+                from: config.fromEmail,
                 to: options.to,
                 subject: options.subject,
                 html: options.html,

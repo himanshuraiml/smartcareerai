@@ -1,33 +1,25 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { logger } from './logger';
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || 'PlaceNxt <noreply@placenxt.com>';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'PlaceNxt <noreply@placenxt.com>';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3100';
 
-function createTransporter() {
-    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-        logger.warn('SMTP not configured — emails will not be sent');
+function getResendClient(): Resend | null {
+    if (!RESEND_API_KEY) {
+        logger.warn('RESEND_API_KEY not configured — emails will not be sent');
         return null;
     }
-    return nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: SMTP_PORT,
-        secure: SMTP_PORT === 465,
-        auth: { user: SMTP_USER, pass: SMTP_PASS },
-    });
+    return new Resend(RESEND_API_KEY);
 }
 
-const transporter = createTransporter();
+const resend = getResendClient();
 
 export async function sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
     const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    if (!transporter) {
-        logger.warn(`SMTP not configured. Reset URL for ${to}: ${resetUrl}`);
+    if (!resend) {
+        logger.warn(`Email not configured. Reset URL for ${to}: ${resetUrl}`);
         return;
     }
 
@@ -64,8 +56,8 @@ export async function sendPasswordResetEmail(to: string, resetToken: string): Pr
 </html>`;
 
     try {
-        await transporter.sendMail({
-            from: SMTP_FROM,
+        await resend.emails.send({
+            from: EMAIL_FROM,
             to,
             subject: 'Reset Your PlaceNxt Password',
             html,

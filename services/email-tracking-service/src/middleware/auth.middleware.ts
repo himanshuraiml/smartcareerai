@@ -8,6 +8,14 @@ interface AuthRequest extends Request {
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+        // Check for user ID header (passed by API gateway after JWT verification)
+        const userIdHeader = req.headers['x-user-id'] as string | undefined;
+        if (userIdHeader) {
+            req.userId = userIdHeader;
+            return next();
+        }
+
+        // Fallback: verify JWT directly (for direct service calls without gateway)
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,8 +30,8 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
             return res.status(500).json({ error: 'Server configuration error' });
         }
 
-        const decoded = jwt.verify(token, secret) as { userId: string };
-        req.userId = decoded.userId;
+        const decoded = jwt.verify(token, secret) as { userId: string; id: string };
+        req.userId = decoded.userId || decoded.id;
 
         next();
     } catch (error) {

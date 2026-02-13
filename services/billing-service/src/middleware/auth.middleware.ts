@@ -22,6 +22,23 @@ export const authMiddleware = async (
     next: NextFunction
 ) => {
     try {
+        // Check for user ID header (passed by API gateway after JWT verification)
+        const userIdHeader = req.headers['x-user-id'] as string | undefined;
+        if (userIdHeader) {
+            const authHeader = req.headers.authorization;
+            if (authHeader?.startsWith('Bearer ')) {
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.decode(token) as JwtPayload | null;
+                if (decoded) {
+                    req.user = { ...decoded, id: userIdHeader };
+                    return next();
+                }
+            }
+            req.user = { id: userIdHeader, email: '', role: '' } as JwtPayload;
+            return next();
+        }
+
+        // Fallback: verify JWT directly (for direct service calls without gateway)
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

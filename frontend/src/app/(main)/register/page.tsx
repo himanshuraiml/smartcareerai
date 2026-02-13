@@ -256,27 +256,29 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="flex justify-center w-full">
-                                    <GoogleLogin
-                                        onSuccess={async (credentialResponse) => {
-                                            if (credentialResponse.credential) {
-                                                const success = await googleLogin(credentialResponse.credential);
-                                                if (success) {
-                                                    // Check if user has completed onboarding
-                                                    const user = useAuthStore.getState().user;
-                                                    if (!user?.targetJobRoleId) {
-                                                        router.push('/onboarding');
-                                                    } else {
-                                                        router.push('/dashboard');
+                                    {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
+                                        <GoogleLogin
+                                            onSuccess={async (credentialResponse) => {
+                                                if (credentialResponse.credential) {
+                                                    const success = await googleLogin(credentialResponse.credential);
+                                                    if (success) {
+                                                        // Check if user has completed onboarding
+                                                        const user = useAuthStore.getState().user;
+                                                        if (!user?.targetJobRoleId) {
+                                                            router.push('/onboarding');
+                                                        } else {
+                                                            router.push('/dashboard');
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }}
-                                        onError={() => {
-                                            console.error('Google Login Failed');
-                                        }}
-                                        theme="filled_black"
-                                        shape="pill"
-                                    />
+                                            }}
+                                            onError={() => {
+                                                console.error('Google Login Failed');
+                                            }}
+                                            theme="filled_black"
+                                            shape="pill"
+                                        />
+                                    ) : null}
                                 </div>
                             </motion.div>
                         ) : step === 2 ? (

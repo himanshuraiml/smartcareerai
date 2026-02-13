@@ -9,6 +9,14 @@ interface JwtPayload {
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
+        // Check for user ID header (passed by API gateway after JWT verification)
+        const userIdHeader = req.headers['x-user-id'];
+        if (userIdHeader) {
+            (req as any).user = { id: userIdHeader };
+            return next();
+        }
+
+        // Fallback: verify JWT directly (for direct service calls without gateway)
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

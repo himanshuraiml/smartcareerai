@@ -420,17 +420,6 @@ export class EmailController {
                 message: `Test email sent to ${email}`
             });
         } catch (error: any) {
-            // Retrieve specific SMTP errors
-            if (error.code === 'EAUTH' || error.responseCode === 535) {
-                return next(new AppError('SMTP Authentication Failed: Invalid username or password.', 400));
-            }
-            if (error.code === 'ESOCKET' || error.code === 'ECONNREFUSED') {
-                return next(new AppError('SMTP Connection Failed: Check host and port settings.', 400));
-            }
-            if (error.code === 'EENVELOPE') {
-                return next(new AppError('SMTP Error: Invalid sender or recipient address.', 400));
-            }
-
             // If it's already an AppError, pass it through
             if (error instanceof AppError) {
                 return next(error);

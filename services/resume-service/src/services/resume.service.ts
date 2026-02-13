@@ -31,7 +31,7 @@ export class ResumeService {
         this.minioClient = new Client({
             endPoint,
             port,
-            useSSL: process.env.NODE_ENV === 'production',
+            useSSL: process.env.MINIO_USE_SSL === 'true',
             accessKey,
             secretKey,
         });
