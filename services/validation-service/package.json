@@ -5,11 +5,12 @@
     "main": "dist/index.js",
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-        "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
+        "build": "cd ../../packages/shared && npm run build && cd ../../services/validation-service && npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
         "start": "node dist/index.js",
         "test": "jest"
     },
     "dependencies": {
+        "@smartcareer/shared": "*",
         "@prisma/client": "^5.22.0",
         "@types/jsonwebtoken": "^9.0.10",
         "cors": "^2.8.5",

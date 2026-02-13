@@ -3,12 +3,13 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
+        "build": "cd ../../packages/shared && npm run build && cd ../../services/auth-service && npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
         "start": "node dist/index.js",
         "test": "jest"
     },
     "dependencies": {
+        "@smartcareer/shared": "*",
         "@prisma/client": "^5.7.0",
         "@types/cookie-parser": "^1.4.10",
         "bcryptjs": "^2.4.3",
