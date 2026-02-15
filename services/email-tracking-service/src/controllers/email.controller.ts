@@ -46,11 +46,11 @@ export class EmailController {
 
             // Redirect to frontend success page
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-            res.redirect(`${frontendUrl}/dashboard/settings?email_connected=true`);
+            res.redirect(`${frontendUrl}/dashboard/applications?email_connected=true`);
         } catch (error) {
             logger.error('OAuth callback error:', error);
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-            res.redirect(`${frontendUrl}/dashboard/settings?email_error=true`);
+            res.redirect(`${frontendUrl}/dashboard/applications?email_error=true`);
         }
     };
 

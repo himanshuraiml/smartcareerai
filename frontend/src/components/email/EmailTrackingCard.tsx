@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Mail, Link2, Unlink, RefreshCw, ExternalLink, CheckCircle, XCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
-const API_URL = process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL || 'http://localhost:3013/api/v1/email';
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/email`;
 
 interface EmailConnection {
     email: string;

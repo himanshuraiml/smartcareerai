@@ -361,7 +361,7 @@ export default function TestPage() {
                             onClick={() => setAnswers({ ...answers, [question.id]: option })}
                             className={`w-full text-left p-4 rounded-lg border transition-all ${answers[question.id] === option
                                 ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/30'
+                                : 'border-white/10 bg-white/5 text-gray-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 hover:text-white'
                                 }`}
                         >
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-sm font-medium mr-3">

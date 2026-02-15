@@ -336,8 +336,14 @@ app.use(
 
 const INTERVIEW_SERVICE_URL = process.env.INTERVIEW_SERVICE_URL || 'http://localhost:3007';
 
-// Apply AI rate limiting for interview endpoints (expensive operations)
-app.use(`${API_PREFIX}/interviews`, aiRateLimiter);
+// Apply AI rate limiting ONLY for POST/PUT requests (expensive AI operations)
+// GET requests (session reads, polling) should not be rate-limited this aggressively
+app.use(`${API_PREFIX}/interviews`, (req, res, next) => {
+    if (req.method === 'POST' || req.method === 'PUT') {
+        return aiRateLimiter(req, res, next);
+    }
+    next();
+});
 app.use(
     `${API_PREFIX}/interviews`,
     createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/interviews`]: '' }))

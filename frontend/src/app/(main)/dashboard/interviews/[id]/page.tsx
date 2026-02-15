@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { useAudioRecorder, formatTime } from '@/hooks/useAudioRecorder';
 import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
+import ReactMarkdown from 'react-markdown';
 
 
 interface QuestionMetrics {
@@ -503,9 +504,15 @@ export default function InterviewRoomPage() {
                         <div className="lg:col-span-2 space-y-4">
                             <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
                                 <h3 className="text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
-                                <p className="text-gray-400 text-sm">
-                                    {session.feedback || 'Complete the interview to receive detailed feedback.'}
-                                </p>
+                                <div className="text-gray-400 text-sm prose prose-sm prose-invert max-w-none
+                                               prose-p:my-2 prose-p:leading-relaxed
+                                               prose-strong:text-white prose-strong:font-semibold
+                                               prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
+                                               prose-li:my-1">
+                                    <ReactMarkdown>
+                                        {session.feedback || 'Complete the interview to receive detailed feedback.'}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

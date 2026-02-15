@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 // Types for the feedback data
 interface QuestionMetrics {
@@ -220,8 +221,8 @@ export function MetricCard({ label, value, subLabel }: { label: string; value: n
 export function SkillTag({ skill, checked = false }: { skill: string; checked?: boolean }) {
     return (
         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs ${checked
-                ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-                : 'bg-gray-800 text-gray-400 border border-white/10'
+            ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+            : 'bg-gray-800 text-gray-400 border border-white/10'
             }`}>
             {checked && <span>✓</span>}
             {skill}
@@ -277,7 +278,15 @@ export function PerformanceBreakdown({
                 <div className="lg:col-span-2 space-y-4">
                     <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
                         <h3 className="text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
-                        <p className="text-gray-400 text-sm">{recruiterPerspective}</p>
+                        <div className="text-gray-400 text-sm prose prose-sm prose-invert max-w-none
+                                       prose-p:my-2 prose-p:leading-relaxed
+                                       prose-strong:text-white prose-strong:font-semibold
+                                       prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
+                                       prose-li:my-1">
+                            <ReactMarkdown>
+                                {recruiterPerspective}
+                            </ReactMarkdown>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -332,10 +341,10 @@ export function QuestionFeedbackPanel({
                         key={i}
                         onClick={() => onSelectQuestion(i)}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedIndex
-                                ? 'bg-teal-500 text-white'
-                                : questions[i].userAnswer
-                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    : 'bg-gray-800/50 text-gray-500'
+                            ? 'bg-teal-500 text-white'
+                            : questions[i].userAnswer
+                                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                : 'bg-gray-800/50 text-gray-500'
                             }`}
                     >
                         {i + 1}

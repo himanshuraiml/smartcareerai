@@ -7,6 +7,12 @@ import { z } from 'zod';
 export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache';
 
 // ============================================
+// SKILL NORMALIZATION
+// ============================================
+
+export { normalizeSkillName, normalizeSkillList } from './skill-normalization';
+
+// ============================================
 // AUTH SCHEMAS
 // ============================================
 

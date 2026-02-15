@@ -25,7 +25,9 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'email-tracking-service' });
 });
 
-// Routes
+// Routes — mount at root because API Gateway strips the /api/v1/email prefix
+app.use('/', emailRoutes);
+// Also mount at /api/v1/email for direct service access (dev/testing)
 app.use('/api/v1/email', emailRoutes);
 
 // Error handler

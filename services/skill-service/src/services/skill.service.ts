@@ -2,7 +2,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini, analyzeWithLLM } from '../utils/gemini';
-import { cacheGet, cacheSet, cacheDelPattern } from '@smartcareer/shared';
+import { cacheGet, cacheSet, cacheDelPattern, normalizeSkillName } from '@smartcareer/shared';
 
 // Roadmap week structure for learning paths
 interface RoadmapWeek {
@@ -88,115 +88,6 @@ export class SkillService {
             focus: 'Master Web Layouts and Styling'
         }
     };
-
-    // Skill aliases for normalization
-    private static SKILL_ALIASES: Record<string, string> = {
-        // AI/ML
-        'ai': 'Artificial Intelligence',
-        'artificial intelligence': 'Artificial Intelligence',
-        'ml': 'Machine Learning',
-        'machine learning': 'Machine Learning',
-        'genai': 'Generative AI',
-        'gen ai': 'Generative AI',
-        'generative ai': 'Generative AI',
-        'deep learning': 'Deep Learning',
-        'dl': 'Deep Learning',
-        'nlp': 'Natural Language Processing',
-        'natural language processing': 'Natural Language Processing',
-        'cv': 'Computer Vision',
-        'computer vision': 'Computer Vision',
-        // Data
-        'modeling': 'Data Modeling',
-        'data modeling': 'Data Modeling',
-        'data modelling': 'Data Modeling',
-        'viz': 'Data Visualization',
-        'vis': 'Data Visualization',
-        'visualization': 'Data Visualization',
-        'visualisation': 'Data Visualization',
-        'data visualization': 'Data Visualization',
-        'data visualisation': 'Data Visualization',
-        'feature engineering': 'Feature Engineering',
-        'numpy': 'NumPy',
-        'sklearn': 'Scikit-learn',
-        'scikit-learn': 'Scikit-learn',
-        'scikit learn': 'Scikit-learn',
-        // Programming languages
-        'js': 'JavaScript',
-        'javascript': 'JavaScript',
-        'ts': 'TypeScript',
-        'typescript': 'TypeScript',
-        'reactjs': 'React',
-        'react.js': 'React',
-        'react js': 'React',
-        'nodejs': 'Node.js',
-        'node': 'Node.js',
-        'node.js': 'Node.js',
-        'node js': 'Node.js',
-        'golang': 'Go',
-        'c#': 'C#',
-        'csharp': 'C#',
-        'c sharp': 'C#',
-        'dotnet': '.NET',
-        '.net': '.NET',
-        'c++': 'C++',
-        'cpp': 'C++',
-        'c plus plus': 'C++',
-        // Tools & Frameworks
-        'qa': 'Test Automation',
-        'tf': 'TensorFlow',
-        'tensorflow': 'TensorFlow',
-        'pytorch': 'PyTorch',
-        'k8s': 'Kubernetes',
-        'kube': 'Kubernetes',
-        'kubernetes': 'Kubernetes',
-        'postgres': 'PostgreSQL',
-        'postgresql': 'PostgreSQL',
-        'mongo': 'MongoDB',
-        'mongodb': 'MongoDB',
-        // Cloud
-        'aws': 'AWS',
-        'amazon web services': 'AWS',
-        'gcp': 'Google Cloud',
-        'google cloud': 'Google Cloud',
-        'azure': 'Azure',
-        'microsoft azure': 'Azure',
-    };
-
-    // Skills to ignore/block (generic terms)
-    private static SKILL_BLOCKLIST = new Set([
-        'developer',
-        'software',
-        'software developer',
-        'engineer',
-        'dev',
-        'technologies',
-        'tools',
-        'frameworks',
-        'programming',
-        'coding',
-        'web',
-        'app',
-        'application',
-        'system',
-        'computer',
-        'science'
-    ]);
-
-    // Normalize skill name
-    private normalizeSkillName(name: string): string | null {
-        const lowerName = name.toLowerCase().trim();
-
-        // Check blocklist
-        if (SkillService.SKILL_BLOCKLIST.has(lowerName)) {
-            return null;
-        }
-
-        // Check direct alias
-        if (SkillService.SKILL_ALIASES[lowerName]) {
-            return SkillService.SKILL_ALIASES[lowerName];
-        }
-        return name;
-    }
 
     // Get all available job roles for registration/personalization
     async getJobRoles() {
@@ -332,7 +223,7 @@ Return a JSON object with:
             // Save extracted skills to user profile
             const savedSkills: any[] = [];
             for (const extracted of analysis.extractedSkills || []) {
-                const normalizedName = this.normalizeSkillName(extracted.name);
+                const normalizedName = normalizeSkillName(extracted.name);
 
                 if (!normalizedName) {
                     continue;
@@ -406,7 +297,7 @@ Return a JSON object with:
 
         for (const skill of allSkills) {
             const skillLower = skill.name.toLowerCase();
-            const normalizedName = this.normalizeSkillName(skill.name);
+            const normalizedName = normalizeSkillName(skill.name);
 
             if (!normalizedName) continue;
 
@@ -485,6 +376,30 @@ Return a JSON object with:
         });
     }
 
+    // Helper: check if a user skill matches a required/preferred skill using normalization and fuzzy matching
+    private skillMatches(userSkillName: string, targetSkillName: string): boolean {
+        const userLower = userSkillName.toLowerCase().trim();
+        const targetLower = targetSkillName.toLowerCase().trim();
+
+        // 1. Direct exact match
+        if (userLower === targetLower) return true;
+
+        // 2. Normalize both sides using alias system and compare
+        const normalizedUser = normalizeSkillName(userSkillName)?.toLowerCase() || userLower;
+        const normalizedTarget = normalizeSkillName(targetSkillName)?.toLowerCase() || targetLower;
+
+        if (normalizedUser === normalizedTarget) return true;
+
+        // 3. Check if one contains the other (handles "REST APIs" vs "REST API", etc.)
+        if (normalizedUser.includes(normalizedTarget) || normalizedTarget.includes(normalizedUser)) return true;
+
+        // 4. Check without special characters (handles "Node.js" vs "NodeJS", "C++" vs "Cpp")
+        const stripSpecial = (s: string) => s.replace(/[^a-z0-9]/g, '');
+        if (stripSpecial(normalizedUser) === stripSpecial(normalizedTarget)) return true;
+
+        return false;
+    }
+
     // Gap analysis - compare user skills to target role requirements
     async getGapAnalysis(userId: string, targetRole: string) {
         // Get user's current skills
@@ -502,30 +417,38 @@ Return a JSON object with:
             throw new AppError('Target role not found', 404);
         }
 
-        const userSkillNames = userSkills.map(us => us.skill.name.toLowerCase());
+        const userSkillNames = userSkills.map(us => us.skill.name);
         const requiredSkills = jobRole.requiredSkills || [];
         const preferredSkills = jobRole.preferredSkills || [];
 
-        // Calculate gaps
-        const missingRequired = requiredSkills.filter(
-            skill => !userSkillNames.includes(skill.toLowerCase())
+        // Use fuzzy/normalized matching for gap calculation
+        const matchesAnyUserSkill = (targetSkill: string): boolean => {
+            return userSkillNames.some(userSkill => this.skillMatches(userSkill, targetSkill));
+        };
+
+        // Calculate gaps with fuzzy matching
+        const matchedRequired = requiredSkills.filter(skill => matchesAnyUserSkill(skill));
+        const missingRequired = requiredSkills.filter(skill => !matchesAnyUserSkill(skill));
+        const matchedPreferred = preferredSkills.filter(skill => matchesAnyUserSkill(skill));
+        const missingPreferred = preferredSkills.filter(skill => !matchesAnyUserSkill(skill));
+
+        // Calculate weighted match percentage (required: 70%, preferred: 30%)
+        const requiredScore = requiredSkills.length > 0
+            ? (matchedRequired.length / requiredSkills.length) * 100
+            : 100; // If no required skills defined, treat as fully matched
+
+        const preferredScore = preferredSkills.length > 0
+            ? (matchedPreferred.length / preferredSkills.length) * 100
+            : 0; // If no preferred skills, don't add bonus
+
+        const matchPercent = Math.round(
+            (requiredScore * 0.7) + (preferredScore * 0.3)
         );
 
-        const missingPreferred = preferredSkills.filter(
-            skill => !userSkillNames.includes(skill.toLowerCase())
-        );
-
-        const matchedRequired = requiredSkills.filter(
-            skill => userSkillNames.includes(skill.toLowerCase())
-        );
-
-        const matchedPreferred = preferredSkills.filter(
-            skill => userSkillNames.includes(skill.toLowerCase())
-        );
-
-        // Calculate match percentage
-        const totalRequired = requiredSkills.length || 1;
-        const matchPercent = Math.round((matchedRequired.length / totalRequired) * 100);
+        logger.info(`Gap analysis for user targeting "${jobRole.title}": ` +
+            `required=${matchedRequired.length}/${requiredSkills.length}, ` +
+            `preferred=${matchedPreferred.length}/${preferredSkills.length}, ` +
+            `score=${matchPercent}%, userSkills=[${userSkillNames.join(', ')}]`);
 
         return {
             targetRole: jobRole.title,
@@ -1020,7 +943,7 @@ Return JSON:
         for (const rawName of suggestedSkills) {
             try {
                 // Normalize and validate
-                const normalizedName = this.normalizeSkillName(rawName);
+                const normalizedName = normalizeSkillName(rawName);
                 if (!normalizedName) {
                     logger.info(`Skill "${rawName}" blocked by blocklist`);
                     continue;

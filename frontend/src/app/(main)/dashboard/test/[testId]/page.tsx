@@ -234,7 +234,7 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
                 <CardContent>
                     <div className="space-y-3">
                         {currentQuestion.options.map((option, idx) => (
-                            <div key={idx} className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 ${answers[currentQuestion.id] === option ? 'border-primary bg-primary/5' : 'border-gray-200'}`} onClick={() => handleAnswerChange(option)}>
+                            <div key={idx} className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:bg-indigo-500/10 hover:border-indigo-500/30 ${answers[currentQuestion.id] === option ? 'border-primary bg-primary/5' : 'border-white/10'}`} onClick={() => handleAnswerChange(option)}>
                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${answers[currentQuestion.id] === option ? 'border-primary' : 'border-gray-400'}`}>
                                     {answers[currentQuestion.id] === option && <div className="w-2 h-2 rounded-full bg-primary" />}
                                 </div>

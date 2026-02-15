@@ -3,7 +3,7 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
-import { cacheGet, cacheSet } from '@smartcareer/shared';
+import { cacheGet, cacheSet, normalizeSkillList } from '@smartcareer/shared';
 
 interface ATSAnalysisResult {
     overallScore: number;
@@ -300,19 +300,21 @@ export class ScoringService {
         };
     }
 
-    // Save extracted skills to user profile
+    // Save extracted skills to user profile (with normalization)
     private async saveExtractedSkills(userId: string, keywords: string[]) {
         if (!keywords || keywords.length === 0) return;
 
-        for (const keyword of keywords) {
+        // Normalize and deduplicate before saving
+        const normalizedKeywords = normalizeSkillList(keywords);
+
+        for (const keyword of normalizedKeywords) {
             try {
-                // Find or create the skill
+                // Find or create the skill using normalized name
                 let skill = await prisma.skill.findFirst({
                     where: { name: { equals: keyword, mode: 'insensitive' } },
                 });
 
                 if (!skill) {
-                    // Create new skill
                     skill = await prisma.skill.create({
                         data: {
                             name: keyword,
@@ -340,7 +342,7 @@ export class ScoringService {
             }
         }
 
-        logger.info(`Saved ${keywords.length} skills for user ${userId}`);
+        logger.info(`Saved ${normalizedKeywords.length} normalized skills (from ${keywords.length} raw) for user ${userId}`);
     }
 }
 

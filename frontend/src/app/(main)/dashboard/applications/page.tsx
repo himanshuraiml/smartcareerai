@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     Trello, List, Clock, CheckCircle, XCircle, MoreVertical,
     Calendar, Building2, Plus, GripVertical, Trash2, Edit3,
-    Loader2, DollarSign, ExternalLink, MapPin
+    Loader2, DollarSign, ExternalLink, MapPin, Zap
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import AddApplicationDialog from '@/components/tracker/AddApplicationDialog';
+import EmailTrackingCard from '@/components/email/EmailTrackingCard';
 
 interface Application {
     id: string;
@@ -89,6 +91,27 @@ export default function ApplicationsPage() {
             Promise.all([fetchApplications(), fetchStats()]).finally(() => setLoading(false));
         }
     }, [user, fetchApplications, fetchStats]);
+
+    // Auto-sync when redirected back from Gmail OAuth
+    const searchParams = useSearchParams();
+    const hasSynced = useRef(false);
+    useEffect(() => {
+        if (searchParams.get('email_connected') === 'true' && user && !hasSynced.current) {
+            hasSynced.current = true;
+            const EMAIL_API = `${API_URL}/email`;
+            fetch(`${EMAIL_API}/sync`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {}
+            })
+                .then(() => {
+                    // Re-fetch applications to reflect any auto-status updates
+                    fetchApplications();
+                    fetchStats();
+                })
+                .catch(err => console.error('Auto-sync after Gmail connect failed:', err));
+        }
+    }, [searchParams, user, fetchApplications, fetchStats]);
 
     const handleStatusChange = async (appId: string, newStatus: string) => {
         // Optimistic update
@@ -194,140 +217,159 @@ export default function ApplicationsPage() {
                 </div>
             )}
 
-            {/* Kanban Board (Vertical Sections -> Horizontal Items) */}
-            {view === 'board' && (
-                <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-6">
-                    {COLUMNS.map((column) => (
-                        <div key={column.id} className="glass rounded-xl overflow-hidden flex flex-col">
-                            {/* Section Header */}
-                            <div className={`p-3 border-b border-white/5 flex items-center justify-between ${column.color}`}>
-                                <h3 className="font-semibold flex items-center gap-2">
-                                    {column.label}
-                                    <span className="bg-black/20 px-2 py-0.5 rounded text-sm text-white/70">
-                                        {getAppsByStatus(column.id).length}
-                                    </span>
-                                </h3>
-                            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 overflow-hidden">
+                <div className="lg:col-span-3 flex flex-col h-full min-h-0">
+                    {/* Kanban Board (Vertical Sections -> Horizontal Items) */}
+                    {view === 'board' && (
+                        <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-6">
+                            {COLUMNS.map((column) => (
+                                <div key={column.id} className="glass rounded-xl overflow-hidden flex flex-col">
+                                    {/* Section Header */}
+                                    <div className={`p-3 border-b border-white/5 flex items-center justify-between ${column.color}`}>
+                                        <h3 className="font-semibold flex items-center gap-2">
+                                            {column.label}
+                                            <span className="bg-black/20 px-2 py-0.5 rounded text-sm text-white/70">
+                                                {getAppsByStatus(column.id).length}
+                                            </span>
+                                        </h3>
+                                    </div>
 
-                            {/* Horizontal Items Container */}
-                            <div className="p-4 bg-black/20 overflow-x-auto">
-                                <div className="flex gap-4 min-w-min pb-2">
-                                    {getAppsByStatus(column.id).map((app) => (
-                                        <div
-                                            key={app.id}
-                                            draggable
-                                            onDragStart={(e) => e.dataTransfer.setData('appId', app.id)}
-                                            className="w-72 flex-shrink-0 p-4 bg-gray-900 rounded-xl border border-white/5 hover:border-indigo-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all flex flex-col gap-2"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h4 className="font-medium text-white truncate w-56" title={app.job.title}>{app.job.title}</h4>
-                                                    <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
-                                                        <Building2 className="w-3 h-3" />
-                                                        {app.job.company}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    onClick={() => setSelectedApp(app)}
-                                                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-opacity"
+                                    {/* Horizontal Items Container */}
+                                    <div className="p-4 bg-black/20 overflow-x-auto">
+                                        <div className="flex gap-4 min-w-min pb-2">
+                                            {getAppsByStatus(column.id).map((app) => (
+                                                <div
+                                                    key={app.id}
+                                                    draggable
+                                                    onDragStart={(e) => e.dataTransfer.setData('appId', app.id)}
+                                                    className="w-72 flex-shrink-0 p-4 bg-gray-900 rounded-xl border border-white/5 hover:border-indigo-500/50 cursor-grab active:cursor-grabbing group shadow-sm transition-all flex flex-col gap-2"
                                                 >
-                                                    <Edit3 className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h4 className="font-medium text-white truncate w-56" title={app.job.title}>{app.job.title}</h4>
+                                                            <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
+                                                                <Building2 className="w-3 h-3" />
+                                                                {app.job.company}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setSelectedApp(app)}
+                                                            className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-opacity"
+                                                        >
+                                                            <Edit3 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
 
-                                            <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5 mt-auto">
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {new Date(app.updatedAt).toLocaleDateString()}
-                                                </span>
-                                                {app.interviewDate && (
-                                                    <span className="flex items-center gap-1 text-yellow-500">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {new Date(app.interviewDate).toLocaleDateString()}
-                                                    </span>
-                                                )}
-                                                {app.job.location && (
-                                                    <span className="flex items-center gap-1 text-gray-400 ml-auto pl-2">
-                                                        <MapPin className="w-3 h-3" />
-                                                        {app.job.location}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                                    <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5 mt-auto">
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            {new Date(app.updatedAt).toLocaleDateString()}
+                                                        </span>
+                                                        {app.interviewDate && (
+                                                            <span className="flex items-center gap-1 text-yellow-500">
+                                                                <Calendar className="w-3 h-3" />
+                                                                {new Date(app.interviewDate).toLocaleDateString()}
+                                                            </span>
+                                                        )}
+                                                        {app.job.location && (
+                                                            <span className="flex items-center gap-1 text-gray-400 ml-auto pl-2">
+                                                                <MapPin className="w-3 h-3" />
+                                                                {app.job.location}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
 
-                                    {getAppsByStatus(column.id).length === 0 && (
-                                        <div className="w-full flex items-center justify-center py-8 text-gray-500 text-sm italic">
-                                            No applications in this stage
+                                            {getAppsByStatus(column.id).length === 0 && (
+                                                <div className="w-full flex items-center justify-center py-8 text-gray-500 text-sm italic">
+                                                    No applications in this stage
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+
+                                        {/* Drop Zone Overlay (Full Section Drop) */}
+                                        <div
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={(e) => {
+                                                const appId = e.dataTransfer.getData('appId');
+                                                if (appId) handleStatusChange(appId, column.id);
+                                            }}
+                                            className="h-10 mt-2 border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 hover:border-indigo-500/30 transition-all cursor-pointer"
+                                        >
+                                            Drop here to move to {column.label}
+                                        </div>
+                                    </div>
                                 </div>
-
-                                {/* Drop Zone Overlay (Full Section Drop) */}
-                                <div
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={(e) => {
-                                        const appId = e.dataTransfer.getData('appId');
-                                        if (appId) handleStatusChange(appId, column.id);
-                                    }}
-                                    className="h-10 mt-2 border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-600 text-sm hover:bg-white/5 hover:border-indigo-500/30 transition-all cursor-pointer"
-                                >
-                                    Drop here to move to {column.label}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* List View */}
-            {view === 'list' && (
-                <div className="glass rounded-xl overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-white/5 text-gray-400 text-sm">
-                            <tr>
-                                <th className="p-4">Role</th>
-                                <th className="p-4">Company</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Applied</th>
-                                <th className="p-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {applications.map((app) => (
-                                <tr key={app.id} className="text-gray-300 hover:bg-white/5">
-                                    <td className="p-4 font-medium text-white">{app.job.title}</td>
-                                    <td className="p-4">{app.job.company}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded text-xs ${COLUMNS.find(c => c.id === app.status)?.color}`}>
-                                            {app.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : '-'}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => setSelectedApp(app)}
-                                                className="p-1 hover:text-white transition-colors"
-                                            >
-                                                <Edit3 className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(app.id)}
-                                                className="p-1 hover:text-red-400 transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    )}
+
+                    {/* List View */}
+                    {view === 'list' && (
+                        <div className="glass rounded-xl overflow-hidden overflow-y-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-white/5 text-gray-400 text-sm">
+                                    <tr>
+                                        <th className="p-4">Role</th>
+                                        <th className="p-4">Company</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4">Applied</th>
+                                        <th className="p-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {applications.map((app) => (
+                                        <tr key={app.id} className="text-gray-300 hover:bg-white/5">
+                                            <td className="p-4 font-medium text-white">{app.job.title}</td>
+                                            <td className="p-4">{app.job.company}</td>
+                                            <td className="p-4">
+                                                <span className={`px-2 py-1 rounded text-xs ${COLUMNS.find(c => c.id === app.status)?.color}`}>
+                                                    {app.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => setSelectedApp(app)}
+                                                        className="p-1 hover:text-white transition-colors"
+                                                    >
+                                                        <Edit3 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(app.id)}
+                                                        className="p-1 hover:text-red-400 transition-colors"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                <div className="lg:col-span-1 border-l border-white/5 pl-2 space-y-6">
+                    <EmailTrackingCard />
+
+                    <div className="p-4 rounded-xl glass border border-indigo-500/20">
+                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-indigo-400" />
+                            How it works
+                        </h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            We securely scan your Gmail for keywords like "Application Received" or "Interview Invitation".
+                            No email content is stored permanently except relevant job meta-data.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Edit Modal */}
             {selectedApp && (
