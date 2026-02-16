@@ -26,7 +26,7 @@ import cookieParser from 'cookie-parser';
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Allow Gateway
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com'], // Allow Gateway and Prod
     credentials: true,
 }));
 app.use(express.json());

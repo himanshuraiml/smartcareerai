@@ -119,7 +119,7 @@ app.use(cookieParser());
 // CORS Configuration
 const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:3100', 'http://localhost:3000'];
+    : ['http://localhost:3100', 'http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com'];
 
 const corsConfig = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -131,6 +131,7 @@ const corsConfig = {
             callback(null, false);
         }
     },
+},
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-user-id'],
