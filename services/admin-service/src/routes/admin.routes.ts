@@ -15,6 +15,7 @@ router.use(authMiddleware);
 router.use(adminMiddleware);
 
 // User Management
+router.get('/users/export', adminController.exportUsers);
 router.get('/users', adminController.getUsers);
 router.get('/users/:id', adminController.getUserById);
 router.put('/users/:id/role', adminController.updateUserRole);

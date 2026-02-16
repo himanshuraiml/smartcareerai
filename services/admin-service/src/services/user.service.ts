@@ -8,6 +8,7 @@ export interface UserFilters {
     search?: string;
     role?: UserRole;
     isVerified?: boolean;
+    institutionId?: string;
     page?: number;
     limit?: number;
 }
@@ -17,7 +18,7 @@ export class UserService {
      * Get all users with pagination and filters
      */
     async getUsers(filters: UserFilters) {
-        const { search, role, isVerified, page = 1, limit = 20 } = filters;
+        const { search, role, isVerified, institutionId, page = 1, limit = 20 } = filters;
         const skip = (page - 1) * limit;
 
         const where: any = {};
@@ -35,6 +36,10 @@ export class UserService {
 
         if (isVerified !== undefined) {
             where.isVerified = isVerified;
+        }
+
+        if (institutionId) {
+            where.institutionId = institutionId;
         }
 
         const [users, total] = await Promise.all([
@@ -163,6 +168,55 @@ export class UserService {
             },
         });
     }
+    /**
+     * Get all users for export (no pagination)
+     */
+    async getAllUsersForExport(filters?: UserFilters) {
+        const where: any = {};
+
+        if (filters) {
+            const { search, role, isVerified, institutionId } = filters;
+
+            if (search) {
+                where.OR = [
+                    { email: { contains: search, mode: 'insensitive' } },
+                    { name: { contains: search, mode: 'insensitive' } },
+                ];
+            }
+
+            if (role) {
+                where.role = role;
+            }
+
+            if (isVerified !== undefined) {
+                where.isVerified = isVerified;
+            }
+
+            if (institutionId) {
+                where.institutionId = institutionId;
+            }
+        }
+
+        return prisma.user.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isVerified: true,
+                createdAt: true,
+                institution: {
+                    select: {
+                        name: true,
+                        domain: true
+                    }
+                }
+            }
+        });
+    }
+
     /**
      * Reset user data (progress, resumes, tests, etc.)
      */

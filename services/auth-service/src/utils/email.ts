@@ -6,24 +6,24 @@ const EMAIL_FROM = process.env.EMAIL_FROM || 'PlaceNxt <noreply@placenxt.com>';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3100';
 
 function getResendClient(): Resend | null {
-    if (!RESEND_API_KEY) {
-        logger.warn('RESEND_API_KEY not configured — emails will not be sent');
-        return null;
-    }
-    return new Resend(RESEND_API_KEY);
+  if (!RESEND_API_KEY) {
+    logger.warn('RESEND_API_KEY not configured — emails will not be sent');
+    return null;
+  }
+  return new Resend(RESEND_API_KEY);
 }
 
 const resend = getResendClient();
 
 export async function sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
-    const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    if (!resend) {
-        logger.warn(`Email not configured. Reset URL for ${to}: ${resetUrl}`);
-        return;
-    }
+  if (!resend) {
+    logger.warn(`Email not configured. Reset URL for ${to}: ${resetUrl}`);
+    return;
+  }
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -55,16 +55,72 @@ export async function sendPasswordResetEmail(to: string, resetToken: string): Pr
 </body>
 </html>`;
 
-    try {
-        await resend.emails.send({
-            from: EMAIL_FROM,
-            to,
-            subject: 'Reset Your PlaceNxt Password',
-            html,
-        });
-        logger.info(`Password reset email sent to ${to}`);
-    } catch (error: any) {
-        logger.error(`Failed to send password reset email to ${to}: ${error.message}`);
-        throw error;
-    }
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: 'Reset Your PlaceNxt Password',
+      html,
+    });
+    logger.info(`Password reset email sent to ${to}`);
+  } catch (error: any) {
+    logger.error(`Failed to send password reset email to ${to}: ${error.message}`);
+    throw error;
+  }
 }
+
+
+export async function sendVerificationEmail(to: string, verifyToken: string): Promise<void> {
+  const verifyUrl = `${FRONTEND_URL}/verify-email?token=${verifyToken}`;
+
+  if (!resend) {
+    logger.warn(`Email not configured. Verify URL for ${to}: ${verifyUrl}`);
+    return;
+  }
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0f0f23;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#1a1a2e;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+    <div style="padding:32px 32px 0;text-align:center;">
+      <h1 style="color:#818cf8;font-size:24px;margin:0 0 8px;">PlaceNxt</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#ffffff;font-size:20px;margin:0 0 16px;">Verify Your Email</h2>
+      <p style="color:#9ca3af;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Welcome to PlaceNxt! Please verify your email address to activate your account and receive your free credits.
+      </p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${verifyUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:15px;">
+          Verify Email
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px;">
+        If the button doesn't work, copy and paste this URL into your browser:
+      </p>
+      <p style="color:#818cf8;font-size:13px;word-break:break-all;margin:0 0 24px;">${verifyUrl}</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:24px 0;">
+      <p style="color:#6b7280;font-size:12px;margin:0;">
+        If you didn't create an account, you can safely ignore this email.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: 'Verify Your Email Address - PlaceNxt',
+      html,
+    });
+    logger.info(`Verification email sent to ${to}`);
+  } catch (error: any) {
+    logger.error(`Failed to send verification email to ${to}: ${error.message}`);
+    throw error;
+  }
+}
+

@@ -10,6 +10,7 @@ import {
     XCircle,
     Mail,
     RefreshCw,
+    Download,
     User as UserIcon
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
@@ -32,6 +33,8 @@ export default function UserManagementPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState("ALL");
+    const [institutionFilter, setInstitutionFilter] = useState("ALL");
+    const [institutions, setInstitutions] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -42,7 +45,8 @@ export default function UserManagementPage() {
                 page: page.toString(),
                 limit: "10",
                 ...(search && { search }),
-                ...(roleFilter !== "ALL" && { role: roleFilter })
+                ...(roleFilter !== "ALL" && { role: roleFilter }),
+                ...(institutionFilter !== "ALL" && { institution: institutionFilter })
             });
 
             const response = await authFetch(`/admin/users?${params}`);
@@ -57,7 +61,25 @@ export default function UserManagementPage() {
         } finally {
             setLoading(false);
         }
-    }, [user, page, search, roleFilter]);
+    }, [user, page, search, roleFilter, institutionFilter]);
+
+    useEffect(() => {
+        if (user) {
+            // Fetch institutions
+            const fetchInstitutions = async () => {
+                try {
+                    const response = await authFetch('/admin/institutions');
+                    if (response.ok) {
+                        const data = await response.json();
+                        setInstitutions(data.data);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch institutions", error);
+                }
+            };
+            fetchInstitutions();
+        }
+    }, [user]);
 
     useEffect(() => {
         if (user) {
@@ -66,7 +88,7 @@ export default function UserManagementPage() {
             }, 300); // Debounce search
             return () => clearTimeout(timer);
         }
-    }, [fetchUsers, search, roleFilter, user]); // Trigger on filter change
+    }, [fetchUsers, search, roleFilter, institutionFilter, user]); // Trigger on filter change
 
     const handleUpdateRole = async (userId: string, newRole: string) => {
         if (!confirm(`Are you sure you want to change user role to ${newRole}?`)) return;
@@ -142,7 +164,39 @@ export default function UserManagementPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-white">User Management</h1>
-                <p className="text-gray-400 mt-1">Manage users, roles, and permissions</p>
+                <div className="flex justify-between items-center mt-1">
+                    <p className="text-gray-400">Manage users, roles, and permissions</p>
+                    <button
+                        onClick={async () => {
+                            try {
+                                const params = new URLSearchParams({
+                                    ...(search && { search }),
+                                    ...(roleFilter !== "ALL" && { role: roleFilter }),
+                                    ...(institutionFilter !== "ALL" && { institution: institutionFilter })
+                                });
+
+                                const response = await authFetch(`/admin/users/export?${params}`);
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `users_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    a.remove();
+                                } else {
+                                    console.error('Export failed');
+                                }
+                            } catch (error) {
+                                console.error('Export error', error);
+                            }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                        <Download className="w-4 h-4" /> Export Users
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
@@ -167,6 +221,19 @@ export default function UserManagementPage() {
                     <option value="RECRUITER">Recruiter</option>
                     <option value="INSTITUTION_ADMIN">Institution Admin</option>
                     <option value="ADMIN">Admin</option>
+                </select>
+
+                <select
+                    value={institutionFilter}
+                    onChange={(e) => setInstitutionFilter(e.target.value)}
+                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-900"
+                >
+                    <option value="ALL">All Institutions</option>
+                    {institutions.map((inst) => (
+                        <option key={inst.id} value={inst.id}>
+                            {inst.name}
+                        </option>
+                    ))}
                 </select>
             </div>
 

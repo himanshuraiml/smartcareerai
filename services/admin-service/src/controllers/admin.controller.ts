@@ -15,6 +15,7 @@ export class AdminController {
                 search: req.query.search as string,
                 role: req.query.role as UserRole,
                 isVerified: req.query.isVerified === 'true' ? true : req.query.isVerified === 'false' ? false : undefined,
+                institutionId: req.query.institution as string,
                 page: parseInt(req.query.page as string) || 1,
                 limit: parseInt(req.query.limit as string) || 20,
             };
@@ -96,6 +97,54 @@ export class AdminController {
                 success: true,
                 message: 'User data has been reset successfully. Progress cleared.',
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async exportUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const filters: UserFilters = {
+                search: req.query.search as string,
+                role: req.query.role as UserRole,
+                isVerified: req.query.isVerified === 'true' ? true : req.query.isVerified === 'false' ? false : undefined,
+                institutionId: req.query.institution as string,
+            };
+
+            const users = await userService.getAllUsersForExport(filters);
+            const Workbook = require('exceljs').Workbook;
+            const workbook = new Workbook();
+            const worksheet = workbook.addWorksheet('Users');
+
+            worksheet.columns = [
+                { header: 'ID', key: 'id', width: 36 },
+                { header: 'Name', key: 'name', width: 30 },
+                { header: 'Email', key: 'email', width: 30 },
+                { header: 'Role', key: 'role', width: 15 },
+                { header: 'Verified', key: 'isVerified', width: 10 },
+                { header: 'Institution Name', key: 'institutionName', width: 30 },
+                { header: 'Institution Domain', key: 'institutionDomain', width: 25 },
+                { header: 'Created At', key: 'createdAt', width: 20 },
+            ];
+
+            users.forEach((user: any) => {
+                worksheet.addRow({
+                    id: user.id,
+                    name: user.name || '',
+                    email: user.email,
+                    role: user.role,
+                    isVerified: user.isVerified ? 'Yes' : 'No',
+                    institutionName: user.institution?.name || '',
+                    institutionDomain: user.institution?.domain || '',
+                    createdAt: user.createdAt.toISOString().split('T')[0],
+                });
+            });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users_export.xlsx');
+
+            await workbook.xlsx.write(res);
+            res.end();
         } catch (error) {
             next(error);
         }

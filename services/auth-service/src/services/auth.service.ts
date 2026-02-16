@@ -5,7 +5,7 @@ import { prisma } from '../utils/prisma';
 import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { sendPasswordResetEmail } from '../utils/email';
+import { sendPasswordResetEmail, sendVerificationEmail } from '../utils/email';
 import { cacheGet, cacheSet } from '@smartcareer/shared';
 
 interface TokenPayload {
@@ -61,19 +61,15 @@ export class AuthService {
             adminForInstitutionId: user.adminForInstitutionId
         });
 
-        // Auto-create free subscription and credits for new users (directly via Prisma)
+        // Send verification email
         try {
-            await this.createFreeSubscriptionAndCredits(user.id);
-            logger.info(`Successfully created free subscription and credits for user ${user.id}`);
+            await sendVerificationEmail(email, verifyToken);
+            logger.info(`Verification email sent to ${email}`);
         } catch (error: any) {
-            logger.error(`Failed to create free subscription for user ${user.id}: ${error.message}`, {
-                error: error.message,
-                stack: error.stack,
-            });
-            // Don't fail registration if subscription creation fails
+            logger.error(`Failed to send verification email to ${email}: ${error.message}`);
+            // Don't fail registration, user can request resend later
         }
 
-        // TODO: Send verification email
         if (process.env.NODE_ENV !== 'production') {
             logger.info(`Verification token for ${email}: ${verifyToken}`);
         }
@@ -428,6 +424,15 @@ export class AuthService {
                 verifyToken: null,
             },
         });
+
+        // Grant free credits upon successful verification
+        try {
+            await this.createFreeSubscriptionAndCredits(user.id);
+            logger.info(`Successfully created free subscription and credits for verified user ${user.id}`);
+        } catch (error: any) {
+            logger.error(`Failed to create free subscription for verified user ${user.id}: ${error.message}`);
+            // Don't fail verification flow, but log error
+        }
     }
 
     private async generateTokens(payload: TokenPayload) {
