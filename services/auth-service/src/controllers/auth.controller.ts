@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { logger } from '../utils/logger';
+import { validateEmail } from '../utils/email-validation';
 
 const authService = new AuthService();
 
@@ -34,6 +35,10 @@ export class AuthController {
     async register(req: Request, res: Response, next: NextFunction) {
         try {
             const { email, password, name, targetJobRoleId, institutionId } = req.body;
+
+            // Validate email (disposable check + MX record)
+            await validateEmail(email);
+
             const result = await authService.register(email, password, name, targetJobRoleId, institutionId);
 
             setAuthCookies(res, result.accessToken, result.refreshToken);
@@ -240,6 +245,25 @@ export class AuthController {
             res.json({
                 success: true,
                 message: 'Email verified successfully.',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async resendVerification(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                res.status(400).json({ success: false, message: 'Email is required' });
+                return;
+            }
+
+            await authService.resendVerificationEmail(email);
+
+            res.json({
+                success: true,
+                message: 'If the account exists and is not verified, a verification email has been sent.',
             });
         } catch (error) {
             next(error);

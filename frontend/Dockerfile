@@ -9,8 +9,8 @@ COPY package.json package-lock.json* ./
 COPY frontend/package.json ./frontend/package.json
 
 # Copy necessary workspace packages for dependencies
-COPY packages/shared/package.json ./packages/shared/package.json 2>/dev/null || true
-COPY packages/database/package.json ./packages/database/package.json 2>/dev/null || true
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/database/package.json ./packages/database/package.json
 
 # Install ALL dependencies (including workspaces)
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
@@ -25,7 +25,7 @@ ENV DOCKER_BUILD=true
 
 # Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/frontend/node_modules ./frontend/node_modules 2>/dev/null || true
+# COPY --from=deps /app/frontend/node_modules ./frontend/node_modules 2>/dev/null || true
 
 # Copy workspace structure
 COPY package.json package-lock.json* ./

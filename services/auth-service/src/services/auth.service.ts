@@ -435,6 +435,38 @@ export class AuthService {
         }
     }
 
+    async resendVerificationEmail(email: string) {
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user) {
+            // Silently fail to prevent email enumeration
+            return;
+        }
+
+        if (user.isVerified) {
+            throw new AppError('Email is already verified', 400);
+        }
+
+        // Check if there's an existing valid token to prevent spamming
+        // For simplicity, we'll just generate a new one or re-send existing if recent?
+        // Let's generate a new one to be safe and extend expiry if we had one.
+
+        const verifyToken = crypto.randomBytes(32).toString('hex');
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { verifyToken }
+        });
+
+        try {
+            await sendVerificationEmail(email, verifyToken);
+            logger.info(`Verification email resent to ${email}`);
+        } catch (error: any) {
+            logger.error(`Failed to resend verification email to ${email}: ${error.message}`);
+            throw new AppError('Failed to send verification email', 500);
+        }
+    }
+
     private async generateTokens(payload: TokenPayload) {
         // Generate access token
         const accessToken = jwt.sign(payload, this.JWT_SECRET, {
