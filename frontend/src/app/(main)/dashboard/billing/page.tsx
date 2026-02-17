@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { FileText, Video, FileQuestion, ArrowRight, Wallet, History, CreditCard } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 import CreditBalanceCard from "@/components/billing/CreditBalanceCard";
 import CreditPurchaseModal from "@/components/billing/CreditPurchaseModal";
 import Link from "next/link";
@@ -47,10 +48,11 @@ export default function BillingPage() {
         try {
 
             // Parallel fetch for speed
+            // Parallel fetch for speed
             const [subRes, creditsRes, transRes] = await Promise.all([
-                fetch(`${API_URL}/billing/subscriptions`, { credentials: 'include' }),
-                fetch(`${API_URL}/billing/credits/balances`, { credentials: 'include' }),
-                fetch(`${API_URL}/billing/credits/history`, { credentials: 'include' }),
+                authFetch(`/billing/subscriptions`),
+                authFetch(`/billing/credits/balances`),
+                authFetch(`/billing/credits/history`),
             ]);
 
             if (subRes.ok) {

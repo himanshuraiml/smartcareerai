@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 export default function PostJobPage() {
     const router = useRouter();
@@ -43,9 +44,9 @@ export default function PostJobPage() {
                 experienceMax: formData.experienceMax ? parseInt(formData.experienceMax) : undefined,
             };
 
-            const res = await fetch(`${API_URL}/recruiter/jobs`, {
+            const res = await authFetch(`/recruiter/jobs`, {
                 method: "POST",
-                credentials: 'include', headers: {
+                headers: {
                     "Content-Type": "application/json",
 
                 },

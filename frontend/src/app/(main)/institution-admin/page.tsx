@@ -28,6 +28,7 @@ import {
     Cell
 } from "recharts";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -78,9 +79,7 @@ export default function InstitutionDashboard() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_URL}/admin/institution/dashboard`, {
-                credentials: 'include', headers: {}
-            });
+            const res = await authFetch(`/admin/institution/dashboard`);
             if (!res.ok) throw new Error("Failed to fetch dashboard");
             const result = await res.json();
             setData(result.data);

@@ -11,6 +11,7 @@ import {
     Filter
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
@@ -43,9 +44,7 @@ export default function CandidateSearchPage() {
             if (location) params.append("location", location);
             if (experienceMin) params.append("experienceMin", experienceMin);
 
-            const response = await fetch(`${API_URL}/recruiter/candidates/search?${params}`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/recruiter/candidates/search?${params}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -72,9 +71,9 @@ export default function CandidateSearchPage() {
 
     const handleSaveCandidate = async (candidateId: string) => {
         try {
-            const response = await fetch(`${API_URL}/recruiter/candidates/save`, {
+            const response = await authFetch(`/recruiter/candidates/save`, {
                 method: "POST",
-                credentials: 'include', headers: {
+                headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ candidateId })

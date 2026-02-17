@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import { useAudioRecorder, formatTime } from '@/hooks/useAudioRecorder';
 import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
 import ReactMarkdown from 'react-markdown';
@@ -149,9 +150,7 @@ export default function InterviewRoomPage() {
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/interviews/sessions/${sessionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setSession(data.data);
@@ -182,9 +181,8 @@ export default function InterviewRoomPage() {
         if (!sessionId) return;
         setStarting(true);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/start`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/interviews/sessions/${sessionId}/start`, {
+                method: 'POST'
             });
             if (response.ok) {
                 // Route based on interview type
@@ -219,10 +217,8 @@ export default function InterviewRoomPage() {
             formData.append('audio', audioBlob, 'answer.webm');
             formData.append('questionId', question.id);
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/audio`, {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer/audio`, {
                 method: 'POST',
-                credentials: 'include', headers: {
-                },
                 body: formData
             });
 
@@ -276,10 +272,8 @@ export default function InterviewRoomPage() {
             formData.append('video', videoBlob, 'answer.webm');
             formData.append('questionId', question.id);
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
-                credentials: 'include', headers: {
-                },
                 body: formData
             });
 
@@ -327,9 +321,9 @@ export default function InterviewRoomPage() {
         setLastFeedback(null);
 
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer`, {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer`, {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -376,9 +370,8 @@ export default function InterviewRoomPage() {
         if (!sessionId) return;
         setCompleting(true);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/interviews/sessions/${sessionId}/complete`, {
+                method: 'POST'
             });
 
             if (response.ok) {

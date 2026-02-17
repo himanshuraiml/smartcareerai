@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Loader2, Building2, MapPin, Briefcase, Link as LinkIcon, DollarSign, ChevronRight, Diamond } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useTheme } from '@/providers/ThemeProvider';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -32,7 +33,8 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         location: '',
         sourceUrl: '',
         salaryMin: '',
-        status: 'APPLIED'});
+        status: 'APPLIED'
+    });
 
     if (!isOpen) return null;
 
@@ -41,10 +43,11 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         setLoading(true);
 
         try {
-            const response = await fetch(`${API_URL}/applications`, {
+            const response = await authFetch(`/applications`, {
                 method: 'POST',
-                credentials: 'include', headers: {
-                    'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     status: formData.status,
                     job: {
@@ -53,8 +56,10 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                         location: formData.location,
                         sourceUrl: formData.sourceUrl,
                         salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
-                        description: 'Manual entry'}
-                })});
+                        description: 'Manual entry'
+                    }
+                })
+            });
 
             if (response.ok) {
                 onSuccess();
@@ -65,7 +70,8 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                     location: '',
                     sourceUrl: '',
                     salaryMin: '',
-                    status: 'APPLIED'});
+                    status: 'APPLIED'
+                });
             } else {
                 console.error('Failed to create application');
                 const data = await response.json();
@@ -98,7 +104,8 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
                 style={{
                     background: cardBg,
                     color: textColor,
-                    borderColor: inputBorder}}
+                    borderColor: inputBorder
+                }}
             >
                 {/* Header */}
                 <div className="flex items-start justify-between px-8 pt-8 pb-2">

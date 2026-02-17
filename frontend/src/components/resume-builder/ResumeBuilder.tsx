@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import { Upload, ChevronRight, ChevronLeft, Download, RefreshCw, Wand2, X, Plus, Trash2, Briefcase, GraduationCap, User, FileText, Globe, Loader2, Award, BookOpen, MapPin, Activity, Heart } from 'lucide-react';
 import ResumeTemplates from './ResumeTemplates';
 import ResumeRenderer from './ResumeRenderer';
@@ -151,9 +152,9 @@ export default function ResumeBuilder() {
         if (!content) return;
         setOptimizing(fieldKey);
         try {
-            const res = await fetch(`${API_URL}/resumes/builder/optimize`, {
+            const res = await authFetch(`/resumes/builder/optimize`, {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -219,9 +220,9 @@ export default function ResumeBuilder() {
             // 1. Upload
             const formData = new FormData();
             formData.append('resume', file);
-            const uploadRes = await fetch(`${API_URL}/resumes/upload`, {
+            const uploadRes = await authFetch(`/resumes/upload`, {
                 method: 'POST',
-                credentials: 'include', headers: {},
+                headers: {},
                 body: formData
             });
             const uploadData = await uploadRes.json();
@@ -231,9 +232,9 @@ export default function ResumeBuilder() {
             const resumeId = uploadData.data.id;
 
             // 2. Parse
-            const parseRes = await fetch(`${API_URL}/resumes/${resumeId}/parse`, {
+            const parseRes = await authFetch(`/resumes/${resumeId}/parse`, {
                 method: 'POST',
-                credentials: 'include', headers: {}
+                headers: {}
             });
             const parseData = await parseRes.json();
 

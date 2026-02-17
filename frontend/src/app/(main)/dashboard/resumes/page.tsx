@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import Link from 'next/link';
 import { Upload, FileText, Trash2, Eye, Target, Loader2, Check, AlertCircle, RefreshCw, X, CreditCard, AlertTriangle, BarChart2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import ResumeAnalysisReport from '@/components/scoring/ResumeAnalysisReport';
 import ResumeBuilder from '@/components/resume-builder/ResumeBuilder';
 
@@ -55,9 +56,7 @@ export default function ResumesPage() {
     // Fetch resumes on mount
     const fetchResumes = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/resumes`, {
-                credentials: 'include', headers: {
-                }});
+            const response = await authFetch('/resumes');
 
             if (response.ok) {
                 const data = await response.json();
@@ -97,11 +96,10 @@ export default function ResumesPage() {
             const formData = new FormData();
             formData.append('resume', file);
 
-            const response = await fetch(`${API_URL}/resumes/upload`, {
+            const response = await authFetch('/resumes/upload', {
                 method: 'POST',
-                credentials: 'include', headers: {
-                },
-                body: formData});
+                body: formData
+            });
 
             const data = await response.json();
 
@@ -122,10 +120,9 @@ export default function ResumesPage() {
         if (!confirm('Are you sure you want to delete this resume?')) return;
 
         try {
-            const response = await fetch(`${API_URL}/resumes/${resumeId}`, {
-                method: 'DELETE',
-                credentials: 'include', headers: {
-                }});
+            const response = await authFetch(`/resumes/${resumeId}`, {
+                method: 'DELETE'
+            });
 
             if (response.ok) {
                 setResumes((prev) => prev.filter(r => r.id !== resumeId));
@@ -140,9 +137,7 @@ export default function ResumesPage() {
 
     const handleView = async (resume: Resume) => {
         try {
-            const response = await fetch(`${API_URL}/resumes/${resume.id}`, {
-                credentials: 'include', headers: {
-                }});
+            const response = await authFetch(`/resumes/${resume.id}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -167,13 +162,16 @@ export default function ResumesPage() {
         setError(null);
 
         try {
-            const response = await fetch(`${API_URL}/scores/analyze`, {
+            const response = await authFetch('/scores/analyze', {
                 method: 'POST',
-                credentials: 'include', headers: {
-                    'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     resumeId: resumeId,
-                    jobRole: targetRole})});
+                    jobRole: targetRole
+                })
+            });
 
             const data = await response.json();
 
@@ -186,11 +184,13 @@ export default function ResumesPage() {
 
                 // Also trigger skill extraction
                 try {
-                    await fetch(`${API_URL}/skills/analyze`, {
+                    await authFetch('/skills/analyze', {
                         method: 'POST',
-                        credentials: 'include', headers: {
-                            'Content-Type': 'application/json'},
-                        body: JSON.stringify({ resumeId: resumeId })});
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ resumeId: resumeId })
+                    });
                 } catch (e) {
                     // Skill extraction done in background (silently handled)
                 }
@@ -212,16 +212,19 @@ export default function ResumesPage() {
         accept: {
             'application/pdf': ['.pdf'],
             'application/msword': ['.doc'],
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']},
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+        },
         maxFiles: 1,
-        maxSize: 10 * 1024 * 1024});
+        maxSize: 10 * 1024 * 1024
+    });
 
     const getStatusBadge = (status: Resume['status']) => {
         const badges = {
             PENDING: { color: 'bg-yellow-500/10 text-yellow-400', icon: Loader2, label: 'Pending', spin: true },
             PARSING: { color: 'bg-blue-500/10 text-blue-400', icon: Loader2, label: 'Parsing', spin: true },
             PARSED: { color: 'bg-green-500/10 text-green-400', icon: Check, label: 'Ready', spin: false },
-            FAILED: { color: 'bg-red-500/10 text-red-400', icon: AlertCircle, label: 'Failed', spin: false }};
+            FAILED: { color: 'bg-red-500/10 text-red-400', icon: AlertCircle, label: 'Failed', spin: false }
+        };
         const badge = badges[status];
         return (
             <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>

@@ -18,11 +18,14 @@ import {
     CreditCard,
     Lock,
     Sparkles,
+    RotateCw,
+    AlertTriangle,
     User
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -74,7 +77,7 @@ export default function DashboardLayout({
     }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, _hasHydrated } = useAuthStore();
+    const { user, logout, fetchUser, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -118,23 +121,23 @@ export default function DashboardLayout({
         try {
 
             // Fetch each endpoint individually to avoid one failure blocking all
-            const resumeData = await fetch(`${API_URL}/resumes`, { credentials: 'include' })
+            const resumeData = await authFetch('/resumes')
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const skillsData = await fetch(`${API_URL}/skills/user-skills`, { credentials: 'include' })
+            const skillsData = await authFetch('/skills/user-skills')
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const testsData = await fetch(`${API_URL}/validation/attempts`, { credentials: 'include' })
+            const testsData = await authFetch('/validation/attempts')
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const interviewData = await fetch(`${API_URL}/interviews/sessions`, { credentials: 'include' })
+            const interviewData = await authFetch('/interviews/sessions')
                 .then(res => res.ok ? res.json() : { data: [] })
                 .catch(() => ({ data: [] }));
 
-            const appData = await fetch(`${API_URL}/applications/stats`, { credentials: 'include' })
+            const appData = await authFetch('/applications/stats')
                 .then(res => res.ok ? res.json() : { data: { applied: 0 } })
                 .catch(() => ({ data: { applied: 0 } }));
 
@@ -385,6 +388,25 @@ export default function DashboardLayout({
                             </div>
                         </header>
                     </>
+                )}
+
+                {/* Verification Warning */}
+                {!isInterviewRoom && user && !user.isVerified && (
+                    <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                            <p className="text-sm text-yellow-200">
+                                Please verify your email address ({user.email}) to unlock free credits and all features.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => fetchUser()}
+                            className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors"
+                        >
+                            <RotateCw className="w-4 h-4" />
+                            Check Status
+                        </button>
+                    </div>
                 )}
 
                 <div className={`flex-1 ${isInterviewRoom ? 'p-0' : 'p-6 lg:p-8'} overflow-y-auto overflow-x-hidden max-w-full`}>

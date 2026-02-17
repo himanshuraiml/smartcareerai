@@ -8,6 +8,7 @@ import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Briefcase, ChevronRig
 import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -43,8 +44,8 @@ export default function RegisterPage() {
         const fetchData = async () => {
             try {
                 const [rolesRes, instRes] = await Promise.all([
-                    fetch(`${API_URL}/job-roles`),
-                    fetch(`${API_URL}/institutions`)
+                    authFetch(`/job-roles`, { skipAuth: true }),
+                    authFetch(`/institutions`, { skipAuth: true })
                 ]);
 
                 if (rolesRes.ok) {

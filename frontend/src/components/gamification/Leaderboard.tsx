@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, ChevronUp, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -39,7 +40,7 @@ export default function Leaderboard({ currentUserXp = 0 }: LeaderboardProps) {
                 if (user) {
                 }
 
-                const res = await fetch(`${API_URL}/auth/leaderboard?limit=20`, { headers });
+                const res = await authFetch(`/auth/leaderboard?limit=20`, { headers });
                 if (!res.ok) throw new Error('Failed to fetch');
 
                 const data = await res.json();

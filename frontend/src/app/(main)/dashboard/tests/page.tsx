@@ -7,6 +7,7 @@ import {
     CheckCircle, Trophy
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface TestAttempt {
     id: string;
@@ -48,8 +49,6 @@ interface Badge {
     testAttempt?: { score: number; completedAt: string };
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
 export default function TestsPage() {
     const { user } = useAuthStore();
     const [tests, setTests] = useState<SkillTest[]>([]);
@@ -65,16 +64,14 @@ export default function TestsPage() {
     const fetchData = useCallback(async () => {
         try {
             const requests = [
-                fetch(`${API_URL}/validation/tests`, { credentials: 'include', headers: {} }),
-                fetch(`${API_URL}/validation/badges`, { credentials: 'include', headers: {} }),
-                fetch(`${API_URL}/validation/attempts`, { credentials: 'include', headers: {} }),
+                authFetch('/validation/tests'),
+                authFetch('/validation/badges'),
+                authFetch('/validation/attempts'),
             ];
 
             if (selectedRole) {
                 requests.push(
-                    fetch(`${API_URL}/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`, {
-                        credentials: 'include', headers: {}
-                    })
+                    authFetch(`/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`)
                 );
             }
 

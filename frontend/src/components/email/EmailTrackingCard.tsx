@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Link2, Unlink, RefreshCw, ExternalLink, CheckCircle, XCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/email`;
 
@@ -47,9 +48,7 @@ export function EmailTrackingCard() {
 
     const fetchConnectionStatus = async () => {
         try {
-            const response = await fetch(`${API_URL}/connection`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/email/connection`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.data?.email) {
@@ -66,9 +65,7 @@ export function EmailTrackingCard() {
 
     const fetchTrackedEmails = async () => {
         try {
-            const response = await fetch(`${API_URL}/tracked?limit=5`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/email/tracked?limit=5`);
             if (response.ok) {
                 const data = await response.json();
                 setEmails(data.data?.emails || []);
@@ -81,9 +78,7 @@ export function EmailTrackingCard() {
     const handleConnect = async () => {
         setConnecting(true);
         try {
-            const response = await fetch(`${API_URL}/oauth/url`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/email/oauth/url`);
             if (response.ok) {
                 const data = await response.json();
                 window.location.href = data.data.url;
@@ -97,9 +92,8 @@ export function EmailTrackingCard() {
 
     const handleDisconnect = async () => {
         try {
-            const response = await fetch(`${API_URL}/connection`, {
-                method: 'DELETE',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/email/connection`, {
+                method: 'DELETE'
             });
             if (response.ok) {
                 setConnection(null);
@@ -113,9 +107,8 @@ export function EmailTrackingCard() {
     const handleSync = async () => {
         setSyncing(true);
         try {
-            await fetch(`${API_URL}/sync`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            await authFetch(`/email/sync`, {
+                method: 'POST'
             });
             await fetchTrackedEmails();
         } catch (error) {

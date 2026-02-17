@@ -13,6 +13,7 @@ import {
     TrendingUp
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -72,9 +73,7 @@ export default function StudentDetailPage() {
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const response = await fetch(`${API_URL}/admin/institution/students/${params.id}`, {
-                    credentials: 'include', headers: {}
-                });
+                const response = await authFetch(`/admin/institution/students/${params.id}`);
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch student");

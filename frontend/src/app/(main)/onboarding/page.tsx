@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, ChevronRight, Sparkles, Building2, Check, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -59,8 +60,8 @@ export default function OnboardingPage() {
         const fetchData = async () => {
             try {
                 const [rolesRes, instRes] = await Promise.all([
-                    fetch(`${API_URL}/job-roles`),
-                    fetch(`${API_URL}/institutions`)
+                    authFetch(`/job-roles`),
+                    authFetch(`/institutions`)
                 ]);
 
                 if (rolesRes.ok) {
@@ -97,9 +98,9 @@ export default function OnboardingPage() {
         // But since we don't have updateInstitution in store yet, we'll fetch directly
 
         try {
-            const res = await fetch(`${API_URL}/auth/profile`, {
+            const res = await authFetch(`/auth/profile`, {
                 method: 'PUT',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ institutionId: formData.institutionId || null })
@@ -121,9 +122,9 @@ export default function OnboardingPage() {
         setFormData({ ...formData, institutionId: '' });
         // Send empty/null to backend
         try {
-            await fetch(`${API_URL}/users/me/institution`, {
+            await authFetch(`/users/me/institution`, {
                 method: 'PUT',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ institutionId: null })

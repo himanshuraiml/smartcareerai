@@ -12,6 +12,7 @@ import CareerRoadmap, { RoadmapStage, DEFAULT_ROADMAP_STAGES } from '@/component
 import Leaderboard from '@/components/gamification/Leaderboard';
 import PlacementReadyScore from '@/components/gamification/PlacementReadyScore';
 import SkillTestSuggestion from '@/components/dashboard/SkillTestSuggestion';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -45,12 +46,12 @@ export default function DashboardPage() {
         try {
 
             const [resumeRes, atsRes, appRes, interviewRes, testsRes, badgesRes] = await Promise.all([
-                fetch(`${API_URL}/resumes`, { credentials: 'include' }),
-                fetch(`${API_URL}/scores/history`, { credentials: 'include' }),
-                fetch(`${API_URL}/applications/stats`, { credentials: 'include' }),
-                fetch(`${API_URL}/interviews/sessions`, { credentials: 'include' }),
-                fetch(`${API_URL}/validation/attempts`, { credentials: 'include' }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
-                fetch(`${API_URL}/validation/badges`, { credentials: 'include' }).catch(() => ({ ok: false, json: async () => ({ data: [] }) })),
+                authFetch('/resumes'),
+                authFetch('/scores/history'),
+                authFetch('/applications/stats'),
+                authFetch('/interviews/sessions'),
+                authFetch('/validation/attempts').catch(() => ({ ok: false, json: async () => ({ data: [] }) } as any)),
+                authFetch('/validation/badges').catch(() => ({ ok: false, json: async () => ({ data: [] }) } as any)),
             ]);
 
             const resumeData = resumeRes.ok ? await resumeRes.json() : { data: [] };

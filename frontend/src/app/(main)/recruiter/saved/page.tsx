@@ -11,6 +11,7 @@ import {
     XCircle
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
@@ -37,9 +38,7 @@ export default function SavedCandidatesPage() {
     useEffect(() => {
         const fetchSaved = async () => {
             try {
-                const response = await fetch(`${API_URL}/recruiter/candidates/saved`, {
-                    credentials: 'include', headers: {}
-                });
+                const response = await authFetch(`/recruiter/candidates/saved`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -57,9 +56,8 @@ export default function SavedCandidatesPage() {
 
     const removeCandidate = async (candidateId: string) => {
         try {
-            const response = await fetch(`${API_URL}/recruiter/candidates/${candidateId}`, {
-                method: "DELETE",
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/recruiter/candidates/${candidateId}`, {
+                method: "DELETE"
             });
 
             if (response.ok) {
@@ -72,9 +70,9 @@ export default function SavedCandidatesPage() {
 
     const updateStatus = async (candidateId: string, status: string) => {
         try {
-            const response = await fetch(`${API_URL}/recruiter/candidates/${candidateId}/status`, {
+            const response = await authFetch(`/recruiter/candidates/${candidateId}/status`, {
                 method: "PUT",
-                credentials: 'include', headers: {
+                headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ status })

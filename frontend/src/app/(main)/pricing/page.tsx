@@ -5,6 +5,7 @@ import { Check, Loader2, Zap, Star, Briefcase, Gem, ArrowLeft } from "lucide-rea
 import { useAuthStore } from "@/store/auth.store";
 import useRazorpay from "@/hooks/useRazorpay";
 import { useRouter } from "next/navigation";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -159,7 +160,7 @@ export default function PricingPage() {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const res = await fetch(`${API_URL}/billing/subscriptions/plans`);
+                const res = await authFetch('/billing/subscriptions/plans', { skipAuth: true });
                 if (res.ok) {
                     const data = await res.json();
                     const dbPlans = data.data || [];
@@ -240,7 +241,7 @@ export default function PricingPage() {
         try {
             // For free plan, still need to call subscribe API to initialize credits
             if (plan.name === "free") {
-                const response = await fetch(`${API_URL}/billing/subscriptions/subscribe`, {
+                const response = await authFetch('/billing/subscriptions/subscribe', {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -250,7 +251,6 @@ export default function PricingPage() {
                         userEmail: user?.email,
                         userName: user?.name,
                     }),
-                    credentials: 'include',
                 });
 
                 if (response.ok) {
@@ -264,7 +264,7 @@ export default function PricingPage() {
             }
 
             // 1. Create Subscription on Backend for paid plans
-            const response = await fetch(`${API_URL}/billing/subscriptions/subscribe`, {
+            const response = await authFetch('/billing/subscriptions/subscribe', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -273,7 +273,6 @@ export default function PricingPage() {
                     planName: plan.name,
                     billingCycle: billingCycle, // Send selected billing cycle (monthly/yearly)
                 }),
-                credentials: 'include',
             });
 
             const data = await response.json();

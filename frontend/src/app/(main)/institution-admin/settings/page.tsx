@@ -13,6 +13,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -65,9 +66,9 @@ export default function InstitutionSettingsPage() {
         setSavingPassword(true);
 
         try {
-            const response = await fetch(`${API_URL}/auth/change-password`, {
+            const response = await authFetch(`/auth/change-password`, {
                 method: "PUT",
-                credentials: 'include', headers: {
+                headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ currentPassword, newPassword })
@@ -95,9 +96,7 @@ export default function InstitutionSettingsPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch(`${API_URL}/admin/institution/settings`, {
-                    credentials: 'include', headers: {}
-                });
+                const response = await authFetch(`/admin/institution/settings`);
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch settings");
@@ -128,9 +127,9 @@ export default function InstitutionSettingsPage() {
         setSuccess(null);
 
         try {
-            const response = await fetch(`${API_URL}/admin/institution/settings`, {
+            const response = await authFetch(`/admin/institution/settings`, {
                 method: "PUT",
-                credentials: 'include', headers: {
+                headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ name, logoUrl, address })

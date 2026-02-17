@@ -33,6 +33,7 @@ interface AuthState {
     refreshAccessToken: () => Promise<boolean>;
     clearError: () => void;
     updateTargetJobRole: (jobRoleId: string) => Promise<boolean>;
+    fetchUser: () => Promise<void>;
     _hasHydrated: boolean;
     setHasHydrated: (state: boolean) => void;
 }
@@ -245,6 +246,29 @@ export const useAuthStore = create<AuthState>()(
                     return true;
                 } catch (error) {
                     return false;
+                }
+            },
+
+            fetchUser: async () => {
+                const { accessToken } = get();
+                if (!accessToken) return;
+
+                try {
+                    const response = await fetch(`${API_URL}/auth/me`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        set({ user: data.data.user });
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch user:', error);
                 }
             },
 

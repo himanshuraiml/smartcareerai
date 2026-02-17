@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
+import { authFetch } from '@/lib/auth-fetch';
+
 interface Skill {
     id: string;
     name: string;
@@ -71,9 +73,7 @@ export default function SkillsPage() {
 
     const fetchUserSkills = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/skills/user-skills`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/skills/user-skills');
             if (response.ok) {
                 const data = await response.json();
                 setUserSkills(data.data || []);
@@ -87,9 +87,7 @@ export default function SkillsPage() {
 
     const fetchAllSkills = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/skills/skills`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/skills/skills');
             if (response.ok) {
                 const data = await response.json();
                 setAllSkills(data.data || []);
@@ -101,9 +99,7 @@ export default function SkillsPage() {
 
     const fetchAttempts = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/validation/attempts`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/validation/attempts');
             if (response.ok) {
                 const data = await response.json();
                 setAttempts(data.data || []);
@@ -148,10 +144,7 @@ export default function SkillsPage() {
     const fetchGapAnalysis = useCallback(async () => {
         setAnalyzing(true);
         try {
-            const response = await fetch(
-                `${API_URL}/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`,
-                { credentials: 'include', headers: {} }
-            );
+            const response = await authFetch(`/skills/gap-analysis?targetRole=${encodeURIComponent(selectedRole)}`);
             if (response.ok) {
                 const data = await response.json();
                 setGapAnalysis(data.data);
@@ -166,9 +159,8 @@ export default function SkillsPage() {
     const fetchRoadmap = useCallback(async () => {
         setAnalyzing(true);
         try {
-            const response = await fetch(
-                `${API_URL}/skills/roadmap?targetRole=${encodeURIComponent(selectedRole)}&timeframe=12`,
-                { credentials: 'include', headers: {} }
+            const response = await authFetch(
+                `/skills/roadmap?targetRole=${encodeURIComponent(selectedRole)}&timeframe=12`
             );
             if (response.ok) {
                 const data = await response.json();
@@ -202,8 +194,8 @@ export default function SkillsPage() {
     const fetchCertifications = async () => {
         setLoadingCerts(true);
         try {
-            const response = await fetch(
-                `${API_URL}/skills/certifications?targetRole=${encodeURIComponent(selectedRole)}`
+            const response = await authFetch(
+                `/skills/certifications?targetRole=${encodeURIComponent(selectedRole)}`
             );
             if (response.ok) {
                 const data = await response.json();

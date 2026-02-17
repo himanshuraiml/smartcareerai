@@ -294,6 +294,20 @@ export class CreditService {
      * Consume credits for a feature
      */
     async consumeCredit(userId: string, creditType: CreditType, featureId?: string) {
+        // Check if user is verified
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isVerified: true }
+        });
+
+        if (!user) {
+            throw createError('User not found', 404, 'USER_NOT_FOUND');
+        }
+
+        if (!user.isVerified) {
+            throw createError('Email verification required to use credits', 403, 'EMAIL_NOT_VERIFIED');
+        }
+
         // Check and renew subscription if billing period has passed (lazy renewal)
         await subscriptionService.checkAndRenewSubscription(userId);
 
@@ -357,6 +371,21 @@ export class CreditService {
      * Check if user has credits (without consuming)
      */
     async hasCredits(userId: string, creditType: CreditType): Promise<boolean> {
+        // Check if user is verified
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isVerified: true }
+        });
+
+        if (!user || (!user.isVerified)) {
+            // If user is not verified, they should not have access to consume credits
+            // However, for hasCredits() we return false if they can't USE them.
+            // Or should we throw? 
+            // hasCredits is usually a boolean check for UI buttons. 
+            // If I return false, the button might be disabled, which is good.
+            return false;
+        }
+
         // Check and renew subscription if billing period has passed (lazy renewal)
         await subscriptionService.checkAndRenewSubscription(userId);
 

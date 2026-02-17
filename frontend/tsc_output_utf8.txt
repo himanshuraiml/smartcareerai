@@ -1,0 +1,18 @@
+﻿src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(204,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(204,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(238,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(238,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(255,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(255,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(269,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(269,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(218,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(218,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(235,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(235,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(249,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/interviews/[id]/room/page.tsx(249,29): error TS1005: ';' expected.
+src/app/(main)/dashboard/test/[testId]/page.tsx(103,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/test/[testId]/page.tsx(272,1): error TS1005: '}' expected.
+src/app/(main)/dashboard/tests/[id]/page.tsx(78,10): error TS1472: 'catch' or 'finally' expected.
+src/app/(main)/dashboard/tests/[id]/page.tsx(78,22): error TS1005: ';' expected.

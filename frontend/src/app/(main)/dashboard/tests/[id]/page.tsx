@@ -8,6 +8,7 @@ import {
     Trophy, RefreshCw, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Question {
     id: string;
@@ -63,9 +64,7 @@ export default function TestPage() {
 
     const fetchTest = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/validation/tests/${id}`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/validation/tests/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 setTest(data.data);
@@ -103,9 +102,8 @@ export default function TestPage() {
     const startTest = async () => {
         setStarting(true);
         try {
-            const response = await fetch(`${API_URL}/validation/tests/${id}/start`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/validation/tests/${id}/start`, {
+                method: 'POST'
             });
             if (response.ok) {
                 setStarted(true);
@@ -123,9 +121,9 @@ export default function TestPage() {
         setSubmitting(true);
 
         try {
-            const response = await fetch(`${API_URL}/validation/tests/${id}/submit`, {
+            const response = await authFetch(`/validation/tests/${id}/submit`, {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ answers })

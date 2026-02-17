@@ -8,6 +8,7 @@ import {
     Loader2, DollarSign, ExternalLink, MapPin, Zap
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import AddApplicationDialog from '@/components/tracker/AddApplicationDialog';
 import EmailTrackingCard from '@/components/email/EmailTrackingCard';
 
@@ -59,9 +60,7 @@ export default function ApplicationsPage() {
 
     const fetchApplications = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/applications/applications`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/applications/applications`);
             if (response.ok) {
                 const data = await response.json();
                 setApplications(data.data || []);
@@ -73,9 +72,7 @@ export default function ApplicationsPage() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/applications/stats`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/applications/stats`);
             if (response.ok) {
                 const data = await response.json();
                 setStats(data.data);
@@ -98,11 +95,9 @@ export default function ApplicationsPage() {
     useEffect(() => {
         if (searchParams.get('email_connected') === 'true' && user && !hasSynced.current) {
             hasSynced.current = true;
-            const EMAIL_API = `${API_URL}/email`;
-            fetch(`${EMAIL_API}/sync`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {}
+            const EMAIL_API = `/email`;
+            authFetch(`${EMAIL_API}/sync`, {
+                method: 'POST'
             })
                 .then(() => {
                     // Re-fetch applications to reflect any auto-status updates
@@ -120,9 +115,9 @@ export default function ApplicationsPage() {
         ));
 
         try {
-            await fetch(`${API_URL}/applications/applications/${appId}/status`, {
+            await authFetch(`/applications/applications/${appId}/status`, {
                 method: 'PATCH',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ status: newStatus })
@@ -138,9 +133,8 @@ export default function ApplicationsPage() {
         if (!confirm('Are you sure you want to delete this application?')) return;
 
         try {
-            await fetch(`${API_URL}/applications/applications/${appId}`, {
-                method: 'DELETE',
-                credentials: 'include', headers: {}
+            await authFetch(`/applications/applications/${appId}`, {
+                method: 'DELETE'
             });
             setApplications(prev => prev.filter(app => app.id !== appId));
             fetchStats();

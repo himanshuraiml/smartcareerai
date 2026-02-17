@@ -13,6 +13,7 @@ import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useFaceAnalysis } from '@/hooks/use-face-analysis';
 import { useProctoring } from '@/hooks/useProctoring';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Question {
     id: string;
@@ -183,9 +184,7 @@ export default function HRInterviewRoomPage() {
             return;
         }
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/interviews/sessions/${sessionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setSession(data.data);
@@ -232,10 +231,8 @@ export default function HRInterviewRoomPage() {
                 detectedKeywords: Array.from(detectedKeywords)
             }));
 
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/answer/video`, {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer/video`, {
                 method: 'POST',
-                credentials: 'include', headers: {
-                },
                 body: formData
             });
 
@@ -281,9 +278,8 @@ export default function HRInterviewRoomPage() {
     const endSession = async () => {
         if (!sessionId) return;
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions/${sessionId}/complete`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/interviews/sessions/${sessionId}/complete`, {
+                method: 'POST'
             });
 
             if (response.ok) {

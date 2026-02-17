@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Eye, EyeOff, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -43,10 +44,11 @@ function ResetPasswordForm() {
         setError('');
 
         try {
-            const response = await fetch(`${API_URL}/auth/reset-password`, {
+            const response = await authFetch(`/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),
+                skipAuth: true
             });
 
             if (!response.ok) {

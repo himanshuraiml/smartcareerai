@@ -11,6 +11,7 @@ import {
     Briefcase
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -35,9 +36,7 @@ export default function JobPostingsPage() {
 
     const fetchJobs = async () => {
         try {
-            const response = await fetch(`${API_URL}/recruiter/jobs`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch(`/recruiter/jobs`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -56,9 +55,8 @@ export default function JobPostingsPage() {
 
     const toggleStatus = async (jobId: string) => {
         try {
-            const response = await fetch(`${API_URL}/recruiter/jobs/${jobId}/toggle`, {
-                method: 'PUT',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/recruiter/jobs/${jobId}/toggle`, {
+                method: 'PUT'
             });
             if (response.ok) {
                 fetchJobs(); // Refresh
@@ -71,9 +69,8 @@ export default function JobPostingsPage() {
     const deleteJob = async (jobId: string) => {
         if (!confirm("Delete this job posting?")) return;
         try {
-            const response = await fetch(`${API_URL}/recruiter/jobs/${jobId}`, {
-                method: 'DELETE',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/recruiter/jobs/${jobId}`, {
+                method: 'DELETE'
             });
             if (response.ok) {
                 setJobs(prev => prev.filter(j => j.id !== jobId));

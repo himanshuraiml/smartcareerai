@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Quote, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -18,7 +19,7 @@ export default function DailyMotivation() {
     useEffect(() => {
         const fetchQuote = async () => {
             try {
-                const res = await fetch(`${API_URL}/auth/motivation`);
+                const res = await authFetch(`/auth/motivation`);
                 if (res.ok) {
                     const data = await res.json();
                     // The API returns { success: true, data: { text: "...", author: "..." } }

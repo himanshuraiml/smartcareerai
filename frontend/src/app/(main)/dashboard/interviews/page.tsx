@@ -8,6 +8,7 @@ import {
     CreditCard, AlertTriangle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface InterviewSession {
     id: string;
@@ -46,9 +47,7 @@ export default function InterviewsPage() {
 
     const fetchSessions = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/interviews/sessions');
             if (response.ok) {
                 const data = await response.json();
                 setSessions(data.data || []);
@@ -73,9 +72,9 @@ export default function InterviewsPage() {
         setCreating(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/interviews/sessions`, {
+            const response = await authFetch('/interviews/sessions', {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(newSession)

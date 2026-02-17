@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, EyeOff, Lock, Check, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -44,7 +45,7 @@ function AdminInviteContent() {
             }
 
             try {
-                const res = await fetch(`${API_URL}/auth/verify-invite?token=${token}`);
+                const res = await authFetch(`/auth/verify-invite?token=${token}`, { skipAuth: true });
                 const data = await res.json();
 
                 if (res.ok && data.valid) {
@@ -80,10 +81,11 @@ function AdminInviteContent() {
         setSubmitting(true);
 
         try {
-            const res = await fetch(`${API_URL}/auth/accept-invite`, {
+            const res = await authFetch(`/auth/accept-invite`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, password })
+                body: JSON.stringify({ token, password }),
+                skipAuth: true
             });
 
             const data = await res.json();

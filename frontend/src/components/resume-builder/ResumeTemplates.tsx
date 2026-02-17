@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import { Loader2, Check, ArrowRight, Layout } from 'lucide-react';
 import ResumeRenderer from './ResumeRenderer';
 
@@ -91,9 +92,7 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
     useEffect(() => {
         const fetchTemplates = async () => {
             try {
-                const res = await fetch(`${API_URL}/resumes/templates`, {
-                    credentials: 'include', headers: {}
-                });
+                const res = await authFetch(`/resumes/templates`);
                 if (res.ok) {
                     const data = await res.json();
                     setTemplates(data.data || []);

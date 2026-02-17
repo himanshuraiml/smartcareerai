@@ -8,6 +8,7 @@ import {
     ChevronDown, Shield, Bell, Key, Trash2, AlertTriangle, Building2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -63,7 +64,7 @@ export default function SettingsPage() {
     useEffect(() => {
         const fetchJobRoles = async () => {
             try {
-                const res = await fetch(`${API_URL}/job-roles`);
+                const res = await authFetch('/job-roles');
                 if (res.ok) {
                     const data = await res.json();
                     setJobRoles(data.data || []);
@@ -76,7 +77,7 @@ export default function SettingsPage() {
 
         const fetchInstitutions = async () => {
             try {
-                const res = await fetch(`${API_URL}/institutions`);
+                const res = await authFetch('/institutions');
                 if (res.ok) {
                     const data = await res.json();
                     setInstitutions(data.data || []);
@@ -108,9 +109,9 @@ export default function SettingsPage() {
 
         try {
             // Update profile info
-            const profileRes = await fetch(`${API_URL}/auth/profile`, {
+            const profileRes = await authFetch('/auth/profile', {
                 method: 'PUT',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -163,9 +164,9 @@ export default function SettingsPage() {
         setPasswordLoading(true);
 
         try {
-            const res = await fetch(`${API_URL}/auth/change-password`, {
+            const res = await authFetch('/auth/change-password', {
                 method: 'PUT',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -199,9 +200,9 @@ export default function SettingsPage() {
         setDeleteLoading(true);
 
         try {
-            const res = await fetch(`${API_URL}/auth/me`, {
+            const res = await authFetch('/auth/me', {
                 method: 'DELETE',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(

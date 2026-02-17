@@ -18,6 +18,7 @@ import {
     SlidersHorizontal
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -88,9 +89,7 @@ export default function InstitutionStudentsPage() {
     useEffect(() => {
         const fetchJobRoles = async () => {
             try {
-                const response = await fetch(`${API_URL}/job-roles`, {
-                    credentials: 'include', headers: {}
-                });
+                const response = await authFetch(`/job-roles`);
                 if (response.ok) {
                     const data = await response.json();
                     setJobRoles(data.data || []);
@@ -122,9 +121,7 @@ export default function InstitutionStudentsPage() {
                 params.append("page", String(pagination.page));
                 params.append("limit", String(pagination.limit));
 
-                const response = await fetch(`${API_URL}/admin/institution/students?${params}`, {
-                    credentials: 'include', headers: {}
-                });
+                const response = await authFetch(`/admin/institution/students?${params}`);
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch students");
@@ -257,8 +254,8 @@ export default function InstitutionStudentsPage() {
                                 key={tab.value}
                                 onClick={() => setScoreType(tab.value as ScoreType)}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${scoreType === tab.value
-                                        ? "bg-emerald-500 text-white"
-                                        : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
                                     }`}
                             >
                                 {tab.label}

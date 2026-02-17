@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -72,9 +73,9 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
 
     const startTestSession = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/validation/tests/${testId}/start`, {
+            const res = await authFetch(`/validation/tests/${testId}/start`, {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'x-user-id': user?.id || '', // validation service expects x-user-id or auth token handling needs ensuring
                 }
             });
@@ -112,9 +113,9 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
         setSubmitting(true);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/validation/tests/${testId}/submit`, {
+            const res = await authFetch(`/validation/tests/${testId}/submit`, {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json',
                     'x-user-id': user?.id || ''
                 },

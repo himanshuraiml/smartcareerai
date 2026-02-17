@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { Target, Award, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface SkillTest {
     id: string;
@@ -36,12 +35,8 @@ export default function SkillTestSuggestion() {
 
             try {
                 const [testsRes, attemptsRes] = await Promise.all([
-                    fetch(`${API_URL}/validation/tests`, {
-                        credentials: 'include', headers: {}
-                    }),
-                    fetch(`${API_URL}/validation/attempts`, {
-                        credentials: 'include', headers: {}
-                    })
+                    authFetch(`/validation/tests`),
+                    authFetch(`/validation/attempts`)
                 ]);
 
                 if (testsRes.ok && attemptsRes.ok) {

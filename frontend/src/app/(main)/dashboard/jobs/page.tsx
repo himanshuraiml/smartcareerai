@@ -7,6 +7,7 @@ import {
     ChevronLeft, ArrowRight
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
+import { authFetch } from '@/lib/auth-fetch';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Job {
@@ -49,9 +50,7 @@ export default function JobsPage() {
     const fetchPersonalizedJobs = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/jobs/for-me?limit=20`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/jobs/for-me?limit=20');
 
             if (response.ok) {
                 const data = await response.json();
@@ -78,9 +77,9 @@ export default function JobsPage() {
                 url = `${API_URL}/jobs/search?${params.toString()}`;
             }
 
-            const response = await fetch(url, {
-                credentials: 'include', headers: {}
-            });
+            // Construct relative URL for authFetch
+            const relativeUrl = url.replace(API_URL, '');
+            const response = await authFetch(relativeUrl);
 
             if (response.ok) {
                 const data = await response.json();
@@ -96,9 +95,7 @@ export default function JobsPage() {
     const fetchMatchingJobs = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/jobs/match?limit=20`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/jobs/match?limit=20');
 
             if (response.ok) {
                 const data = await response.json();
@@ -115,9 +112,8 @@ export default function JobsPage() {
         setLoading(true);
         try {
             const defaultQuery = query || user?.targetJobRole?.title || 'Software Engineer';
-            const response = await fetch(`${API_URL}/jobs/aggregate?q=${encodeURIComponent(defaultQuery)}&limit=10`, {
-                method: 'POST',
-                credentials: 'include', headers: {}
+            const response = await authFetch(`/jobs/aggregate?q=${encodeURIComponent(defaultQuery)}&limit=10`, {
+                method: 'POST'
             });
 
             if (response.ok) {
@@ -133,9 +129,7 @@ export default function JobsPage() {
 
     const fetchSavedJobs = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/jobs/saved`, {
-                credentials: 'include', headers: {}
-            });
+            const response = await authFetch('/jobs/saved');
 
             if (response.ok) {
                 const data = await response.json();
@@ -170,9 +164,8 @@ export default function JobsPage() {
 
         try {
             if (isSaved) {
-                await fetch(`${API_URL}/jobs/jobs/${jobId}/save`, {
-                    method: 'DELETE',
-                    credentials: 'include', headers: {}
+                await authFetch(`/jobs/jobs/${jobId}/save`, {
+                    method: 'DELETE'
                 });
                 setSavedJobIds(prev => {
                     const next = new Set(prev);
@@ -180,9 +173,8 @@ export default function JobsPage() {
                     return next;
                 });
             } else {
-                await fetch(`${API_URL}/jobs/jobs/${jobId}/save`, {
-                    method: 'POST',
-                    credentials: 'include', headers: {}
+                await authFetch(`/jobs/jobs/${jobId}/save`, {
+                    method: 'POST'
                 });
                 setSavedJobIds(prev => new Set([...Array.from(prev), jobId]));
             }
@@ -216,9 +208,9 @@ export default function JobsPage() {
         // Auto-track application (User Request #3)
         // We create an application entry even though the user goes external
         try {
-            await fetch(`${API_URL}/applications`, {
+            await authFetch('/applications', {
                 method: 'POST',
-                credentials: 'include', headers: {
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
