@@ -5,8 +5,8 @@
     "main": "dist/index.js",
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-        "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
-        "prestart": "cd ../../packages/shared && tsc && cd ../../services/validation-service && npm run build",
+        "build": "cd ../../packages/shared && tsc && cd ../../services/validation-service && npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
+        "prestart": "npm run build",
         "start": "node dist/index.js",
         "test": "jest"
     },
