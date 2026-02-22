@@ -4,13 +4,13 @@ import { z } from 'zod';
 // REDIS CACHE
 // ============================================
 
-export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache';
+export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache.js';
 
 // ============================================
 // SKILL NORMALIZATION
 // ============================================
 
-export { normalizeSkillName, normalizeSkillList } from './skill-normalization';
+export { normalizeSkillName, normalizeSkillList } from './skill-normalization.js';
 
 // ============================================
 // AUTH SCHEMAS

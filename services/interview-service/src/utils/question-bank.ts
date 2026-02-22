@@ -89,9 +89,9 @@ async function fetchBankQuestions(
 ): Promise<BankQuestion[]> {
     // Cache bank questions — they are seeded/static data
     const cacheKey = `interview:bank:${jobRoleId || 'shared'}:${questionType || 'mixed'}:${difficulty}`;
-    let questions = await cacheGet<BankQuestion[]>(cacheKey);
+    let questions: BankQuestion[] | null = await cacheGet<BankQuestion[]>(cacheKey);
 
-    if (!questions) {
+    if (!questions || questions.length === 0) {
         const where: any = {
             isActive: true,
         };
@@ -110,7 +110,7 @@ async function fetchBankQuestions(
         }
 
         // Fetch more than needed so we can shuffle and pick
-        questions = await prisma.interviewBankQuestion.findMany({
+        const fetchedQuestions = await prisma.interviewBankQuestion.findMany({
             where,
             select: {
                 id: true,
@@ -120,11 +120,14 @@ async function fetchBankQuestions(
                 difficulty: true,
                 questionType: true,
             },
-        }) as BankQuestion[];
+        });
+
+        questions = fetchedQuestions as BankQuestion[];
 
         await cacheSet(cacheKey, questions, 3600); // 1 hour
     }
 
     // Shuffle and take the required count
-    return shuffle(questions).slice(0, count);
+    const finalQuestions = questions as BankQuestion[];
+    return shuffle<BankQuestion>(finalQuestions).slice(0, count);
 }
