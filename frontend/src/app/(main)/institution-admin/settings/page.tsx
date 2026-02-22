@@ -153,7 +153,7 @@ export default function InstitutionSettingsPage() {
 
     if (loading) {
         return (
-            <div className="text-white text-center py-20">
+            <div className="text-gray-900 dark:text-white text-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
                 Loading settings...
             </div>
@@ -163,12 +163,12 @@ export default function InstitutionSettingsPage() {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-white">Institution Settings</h1>
-                <p className="text-gray-400 mt-1">Manage your institution profile</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Institution Settings</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your institution profile</p>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 rounded-xl glass border border-white/5 space-y-6">
-                <div className="flex items-center gap-4 pb-6 border-b border-white/10">
+            <form onSubmit={handleSave} className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5 space-y-6">
+                <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-white/10">
                     <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
                         {logoUrl ? (
                             <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-xl object-cover" />
@@ -177,9 +177,9 @@ export default function InstitutionSettingsPage() {
                         )}
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-white">{settings?.name || "Your Institution"}</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{settings?.name || "Your Institution"}</h2>
                         {settings?.domain && (
-                            <p className="text-sm text-gray-400">Domain: {settings.domain}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Domain: {settings.domain}</p>
                         )}
                     </div>
                 </div>
@@ -198,41 +198,41 @@ export default function InstitutionSettingsPage() {
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             Institution Name
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             placeholder="Enter institution name"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             Logo URL
                         </label>
                         <input
                             type="url"
                             value={logoUrl}
                             onChange={(e) => setLogoUrl(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             placeholder="https://example.com/logo.svg"
                         />
                         <p className="text-xs text-gray-500 mt-1">Provide a URL to your institution&apos;s logo</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             Address
                         </label>
                         <textarea
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             rows={3}
-                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
                             placeholder="123 Campus Drive, City, Country"
                         />
                     </div>
@@ -260,14 +260,14 @@ export default function InstitutionSettingsPage() {
             </form>
 
             {/* Change Password Section */}
-            <form onSubmit={handlePasswordChange} className="p-6 rounded-xl glass border border-white/5 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+            <form onSubmit={handlePasswordChange} className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5 space-y-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-white/10">
                     <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
                         <Lock className="w-5 h-5 text-violet-400" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-white">Change Password</h2>
-                        <p className="text-sm text-gray-400">Update your account password</p>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Update your account password</p>
                     </div>
                 </div>
 
@@ -287,7 +287,7 @@ export default function InstitutionSettingsPage() {
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             Current Password
                         </label>
                         <div className="relative">
@@ -296,13 +296,13 @@ export default function InstitutionSettingsPage() {
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 required
-                                className="w-full px-4 py-3 pr-12 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                                className="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                                 placeholder="Enter current password"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                             >
                                 {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
@@ -310,7 +310,7 @@ export default function InstitutionSettingsPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             New Password
                         </label>
                         <div className="relative">
@@ -320,13 +320,13 @@ export default function InstitutionSettingsPage() {
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 required
                                 minLength={8}
-                                className="w-full px-4 py-3 pr-12 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                                className="w-full px-4 py-3 pr-12 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                                 placeholder="Min 8 characters"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                             >
                                 {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
@@ -334,7 +334,7 @@ export default function InstitutionSettingsPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             Confirm New Password
                         </label>
                         <input
@@ -342,7 +342,7 @@ export default function InstitutionSettingsPage() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                             placeholder="Confirm new password"
                         />
                     </div>

@@ -66,12 +66,12 @@ export default function PostJobPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center gap-4">
-                <Link href="/recruiter/jobs" className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                    <ArrowLeft className="w-5 h-5 text-gray-400" />
+                <Link href="/recruiter/jobs" className="p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
+                    <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Post a New Job</h1>
-                    <p className="text-gray-400">Create a job listing to find the perfect candidate</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Post a New Job</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Create a job listing to find the perfect candidate</p>
                 </div>
             </div>
 
@@ -79,31 +79,31 @@ export default function PostJobPage() {
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Job Title</label>
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Job Title</label>
                         <input
                             required
                             type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                             placeholder="e.g. Senior React Developer"
                             value={formData.title}
                             onChange={e => setFormData({ ...formData, title: e.target.value })}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Location</label>
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Location</label>
                         <input
                             required
                             type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                             placeholder="e.g. New York, NY"
                             value={formData.location}
                             onChange={e => setFormData({ ...formData, location: e.target.value })}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Work Type</label>
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Work Type</label>
                         <select
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 [&>option]:text-black"
+                            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 [&>option]:text-black"
                             value={formData.locationType}
                             onChange={e => setFormData({ ...formData, locationType: e.target.value })}
                         >
@@ -116,10 +116,10 @@ export default function PostJobPage() {
 
                 {/* Details */}
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Job Description</label>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Job Description</label>
                     <textarea
                         required
-                        className="w-full h-32 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 resize-none"
+                        className="w-full h-32 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 resize-none"
                         placeholder="Describe the role and responsibilities..."
                         value={formData.description}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -127,10 +127,10 @@ export default function PostJobPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Requirements (One per line)</label>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Requirements (One per line)</label>
                     <textarea
                         required
-                        className="w-full h-32 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 resize-none"
+                        className="w-full h-32 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 resize-none"
                         placeholder="- 5+ years of experience&#10;- Strong knowledge of React"
                         value={formData.requirements}
                         onChange={e => setFormData({ ...formData, requirements: e.target.value })}
@@ -138,11 +138,11 @@ export default function PostJobPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Required Skills (Comma separated)</label>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Required Skills (Comma separated)</label>
                     <input
                         required
                         type="text"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                         placeholder="React, TypeScript, Node.js"
                         value={formData.requiredSkills}
                         onChange={e => setFormData({ ...formData, requiredSkills: e.target.value })}
@@ -150,20 +150,20 @@ export default function PostJobPage() {
                 </div>
 
                 {/* Compensation & Experience */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200 dark:border-white/5">
                     <div className="space-y-4">
-                        <label className="text-sm font-medium text-gray-300">Salary Range (Annual USD)</label>
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Salary Range (Annual USD)</label>
                         <div className="flex gap-4">
                             <input
                                 type="number"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                 placeholder="Min"
                                 value={formData.salaryMin}
                                 onChange={e => setFormData({ ...formData, salaryMin: e.target.value })}
                             />
                             <input
                                 type="number"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                 placeholder="Max"
                                 value={formData.salaryMax}
                                 onChange={e => setFormData({ ...formData, salaryMax: e.target.value })}
@@ -172,18 +172,18 @@ export default function PostJobPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <label className="text-sm font-medium text-gray-300">Experience (Years)</label>
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Experience (Years)</label>
                         <div className="flex gap-4">
                             <input
                                 type="number"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                 placeholder="Min"
                                 value={formData.experienceMin}
                                 onChange={e => setFormData({ ...formData, experienceMin: e.target.value })}
                             />
                             <input
                                 type="number"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                 placeholder="Max"
                                 value={formData.experienceMax}
                                 onChange={e => setFormData({ ...formData, experienceMax: e.target.value })}
@@ -196,7 +196,7 @@ export default function PostJobPage() {
                 <div className="pt-6 flex justify-end gap-3">
                     <Link
                         href="/recruiter/jobs"
-                        className="px-6 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                        className="px-6 py-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                     >
                         Cancel
                     </Link>

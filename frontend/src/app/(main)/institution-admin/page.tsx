@@ -96,7 +96,7 @@ export default function InstitutionDashboard() {
     }, [user]);
 
     const getScoreColor = (score: number | null) => {
-        if (score === null) return "text-gray-400";
+        if (score === null) return "text-gray-500 dark:text-gray-400";
         if (score >= 80) return "text-emerald-400";
         if (score >= 60) return "text-amber-400";
         return "text-red-400";
@@ -162,14 +162,14 @@ export default function InstitutionDashboard() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                         Overview of your institution&apos;s student performance
                     </p>
                 </div>
                 <button
                     onClick={fetchDashboard}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -222,10 +222,10 @@ export default function InstitutionDashboard() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Activity Trend - Takes 2 columns */}
-                <div className="lg:col-span-2 p-6 rounded-xl glass border border-white/5">
+                <div className="lg:col-span-2 p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h2 className="text-lg font-semibold text-white">Activity Trend</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Activity Trend</h2>
                             <p className="text-sm text-gray-500">Interviews & signups over last 14 days</p>
                         </div>
                         <div className="flex items-center gap-4 text-xs">
@@ -279,8 +279,8 @@ export default function InstitutionDashboard() {
                 </div>
 
                 {/* Score Distribution */}
-                <div className="p-6 rounded-xl glass border border-white/5">
-                    <h2 className="text-lg font-semibold text-white mb-4">Score Distribution</h2>
+                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Score Distribution</h2>
                     {totalScored > 0 ? (
                         <>
                             <div className="h-40 flex items-center justify-center">
@@ -315,8 +315,8 @@ export default function InstitutionDashboard() {
                                 {scoreChartData.map((item) => (
                                     <div key={item.name} className="flex items-center gap-2 text-xs">
                                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></span>
-                                        <span className="text-gray-400">{item.name}</span>
-                                        <span className="text-white ml-auto">{item.value}</span>
+                                        <span className="text-gray-500 dark:text-gray-400">{item.name}</span>
+                                        <span className="text-gray-900 dark:text-white ml-auto">{item.value}</span>
                                     </div>
                                 ))}
                             </div>
@@ -332,9 +332,9 @@ export default function InstitutionDashboard() {
             {/* Three Column Info */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Top Performers */}
-                <div className="p-6 rounded-xl glass border border-white/5">
+                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-amber-400" />
                             Top Performers
                         </h2>
@@ -348,7 +348,7 @@ export default function InstitutionDashboard() {
                                 <Link
                                     key={student.id}
                                     href={`/institution-admin/students/${student.id}`}
-                                    className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-white/5 transition"
+                                    className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold relative">
                                         {student.avatarUrl ? (
@@ -364,7 +364,7 @@ export default function InstitutionDashboard() {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">{student.name}</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{student.name}</p>
                                         <p className="text-xs text-gray-500 truncate">{student.targetRole || "No role set"}</p>
                                     </div>
                                     <div className={`px-2 py-1 rounded text-xs font-semibold ${getScoreBg(student.averageScore)} ${getScoreColor(student.averageScore)}`}>
@@ -381,9 +381,9 @@ export default function InstitutionDashboard() {
                 </div>
 
                 {/* Target Roles */}
-                <div className="p-6 rounded-xl glass border border-white/5">
+                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             <Briefcase className="w-5 h-5 text-blue-400" />
                             Target Roles
                         </h2>
@@ -397,10 +397,10 @@ export default function InstitutionDashboard() {
                                 return (
                                     <div key={idx}>
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-sm text-gray-300 truncate">{role.roleName}</span>
+                                            <span className="text-sm text-gray-600 dark:text-gray-300 truncate">{role.roleName}</span>
                                             <span className="text-xs text-gray-500">{role.count}</span>
                                         </div>
-                                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-1.5 bg-white dark:bg-white/5 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full rounded-full ${colors[idx % colors.length]}`}
                                                 style={{ width: `${percentage}%` }}
@@ -418,9 +418,9 @@ export default function InstitutionDashboard() {
                 </div>
 
                 {/* Top Skills */}
-                <div className="p-6 rounded-xl glass border border-white/5">
+                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             <Code className="w-5 h-5 text-indigo-400" />
                             Popular Skills
                         </h2>
@@ -430,9 +430,9 @@ export default function InstitutionDashboard() {
                             {data.topSkills.map((skill, idx) => (
                                 <div
                                     key={idx}
-                                    className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm"
+                                    className="px-3 py-1.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm"
                                 >
-                                    <span className="text-gray-300">{skill.name}</span>
+                                    <span className="text-gray-600 dark:text-gray-300">{skill.name}</span>
                                     <span className="text-gray-500 ml-1.5 text-xs">({skill.count})</span>
                                 </div>
                             ))}
@@ -446,9 +446,9 @@ export default function InstitutionDashboard() {
             </div>
 
             {/* Recent Activity */}
-            <div className="p-6 rounded-xl glass border border-white/5">
+            <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                         <Zap className="w-5 h-5 text-emerald-400" />
                         Recent Activity
                     </h2>
@@ -462,7 +462,7 @@ export default function InstitutionDashboard() {
                             <Link
                                 key={activity.id}
                                 href={`/institution-admin/students/${activity.student.id}`}
-                                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition border border-transparent hover:border-white/10"
+                                className="p-4 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition border border-transparent hover:border-gray-300 dark:hover:border-white/10"
                             >
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-sm font-medium">
@@ -473,7 +473,7 @@ export default function InstitutionDashboard() {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">{activity.student.name || "Unknown"}</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{activity.student.name || "Unknown"}</p>
                                         <p className="text-xs text-gray-500 flex items-center gap-1">
                                             <Clock className="w-3 h-3" />
                                             {formatDate(activity.completedAt)}
@@ -482,8 +482,8 @@ export default function InstitutionDashboard() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-gray-400 mb-0.5">{activity.type} Interview</p>
-                                        <p className="text-sm text-gray-300 truncate">{activity.targetRole}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{activity.type} Interview</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{activity.targetRole}</p>
                                     </div>
                                     {activity.score !== null && (
                                         <div className={`px-2 py-1 rounded text-sm font-semibold ${getScoreBg(activity.score)} ${getScoreColor(activity.score)}`}>
@@ -536,10 +536,10 @@ function StatCard({
     };
 
     return (
-        <div className={`p-4 rounded-xl bg-gradient-to-br ${colorClasses[color]} border border-white/5`}>
+        <div className={`p-4 rounded-xl bg-gradient-to-br ${colorClasses[color]} border border-gray-200 dark:border-white/5`}>
             <Icon className={`w-5 h-5 ${iconColors[color]} mb-2`} />
-            <p className="text-2xl font-bold text-white">{value}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
             {subtitle && <p className="text-[10px] text-gray-500 mt-0.5">{subtitle}</p>}
         </div>
     );

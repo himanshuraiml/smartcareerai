@@ -1,22 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
-    Search,
-    MoreVertical,
-    Shield,
-    Trash2,
-    CheckCircle,
-    XCircle,
-    Mail,
-    RefreshCw,
-    Download,
-    User as UserIcon
+    Search, Shield, Trash2, CheckCircle, XCircle,
+    RefreshCw, Download, Users, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
 interface User {
     id: string;
@@ -25,6 +16,27 @@ interface User {
     role: "USER" | "ADMIN" | "RECRUITER" | "INSTITUTION_ADMIN";
     isVerified: boolean;
     createdAt: string;
+}
+
+const ROLE_STYLES: Record<string, string> = {
+    ADMIN: "bg-rose-500/15 text-rose-500 dark:text-rose-400",
+    INSTITUTION_ADMIN: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    RECRUITER: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+    USER: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+};
+
+const AVATAR_GRADIENTS = [
+    "from-indigo-500 to-violet-500",
+    "from-emerald-500 to-teal-500",
+    "from-rose-500 to-pink-500",
+    "from-amber-500 to-orange-500",
+    "from-cyan-500 to-sky-500",
+];
+
+function getAvatarGradient(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
 
 export default function UserManagementPage() {
@@ -42,179 +54,128 @@ export default function UserManagementPage() {
         setLoading(true);
         try {
             const params = new URLSearchParams({
-                page: page.toString(),
-                limit: "10",
+                page: page.toString(), limit: "10",
                 ...(search && { search }),
                 ...(roleFilter !== "ALL" && { role: roleFilter }),
                 ...(institutionFilter !== "ALL" && { institution: institutionFilter })
             });
-
             const response = await authFetch(`/admin/users?${params}`);
-
             if (response.ok) {
                 const data = await response.json();
                 setUsers(data.data);
                 setTotalPages(data.pagination.totalPages);
             }
-        } catch (error) {
-            console.error("Failed to fetch users", error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
     }, [user, page, search, roleFilter, institutionFilter]);
 
     useEffect(() => {
-        if (user) {
-            // Fetch institutions
-            const fetchInstitutions = async () => {
-                try {
-                    const response = await authFetch('/admin/institutions');
-                    if (response.ok) {
-                        const data = await response.json();
-                        setInstitutions(data.data);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch institutions", error);
-                }
-            };
-            fetchInstitutions();
-        }
+        if (!user) return;
+        authFetch('/admin/institutions').then(async r => {
+            if (r.ok) setInstitutions((await r.json()).data);
+        });
     }, [user]);
 
     useEffect(() => {
-        if (user) {
-            const timer = setTimeout(() => {
-                fetchUsers();
-            }, 300); // Debounce search
-            return () => clearTimeout(timer);
-        }
-    }, [fetchUsers, search, roleFilter, institutionFilter, user]); // Trigger on filter change
+        if (!user) return;
+        const t = setTimeout(() => fetchUsers(), 300);
+        return () => clearTimeout(t);
+    }, [fetchUsers, search, roleFilter, institutionFilter, user]);
 
     const handleUpdateRole = async (userId: string, newRole: string) => {
-        if (!confirm(`Are you sure you want to change user role to ${newRole}?`)) return;
-
-        try {
-            const response = await authFetch(`/admin/users/${userId}/role`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ role: newRole })
-            });
-
-            if (response.ok) {
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error("Failed to update role", error);
-        }
+        if (!confirm(`Change role to ${newRole}?`)) return;
+        const res = await authFetch(`/admin/users/${userId}/role`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: newRole })
+        });
+        if (res.ok) fetchUsers();
     };
 
     const handleResetUser = async (userId: string) => {
-        if (!confirm("Are you sure you want to RESET this user's progress? This will delete all resumes, test attempts, and interviews. This cannot be undone.")) return;
-
-        try {
-            const response = await authFetch(`/admin/users/${userId}/reset`, {
-                method: "POST"
-            });
-
-            if (response.ok) {
-                alert("User progress has been reset successfully.");
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error("Failed to reset user", error);
-        }
+        if (!confirm("Reset this user's progress? This will delete all resumes, attempts, and interviews. Cannot be undone.")) return;
+        const res = await authFetch(`/admin/users/${userId}/reset`, { method: "POST" });
+        if (res.ok) { alert("Reset successful."); fetchUsers(); }
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-
-        try {
-            const response = await authFetch(`/admin/users/${userId}`, {
-                method: "DELETE"
-            });
-
-            if (response.ok) {
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error("Failed to delete user", error);
-        }
+        if (!confirm("Delete this user? Cannot be undone.")) return;
+        const res = await authFetch(`/admin/users/${userId}`, { method: "DELETE" });
+        if (res.ok) fetchUsers();
     };
 
-    const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
-        const action = currentStatus ? "unverify" : "verify";
-        if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    const handleToggleVerification = async (userId: string, current: boolean) => {
+        if (!confirm(`${current ? "Unverify" : "Verify"} this user?`)) return;
+        const res = await authFetch(`/admin/users/${userId}/verify`, { method: "PUT" });
+        if (res.ok) fetchUsers();
+    };
 
+    const handleExport = async () => {
         try {
-            const response = await authFetch(`/admin/users/${userId}/verify`, {
-                method: "PUT"
+            const params = new URLSearchParams({
+                ...(search && { search }),
+                ...(roleFilter !== "ALL" && { role: roleFilter }),
+                ...(institutionFilter !== "ALL" && { institution: institutionFilter })
             });
-
-            if (response.ok) {
-                fetchUsers();
+            const res = await authFetch(`/admin/users/export?${params}`);
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `users_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
             }
-        } catch (error) {
-            console.error("Failed to toggle verification", error);
-        }
+        } catch (e) { console.error(e); }
     };
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-white">User Management</h1>
-                <div className="flex justify-between items-center mt-1">
-                    <p className="text-gray-400">Manage users, roles, and permissions</p>
-                    <button
-                        onClick={async () => {
-                            try {
-                                const params = new URLSearchParams({
-                                    ...(search && { search }),
-                                    ...(roleFilter !== "ALL" && { role: roleFilter }),
-                                    ...(institutionFilter !== "ALL" && { institution: institutionFilter })
-                                });
-
-                                const response = await authFetch(`/admin/users/export?${params}`);
-                                if (response.ok) {
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `users_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    a.remove();
-                                } else {
-                                    console.error('Export failed');
-                                }
-                            } catch (error) {
-                                console.error('Export error', error);
-                            }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-medium"
-                    >
-                        <Download className="w-4 h-4" /> Export Users
-                    </button>
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between flex-wrap gap-4"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                        <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-gray-900 dark:text-white">User Management</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Manage users, roles, and permissions</p>
+                    </div>
                 </div>
-            </div>
+                <button
+                    onClick={handleExport}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 hover:opacity-90 transition-opacity"
+                >
+                    <Download className="w-4 h-4" /> Export Users
+                </button>
+            </motion.div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.07 }}
+                className="flex flex-col md:flex-row gap-3"
+            >
                 <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search users by name or email..."
+                        placeholder="Search by name or email…"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500"
+                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all text-sm"
                     />
                 </div>
                 <select
                     value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-900"
+                    onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+                    className="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm [&>option]:bg-white dark:[&>option]:bg-gray-900"
                 >
                     <option value="ALL">All Roles</option>
                     <option value="USER">User</option>
@@ -222,137 +183,146 @@ export default function UserManagementPage() {
                     <option value="INSTITUTION_ADMIN">Institution Admin</option>
                     <option value="ADMIN">Admin</option>
                 </select>
-
                 <select
                     value={institutionFilter}
-                    onChange={(e) => setInstitutionFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-900"
+                    onChange={(e) => { setInstitutionFilter(e.target.value); setPage(1); }}
+                    className="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm [&>option]:bg-white dark:[&>option]:bg-gray-900"
                 >
                     <option value="ALL">All Institutions</option>
-                    {institutions.map((inst) => (
-                        <option key={inst.id} value={inst.id}>
-                            {inst.name}
-                        </option>
-                    ))}
+                    {institutions.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
-            </div>
+            </motion.div>
 
-            {/* Users Table */}
-            <div className="glass rounded-xl overflow-hidden border border-white/5">
+            {/* Table */}
+            <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 }}
+                className="rounded-2xl border border-gray-200 dark:border-white/8 bg-white dark:bg-gray-800/50 overflow-hidden"
+            >
                 <table className="w-full text-left">
-                    <thead className="bg-white/5 text-gray-400 text-sm">
-                        <tr>
-                            <th className="p-4 font-medium">User</th>
-                            <th className="p-4 font-medium">Role</th>
-                            <th className="p-4 font-medium">Status</th>
-                            <th className="p-4 font-medium">Joined</th>
-                            <th className="p-4 font-medium text-right">Actions</th>
+                    <thead>
+                        <tr className="border-b border-gray-100 dark:border-white/8">
+                            {["User", "Role", "Status", "Joined", "Actions"].map((h, i) => (
+                                <th key={h} className={`px-5 py-3.5 text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase ${i === 4 ? "text-right" : ""}`}>
+                                    {h}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                         {loading ? (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-gray-400">Loading users...</td>
+                                <td colSpan={5} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                                        <div className="w-7 h-7 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                        <span className="text-sm">Loading users…</span>
+                                    </div>
+                                </td>
                             </tr>
                         ) : users.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-gray-400">No users found</td>
+                                <td colSpan={5} className="py-16 text-center">
+                                    <Users className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">No users found</p>
+                                </td>
                             </tr>
                         ) : (
-                            users.map((user) => (
-                                <tr key={user.id} className="hover:bg-white/5 transition">
-                                    <td className="p-4">
+                            users.map((u, idx) => (
+                                <motion.tr
+                                    key={u.id}
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.03 }}
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
+                                >
+                                    <td className="px-5 py-3.5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-white font-medium">
-                                                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                                            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getAvatarGradient(u.email)} flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
+                                                {(u.name || u.email).charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{user.name || 'No Name'}</p>
-                                                <p className="text-gray-400 text-sm">{user.email}</p>
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{u.name || "—"}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="px-5 py-3.5">
                                         <select
-                                            value={user.role}
-                                            onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                                            className={`px-3 py-1 rounded text-xs font-bold border border-transparent focus:border-white/20 focus:outline-none cursor-pointer ${user.role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
-                                                user.role === 'INSTITUTION_ADMIN' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                    user.role === 'RECRUITER' ? 'bg-indigo-500/20 text-indigo-400' :
-                                                        'bg-blue-500/20 text-blue-400'
-                                                } [&>option]:bg-gray-900 [&>option]:text-white`}
+                                            value={u.role}
+                                            onChange={(e) => handleUpdateRole(u.id, e.target.value)}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold border-none focus:ring-2 focus:ring-indigo-500/30 focus:outline-none cursor-pointer ${ROLE_STYLES[u.role]} [&>option]:bg-white dark:[&>option]:bg-gray-900 dark:[&>option]:text-white`}
                                         >
                                             <option value="USER">USER</option>
                                             <option value="RECRUITER">RECRUITER</option>
-                                            <option value="INSTITUTION_ADMIN">INSTITUTION ADMIN</option>
+                                            <option value="INSTITUTION_ADMIN">INST. ADMIN</option>
                                             <option value="ADMIN">ADMIN</option>
                                         </select>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="px-5 py-3.5">
                                         <button
-                                            onClick={() => handleToggleVerification(user.id, user.isVerified)}
-                                            className={`flex items-center gap-1 text-sm px-2 py-1 rounded-lg transition hover:bg-white/10 ${user.isVerified
-                                                ? 'text-green-400 hover:text-green-300'
-                                                : 'text-gray-400 hover:text-yellow-400'
+                                            onClick={() => handleToggleVerification(u.id, u.isVerified)}
+                                            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${u.isVerified
+                                                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+                                                : "text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/50 hover:bg-yellow-500/10 hover:text-yellow-600"
                                                 }`}
-                                            title={user.isVerified ? "Click to unverify" : "Click to verify"}
                                         >
-                                            {user.isVerified ? (
-                                                <><CheckCircle className="w-4 h-4" /> Verified</>
-                                            ) : (
-                                                <><XCircle className="w-4 h-4" /> Unverified</>
-                                            )}
+                                            {u.isVerified
+                                                ? <><CheckCircle className="w-3.5 h-3.5" /> Verified</>
+                                                : <><XCircle className="w-3.5 h-3.5" /> Unverified</>
+                                            }
                                         </button>
                                     </td>
-                                    <td className="p-4 text-gray-400 text-sm">
-                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    <td className="px-5 py-3.5 text-xs text-gray-500 dark:text-gray-400">
+                                        {new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </td>
-                                    <td className="p-4 text-right">
-                                        <button
-                                            onClick={() => handleResetUser(user.id)}
-                                            className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition"
-                                            title="Reset User Progress"
-                                        >
-                                            <RefreshCw className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteUser(user.id)}
-                                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                                            title="Delete User"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    <td className="px-5 py-3.5 text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <button
+                                                onClick={() => handleResetUser(u.id)}
+                                                title="Reset Progress"
+                                                className="p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                            >
+                                                <RefreshCw className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(u.id)}
+                                                title="Delete User"
+                                                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </td>
-                                </tr>
+                                </motion.tr>
                             ))
                         )}
                     </tbody>
                 </table>
-            </div>
+            </motion.div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6">
+                <div className="flex items-center justify-center gap-3">
                     <button
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-4 py-2 rounded-lg bg-white/5 text-white disabled:opacity-50 hover:bg-white/10"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/8 transition-colors"
                     >
-                        Previous
+                        <ChevronLeft className="w-4 h-4" /> Prev
                     </button>
-                    <span className="px-4 py-2 text-gray-400">Page {page} of {totalPages}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 px-2">
+                        Page <span className="font-semibold text-gray-900 dark:text-white">{page}</span> of {totalPages}
+                    </span>
                     <button
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-4 py-2 rounded-lg bg-white/5 text-white disabled:opacity-50 hover:bg-white/10"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/8 transition-colors"
                     >
-                        Next
+                        Next <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
             )}
         </div>
     );
 }
-
-
-

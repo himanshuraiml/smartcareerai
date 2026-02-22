@@ -127,16 +127,16 @@ export default function CreditPurchaseModal({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10 relative">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-gray-200 dark:border-white/10 relative">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-xl font-bold text-white mb-2">Buy {creditType.replace('_', ' ')} Credits</h2>
-                <p className="text-gray-400 text-sm mb-6">Select a bundle to top up your account</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Buy {creditType.replace('_', ' ')} Credits</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Select a bundle to top up your account</p>
 
                 <div className="space-y-4">
                     {bundles.map((bundle) => (
@@ -144,14 +144,14 @@ export default function CreditPurchaseModal({
                             key={bundle.quantity}
                             onClick={() => handlePurchase(bundle.quantity)}
                             disabled={loading}
-                            className="w-full p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-indigo-500/50 transition flex items-center justify-between group"
+                            className="w-full p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 hover:border-indigo-500/50 transition flex items-center justify-between group"
                         >
                             <div className="text-left">
-                                <p className="text-white font-medium">{bundle.quantity} Credits</p>
+                                <p className="text-gray-900 dark:text-white font-medium">{bundle.quantity} Credits</p>
                                 <span className="text-xs text-green-400">{bundle.savings} Savings</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-xl font-bold text-white">₹{bundle.price}</span>
+                                <span className="text-xl font-bold text-gray-900 dark:text-white">₹{bundle.price}</span>
                                 {loading ? (
                                     <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                                 ) : (

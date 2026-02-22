@@ -79,8 +79,8 @@ export function GaugeChart({ value, label, color = '#14b8a6' }: { value: number;
                 <circle cx="100" cy="100" r="8" fill={color} />
             </svg>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                <p className="text-3xl font-bold text-white">{percentage}%</p>
-                <p className="text-gray-400 text-sm">{label}</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{percentage}%</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{label}</p>
             </div>
         </div>
     );
@@ -189,8 +189,8 @@ export function BarChart({ data, labels, color = '#14b8a6' }: { data: number[]; 
         <div className="space-y-2">
             {data.map((value, i) => (
                 <div key={i} className="flex items-center gap-3">
-                    <span className="text-gray-400 text-xs w-8">{labels[i]}</span>
-                    <div className="flex-1 h-6 bg-gray-800/50 rounded-full overflow-hidden">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs w-8">{labels[i]}</span>
+                    <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-800/50 rounded-full overflow-hidden">
                         <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
@@ -199,7 +199,7 @@ export function BarChart({ data, labels, color = '#14b8a6' }: { data: number[]; 
                             }}
                         />
                     </div>
-                    <span className="text-white text-sm font-medium w-8 text-right">{value}</span>
+                    <span className="text-gray-900 dark:text-white text-sm font-medium w-8 text-right">{value}</span>
                 </div>
             ))}
         </div>
@@ -209,9 +209,9 @@ export function BarChart({ data, labels, color = '#14b8a6' }: { data: number[]; 
 // Metric Card Component
 export function MetricCard({ label, value, subLabel }: { label: string; value: number; subLabel?: string }) {
     return (
-        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
-            <p className="text-2xl font-bold text-white">{value}</p>
+        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+            <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
             {subLabel && <p className="text-gray-500 text-xs mt-1">{subLabel}</p>}
         </div>
     );
@@ -222,7 +222,7 @@ export function SkillTag({ skill, checked = false }: { skill: string; checked?: 
     return (
         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs ${checked
             ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-            : 'bg-gray-800 text-gray-400 border border-white/10'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10'
             }`}>
             {checked && <span>✓</span>}
             {skill}
@@ -257,8 +257,8 @@ export function PerformanceBreakdown({
 
     return (
         <div className="p-6 rounded-2xl glass">
-            <h2 className="text-xl font-bold text-white mb-6">Performance Breakdown</h2>
-            <p className="text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Performance Breakdown</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Score Card */}
@@ -276,9 +276,9 @@ export function PerformanceBreakdown({
 
                 {/* Recruiter Perspective & Knowledge */}
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                        <h3 className="text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
-                        <div className="text-gray-400 text-sm prose prose-sm prose-invert max-w-none
+                    <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                        <h3 className="text-gray-900 dark:text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm prose prose-sm prose-invert max-w-none
                                        prose-p:my-2 prose-p:leading-relaxed
                                        prose-strong:text-white prose-strong:font-semibold
                                        prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
@@ -290,18 +290,18 @@ export function PerformanceBreakdown({
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <h3 className="text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
-                            <p className="text-gray-400 text-sm">
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">
                                 {knowledgeScore > 0
                                     ? `Score: ${knowledgeScore}%`
                                     : 'No evidence of technical understanding or domain knowledge could be evaluated.'}
                             </p>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <h3 className="text-white font-medium mb-2">Areas of Improvement</h3>
-                            <ul className="text-gray-400 text-sm space-y-1">
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Areas of Improvement</h3>
+                            <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
                                 {areasOfImprovement.map((area, i) => (
                                     <li key={i} className="flex items-start gap-2">
                                         <span className="text-teal-400">•</span>
@@ -331,8 +331,8 @@ export function QuestionFeedbackPanel({
 
     return (
         <div className="p-6 rounded-2xl glass">
-            <h2 className="text-xl font-bold text-white mb-2">Question wise feedback</h2>
-            <p className="text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Question wise feedback</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
 
             {/* Question Tabs */}
             <div className="flex flex-wrap gap-2 mb-6">
@@ -343,8 +343,8 @@ export function QuestionFeedbackPanel({
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedIndex
                             ? 'bg-teal-500 text-white'
                             : questions[i].userAnswer
-                                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                : 'bg-gray-800/50 text-gray-500'
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                : 'bg-gray-100 dark:bg-gray-800/50 text-gray-500'
                             }`}
                     >
                         {i + 1}
@@ -356,14 +356,14 @@ export function QuestionFeedbackPanel({
             {selectedQuestion && (
                 <div className="space-y-6">
                     {/* Question */}
-                    <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                        <p className="text-white font-medium">{selectedQuestion.questionText}</p>
+                    <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                        <p className="text-gray-900 dark:text-white font-medium">{selectedQuestion.questionText}</p>
                     </div>
 
                     {/* Skills Assessed */}
                     {selectedQuestion.skillsAssessed && selectedQuestion.skillsAssessed.length > 0 && (
                         <div>
-                            <p className="text-gray-400 text-sm mb-2">Skill Assessed</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Skill Assessed</p>
                             <div className="flex flex-wrap gap-2">
                                 {selectedQuestion.skillsAssessed.map((skill, i) => (
                                     <SkillTag key={i} skill={skill} />
@@ -374,9 +374,9 @@ export function QuestionFeedbackPanel({
 
                     {/* Your Answer */}
                     <div>
-                        <p className="text-gray-400 text-sm mb-2">Your Answer</p>
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <p className="text-gray-300">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Your Answer</p>
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <p className="text-gray-600 dark:text-gray-300">
                                 {selectedQuestion.userAnswer || 'No answer recorded'}
                             </p>
                         </div>
@@ -385,9 +385,9 @@ export function QuestionFeedbackPanel({
                     {/* Ideal Answer */}
                     {selectedQuestion.idealAnswer && (
                         <div>
-                            <p className="text-gray-400 text-sm mb-2">Ideal Answer</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Ideal Answer</p>
                             <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/20">
-                                <p className="text-gray-300">{selectedQuestion.idealAnswer}</p>
+                                <p className="text-gray-600 dark:text-gray-300">{selectedQuestion.idealAnswer}</p>
                                 {selectedQuestion.skillsAssessed && (
                                     <div className="flex flex-wrap gap-2 mt-3">
                                         {selectedQuestion.skillsAssessed.map((skill, i) => (
@@ -402,7 +402,7 @@ export function QuestionFeedbackPanel({
                     {/* Verbal Fluency Metrics */}
                     {selectedQuestion.metrics && (
                         <div>
-                            <p className="text-gray-400 text-sm mb-3">Verbal Fluency</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Verbal Fluency</p>
                             <div className="grid grid-cols-5 gap-3">
                                 <MetricCard label="Pace" value={selectedQuestion.metrics.pace} />
                                 <MetricCard label="Tone" value={selectedQuestion.metrics.tone} />
@@ -416,8 +416,8 @@ export function QuestionFeedbackPanel({
                     {/* Improvement Tips */}
                     {selectedQuestion.improvementTips && selectedQuestion.improvementTips.length > 0 && (
                         <div>
-                            <p className="text-gray-400 text-sm mb-2">How can You Improve?</p>
-                            <ul className="text-gray-400 text-sm space-y-1">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">How can You Improve?</p>
+                            <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
                                 {selectedQuestion.improvementTips.map((tip, i) => (
                                     <li key={i} className="flex items-start gap-2">
                                         <span className="text-teal-400">•</span>

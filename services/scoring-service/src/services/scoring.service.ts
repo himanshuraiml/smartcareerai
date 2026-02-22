@@ -5,6 +5,18 @@ import { analyzeWithGemini } from '../utils/gemini';
 import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
 import { cacheGet, cacheSet, normalizeSkillList } from '@smartcareer/shared';
 
+interface ScoreDeduction {
+    category: string;
+    points: number;
+    reason: string;
+}
+
+interface IndustryBenchmark {
+    estimatedPercentile: number;
+    averageScoreForRole: number;
+    competitiveLevel: string;
+}
+
 interface ATSAnalysisResult {
     overallScore: number;
     keywordMatchPercent: number;
@@ -15,6 +27,10 @@ interface ATSAnalysisResult {
     missingKeywords: string[];
     formattingIssues: string[];
     suggestions: string[];
+    scoreDeductions: ScoreDeduction[];
+    scoreExplanation: string;
+    industryBenchmark: IndustryBenchmark;
+    transparencyNote: string;
 }
 
 export class ScoringService {
@@ -179,6 +195,14 @@ export class ScoringService {
                 missingKeywords: result.missingKeywords || [],
                 formattingIssues: result.formattingIssues || [],
                 suggestions: result.suggestions || [],
+                scoreDeductions: Array.isArray(result.scoreDeductions) ? result.scoreDeductions : [],
+                scoreExplanation: result.scoreExplanation || 'Score breakdown not available.',
+                industryBenchmark: result.industryBenchmark || {
+                    estimatedPercentile: 50,
+                    averageScoreForRole: 60,
+                    competitiveLevel: 'average',
+                },
+                transparencyNote: result.transparencyNote || 'ATS scores vary across platforms (LinkedIn, Indeed, Workday) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
             };
         } catch (error) {
             logger.error('LLM analysis failed', error);
@@ -269,20 +293,73 @@ export class ScoringService {
             }
         }
 
+        const overallScore = Math.round((keywordMatchPercent + formattingScore) / 2);
+        const experienceScore = text.includes('experience') ? 70 : 40;
+        const educationScore = text.includes('education') || text.includes('degree') ? 70 : 40;
+
+        // Generate transparency: score deductions
+        const scoreDeductions: ScoreDeduction[] = [];
+        if (missingKeywords.length > 0) {
+            scoreDeductions.push({
+                category: 'Keywords',
+                points: Math.round(100 - keywordMatchPercent),
+                reason: `Missing ${missingKeywords.length} key skills: ${missingKeywords.slice(0, 3).join(', ')}${missingKeywords.length > 3 ? '...' : ''}`,
+            });
+        }
+        if (formattingIssues.length > 0) {
+            scoreDeductions.push({
+                category: 'Formatting',
+                points: 100 - formattingScore,
+                reason: formattingIssues.join('; '),
+            });
+        }
+        if (experienceScore < 70) {
+            scoreDeductions.push({
+                category: 'Experience',
+                points: 30,
+                reason: 'No clear work experience section detected in resume',
+            });
+        }
+        if (educationScore < 70) {
+            scoreDeductions.push({
+                category: 'Education',
+                points: 30,
+                reason: 'No clear education section detected in resume',
+            });
+        }
+
+        // Generate transparency: explanation
+        const topIssues = scoreDeductions.slice(0, 2).map(d => d.reason).join('. ');
+        const scoreExplanation = `Your resume scored ${overallScore}/100 for ${jobRole}. ${topIssues ? `Key areas for improvement: ${topIssues}.` : 'The resume covers the main requirements well.'}`;
+
+        // Generate transparency: industry benchmark
+        const competitiveLevel = overallScore >= 80 ? 'excellent' : overallScore >= 65 ? 'above_average' : overallScore >= 45 ? 'average' : 'below_average';
+        const industryBenchmark: IndustryBenchmark = {
+            estimatedPercentile: Math.min(95, Math.max(5, overallScore + Math.round((overallScore - 50) * 0.3))),
+            averageScoreForRole: 58,
+            competitiveLevel,
+        };
+
         return {
-            overallScore: Math.round((keywordMatchPercent + formattingScore) / 2),
+            overallScore,
             keywordMatchPercent: Math.round(keywordMatchPercent),
             formattingScore,
-            experienceScore: text.includes('experience') ? 70 : 40,
-            educationScore: text.includes('education') || text.includes('degree') ? 70 : 40,
+            experienceScore,
+            educationScore,
             matchedKeywords,
             missingKeywords,
             formattingIssues,
-            suggestions: suggestions.slice(0, 5), // Max 5 suggestions
+            suggestions: suggestions.slice(0, 5),
+            scoreDeductions,
+            scoreExplanation,
+            industryBenchmark,
+            transparencyNote: 'ATS scores vary across platforms (LinkedIn, Indeed, Workday) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
         };
     }
 
     private formatScore(score: any) {
+        // Extract transparency data from rawAnalysis if available
+        const raw = score.rawAnalysis || {};
         return {
             id: score.id,
             resumeId: score.resumeId,
@@ -296,6 +373,11 @@ export class ScoringService {
             missingKeywords: score.missingKeywords,
             formattingIssues: score.formattingIssues,
             suggestions: score.suggestions,
+            // Transparency fields
+            scoreDeductions: raw.scoreDeductions || [],
+            scoreExplanation: raw.scoreExplanation || null,
+            industryBenchmark: raw.industryBenchmark || null,
+            transparencyNote: raw.transparencyNote || 'ATS scores vary across platforms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
             createdAt: score.createdAt.toISOString(),
         };
     }

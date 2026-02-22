@@ -9,8 +9,8 @@ export default function RecruiterSettingsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-white">Settings</h1>
-                <p className="text-gray-400 mt-1">Manage your account and preferences</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your account and preferences</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6">
@@ -26,8 +26,8 @@ export default function RecruiterSettingsPage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === tab.id
-                                ? "bg-white/10 text-white font-medium"
-                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                ? "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white font-medium"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white dark:bg-white/5"
                                 }`}
                         >
                             <tab.icon className="w-5 h-5" />
@@ -40,15 +40,15 @@ export default function RecruiterSettingsPage() {
                 <div className="flex-1 glass rounded-xl p-6 lg:p-8">
                     {activeTab === 'account' && (
                         <div className="space-y-6">
-                            <h2 className="text-xl font-bold text-white mb-6">Account Information</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Account Information</h2>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
-                                    <input type="text" defaultValue="John Recruiter" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white" />
+                                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Full Name</label>
+                                    <input type="text" defaultValue="John Recruiter" className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
-                                    <input type="email" defaultValue="recruiter@techhunters.io" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white" />
+                                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Email Address</label>
+                                    <input type="email" defaultValue="recruiter@techhunters.io" className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white" />
                                 </div>
                             </div>
                         </div>

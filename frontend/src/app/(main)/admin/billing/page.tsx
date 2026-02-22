@@ -404,80 +404,62 @@ export default function AdminBillingPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-white">Billing Management</h1>
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between flex-wrap gap-4"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                        <CreditCard className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-gray-900 dark:text-white">Billing Management</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Plans, pricing, and billing settings</p>
+                    </div>
+                </div>
                 <button
                     onClick={() => loadData()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/8 transition-colors"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
                 </button>
-            </div>
+            </motion.div>
 
             {/* Stats */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl glass border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                <Users className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{stats.totalSubscriptions}</p>
-                                <p className="text-sm text-gray-400">Total Subscriptions</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                                <CheckCircle className="w-5 h-5 text-green-400" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{stats.activeSubscriptions}</p>
-                                <p className="text-sm text-gray-400">Active Subscriptions</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                <Package className="w-5 h-5 text-blue-400" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{plans.length}</p>
-                                <p className="text-sm text-gray-400">Total Plans</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                                <TrendingUp className="w-5 h-5 text-yellow-400" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{stats.totalCreditsPurchased}</p>
-                                <p className="text-sm text-gray-400">Credits Purchased</p>
-                            </div>
-                        </div>
-                    </div>
+                    {[
+                        { label: 'Total Subscriptions', value: stats.totalSubscriptions, icon: <Users className="w-4 h-4 text-indigo-400" />, bg: 'bg-indigo-500/15' },
+                        { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: <CheckCircle className="w-4 h-4 text-emerald-400" />, bg: 'bg-emerald-500/15' },
+                        { label: 'Total Plans', value: plans.length, icon: <Package className="w-4 h-4 text-blue-400" />, bg: 'bg-blue-500/15' },
+                        { label: 'Credits Purchased', value: stats.totalCreditsPurchased, icon: <TrendingUp className="w-4 h-4 text-amber-400" />, bg: 'bg-amber-500/15' },
+                    ].map((s, i) => (
+                        <motion.div key={s.label}
+                            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.06 }}
+                            className="rounded-2xl border border-gray-200 dark:border-white/8 bg-white dark:bg-gray-800/50 p-5"
+                        >
+                            <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-3`}>{s.icon}</div>
+                            <p className="text-2xl font-black text-gray-900 dark:text-white">{s.value}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.label}</p>
+                        </motion.div>
+                    ))}
                 </div>
             )}
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-white/10 pb-2">
+            <div className="flex gap-1.5 p-1 rounded-xl bg-gray-100 dark:bg-gray-800/50 w-fit">
                 {[
-                    { id: 'plans', label: 'Subscription Plans', icon: Package },
+                    { id: 'plans', label: 'Plans', icon: Package },
                     { id: 'credits', label: 'Credit Pricing', icon: CreditCard },
                     { id: 'settings', label: 'Settings', icon: Settings }
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                            ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                            ? 'bg-white dark:bg-gray-700/60 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -493,20 +475,18 @@ export default function AdminBillingPage() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${toast.type === 'success'
-                            ? 'bg-green-500/20 border border-green-500/30'
-                            : 'bg-red-500/20 border border-red-500/30'
+                        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur-md ${toast.type === 'success'
+                                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400'
                             }`}
                     >
                         {toast.type === 'success' ? (
-                            <CheckCircle className="w-5 h-5 text-green-400" />
+                            <CheckCircle className="w-5 h-5" />
                         ) : (
-                            <AlertCircle className="w-5 h-5 text-red-400" />
+                            <AlertCircle className="w-5 h-5" />
                         )}
-                        <span className={toast.type === 'success' ? 'text-green-300' : 'text-red-300'}>
-                            {toast.message}
-                        </span>
-                        <button onClick={() => setToast(null)} className="text-gray-400 hover:text-white ml-2">
+                        <span className="text-sm font-medium">{toast.message}</span>
+                        <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
                             <X className="w-4 h-4" />
                         </button>
                     </motion.div>
@@ -514,332 +494,337 @@ export default function AdminBillingPage() {
             </AnimatePresence>
 
             {/* Content */}
-            {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-                </div>
-            ) : (
-                <>
-                    {/* Plans Tab */}
-                    {activeTab === 'plans' && (
-                        <div className="space-y-4">
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={() => {
-                                        setEditingPlan(null);
-                                        resetPlanForm();
-                                        setShowPlanModal(true);
-                                    }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    New Plan
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {plans.map((plan) => (
-                                    <div
-                                        key={plan.id}
-                                        className={`p-5 rounded-xl glass border transition-colors ${plan.isActive ? 'border-white/10' : 'border-red-500/30 opacity-60'
-                                            }`}
+            {
+                loading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                    </div>
+                ) : (
+                    <>
+                        {/* Plans Tab */}
+                        {activeTab === 'plans' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => {
+                                            setEditingPlan(null);
+                                            resetPlanForm();
+                                            setShowPlanModal(true);
+                                        }}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90"
                                     >
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-semibold text-white">{plan.displayName}</h3>
-                                                    {!plan.isActive && (
-                                                        <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
-                                                            Inactive
+                                        <Plus className="w-4 h-4" />
+                                        New Plan
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {plans.map((plan, idx) => (
+                                        <motion.div
+                                            key={plan.id}
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.06 }}
+                                            className={`p-5 rounded-2xl border transition-colors bg-white dark:bg-gray-800/50 ${plan.isActive ? 'border-gray-200 dark:border-white/8 hover:shadow-md dark:hover:shadow-indigo-500/5' : 'border-rose-500/30 opacity-55'
+                                                }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-base font-bold text-gray-900 dark:text-white">{plan.displayName}</h3>
+                                                        {!plan.isActive && (
+                                                            <span className="px-2 py-0.5 rounded-full text-xs bg-rose-500/15 text-rose-500 dark:text-rose-400 font-medium">
+                                                                Inactive
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 font-mono mt-0.5">{plan.name}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleTogglePlanActive(plan)}
+                                                        className={`p-2 rounded-lg transition-colors ${plan.isActive
+                                                            ? 'text-green-400 hover:bg-green-500/10'
+                                                            : 'text-red-400 hover:bg-red-500/10'
+                                                            }`}
+                                                        title={plan.isActive ? 'Deactivate' : 'Activate'}
+                                                    >
+                                                        {plan.isActive ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openEditPlanModal(plan)}
+                                                        className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10"
+                                                    >
+                                                        <Edit3 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeletePlan(plan.id)}
+                                                        className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-1">Monthly</p>
+                                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(plan.priceMonthly)}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-1">Yearly</p>
+                                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(plan.priceYearly)}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2 mb-4">
+                                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Features</p>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {plan.features?.resumeReviews && (
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/15 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                                                            {plan.features.resumeReviews === 'unlimited' ? '∞' : plan.features.resumeReviews} Resume Reviews
+                                                        </span>
+                                                    )}
+                                                    {plan.features?.interviews && (
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                                                            {plan.features.interviews === 'unlimited' ? '∞' : plan.features.interviews} Interviews
+                                                        </span>
+                                                    )}
+                                                    {plan.features?.skillTests && (
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                                                            {plan.features.skillTests === 'unlimited' ? '∞' : plan.features.skillTests} Skill Tests
+                                                        </span>
+                                                    )}
+                                                    {plan.features?.prioritySupport && (
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                                            Priority Support
+                                                        </span>
+                                                    )}
+                                                    {plan.features?.apiAccess && (
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
+                                                            API Access
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-400">ID: {plan.name}</p>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => handleTogglePlanActive(plan)}
-                                                    className={`p-2 rounded-lg transition-colors ${plan.isActive
-                                                        ? 'text-green-400 hover:bg-green-500/10'
-                                                        : 'text-red-400 hover:bg-red-500/10'
-                                                        }`}
-                                                    title={plan.isActive ? 'Deactivate' : 'Activate'}
-                                                >
-                                                    {plan.isActive ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                                                </button>
-                                                <button
-                                                    onClick={() => openEditPlanModal(plan)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
-                                                >
-                                                    <Edit3 className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeletePlan(plan.id)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
 
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Monthly</p>
-                                                <p className="text-xl font-bold text-white">{formatCurrency(plan.priceMonthly)}</p>
+                                            <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-white/5">
+                                                <span>{plan._count?.subscriptions || 0} subscribers</span>
+                                                <span>Sort: {plan.sortOrder}</span>
                                             </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Yearly</p>
-                                                <p className="text-xl font-bold text-white">{formatCurrency(plan.priceYearly)}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2 mb-4">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Features</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {plan.features?.resumeReviews && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-blue-500/20 text-blue-300">
-                                                        {plan.features.resumeReviews === 'unlimited' ? '∞' : plan.features.resumeReviews} Resume Reviews
-                                                    </span>
-                                                )}
-                                                {plan.features?.interviews && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-indigo-500/20 text-indigo-300">
-                                                        {plan.features.interviews === 'unlimited' ? '∞' : plan.features.interviews} Interviews
-                                                    </span>
-                                                )}
-                                                {plan.features?.skillTests && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-300">
-                                                        {plan.features.skillTests === 'unlimited' ? '∞' : plan.features.skillTests} Skill Tests
-                                                    </span>
-                                                )}
-                                                {plan.features?.prioritySupport && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-300">
-                                                        Priority Support
-                                                    </span>
-                                                )}
-                                                {plan.features?.apiAccess && (
-                                                    <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-300">
-                                                        API Access
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between text-sm text-gray-400 pt-3 border-t border-white/5">
-                                            <span>{plan._count?.subscriptions || 0} subscribers</span>
-                                            <span>Sort: {plan.sortOrder}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                                {plans.length === 0 && (
-                                    <div className="col-span-full text-center py-12 text-gray-500">
-                                        No subscription plans found. Create your first plan.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Credits Tab */}
-                    {activeTab === 'credits' && editedPricing && (
-                        <div className="space-y-6">
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleSaveCreditPricing}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
-                                >
-                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    Save Changes
-                                </button>
-                            </div>
-
-                            {/* Per Credit Pricing */}
-                            <div className="p-6 rounded-xl glass border border-white/5">
-                                <h3 className="text-lg font-semibold text-white mb-4">Per-Credit Pricing</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {Object.entries(editedPricing.perCredit).map(([key, value]) => (
-                                        <div key={key} className="space-y-2">
-                                            <label className="block text-sm font-medium text-gray-300">
-                                                {creditTypeLabels[key] || key}
-                                            </label>
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-                                                <input
-                                                    type="number"
-                                                    value={value}
-                                                    onChange={(e) => setEditedPricing({
-                                                        ...editedPricing,
-                                                        perCredit: { ...editedPricing.perCredit, [key]: e.target.value }
-                                                    })}
-                                                    className="w-full pl-8 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
+                                        </motion.div>
                                     ))}
+                                    {plans.length === 0 && (
+                                        <div className="col-span-full text-center py-12 text-gray-500">
+                                            No subscription plans found. Create your first plan.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                        )}
 
-                            {/* Bundle Pricing */}
-                            {Object.entries(editedPricing.bundles).map(([creditType, bundles]) => (
-                                <div key={creditType} className="p-6 rounded-xl glass border border-white/5">
-                                    <h3 className="text-lg font-semibold text-white mb-4">
-                                        {creditTypeLabels[creditType] || creditType} Bundles
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {bundles.map((bundle, index) => (
-                                            <div key={index} className="grid grid-cols-3 gap-3">
-                                                <div>
-                                                    <label className="block text-xs text-gray-400 mb-1">Quantity</label>
+                        {/* Credits Tab */}
+                        {activeTab === 'credits' && editedPricing && (
+                            <div className="space-y-6">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={handleSaveCreditPricing}
+                                        disabled={saving}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        Save Changes
+                                    </button>
+                                </div>
+
+                                {/* Per Credit Pricing */}
+                                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Per-Credit Pricing</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {Object.entries(editedPricing.perCredit).map(([key, value]) => (
+                                            <div key={key} className="space-y-2">
+                                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                    {creditTypeLabels[key] || key}
+                                                </label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">₹</span>
                                                     <input
                                                         type="number"
-                                                        value={bundle.quantity}
-                                                        onChange={(e) => {
-                                                            const newBundles = [...bundles];
-                                                            newBundles[index] = { ...bundle, quantity: e.target.value };
-                                                            setEditedPricing({
-                                                                ...editedPricing,
-                                                                bundles: { ...editedPricing.bundles, [creditType]: newBundles }
-                                                            });
-                                                        }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-400 mb-1">Price (₹)</label>
-                                                    <input
-                                                        type="number"
-                                                        value={bundle.price}
-                                                        onChange={(e) => {
-                                                            const newBundles = [...bundles];
-                                                            newBundles[index] = { ...bundle, price: e.target.value };
-                                                            setEditedPricing({
-                                                                ...editedPricing,
-                                                                bundles: { ...editedPricing.bundles, [creditType]: newBundles }
-                                                            });
-                                                        }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-400 mb-1">Savings</label>
-                                                    <input
-                                                        type="text"
-                                                        value={bundle.savings}
-                                                        onChange={(e) => {
-                                                            const newBundles = [...bundles];
-                                                            newBundles[index] = { ...bundle, savings: e.target.value };
-                                                            setEditedPricing({
-                                                                ...editedPricing,
-                                                                bundles: { ...editedPricing.bundles, [creditType]: newBundles }
-                                                            });
-                                                        }}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                        placeholder="e.g., 20%"
+                                                        value={value}
+                                                        onChange={(e) => setEditedPricing({
+                                                            ...editedPricing,
+                                                            perCredit: { ...editedPricing.perCredit, [key]: e.target.value }
+                                                        })}
+                                                        className="w-full pl-8 pr-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     />
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
 
-                    {/* Settings Tab */}
-                    {activeTab === 'settings' && (
-                        <div className="max-w-xl space-y-6">
-                            <div className="p-6 rounded-xl glass border border-white/5 space-y-6">
-                                <h3 className="text-lg font-semibold text-white">Billing Toggles</h3>
-
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
-                                        <div>
-                                            <p className="font-medium text-white">Billing Enabled</p>
-                                            <p className="text-sm text-gray-400">Master switch for all billing features</p>
+                                {/* Bundle Pricing */}
+                                {Object.entries(editedPricing.bundles).map(([creditType, bundles]) => (
+                                    <div key={creditType} className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                            {creditTypeLabels[creditType] || creditType} Bundles
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {bundles.map((bundle, index) => (
+                                                <div key={index} className="grid grid-cols-3 gap-3">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Quantity</label>
+                                                        <input
+                                                            type="number"
+                                                            value={bundle.quantity}
+                                                            onChange={(e) => {
+                                                                const newBundles = [...bundles];
+                                                                newBundles[index] = { ...bundle, quantity: e.target.value };
+                                                                setEditedPricing({
+                                                                    ...editedPricing,
+                                                                    bundles: { ...editedPricing.bundles, [creditType]: newBundles }
+                                                                });
+                                                            }}
+                                                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Price (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            value={bundle.price}
+                                                            onChange={(e) => {
+                                                                const newBundles = [...bundles];
+                                                                newBundles[index] = { ...bundle, price: e.target.value };
+                                                                setEditedPricing({
+                                                                    ...editedPricing,
+                                                                    bundles: { ...editedPricing.bundles, [creditType]: newBundles }
+                                                                });
+                                                            }}
+                                                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Savings</label>
+                                                        <input
+                                                            type="text"
+                                                            value={bundle.savings}
+                                                            onChange={(e) => {
+                                                                const newBundles = [...bundles];
+                                                                newBundles[index] = { ...bundle, savings: e.target.value };
+                                                                setEditedPricing({
+                                                                    ...editedPricing,
+                                                                    bundles: { ...editedPricing.bundles, [creditType]: newBundles }
+                                                                });
+                                                            }}
+                                                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            placeholder="e.g., 20%"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <button
-                                            onClick={() => setBillingSettings({
-                                                ...billingSettings,
-                                                billing_enabled: !billingSettings.billing_enabled
-                                            })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.billing_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.billing_enabled ? 'translate-x-6' : ''
-                                                    }`}
-                                            />
-                                        </button>
                                     </div>
-
-                                    <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
-                                        <div>
-                                            <p className="font-medium text-white">Subscriptions Enabled</p>
-                                            <p className="text-sm text-gray-400">Allow users to subscribe to plans</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setBillingSettings({
-                                                ...billingSettings,
-                                                subscription_enabled: !billingSettings.subscription_enabled
-                                            })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.subscription_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.subscription_enabled ? 'translate-x-6' : ''
-                                                    }`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
-                                        <div>
-                                            <p className="font-medium text-white">Credit Purchases Enabled</p>
-                                            <p className="text-sm text-gray-400">Allow users to purchase credits</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setBillingSettings({
-                                                ...billingSettings,
-                                                credit_pricing_enabled: !billingSettings.credit_pricing_enabled
-                                            })}
-                                            className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.credit_pricing_enabled ? 'bg-green-500' : 'bg-gray-600'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.credit_pricing_enabled ? 'translate-x-6' : ''
-                                                    }`}
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleSaveBillingSettings}
-                                    disabled={saving}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
-                                >
-                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    Save Settings
-                                </button>
+                                ))}
                             </div>
+                        )}
 
-                            {!billingSettings.billing_enabled && (
-                                <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/30">
-                                    <div className="flex items-center gap-3">
-                                        <AlertCircle className="w-5 h-5 text-red-400" />
-                                        <div>
-                                            <p className="font-medium text-red-300">Billing is currently disabled</p>
-                                            <p className="text-sm text-red-400/80">
-                                                Users will not be able to make any purchases while billing is disabled.
-                                            </p>
+                        {/* Settings Tab */}
+                        {activeTab === 'settings' && (
+                            <div className="max-w-xl space-y-6">
+                                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5 space-y-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Billing Toggles</h3>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800/50">
+                                            <div>
+                                                <p className="font-medium text-gray-900 dark:text-white">Billing Enabled</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Master switch for all billing features</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setBillingSettings({
+                                                    ...billingSettings,
+                                                    billing_enabled: !billingSettings.billing_enabled
+                                                })}
+                                                className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.billing_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.billing_enabled ? 'translate-x-6' : ''
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800/50">
+                                            <div>
+                                                <p className="font-medium text-gray-900 dark:text-white">Subscriptions Enabled</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Allow users to subscribe to plans</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setBillingSettings({
+                                                    ...billingSettings,
+                                                    subscription_enabled: !billingSettings.subscription_enabled
+                                                })}
+                                                className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.subscription_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.subscription_enabled ? 'translate-x-6' : ''
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800/50">
+                                            <div>
+                                                <p className="font-medium text-gray-900 dark:text-white">Credit Purchases Enabled</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Allow users to purchase credits</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setBillingSettings({
+                                                    ...billingSettings,
+                                                    credit_pricing_enabled: !billingSettings.credit_pricing_enabled
+                                                })}
+                                                className={`relative w-14 h-8 rounded-full transition-colors ${billingSettings.credit_pricing_enabled ? 'bg-green-500' : 'bg-gray-600'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${billingSettings.credit_pricing_enabled ? 'translate-x-6' : ''
+                                                        }`}
+                                                />
+                                            </button>
                                         </div>
                                     </div>
+
+                                    <button
+                                        onClick={handleSaveBillingSettings}
+                                        disabled={saving}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        Save Settings
+                                    </button>
                                 </div>
-                            )}
-                        </div>
-                    )}
-                </>
-            )}
+
+                                {!billingSettings.billing_enabled && (
+                                    <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30">
+                                        <div className="flex items-center gap-3">
+                                            <AlertCircle className="w-5 h-5 text-rose-500" />
+                                            <div>
+                                                <p className="font-semibold text-rose-600 dark:text-rose-400">Billing is currently disabled</p>
+                                                <p className="text-sm text-rose-500/80">
+                                                    Users will not be able to make any purchases while billing is disabled.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )
+            }
 
             {/* Plan Modal */}
             <AnimatePresence>
@@ -849,13 +834,13 @@ export default function AdminBillingPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl"
+                            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                                     {editingPlan ? 'Edit Plan' : 'New Subscription Plan'}
                                 </h2>
-                                <button onClick={() => setShowPlanModal(false)} className="text-gray-400 hover:text-white">
+                                <button onClick={() => setShowPlanModal(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -863,24 +848,24 @@ export default function AdminBillingPage() {
                             <form onSubmit={handleSavePlan} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Plan Name (ID)</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Plan Name (ID)</label>
                                         <input
                                             type="text"
                                             required
                                             value={planForm.name}
                                             onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="e.g., starter"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Display Name</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Display Name</label>
                                         <input
                                             type="text"
                                             required
                                             value={planForm.displayName}
                                             onChange={(e) => setPlanForm({ ...planForm, displayName: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="e.g., Starter Plan"
                                         />
                                     </div>
@@ -888,86 +873,86 @@ export default function AdminBillingPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Monthly Price (₹)</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Monthly Price (₹)</label>
                                         <input
                                             type="number"
                                             value={planForm.priceMonthly}
                                             onChange={(e) => setPlanForm({ ...planForm, priceMonthly: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="0"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Yearly Price (₹)</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Yearly Price (₹)</label>
                                         <input
                                             type="number"
                                             value={planForm.priceYearly}
                                             onChange={(e) => setPlanForm({ ...planForm, priceYearly: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="0"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="p-4 rounded-lg bg-white/5 space-y-3">
-                                    <p className="text-sm font-medium text-gray-300">Features (use "unlimited" for unlimited)</p>
+                                <div className="p-4 rounded-lg bg-white dark:bg-gray-800/50 space-y-3">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Features (use "unlimited" for unlimited)</p>
                                     <div className="grid grid-cols-3 gap-3">
                                         <div>
-                                            <label className="block text-xs text-gray-400 mb-1">Resume Reviews</label>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Resume Reviews</label>
                                             <input
                                                 type="text"
                                                 value={planForm.resumeReviews}
                                                 onChange={(e) => setPlanForm({ ...planForm, resumeReviews: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="3"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-400 mb-1">AI Interviews</label>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">AI Interviews</label>
                                             <input
                                                 type="text"
                                                 value={planForm.interviews}
                                                 onChange={(e) => setPlanForm({ ...planForm, interviews: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="1"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-400 mb-1">Skill Tests</label>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Skill Tests</label>
                                             <input
                                                 type="text"
                                                 value={planForm.skillTests}
                                                 onChange={(e) => setPlanForm({ ...planForm, skillTests: e.target.value })}
-                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 placeholder="3"
                                             />
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-4 pt-2">
-                                        <label className="flex items-center gap-2 text-sm text-gray-300">
+                                        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                             <input
                                                 type="checkbox"
                                                 checked={planForm.jobAlerts}
                                                 onChange={(e) => setPlanForm({ ...planForm, jobAlerts: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
+                                                className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             Job Alerts
                                         </label>
-                                        <label className="flex items-center gap-2 text-sm text-gray-300">
+                                        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                             <input
                                                 type="checkbox"
                                                 checked={planForm.prioritySupport}
                                                 onChange={(e) => setPlanForm({ ...planForm, prioritySupport: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
+                                                className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             Priority Support
                                         </label>
-                                        <label className="flex items-center gap-2 text-sm text-gray-300">
+                                        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                             <input
                                                 type="checkbox"
                                                 checked={planForm.apiAccess}
                                                 onChange={(e) => setPlanForm({ ...planForm, apiAccess: e.target.checked })}
-                                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
+                                                className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-white/20 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             API Access
                                         </label>
@@ -976,32 +961,32 @@ export default function AdminBillingPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Razorpay Plan ID (Optional)</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Razorpay Plan ID (Optional)</label>
                                         <input
                                             type="text"
                                             value={planForm.razorpayPlanId}
                                             onChange={(e) => setPlanForm({ ...planForm, razorpayPlanId: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="plan_xxxxx"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Sort Order</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Sort Order</label>
                                         <input
                                             type="number"
                                             value={planForm.sortOrder}
                                             onChange={(e) => setPlanForm({ ...planForm, sortOrder: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         />
                                     </div>
                                 </div>
 
-                                <label className="flex items-center gap-2 text-sm text-gray-300">
+                                <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <input
                                         type="checkbox"
                                         checked={planForm.isActive}
                                         onChange={(e) => setPlanForm({ ...planForm, isActive: e.target.checked })}
-                                        className="w-4 h-4 rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-indigo-500"
+                                        className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-700/60 border-gray-300 dark:border-white/20 text-indigo-500 focus:ring-indigo-500"
                                     />
                                     Plan is Active
                                 </label>
@@ -1010,7 +995,7 @@ export default function AdminBillingPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPlanModal(false)}
-                                        className="px-4 py-2 rounded-lg text-gray-400 hover:text-white"
+                                        className="px-4 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                     >
                                         Cancel
                                     </button>
@@ -1027,7 +1012,7 @@ export default function AdminBillingPage() {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }
 

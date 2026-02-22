@@ -61,9 +61,9 @@ export default function ForgotPasswordPage() {
                         <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-8 h-8 text-green-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
-                        <p className="text-gray-400 mb-6">
-                            We've sent password reset instructions to <span className="text-white font-medium">{email}</span>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check Your Email</h1>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
+                            We've sent password reset instructions to <span className="text-gray-900 dark:text-white font-medium">{email}</span>
                         </p>
                         <p className="text-sm text-gray-500 mb-6">
                             Didn't receive the email? Check your spam folder or try again.
@@ -100,8 +100,8 @@ export default function ForgotPasswordPage() {
 
                 {/* Card */}
                 <div className="p-8 rounded-2xl glass">
-                    <h1 className="text-2xl font-bold text-white text-center mb-2">Forgot Password?</h1>
-                    <p className="text-gray-400 text-center mb-8">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">Forgot Password?</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
                         Enter your email and we'll send you reset instructions
                     </p>
 
@@ -113,14 +113,14 @@ export default function ForgotPasswordPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="you@example.com"
                                     required
                                 />

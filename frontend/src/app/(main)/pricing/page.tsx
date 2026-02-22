@@ -143,7 +143,7 @@ export default function PricingPage() {
     // Detect light mode
     useEffect(() => {
         const checkTheme = () => {
-            const isLight = document.documentElement.classList.contains('light-mode');
+            const isLight = !document.documentElement.classList.contains('dark');
             setIsLightMode(isLight);
         };
 
@@ -324,12 +324,12 @@ export default function PricingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-white py-20 px-4 pricing-page">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-900 dark:text-white py-20 px-4 pricing-page">
             {/* Back Button */}
             <div className="max-w-7xl mx-auto mb-8">
                 <button
                     onClick={() => user ? router.push('/dashboard') : router.push('/')}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span className="text-sm font-medium">Back to {user ? 'Dashboard' : 'Home'}</span>
@@ -341,7 +341,7 @@ export default function PricingPage() {
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-500">
                     Invest in Your Career Growth
                 </h1>
-                <p className="text-xl text-gray-400 mb-8">
+                <p className="text-xl text-gray-500 dark:text-gray-400 mb-8">
                     Unlock premium AI tools to accelerate your job search and interview prep.
                 </p>
 
@@ -350,7 +350,7 @@ export default function PricingPage() {
                     <span className={`text-sm ${billingCycle === 'monthly' ? 'text-white font-medium' : 'text-gray-500'}`}>Monthly</span>
                     <button
                         onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                        className="w-14 h-7 bg-gray-800 rounded-full p-1 relative transition-colors duration-300 border border-white/10"
+                        className="w-14 h-7 bg-gray-200 dark:bg-gray-800 rounded-full p-1 relative transition-colors duration-300 border border-gray-300 dark:border-white/10"
                     >
                         <div className={`w-5 h-5 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'}`} />
                     </button>

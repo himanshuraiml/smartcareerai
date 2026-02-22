@@ -189,20 +189,20 @@ export default function InstitutionStudentsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Students</h1>
-                    <p className="text-gray-400 mt-1">Manage and monitor student progress</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Students</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Manage and monitor student progress</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Search */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search students..."
-                            className="pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 w-64"
+                            className="pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 w-64"
                         />
                     </div>
 
@@ -211,7 +211,7 @@ export default function InstitutionStudentsPage() {
                         onClick={() => setShowFilters(!showFilters)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${showFilters || hasActiveFilters
                             ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                            : "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                             }`}
                     >
                         <SlidersHorizontal className="w-4 h-4" />
@@ -225,16 +225,16 @@ export default function InstitutionStudentsPage() {
 
             {/* Filters Panel */}
             {showFilters && (
-                <div className="p-5 rounded-xl glass border border-white/5 space-y-4">
+                <div className="p-5 rounded-xl glass border border-gray-200 dark:border-white/5 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-white flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                             <Filter className="w-4 h-4 text-emerald-400" />
                             Filter Students
                         </h3>
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
-                                className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+                                className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
                             >
                                 <X className="w-3 h-3" />
                                 Clear all
@@ -255,7 +255,7 @@ export default function InstitutionStudentsPage() {
                                 onClick={() => setScoreType(tab.value as ScoreType)}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${scoreType === tab.value
                                     ? "bg-emerald-500 text-white"
-                                    : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                                    : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10"
                                     }`}
                             >
                                 {tab.label}
@@ -267,11 +267,11 @@ export default function InstitutionStudentsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                         {/* Target Role */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5">Target Role</label>
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Target Role</label>
                             <select
                                 value={selectedRole}
                                 onChange={(e) => setSelectedRole(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="">All Roles</option>
                                 {jobRoles.map((role) => (
@@ -282,7 +282,7 @@ export default function InstitutionStudentsPage() {
 
                         {/* Min Interview Score */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 flex items-center gap-1">
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
                                 <Target className="w-3 h-3" />
                                 Min Interview Score
                             </label>
@@ -293,13 +293,13 @@ export default function InstitutionStudentsPage() {
                                 placeholder="0-100"
                                 min="0"
                                 max="100"
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
 
                         {/* Min ATS Score */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 flex items-center gap-1">
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
                                 <FileText className="w-3 h-3" />
                                 Min ATS Score
                             </label>
@@ -310,13 +310,13 @@ export default function InstitutionStudentsPage() {
                                 placeholder="0-100"
                                 min="0"
                                 max="100"
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
 
                         {/* Min Skill Score */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 flex items-center gap-1">
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
                                 <BookOpen className="w-3 h-3" />
                                 Min Skill Score
                             </label>
@@ -327,17 +327,17 @@ export default function InstitutionStudentsPage() {
                                 placeholder="0-100"
                                 min="0"
                                 max="100"
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
 
                         {/* Sort By */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5">Sort By</label>
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Sort By</label>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortBy)}
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="name">Name</option>
                                 <option value="interviewScore">Interview Score</option>
@@ -349,11 +349,11 @@ export default function InstitutionStudentsPage() {
 
                         {/* Sort Order */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5">Order</label>
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Order</label>
                             <select
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="asc">Ascending</option>
                                 <option value="desc">Descending</option>
@@ -366,15 +366,15 @@ export default function InstitutionStudentsPage() {
             {/* Results Summary */}
             {!loading && !error && (
                 <div className="flex items-center justify-between text-sm">
-                    <p className="text-gray-400">
-                        Found <span className="text-white font-medium">{pagination.total}</span> students
+                    <p className="text-gray-500 dark:text-gray-400">
+                        Found <span className="text-gray-900 dark:text-white font-medium">{pagination.total}</span> students
                         {hasActiveFilters && " matching your filters"}
                     </p>
                 </div>
             )}
 
             {/* Students Table */}
-            <div className="rounded-xl glass border border-white/5 overflow-hidden">
+            <div className="rounded-xl glass border border-gray-200 dark:border-white/5 overflow-hidden">
                 {loading ? (
                     <div className="p-16 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500 mx-auto"></div>
@@ -383,7 +383,7 @@ export default function InstitutionStudentsPage() {
                     <div className="p-16 text-center text-red-400">{error}</div>
                 ) : students.length === 0 ? (
                     <div className="p-16 text-center">
-                        <div className="text-gray-400 mb-2">No students found matching your criteria.</div>
+                        <div className="text-gray-500 dark:text-gray-400 mb-2">No students found matching your criteria.</div>
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
@@ -396,41 +396,41 @@ export default function InstitutionStudentsPage() {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-white/5 border-b border-white/10">
+                            <thead className="bg-white/5 border-b border-gray-200 dark:border-white/10">
                                 <tr>
-                                    <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Student</th>
-                                    <th className="text-left px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Target Role</th>
-                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+                                    <th className="text-left px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target Role</th>
+                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center justify-center gap-1">
                                             <Target className="w-3.5 h-3.5" />
                                             Interview
                                         </div>
                                     </th>
-                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center justify-center gap-1">
                                             <FileText className="w-3.5 h-3.5" />
                                             ATS
                                         </div>
                                     </th>
-                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center justify-center gap-1">
                                             <BookOpen className="w-3.5 h-3.5" />
                                             Skill
                                         </div>
                                     </th>
-                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center justify-center gap-1">
                                             <Award className="w-3.5 h-3.5" />
                                             Badges
                                         </div>
                                     </th>
-                                    <th className="text-left px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Last Active</th>
-                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th className="text-left px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Active</th>
+                                    <th className="text-center px-4 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-gray-200 dark:divide-white/5">
                                 {students.map((student) => (
-                                    <tr key={student.id} className="hover:bg-white/5 transition-colors">
+                                    <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
@@ -441,13 +441,13 @@ export default function InstitutionStudentsPage() {
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-medium text-white truncate">{student.name || "Unnamed"}</p>
-                                                    <p className="text-xs text-gray-400 truncate">{student.email}</p>
+                                                    <p className="font-medium text-gray-900 dark:text-white truncate">{student.name || "Unnamed"}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{student.email}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <span className="text-sm text-gray-300 truncate block max-w-[150px]">
+                                            <span className="text-sm text-gray-600 dark:text-gray-300 truncate block max-w-[150px]">
                                                 {student.targetJobRole?.title || "Not set"}
                                             </span>
                                         </td>
@@ -469,13 +469,13 @@ export default function InstitutionStudentsPage() {
                                         <td className="px-4 py-4">
                                             <div className="flex items-center justify-center gap-1">
                                                 <Award className={`w-4 h-4 ${student.badgeCount > 0 ? "text-amber-400" : "text-gray-500"}`} />
-                                                <span className={`text-sm ${student.badgeCount > 0 ? "text-white" : "text-gray-500"}`}>
+                                                <span className={`text-sm ${student.badgeCount > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}`}>
                                                     {student.badgeCount}
                                                 </span>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <span className="text-sm text-gray-400">
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">
                                                 {new Date(student.lastActive).toLocaleDateString()}
                                             </span>
                                         </td>
@@ -496,25 +496,25 @@ export default function InstitutionStudentsPage() {
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-white/5">
-                        <p className="text-sm text-gray-400">
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/5">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                             Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
                         </p>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handlePageChange(pagination.page - 1)}
                                 disabled={pagination.page === 1}
-                                className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
                                 Page {pagination.page} of {pagination.totalPages}
                             </span>
                             <button
                                 onClick={() => handlePageChange(pagination.page + 1)}
                                 disabled={pagination.page === pagination.totalPages}
-                                className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronRight className="w-4 h-4" />
                             </button>

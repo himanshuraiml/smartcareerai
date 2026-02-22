@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 import {
     LayoutDashboard,
     FileText,
@@ -20,7 +21,9 @@ import {
     Sparkles,
     RotateCw,
     AlertTriangle,
-    User
+    User,
+    Send,
+    MessageSquare
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -37,6 +40,7 @@ interface NavItem {
     label: string;
     unlockStage: number; // 0 = always visible, 1+ = unlocks at that stage
     iconColor: string; // Tailwind text color for the icon
+    badge?: string; // Optional badge text
 }
 
 const navItems: NavItem[] = [
@@ -44,7 +48,8 @@ const navItems: NavItem[] = [
     { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0, iconColor: 'text-blue-400' },
     { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 2, iconColor: 'text-cyan-400' },
     { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2, iconColor: 'text-amber-400' },
-    { href: '/dashboard/interviews', icon: Video, label: 'Interviews', unlockStage: 3, iconColor: 'text-rose-400' },
+    { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'Practice Interview', unlockStage: 0, iconColor: 'text-emerald-400', badge: 'Free' },
+    { href: '/dashboard/interviews', icon: Video, label: 'Mock Interviews', unlockStage: 3, iconColor: 'text-rose-400' },
     { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3, iconColor: 'text-emerald-400' },
     { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3, iconColor: 'text-violet-400' },
     { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0, iconColor: 'text-orange-400' },
@@ -81,6 +86,40 @@ export default function DashboardLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const { toast } = useToast();
+    const [isResending, setIsResending] = useState(false);
+
+    const handleResendVerification = async () => {
+        if (!user?.email) return;
+        setIsResending(true);
+        try {
+            const res = await authFetch('/auth/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email }),
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                toast({
+                    title: "Verification Email Sent",
+                    description: "Please check your inbox and verify your email.",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: data.message || "Failed to send verification email.",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred.",
+            });
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     const handleLogout = useCallback(() => {
         logout();
@@ -184,7 +223,7 @@ export default function DashboardLayout({
     if (!_hasHydrated || !user) {
         // Show nothing or a loading spinner while hydrating or redirecting
         return (
-            <div className="min-h-screen flex items-center justify-center bg-black">
+            <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
         );
@@ -208,7 +247,7 @@ export default function DashboardLayout({
         (pathname?.includes('/room') || pathname?.includes('/hr-room') || pathname?.includes('/mixed-room'));
 
     return (
-        <div className="h-screen overflow-hidden flex bg-gray-950">
+        <div className="h-screen overflow-hidden flex bg-gray-50 dark:bg-gray-950">
             {/* Hide sidebar entirely when in interview room */}
             {!isInterviewRoom && (
                 <>
@@ -222,27 +261,32 @@ export default function DashboardLayout({
 
                     {/* Sidebar */}
                     <aside className={`
-    fixed lg:static inset-y-0 left-0 z-50
-    w-64 glass border-r border-white/5
-    transform transition-transform duration-200 ease-in-out
-    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-  `}>
+                        fixed lg:static inset-y-0 left-0 z-50
+                        w-64 border-r border-gray-200/80 dark:border-white/5
+                        bg-white dark:bg-transparent
+                        shadow-[1px_0_0_0_rgba(0,0,0,0.04)] dark:shadow-none
+                        transform transition-transform duration-200 ease-in-out
+                        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                      `}>
                         <div className="flex flex-col h-full">
                             {/* Logo */}
-                            <div className="p-6 flex items-center justify-between">
-                                <Link href="/dashboard" className="flex items-center gap-3">
-                                    <Image
-                                        src="/logo.svg"
-                                        alt="PlaceNxt Logo"
-                                        width={40}
-                                        height={40}
-                                        className="w-10 h-10 rounded-xl"
-                                    />
-                                    <span className="text-2xl font-bold gradient-text tracking-tight">PlaceNxt</span>
+                            <div className="px-5 py-5 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
+                                <Link href="/dashboard" className="flex items-center gap-3 group">
+                                    <div className="relative">
+                                        <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-indigo-500/30 to-purple-500/30 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <Image
+                                            src="/logo.svg"
+                                            alt="PlaceNxt Logo"
+                                            width={36}
+                                            height={36}
+                                            className="w-9 h-9 rounded-xl relative"
+                                        />
+                                    </div>
+                                    <span className="text-xl font-bold gradient-text tracking-tight">PlaceNxt</span>
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
-                                    className="lg:hidden text-gray-400 hover:text-white"
+                                    className="lg:hidden text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -250,19 +294,20 @@ export default function DashboardLayout({
 
                             {/* New User Welcome */}
                             {isNewUser && (
-                                <div className="mx-4 mb-4 p-4 rounded-xl bg-gradient-to-r from-indigo-500/20 to-violet-500/20 border border-indigo-500/30">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Sparkles className="w-4 h-4 text-indigo-400" />
-                                        <span className="text-sm font-bold text-white">Welcome!</span>
+                                <div className="mx-4 mt-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-500/20 dark:to-violet-500/20 border border-indigo-200 dark:border-indigo-500/30">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                                        <span className="text-sm font-bold text-indigo-700 dark:text-white">Welcome!</span>
                                     </div>
-                                    <p className="text-xs text-gray-300">
+                                    <p className="text-xs text-indigo-600/70 dark:text-gray-300">
                                         Follow your career roadmap to unlock more features.
                                     </p>
                                 </div>
                             )}
 
                             {/* Navigation - Unlocked Items */}
-                            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+                            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+
                                 {unlockedItems.map((item) => {
                                     const isActive = item.href === '/dashboard'
                                         ? pathname === item.href
@@ -273,14 +318,22 @@ export default function DashboardLayout({
                                             href={item.href}
                                             onClick={() => setSidebarOpen(false)}
                                             className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                ${isActive
-                                                    ? 'bg-gradient-to-r from-purple-900/60 to-purple-800/40 text-white border border-purple-700/30'
-                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'}
-              `}
+                                                relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                ${isActive
+                                                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                              `}
                                         >
-                                            <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : item.iconColor}`} />
-                                            <span className="font-medium">{item.label}</span>
+                                            {isActive && (
+                                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                            )}
+                                            <item.icon className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                            <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
+                                            {item.badge && (
+                                                <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
+                                                    {item.badge}
+                                                </span>
+                                            )}
                                         </Link>
                                     );
                                 })}
@@ -288,39 +341,44 @@ export default function DashboardLayout({
                                 {/* Locked Items Section */}
                                 {lockedItems.length > 0 && (
                                     <>
-                                        <div className="py-3">
-                                            <p className="px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                        <div className="pt-4 pb-1">
+                                            <p className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                                 Unlock by progressing
                                             </p>
                                         </div>
                                         {lockedItems.map((item) => (
                                             <div
                                                 key={item.href}
-                                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 cursor-not-allowed opacity-50"
+                                                title="Complete earlier stages to unlock"
+                                                className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-400 dark:text-gray-600 cursor-not-allowed select-none"
                                             >
-                                                <Lock className="w-4 h-4" />
-                                                <span className="font-medium">{item.label}</span>
+                                                <Lock className="w-4 h-4 flex-shrink-0" />
+                                                <span className="font-semibold text-[15px]">{item.label}</span>
                                             </div>
                                         ))}
                                     </>
                                 )}
                             </nav>
 
-                            {/* User Profile Dropdown Trigger (Replaced Bottom Bar) */}
-                            <div className="p-4 border-t border-white/5 relative">
+                            {/* User Profile Dropdown Trigger */}
+                            <div className="p-3 border-t border-gray-100 dark:border-white/5 relative">
                                 <button
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left"
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-all duration-200 border border-gray-100 dark:border-white/5 text-left group"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-white font-medium">
-                                            {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                                        </span>
+                                    <div className="relative flex-shrink-0">
+                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 opacity-70" />
+                                        <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                                            <span className="text-white text-sm font-semibold">
+                                                {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
-                                        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                        <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{user?.name || 'User'}</p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-400 truncate">{user?.email}</p>
                                     </div>
+                                    <Settings className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                                 </button>
 
                                 {/* Dropdown Menu */}
@@ -330,17 +388,17 @@ export default function DashboardLayout({
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 10 }}
-                                            className="absolute bottom-full left-4 right-4 mb-2 p-2 rounded-xl bg-gray-900 border border-white/10 shadow-xl backdrop-blur-xl z-50"
+                                            className="absolute bottom-full left-4 right-4 mb-2 p-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 shadow-xl backdrop-blur-xl z-50"
                                         >
-                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                                 <User className="w-4 h-4" />
                                                 <span className="text-sm">Profile</span>
                                             </Link>
-                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                                 <Settings className="w-4 h-4" />
                                                 <span className="text-sm">Settings</span>
                                             </Link>
-                                            <div className="h-px bg-white/10 my-1" />
+                                            <div className="h-px bg-gray-100 dark:bg-white/10 my-1" />
                                             <button
                                                 onClick={handleLogout}
                                                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-left"
@@ -363,8 +421,8 @@ export default function DashboardLayout({
                 {!isInterviewRoom && (
                     <>
                         {/* Desktop Header */}
-                        <header className="hidden lg:flex items-center justify-between px-8 py-4 glass border-b border-white/5 sticky top-0 z-40">
-                            <h1 className="text-xl font-bold text-white capitalize">
+                        <header className="hidden lg:flex items-center justify-between px-8 py-4 glass border-b border-gray-200 dark:border-white/5 sticky top-0 z-40">
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
                                 {getPageTitle(pathname)}
                             </h1>
                             <div className="flex items-center gap-4">
@@ -373,11 +431,11 @@ export default function DashboardLayout({
                         </header>
 
                         {/* Mobile header */}
-                        <header className="lg:hidden sticky top-0 z-30 glass border-b border-white/5">
+                        <header className="lg:hidden sticky top-0 z-30 glass border-b border-gray-200 dark:border-white/5">
                             <div className="flex items-center justify-between px-4 py-3">
                                 <button
                                     onClick={() => setSidebarOpen(true)}
-                                    className="text-gray-400 hover:text-white"
+                                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                 >
                                     <Menu className="w-6 h-6" />
                                 </button>
@@ -390,22 +448,34 @@ export default function DashboardLayout({
                     </>
                 )}
 
+
+
                 {/* Verification Warning */}
                 {!isInterviewRoom && user && !user.isVerified && (
-                    <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-between">
+                    <div className="bg-yellow-50 dark:bg-yellow-500/10 border-b border-yellow-200 dark:border-yellow-500/20 px-6 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                            <p className="text-sm text-yellow-200">
+                            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
                                 Please verify your email address ({user.email}) to unlock free credits and all features.
                             </p>
                         </div>
-                        <button
-                            onClick={() => fetchUser()}
-                            className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors"
-                        >
-                            <RotateCw className="w-4 h-4" />
-                            Check Status
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleResendVerification}
+                                disabled={isResending}
+                                className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors disabled:opacity-50"
+                            >
+                                <Send className="w-4 h-4" />
+                                {isResending ? 'Sending...' : 'Resend Email'}
+                            </button>
+                            <button
+                                onClick={() => fetchUser()}
+                                className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors"
+                            >
+                                <RotateCw className="w-4 h-4" />
+                                Check Status
+                            </button>
+                        </div>
                     </div>
                 )}
 

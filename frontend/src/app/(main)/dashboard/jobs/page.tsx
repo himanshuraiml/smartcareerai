@@ -249,7 +249,7 @@ export default function JobsPage() {
                 {/* Mobile Back Button */}
                 <button
                     onClick={onClose}
-                    className="lg:hidden flex items-center gap-2 text-gray-400 hover:text-white mb-4"
+                    className="lg:hidden flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
                 >
                     <ChevronLeft className="w-5 h-5" />
                     <span>Back to Jobs</span>
@@ -257,12 +257,12 @@ export default function JobsPage() {
 
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-xl font-bold text-white break-words">{job.title}</h2>
-                        <p className="text-gray-400 truncate">{job.company}</p>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white break-words">{job.title}</h2>
+                        <p className="text-gray-500 dark:text-gray-400 truncate">{job.company}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="hidden lg:block p-2 rounded-lg hover:bg-white/10 text-gray-400"
+                        className="hidden lg:block p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -272,7 +272,7 @@ export default function JobsPage() {
                     <span className={`px-3 py-1 rounded-full text-sm ${getLocationBadge(job.locationType)}`}>
                         {job.locationType}
                     </span>
-                    <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 text-gray-300 text-sm">
+                    <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 text-sm">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate max-w-[200px]">{job.location}</span>
                     </span>
@@ -281,12 +281,12 @@ export default function JobsPage() {
                 {formatSalary(job) && (
                     <div className="p-4 rounded-xl bg-green-500/10 mb-4">
                         <p className="text-green-400 font-semibold">{formatSalary(job)}</p>
-                        <p className="text-gray-400 text-sm">Estimated salary</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Estimated salary</p>
                     </div>
                 )}
 
                 <div className="mb-6">
-                    <h3 className="text-white font-medium mb-2">Required Skills</h3>
+                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Required Skills</h3>
                     <div className="flex flex-wrap gap-2">
                         {job.requiredSkills?.map((skill, i) => (
                             <span key={i} className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-sm">
@@ -300,8 +300,8 @@ export default function JobsPage() {
                 </div>
 
                 <div className="mb-6">
-                    <h3 className="text-white font-medium mb-2">Description</h3>
-                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line break-words">
+                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Description</h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line break-words">
                         {job.description || 'No description available.'}
                     </p>
                 </div>
@@ -312,7 +312,7 @@ export default function JobsPage() {
                         onClick={() => toggleSaveJob(job.id)}
                         className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors ${savedJobIds.has(job.id)
                             ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500'
-                            : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                            : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'
                             }`}
                     >
                         {savedJobIds.has(job.id) ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
@@ -338,8 +338,8 @@ export default function JobsPage() {
                 <div className="mb-4 lg:mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div className="min-w-0">
-                            <h1 className="text-2xl lg:text-3xl font-bold text-white">Jobs</h1>
-                            <p className="text-gray-400 mt-1 text-sm lg:text-base truncate">
+                            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Jobs</h1>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm lg:text-base truncate">
                                 {user?.targetJobRole
                                     ? `Jobs for ${user.targetJobRole.title}`
                                     : 'Find your next opportunity'}
@@ -355,7 +355,7 @@ export default function JobsPage() {
                             </button>
                             <button
                                 onClick={() => fetchPersonalizedJobs()}
-                                className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                                 aria-label="Refresh jobs"
                             >
                                 <RefreshCw className="w-5 h-5" />
@@ -372,13 +372,13 @@ export default function JobsPage() {
                                     placeholder="Search jobs..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-indigo-500 focus:outline-none text-sm lg:text-base"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-indigo-500 focus:outline-none text-sm lg:text-base"
                                 />
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`p-3 rounded-xl border transition-colors ${showFilters ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'border-white/10 text-gray-400 hover:text-white'
+                                className={`p-3 rounded-xl border transition-colors ${showFilters ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                                 aria-label="Toggle filters"
                             >
@@ -409,9 +409,9 @@ export default function JobsPage() {
                                         placeholder="Location"
                                         value={locationFilter}
                                         onChange={(e) => setLocationFilter(e.target.value)}
-                                        className="flex-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-indigo-500 focus:outline-none text-sm"
+                                        className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-indigo-500 focus:outline-none text-sm"
                                     />
-                                    <label className="flex items-center gap-2 text-gray-300 cursor-pointer text-sm">
+                                    <label className="flex items-center gap-2 text-gray-600 dark:text-gray-300 cursor-pointer text-sm">
                                         <input
                                             type="checkbox"
                                             checked={remoteOnly}
@@ -420,7 +420,7 @@ export default function JobsPage() {
                                         />
                                         Remote Only
                                     </label>
-                                    <label className="flex items-center gap-2 text-gray-300 cursor-pointer text-sm">
+                                    <label className="flex items-center gap-2 text-gray-600 dark:text-gray-300 cursor-pointer text-sm">
                                         <input
                                             type="checkbox"
                                             checked={showMatching}
@@ -440,15 +440,15 @@ export default function JobsPage() {
                     {loading ? (
                         <div className="p-12 text-center">
                             <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
-                            <p className="text-gray-400">Loading jobs...</p>
+                            <p className="text-gray-500 dark:text-gray-400">Loading jobs...</p>
                         </div>
                     ) : jobs.length === 0 ? (
                         <div className="p-8 lg:p-12 rounded-2xl glass text-center">
                             <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                                 <Briefcase className="w-8 h-8 text-indigo-400" />
                             </div>
-                            <h3 className="text-lg font-medium text-white mb-2">No jobs found</h3>
-                            <p className="text-gray-400 text-sm">Try adjusting your search filters</p>
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No jobs found</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Try adjusting your search filters</p>
                         </div>
                     ) : (
                         jobs.map((job) => (
@@ -460,8 +460,8 @@ export default function JobsPage() {
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-white font-semibold line-clamp-2 break-words text-sm lg:text-base">{job.title}</h3>
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-2 text-gray-400 text-xs lg:text-sm">
+                                        <h3 className="text-gray-900 dark:text-white font-semibold line-clamp-2 break-words text-sm lg:text-base">{job.title}</h3>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-2 text-gray-500 dark:text-gray-400 text-xs lg:text-sm">
                                             <span className="flex items-center gap-1 min-w-0">
                                                 <Building2 className="w-4 h-4 flex-shrink-0" />
                                                 <span className="truncate">{job.company}</span>
@@ -480,7 +480,7 @@ export default function JobsPage() {
                                         )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); toggleSaveJob(job.id); }}
-                                            className="p-1.5 lg:p-2 rounded-lg hover:bg-white/10 transition-colors"
+                                            className="p-1.5 lg:p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
                                         >
                                             {savedJobIds.has(job.id) ? (
                                                 <BookmarkCheck className="w-4 h-4 lg:w-5 lg:h-5 text-indigo-400" />
@@ -496,13 +496,13 @@ export default function JobsPage() {
                                         {job.locationType}
                                     </span>
                                     {formatSalary(job) && (
-                                        <span className="flex items-center gap-1 text-gray-400 text-xs">
+                                        <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs">
                                             <DollarSign className="w-3 h-3" />
                                             <span className="truncate max-w-[100px] lg:max-w-none">{formatSalary(job)}</span>
                                         </span>
                                     )}
                                     {job.experienceMin !== undefined && (
-                                        <span className="flex items-center gap-1 text-gray-400 text-xs">
+                                        <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs">
                                             <Clock className="w-3 h-3" />
                                             {job.experienceMin}+ yrs
                                         </span>
@@ -512,7 +512,7 @@ export default function JobsPage() {
                                 {job.requiredSkills?.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-3">
                                         {job.requiredSkills.slice(0, 3).map((skill, i) => (
-                                            <span key={i} className="px-2 py-0.5 rounded bg-white/5 text-gray-300 text-xs truncate max-w-[100px]">
+                                            <span key={i} className="px-2 py-0.5 rounded bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 text-xs truncate max-w-[100px]">
                                                 {skill}
                                             </span>
                                         ))}

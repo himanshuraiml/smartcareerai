@@ -20,7 +20,20 @@ Provide a comprehensive ATS analysis in JSON format with the following structure
   "matchedKeywords": ["list of keywords found in resume that match the role"],
   "missingKeywords": ["list of important keywords missing from the resume"],
   "formattingIssues": ["list of formatting issues that could affect ATS parsing"],
-  "suggestions": ["list of actionable improvements to boost ATS score"]
+  "suggestions": ["list of actionable improvements to boost ATS score"],
+  "scoreDeductions": [
+    {"category": "Keywords", "points": <number deducted>, "reason": "specific reason for deduction"},
+    {"category": "Formatting", "points": <number deducted>, "reason": "specific reason"},
+    {"category": "Experience", "points": <number deducted>, "reason": "specific reason"},
+    {"category": "Education", "points": <number deducted>, "reason": "specific reason"}
+  ],
+  "scoreExplanation": "A 2-3 sentence plain-English summary of WHY the overall score is what it is. Be specific about the biggest factors.",
+  "industryBenchmark": {
+    "estimatedPercentile": <number 0-100, where the candidate roughly falls compared to typical applicants for this role>,
+    "averageScoreForRole": <number 0-100, the typical ATS score for this role>,
+    "competitiveLevel": "below_average | average | above_average | excellent"
+  },
+  "transparencyNote": "A brief note explaining that ATS scores vary across platforms (LinkedIn, Indeed, Workday, etc.) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth."
 }
 
 Scoring Guidelines:
@@ -29,6 +42,9 @@ Scoring Guidelines:
 - formattingScore: Check for proper sections, consistent formatting, no tables/graphics issues
 - experienceScore: Relevance and depth of work experience to the role
 - educationScore: Relevance of education, certifications, and qualifications
+- scoreDeductions: For EACH category, list exactly how many points were lost and why. Start from 100 for each category and deduct.
+- scoreExplanation: Summarize in plain English why the candidate got this score. Mention the top 2-3 factors.
+- industryBenchmark: Estimate where this resume stands compared to typical applicants. Be realistic.
 
 Be specific in your analysis and provide actionable feedback.
 `;

@@ -286,10 +286,10 @@ export default function DashboardPage() {
             >
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white">
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                             {greeting}, <span className="gradient-text">{user?.name?.split(' ')[0] || 'Explorer'}</span>! 🚀
                         </h1>
-                        <p className="text-gray-400 mt-2">
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
                             Welcome to your Career Mission Control
                         </p>
                     </div>
@@ -306,17 +306,17 @@ export default function DashboardPage() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-white">Level {level}</span>
+                                <span className="text-2xl font-bold text-gray-900 dark:text-white">Level {level}</span>
                                 <Star className="w-5 h-5 text-yellow-400" />
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                                <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
                                         style={{ width: `${((500 - xpToNextLevel) / 500) * 100}%` }}
                                     />
                                 </div>
-                                <span className="text-xs text-gray-400">{xpToNextLevel} XP to next</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{xpToNextLevel} XP to next</span>
                             </div>
                         </div>
                     </motion.div>
@@ -337,7 +337,7 @@ export default function DashboardPage() {
                 {/* Career Roadmap (Main) */}
                 <div className="lg:col-span-2">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <Zap className="w-5 h-5 text-indigo-400" />
                             Your Career Journey
                         </h2>
@@ -361,9 +361,9 @@ export default function DashboardPage() {
                             <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                                 <TrendingUp className="w-5 h-5 text-indigo-400" />
                             </div>
-                            <h3 className="text-lg font-bold text-white">Pro Tip</h3>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Pro Tip</h3>
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                             Complete each stage sequentially to maximize your career readiness score.
                             Verified skill badges increase your profile visibility by <span className="text-green-400 font-bold">3x</span>!
                         </p>
@@ -383,16 +383,16 @@ export default function DashboardPage() {
 
                         <Link href={nextStep.href} className="block group">
                             <div className={`p-1 rounded-2xl bg-gradient-to-br ${nextStep.gradient} ${nextStep.border} border transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-lg`}>
-                                <div className="bg-gray-900/40 backdrop-blur-xl rounded-xl p-5 h-full relative overflow-hidden">
+                                <div className="bg-gray-100 dark:bg-gray-900/40 backdrop-blur-xl rounded-xl p-5 h-full relative overflow-hidden">
                                     <div className="flex items-start gap-4 z-10 relative">
-                                        <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 ${nextStep.color}`}>
+                                        <div className={`w-12 h-12 rounded-xl bg-white dark:bg-white/5 flex items-center justify-center flex-shrink-0 ${nextStep.color}`}>
                                             <nextStep.icon className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h4 className="text-lg font-bold text-white mb-1 group-hover:text-white transition-colors">
+                                            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                                                 {nextStep.title}
                                             </h4>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
                                                 {nextStep.desc}
                                             </p>
                                             <span className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg ${nextStep.btn} text-white`}>

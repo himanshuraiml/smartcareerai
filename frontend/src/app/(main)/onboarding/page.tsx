@@ -153,11 +153,11 @@ export default function OnboardingPage() {
                         <div key={s} className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
                                 ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
-                                : 'bg-white/10 text-gray-500'
+                                : 'bg-gray-100 dark:bg-white/10 text-gray-500'
                                 }`}>
                                 {step > s ? <Check className="w-4 h-4" /> : s}
                             </div>
-                            {s < 2 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-white/10'}`} />}
+                            {s < 2 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-gray-100 dark:bg-white/10'}`} />}
                         </div>
                     ))}
                 </div>
@@ -176,21 +176,21 @@ export default function OnboardingPage() {
                                         <Briefcase className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h1 className="text-xl font-bold text-white">Select Your Goal</h1>
-                                        <p className="text-sm text-gray-400">What's your target role?</p>
+                                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Select Your Goal</h1>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">What's your target role?</p>
                                     </div>
                                 </div>
 
                                 <div className="my-4 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2">
                                     <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
-                                    <p className="text-xs text-gray-300">
+                                    <p className="text-xs text-gray-600 dark:text-gray-300">
                                         We personalize your dashboard based on this.
                                     </p>
                                 </div>
 
                                 <div className="max-h-64 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar">
                                     {loadingRoles ? (
-                                        <div className="text-center py-8 text-gray-400">Loading roles...</div>
+                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading roles...</div>
                                     ) : (
                                         groupedRoles.map((group) => (
                                             <div key={group.category}>
@@ -202,7 +202,7 @@ export default function OnboardingPage() {
                                                             onClick={() => setFormData({ ...formData, targetJobRoleId: role.id })}
                                                             className={`p-3 rounded-lg text-left text-sm font-medium transition-all ${formData.targetJobRoleId === role.id
                                                                 ? 'bg-indigo-500/20 border border-indigo-500/50 text-white'
-                                                                : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                                                                : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10'
                                                                 }`}
                                                         >
                                                             {role.title}
@@ -234,21 +234,21 @@ export default function OnboardingPage() {
                                         <Building2 className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h1 className="text-xl font-bold text-white">Select Institution</h1>
-                                        <p className="text-sm text-gray-400">Are you currently a student?</p>
+                                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Select Institution</h1>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Are you currently a student?</p>
                                     </div>
                                 </div>
 
                                 <div className="mb-6 mt-6">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Institution</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Institution</label>
                                     <select
                                         value={formData.institutionId}
                                         onChange={(e) => setFormData({ ...formData, institutionId: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     >
-                                        <option value="" className="bg-gray-900">Select an Institution (Optional)</option>
+                                        <option value="" className="bg-white dark:bg-gray-900">Select an Institution (Optional)</option>
                                         {institutions.map((inst) => (
-                                            <option key={inst.id} value={inst.id} className="bg-gray-900">
+                                            <option key={inst.id} value={inst.id} className="bg-white dark:bg-gray-900">
                                                 {inst.name}
                                             </option>
                                         ))}

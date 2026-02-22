@@ -95,7 +95,7 @@ export default function StudentDetailPage() {
     }, [user, params.id]);
 
     const getScoreColor = (score: number | null) => {
-        if (score === null) return "text-gray-400";
+        if (score === null) return "text-gray-500 dark:text-gray-400";
         if (score >= 80) return "text-emerald-400";
         if (score >= 60) return "text-amber-400";
         return "text-red-400";
@@ -106,13 +106,13 @@ export default function StudentDetailPage() {
             case "EASY": return "bg-emerald-500/10 text-emerald-400";
             case "MEDIUM": return "bg-amber-500/10 text-amber-400";
             case "HARD": return "bg-red-500/10 text-red-400";
-            default: return "bg-gray-500/10 text-gray-400";
+            default: return "bg-gray-500/10 text-gray-500 dark:text-gray-400";
         }
     };
 
     if (loading) {
         return (
-            <div className="text-white text-center py-20">
+            <div className="text-gray-900 dark:text-white text-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
                 Loading student details...
             </div>
@@ -125,7 +125,7 @@ export default function StudentDetailPage() {
                 <p className="text-red-400 mb-4">{error || "Student not found"}</p>
                 <button
                     onClick={() => router.back()}
-                    className="px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:text-white"
+                    className="px-4 py-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 >
                     Go Back
                 </button>
@@ -139,18 +139,18 @@ export default function StudentDetailPage() {
             <div className="flex items-center gap-4">
                 <Link
                     href="/institution-admin/students"
-                    className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white transition-colors"
+                    className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Student Profile</h1>
-                    <p className="text-gray-400">View detailed performance and progress</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Profile</h1>
+                    <p className="text-gray-500 dark:text-gray-400">View detailed performance and progress</p>
                 </div>
             </div>
 
             {/* Profile Header */}
-            <div className="p-6 rounded-xl glass border border-white/5">
+            <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
                 <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
                         {student.avatarUrl ? (
@@ -160,8 +160,8 @@ export default function StudentDetailPage() {
                         )}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-xl font-bold text-white">{student.name || "Unnamed Student"}</h2>
-                        <p className="text-gray-400">{student.email}</p>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{student.name || "Unnamed Student"}</h2>
+                        <p className="text-gray-500 dark:text-gray-400">{student.email}</p>
                         {student.targetJobRole && (
                             <div className="flex items-center gap-2 mt-2">
                                 <Target className="w-4 h-4 text-emerald-400" />
@@ -169,7 +169,7 @@ export default function StudentDetailPage() {
                             </div>
                         )}
                     </div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                         <p>Joined: {new Date(student.createdAt).toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -177,13 +177,13 @@ export default function StudentDetailPage() {
 
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl glass border border-white/5">
+                <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-emerald-500/10">
                             <TrendingUp className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Avg. Interview Score</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Avg. Interview Score</p>
                             <p className={`text-2xl font-bold ${getScoreColor(student.summary.averageInterviewScore)}`}>
                                 {student.summary.averageInterviewScore !== null ? `${student.summary.averageInterviewScore}%` : "N/A"}
                             </p>
@@ -191,37 +191,37 @@ export default function StudentDetailPage() {
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl glass border border-white/5">
+                <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-blue-500/10">
                             <Calendar className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Total Interviews</p>
-                            <p className="text-2xl font-bold text-white">{student.summary.totalInterviews}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Interviews</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{student.summary.totalInterviews}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl glass border border-white/5">
+                <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-indigo-500/10">
                             <Award className="w-5 h-5 text-indigo-400" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Badges Earned</p>
-                            <p className="text-2xl font-bold text-white">{student.summary.badgesEarned}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Badges Earned</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{student.summary.badgesEarned}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl glass border border-white/5">
+                <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-amber-500/10">
                             <FileText className="w-5 h-5 text-amber-400" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Latest ATS Score</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Latest ATS Score</p>
                             <p className={`text-2xl font-bold ${getScoreColor(student.summary.latestAtsScore)}`}>
                                 {student.summary.latestAtsScore !== null ? `${student.summary.latestAtsScore}%` : "N/A"}
                             </p>
@@ -231,25 +231,25 @@ export default function StudentDetailPage() {
             </div>
 
             {/* Interview History */}
-            <div className="p-6 rounded-xl glass border border-white/5">
-                <h3 className="text-lg font-bold text-white mb-4">Interview History</h3>
+            <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Interview History</h3>
                 {student.interviews.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">No interviews completed yet.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">No interviews completed yet.</p>
                 ) : (
                     <div className="space-y-3">
                         {student.interviews.map((interview) => (
-                            <div key={interview.id} className="p-4 rounded-lg bg-white/5 flex flex-col md:flex-row md:items-center gap-4">
+                            <div key={interview.id} className="p-4 rounded-lg bg-white dark:bg-white/5 flex flex-col md:flex-row md:items-center gap-4">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-white">{interview.targetRole}</span>
+                                        <span className="font-medium text-gray-900 dark:text-white">{interview.targetRole}</span>
                                         <span className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(interview.difficulty)}`}>
                                             {interview.difficulty}
                                         </span>
-                                        <span className="text-xs text-gray-400 capitalize">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                                             ({interview.type.toLowerCase()})
                                         </span>
                                     </div>
-                                    <p className="text-sm text-gray-400">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
                                         {interview.completedAt
                                             ? `Completed on ${new Date(interview.completedAt).toLocaleDateString()}`
                                             : interview.status}
@@ -270,13 +270,13 @@ export default function StudentDetailPage() {
 
             {/* Skill Badges */}
             {student.skillBadges.length > 0 && (
-                <div className="p-6 rounded-xl glass border border-white/5">
-                    <h3 className="text-lg font-bold text-white mb-4">Skill Badges</h3>
+                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Skill Badges</h3>
                     <div className="flex flex-wrap gap-3">
                         {student.skillBadges.map((badge) => (
                             <div key={badge.id} className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                                 <p className="font-medium text-indigo-400">{badge.skill.name}</p>
-                                <p className="text-xs text-gray-400">{badge.badgeType}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{badge.badgeType}</p>
                             </div>
                         ))}
                     </div>

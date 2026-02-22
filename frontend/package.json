@@ -10,7 +10,9 @@
     "test": "jest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "blog:generate": "tsx scripts/blog-generator.ts",
+    "blog:status": "tsx scripts/blog-generator.ts --status"
   },
   "dependencies": {
     "@keystatic/core": "^0.5.48",
@@ -57,12 +59,15 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.16",
+    "dotenv": "^16.6.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",
+    "groq-sdk": "^0.37.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   },
   "overrides": {

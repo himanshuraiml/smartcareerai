@@ -54,8 +54,8 @@ export default function LoginPage() {
 
                 {/* Card */}
                 <div className="p-8 rounded-2xl glass">
-                    <h1 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h1>
-                    <p className="text-gray-400 text-center mb-8">Sign in to continue your journey</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">Welcome Back</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-center mb-8">Sign in to continue your journey</p>
 
                     {error && (
                         <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -65,14 +65,14 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                 <input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="you@example.com"
                                     required
                                 />
@@ -80,14 +80,14 @@ export default function LoginPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -95,7 +95,7 @@ export default function LoginPage() {
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     aria-label={showPassword ? "Hide password" : "Show password"}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
@@ -104,8 +104,8 @@ export default function LoginPage() {
 
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-white/5 text-indigo-500 focus:ring-indigo-500" />
-                                <span className="text-sm text-gray-400">Remember me</span>
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-white/20 bg-white dark:bg-white/5 text-indigo-500 focus:ring-indigo-500" />
+                                <span className="text-sm text-gray-500 dark:text-gray-400">Remember me</span>
                             </label>
                             <Link href="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
                                 Forgot password?
@@ -128,9 +128,9 @@ export default function LoginPage() {
                     </form>
 
                     <div className="flex items-center gap-4 my-6">
-                        <div className="flex-1 border-t border-white/10"></div>
+                        <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
                         <span className="text-sm text-gray-500">Or continue with</span>
-                        <div className="flex-1 border-t border-white/10"></div>
+                        <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
                     </div>
 
                     <div className="flex justify-center w-full">
@@ -167,7 +167,7 @@ export default function LoginPage() {
                         ) : null}
                     </div>
 
-                    <p className="mt-8 text-center text-gray-400">
+                    <p className="mt-8 text-center text-gray-500 dark:text-gray-400">
                         Don't have an account?{' '}
                         <Link href="/register" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
                             Sign up

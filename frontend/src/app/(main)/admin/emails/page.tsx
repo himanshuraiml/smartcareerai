@@ -331,7 +331,7 @@ export default function AdminEmailsPage() {
             case 'PENDING':
                 return 'text-yellow-400 bg-yellow-500/20';
             default:
-                return 'text-gray-400 bg-gray-500/20';
+                return 'text-gray-500 dark:text-gray-400 bg-gray-500/20';
         }
     };
 
@@ -359,10 +359,10 @@ export default function AdminEmailsPage() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-white">Email Management</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Email Management</h1>
                 <button
                     onClick={() => loadData()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -372,49 +372,49 @@ export default function AdminEmailsPage() {
             {/* Stats */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl glass border border-white/5">
+                    <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
                                 <CheckCircle className="w-5 h-5 text-green-400" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{stats.totalSent}</p>
-                                <p className="text-sm text-gray-400">Emails Sent</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalSent}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Emails Sent</p>
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
+                    <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
                                 <AlertCircle className="w-5 h-5 text-red-400" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{stats.totalFailed}</p>
-                                <p className="text-sm text-gray-400">Failed</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalFailed}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Failed</p>
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
+                    <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                                 <FileText className="w-5 h-5 text-indigo-400" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">{templates.length}</p>
-                                <p className="text-sm text-gray-400">Templates</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{templates.length}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Templates</p>
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 rounded-xl glass border border-white/5">
+                    <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                                 <Building className="w-5 h-5 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-white">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {invites.filter(i => !i.isAccepted).length}
                                 </p>
-                                <p className="text-sm text-gray-400">Pending Invites</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Pending Invites</p>
                             </div>
                         </div>
                     </div>
@@ -422,7 +422,7 @@ export default function AdminEmailsPage() {
             )}
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-white/10 pb-2">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2">
                 {[
                     { id: 'logs', label: 'Email Logs', icon: Mail },
                     { id: 'invites', label: 'Invitations', icon: Building },
@@ -434,7 +434,7 @@ export default function AdminEmailsPage() {
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
                             ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -463,7 +463,7 @@ export default function AdminEmailsPage() {
                         <span className={toast.type === 'success' ? 'text-green-300' : 'text-red-300'}>
                             {toast.message}
                         </span>
-                        <button onClick={() => setToast(null)} className="text-gray-400 hover:text-white ml-2">
+                        <button onClick={() => setToast(null)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white ml-2">
                             <X className="w-4 h-4" />
                         </button>
                     </motion.div>
@@ -490,13 +490,13 @@ export default function AdminEmailsPage() {
                                         value={logsSearch}
                                         onChange={(e) => setLogsSearch(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && loadLogs()}
-                                        className="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full pl-9 pr-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
                                 <select
                                     value={logsFilter.emailType}
                                     onChange={(e) => setLogsFilter({ ...logsFilter, emailType: e.target.value })}
-                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
                                     <option value="">All Types</option>
                                     <option value="INSTITUTION_ADMIN_INVITE">Institution Admin Invite</option>
@@ -509,7 +509,7 @@ export default function AdminEmailsPage() {
                                 <select
                                     value={logsFilter.status}
                                     onChange={(e) => setLogsFilter({ ...logsFilter, status: e.target.value })}
-                                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
                                     <option value="">All Status</option>
                                     <option value="SENT">Sent</option>
@@ -519,29 +519,29 @@ export default function AdminEmailsPage() {
                             </div>
 
                             {/* Logs Table */}
-                            <div className="rounded-xl glass border border-white/5 overflow-hidden">
+                            <div className="rounded-xl glass border border-gray-200 dark:border-white/5 overflow-hidden">
                                 <table className="w-full">
-                                    <thead className="bg-white/5">
+                                    <thead className="bg-white dark:bg-white/5">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Recipient</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Subject</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Type</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Date</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Recipient</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Subject</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Type</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Date</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-white/5">
+                                    <tbody className="divide-y divide-gray-200 dark:divide-white/5">
                                         {logs.map((log) => (
-                                            <tr key={log.id} className="hover:bg-white/5">
-                                                <td className="px-4 py-3 text-sm text-white">{log.recipientEmail}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-300 max-w-xs truncate">{log.subject}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-400">{getEmailTypeLabel(log.emailType)}</td>
+                                            <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                                                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{log.recipientEmail}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">{log.subject}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{getEmailTypeLabel(log.emailType)}</td>
                                                 <td className="px-4 py-3">
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(log.status)}`}>
                                                         {log.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-400">{formatDate(log.createdAt)}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{formatDate(log.createdAt)}</td>
                                             </tr>
                                         ))}
                                         {logs.length === 0 && (
@@ -561,17 +561,17 @@ export default function AdminEmailsPage() {
                                     <button
                                         onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
                                         disabled={logsPage === 1}
-                                        className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white disabled:opacity-50"
+                                        className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
                                     </button>
-                                    <span className="text-sm text-gray-400">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Page {logsPage} of {logsTotalPages}
                                     </span>
                                     <button
                                         onClick={() => setLogsPage((p) => Math.min(logsTotalPages, p + 1))}
                                         disabled={logsPage === logsTotalPages}
-                                        className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white disabled:opacity-50"
+                                        className="p-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50"
                                     >
                                         <ChevronRight className="w-4 h-4" />
                                     </button>
@@ -583,21 +583,21 @@ export default function AdminEmailsPage() {
                     {/* Invitations Tab */}
                     {activeTab === 'invites' && (
                         <div className="space-y-4">
-                            <div className="rounded-xl glass border border-white/5 overflow-hidden">
+                            <div className="rounded-xl glass border border-gray-200 dark:border-white/5 overflow-hidden">
                                 <table className="w-full">
-                                    <thead className="bg-white/5">
+                                    <thead className="bg-white dark:bg-white/5">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Email</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Institution</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Sent At</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Email</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Institution</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Sent At</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-white/5">
+                                    <tbody className="divide-y divide-gray-200 dark:divide-white/5">
                                         {invites.map((invite) => (
-                                            <tr key={invite.id} className="hover:bg-white/5">
-                                                <td className="px-4 py-3 text-sm text-white">{invite.recipientEmail}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-300">
+                                            <tr key={invite.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                                                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{invite.recipientEmail}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                                                     {invite.user?.adminForInstitution?.name || '-'}
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -618,7 +618,7 @@ export default function AdminEmailsPage() {
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-400">{formatDate(invite.createdAt)}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{formatDate(invite.createdAt)}</td>
                                             </tr>
                                         ))}
                                         {invites.length === 0 && (
@@ -662,12 +662,12 @@ export default function AdminEmailsPage() {
                                 {templates.map((template) => (
                                     <div
                                         key={template.id}
-                                        className="p-4 rounded-xl glass border border-white/5 hover:border-indigo-500/30 transition-colors"
+                                        className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5 hover:border-indigo-500/30 transition-colors"
                                     >
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h3 className="text-white font-medium">{template.name}</h3>
-                                                <p className="text-sm text-gray-400">{template.subject}</p>
+                                                <h3 className="text-gray-900 dark:text-white font-medium">{template.name}</h3>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{template.subject}</p>
                                             </div>
                                             <span className="px-2 py-1 rounded text-xs font-medium bg-indigo-500/20 text-indigo-400">
                                                 {template.category}
@@ -691,13 +691,13 @@ export default function AdminEmailsPage() {
                                                         });
                                                         setShowTemplateModal(true);
                                                     }}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+                                                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10"
                                                 >
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteTemplate(template.id)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                                                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -718,11 +718,11 @@ export default function AdminEmailsPage() {
                     {activeTab === 'compose' && (
                         <div className="max-w-2xl">
                             <form onSubmit={handleSendBulkEmail} className="space-y-6">
-                                <div className="p-6 rounded-xl glass border border-white/5 space-y-4">
-                                    <h3 className="text-lg font-medium text-white mb-4">Send Bulk Email</h3>
+                                <div className="p-6 rounded-xl glass border border-gray-200 dark:border-white/5 space-y-4">
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Send Bulk Email</h3>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">Recipients</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Recipients</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {[
                                                 { id: 'all_students', label: 'All Students', icon: Users },
@@ -735,7 +735,7 @@ export default function AdminEmailsPage() {
                                                     onClick={() => setComposeForm({ ...composeForm, recipientType: option.id })}
                                                     className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${composeForm.recipientType === option.id
                                                         ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400'
-                                                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                                                        : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                                         }`}
                                                 >
                                                     <option.icon className="w-5 h-5" />
@@ -746,17 +746,17 @@ export default function AdminEmailsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                                             Use Template (Optional)
                                         </label>
                                         <select
                                             value={composeForm.templateId}
                                             onChange={(e) => setComposeForm({ ...composeForm, templateId: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         >
-                                            <option value="" className="bg-gray-800 text-white">No template (compose manually)</option>
+                                            <option value="" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">No template (compose manually)</option>
                                             {templates.map((t) => (
-                                                <option key={t.id} value={t.id} className="bg-gray-800 text-white">
+                                                <option key={t.id} value={t.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                                     {t.name}
                                                 </option>
                                             ))}
@@ -766,24 +766,24 @@ export default function AdminEmailsPage() {
                                     {!composeForm.templateId && (
                                         <>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-1">Subject</label>
+                                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Subject</label>
                                                 <input
                                                     type="text"
                                                     value={composeForm.subject}
                                                     onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
                                                     required={!composeForm.templateId}
-                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     placeholder="Email subject..."
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-1">Content</label>
+                                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Content</label>
                                                 <textarea
                                                     value={composeForm.content}
                                                     onChange={(e) => setComposeForm({ ...composeForm, content: e.target.value })}
                                                     required={!composeForm.templateId}
                                                     rows={8}
-                                                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                     placeholder="Email content (HTML supported)..."
                                                 />
                                             </div>
@@ -807,7 +807,7 @@ export default function AdminEmailsPage() {
                                     <button
                                         type="button"
                                         onClick={handleSendTestEmail}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10"
                                     >
                                         <Eye className="w-4 h-4" />
                                         Send Test
@@ -827,13 +827,13 @@ export default function AdminEmailsPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-gray-900 border border-white/10 shadow-2xl"
+                            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                                     {editingTemplate ? 'Edit Template' : 'New Template'}
                                 </h2>
-                                <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-white">
+                                <button onClick={() => setShowTemplateModal(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -841,21 +841,21 @@ export default function AdminEmailsPage() {
                             <form onSubmit={handleSaveTemplate} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Template Name</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Template Name</label>
                                         <input
                                             type="text"
                                             required
                                             value={templateForm.name}
                                             onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Category</label>
                                         <select
                                             value={templateForm.category}
                                             onChange={(e) => setTemplateForm({ ...templateForm, category: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         >
                                             <option value="GENERAL">General</option>
                                             <option value="NEWSLETTER">Newsletter</option>
@@ -867,44 +867,44 @@ export default function AdminEmailsPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Subject</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Subject</label>
                                     <input
                                         type="text"
                                         required
                                         value={templateForm.subject}
                                         onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Use {{variable}} for dynamic content"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Variables (comma-separated)</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Variables (comma-separated)</label>
                                     <input
                                         type="text"
                                         value={templateForm.variables}
                                         onChange={(e) => setTemplateForm({ ...templateForm, variables: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="e.g., userName, companyName"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">HTML Content</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">HTML Content</label>
                                     <textarea
                                         required
                                         rows={10}
                                         value={templateForm.htmlContent}
                                         onChange={(e) => setTemplateForm({ ...templateForm, htmlContent: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="<p>Hello {{userName}},</p>..."
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Plain Text (Optional)</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Plain Text (Optional)</label>
                                     <textarea
                                         rows={4}
                                         value={templateForm.textContent}
                                         onChange={(e) => setTemplateForm({ ...templateForm, textContent: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Plain text version..."
                                     />
                                 </div>
@@ -913,7 +913,7 @@ export default function AdminEmailsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowTemplateModal(false)}
-                                        className="px-4 py-2 rounded-lg text-gray-400 hover:text-white"
+                                        className="px-4 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                     >
                                         Cancel
                                     </button>

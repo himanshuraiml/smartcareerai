@@ -350,6 +350,12 @@ app.use(
     createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/interviews`]: '' }))
 );
 
+// Practice Interviews (free tier — no AI rate limiting needed since no LLM is used)
+app.use(
+    `${API_PREFIX}/practice-interviews`,
+    createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/practice-interviews`]: '/practice' }))
+);
+
 const VALIDATION_SERVICE_URL = process.env.VALIDATION_SERVICE_URL || 'http://localhost:3008';
 
 app.use(

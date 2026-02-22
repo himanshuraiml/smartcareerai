@@ -93,15 +93,15 @@ export default function BillingPage() {
         <div className="space-y-8">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-white">Billing & Credits</h1>
-                <p className="text-gray-400 mt-1">Manage your subscription and credit balances</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Billing & Credits</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your subscription and credit balances</p>
             </div>
 
             {/* Subscription Card */}
             <div className="p-6 rounded-xl glass border-l-4 border-indigo-500">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-lg font-bold text-white">Current Plan</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Current Plan</h2>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-2xl font-bold text-indigo-400">
                                 {subscription?.plan?.displayName || "Free"}
@@ -113,7 +113,7 @@ export default function BillingPage() {
                             )}
                         </div>
                         {subscription?.currentPeriodEnd && (
-                            <p className="text-gray-400 text-sm mt-2">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                                 Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                             </p>
                         )}
@@ -122,7 +122,7 @@ export default function BillingPage() {
                     <div className="flex gap-3">
                         <Link
                             href="/pricing"
-                            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white transition flex items-center gap-2"
+                            className="px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-900 dark:text-white transition flex items-center gap-2"
                         >
                             Change Plan
                         </Link>
@@ -144,8 +144,8 @@ export default function BillingPage() {
 
             {/* Credit Balances */}
             <div>
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Wallet className="w-5 h-5 text-gray-400" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Wallet className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     Credit Balances
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -175,23 +175,23 @@ export default function BillingPage() {
 
             {/* Transaction History */}
             <div className="p-6 rounded-xl glass">
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <History className="w-5 h-5 text-gray-400" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <History className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     Transaction History
                 </h2>
 
                 {loading ? (
-                    <div className="text-center py-12 text-gray-400">Loading history...</div>
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading history...</div>
                 ) : transactions.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 bg-white/5 rounded-xl border border-dashed border-white/10">
+                    <div className="text-center py-12 text-gray-500 bg-white dark:bg-white/5 rounded-xl border border-dashed border-gray-200 dark:border-white/10">
                         No transactions yet
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {transactions.map((tx) => (
-                            <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition border border-white/5">
+                            <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition border border-gray-200 dark:border-white/5">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                         {tx.transactionType === 'PURCHASE' || tx.transactionType === 'GRANT' ? (
                                             <CreditCard className="w-5 h-5 text-green-400" />
                                         ) : (
@@ -199,8 +199,8 @@ export default function BillingPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-white font-medium">{tx.description}</p>
-                                        <p className="text-gray-400 text-xs">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                                        <p className="text-gray-900 dark:text-white font-medium">{tx.description}</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">{new Date(tx.createdAt).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">

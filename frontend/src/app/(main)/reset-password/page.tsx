@@ -75,8 +75,8 @@ function ResetPasswordForm() {
                         <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
                             <XCircle className="w-8 h-8 text-red-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Invalid Reset Link</h1>
-                        <p className="text-gray-400 mb-6">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invalid Reset Link</h1>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
                             This password reset link is invalid or has expired.
                         </p>
                         <Link
@@ -99,8 +99,8 @@ function ResetPasswordForm() {
                         <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-8 h-8 text-green-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Password Reset!</h1>
-                        <p className="text-gray-400 mb-6">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Password Reset!</h1>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
                             Your password has been successfully reset. Redirecting to login...
                         </p>
                         <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto" />
@@ -129,8 +129,8 @@ function ResetPasswordForm() {
 
                 {/* Card */}
                 <div className="p-8 rounded-2xl glass">
-                    <h1 className="text-2xl font-bold text-white text-center mb-2">Reset Password</h1>
-                    <p className="text-gray-400 text-center mb-8">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">Reset Password</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
                         Create a new secure password
                     </p>
 
@@ -142,21 +142,21 @@ function ResetPasswordForm() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">New Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-600 dark:text-gray-300 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
@@ -164,21 +164,21 @@ function ResetPasswordForm() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Confirm Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                 <input
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-600 dark:text-gray-300 transition-colors"
                                 >
                                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
@@ -226,7 +226,7 @@ function LoadingFallback() {
             <div className="w-full max-w-md">
                 <div className="p-8 rounded-2xl glass text-center">
                     <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-400">Loading...</p>
+                    <p className="text-gray-500 dark:text-gray-400">Loading...</p>
                 </div>
             </div>
         </div>

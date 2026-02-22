@@ -6,7 +6,9 @@
       "Bash(docker logs:*)",
       "Bash(npx tsc:*)",
       "Bash(echo:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

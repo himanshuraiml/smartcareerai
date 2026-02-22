@@ -61,7 +61,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className="dark dark-mode" suppressHydrationWarning>
+        <html lang="en" className="dark" suppressHydrationWarning>
             <body className={inter.className}>
                 <GoogleAuthProviderWrapper>
                     <ThemeProvider>

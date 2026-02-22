@@ -667,13 +667,13 @@ export default function HRInterviewRoomPage() {
                     <div className="flex items-center justify-center gap-4 py-4">
                         <button
                             onClick={() => setIsMuted(!isMuted)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20'}`}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20'}`}
                         >
                             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
 
                         <button
-                            className="w-12 h-12 rounded-full bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition"
+                            className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition"
                         >
                             <Video className="w-5 h-5" />
                         </button>
@@ -746,7 +746,7 @@ export default function HRInterviewRoomPage() {
                                 {['leadership', 'teamwork', 'conflict'].map(keyword => {
                                     const detected = detectedKeywords.has(keyword);
                                     return (
-                                        <div key={keyword} className={`px-2 py-1 rounded text-xs border ${detected ? 'bg-teal-500/10 border-teal-500/30 text-teal-500' : 'bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500'}`}>
+                                        <div key={keyword} className={`px-2 py-1 rounded text-xs border ${detected ? 'bg-teal-500/10 border-teal-500/30 text-teal-500' : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500'}`}>
                                             {keyword}
                                         </div>
                                     );
@@ -771,7 +771,7 @@ export default function HRInterviewRoomPage() {
                             {/* Mic toggle */}
                             <button
                                 onClick={() => setIsMuted(!isMuted)}
-                                className={`p-2 rounded-lg transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                                className={`p-2 rounded-lg transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                             >
                                 {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                             </button>

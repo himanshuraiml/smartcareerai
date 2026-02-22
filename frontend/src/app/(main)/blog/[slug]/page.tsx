@@ -15,8 +15,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-    const post = getPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const post = getPostBySlug(slug);
 
     if (!post) {
         notFound();
@@ -29,10 +30,10 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         .slice(0, 2);
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] bg-grid landing-page text-white overflow-x-hidden">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] bg-grid landing-page text-gray-900 dark:text-white overflow-x-hidden">
 
             {/* Navigation (Reused) - Ideally this should be a component */}
-            <nav className="fixed top-0 w-full z-50 glass-premium border-b border-white/5">
+            <nav className="fixed top-0 w-full z-50 glass-premium border-b border-gray-200 dark:border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2">
@@ -48,9 +49,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
                         {/* Desktop Navigation */}
                         <div className="hidden md:flex items-center gap-6">
-                            <Link href="/blog" className="text-white font-medium">Blog</Link>
-                            <Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link>
-                            <Link href="/login" className="text-gray-300 hover:text-white transition-colors">Login</Link>
+                            <Link href="/blog" className="text-gray-900 dark:text-white font-medium">Blog</Link>
+                            <Link href="/pricing" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Pricing</Link>
+                            <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Login</Link>
                             <Link
                                 href="/register"
                                 className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white !text-white font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-violet-500/30"
@@ -68,7 +69,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                           */}
                         <Link
                             href="/blog"
-                            className="md:hidden p-2 rounded-lg hover:bg-white/10 text-gray-300 transition-colors"
+                            className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         >
                             <ArrowLeft className="w-6 h-6" />
                         </Link>
@@ -79,7 +80,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <main className="pt-32 pb-20 px-4">
                 <div className="max-w-4xl mx-auto">
                     {/* Back Button */}
-                    <Link href="/blog" className="inline-flex items-center text-gray-400 hover:text-white mb-8 group transition-colors">
+                    <Link href="/blog" className="inline-flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 group transition-colors">
                         <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                         Back to Blog
                     </Link>
@@ -90,28 +91,28 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-sm font-bold rounded-lg border border-indigo-500/30">
                                 {post.frontmatter.category}
                             </span>
-                            <span className="flex items-center gap-1 text-sm text-gray-400">
+                            <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                                 <Clock className="w-4 h-4" /> {post.frontmatter.readTime}
                             </span>
-                            <span className="flex items-center gap-1 text-sm text-gray-400">
+                            <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                                 <Calendar className="w-4 h-4" /> {post.frontmatter.date}
                             </span>
                         </div>
                         <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">{post.frontmatter.title}</h1>
-                        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">{post.frontmatter.excerpt}</p>
+                        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{post.frontmatter.excerpt}</p>
 
                         {/* Author Info */}
                         <div className="flex items-center justify-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">P</div>
                             <div className="text-left">
-                                <div className="text-white font-medium">PlaceNxt Team</div>
+                                <div className="text-gray-900 dark:text-white font-medium">PlaceNxt Team</div>
                                 <div className="text-xs text-gray-500">Career Experts</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Featured Image */}
-                    <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 border border-white/5 shadow-2xl shadow-indigo-500/10">
+                    <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 border border-gray-200 dark:border-white/5 shadow-2xl shadow-indigo-500/10">
                         {post.frontmatter.image ? (
                             <Image
                                 src={post.frontmatter.image}
@@ -128,21 +129,21 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                     </div>
 
                     {/* Content */}
-                    <article className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-ul:text-gray-300 prose-li:marker:text-indigo-500">
+                    <article className="prose dark:prose-invert prose-lg max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-white prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:marker:text-indigo-500">
                         <MDXRemote source={post.content} />
                     </article>
 
                     {/* Article Footer: Keywords & Share */}
-                    <div className="mt-16 pt-8 border-t border-white/10">
+                    <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/10">
                         <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
                             <div className="flex flex-wrap gap-2">
                                 {post.frontmatter.keywords.map(keyword => (
-                                    <span key={keyword} className="px-3 py-1 bg-white/5 rounded-full text-xs text-gray-400 border border-white/5">
+                                    <span key={keyword} className="px-3 py-1 bg-white dark:bg-white/5 rounded-full text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/5">
                                         #{keyword}
                                     </span>
                                 ))}
                             </div>
-                            <button className="flex items-center gap-2 text-indigo-400 hover:text-white transition-colors">
+                            <button className="flex items-center gap-2 text-indigo-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                                 <Share2 className="w-4 h-4" /> Share Article
                             </button>
                         </div>
@@ -156,10 +157,10 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                             </h2>
                             <div className="grid md:grid-cols-2 gap-8">
                                 {relatedPosts.map(related => (
-                                    <Link key={related.slug} href={`/blog/${related.slug}`} className="group p-6 rounded-2xl glass-card border border-white/5 hover:border-indigo-500/30 transition-all">
+                                    <Link key={related.slug} href={`/blog/${related.slug}`} className="group p-6 rounded-2xl glass-card border border-gray-200 dark:border-white/5 hover:border-indigo-500/30 transition-all">
                                         <div className="text-xs text-indigo-400 mb-2 font-medium">{related.frontmatter.category}</div>
                                         <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-300 transition-colors">{related.frontmatter.title}</h3>
-                                        <p className="text-sm text-gray-400 line-clamp-2">{related.frontmatter.excerpt}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{related.frontmatter.excerpt}</p>
                                     </Link>
                                 ))}
                             </div>
@@ -185,13 +186,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             </main>
 
             {/* Footer */}
-            <footer className="py-8 px-4 border-t border-white/5">
+            <footer className="py-8 px-4 border-t border-gray-200 dark:border-white/5">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
                     <div>© 2026 PlaceNxt. All rights reserved.</div>
                     <div className="flex gap-6">
-                        <Link href="/" className="hover:text-white transition-colors">Home</Link>
-                        <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                        <Link href="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Home</Link>
+                        <Link href="/pricing" className="hover:text-gray-900 dark:hover:text-white transition-colors">Pricing</Link>
+                        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</Link>
                     </div>
                 </div>
             </footer>

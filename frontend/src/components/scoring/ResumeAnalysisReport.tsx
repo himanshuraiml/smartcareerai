@@ -23,10 +23,25 @@ import {
     Cpu,
     Target,
     Layout,
-    FileText
+    FileText,
+    Info,
+    TrendingDown,
+    BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/providers/ThemeProvider';
+
+interface ScoreDeduction {
+    category: string;
+    points: number;
+    reason: string;
+}
+
+interface IndustryBenchmark {
+    estimatedPercentile: number;
+    averageScoreForRole: number;
+    competitiveLevel: string;
+}
 
 interface AtsScore {
     id: string;
@@ -39,6 +54,10 @@ interface AtsScore {
     missingKeywords: string[];
     formattingIssues?: string[];
     suggestions: string[];
+    scoreDeductions?: ScoreDeduction[];
+    scoreExplanation?: string;
+    industryBenchmark?: IndustryBenchmark;
+    transparencyNote?: string;
     createdAt?: string;
 }
 
@@ -102,7 +121,7 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                     style={modalBgStyle}
                 >
                     <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                             <ArrowRight className="w-5 h-5 rotate-180" />
                         </button>
                         <div>
@@ -125,7 +144,7 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                                 Re-analyze
                             </button>
                         )}
-                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -210,23 +229,56 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                                 </div>
                             </div>
 
-                            {/* AI Insights */}
-                            <div className="sm:col-span-2 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-[#131620] rounded-2xl p-5 border border-gray-200 dark:border-white/5 flex items-center gap-6">
-                                <div className="p-4 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
-                                    <Cpu className="w-8 h-8" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="text-gray-700 dark:text-gray-300 font-medium">AI Insight:</h4>
-                                        <span className={`font-bold ${data.overallScore >= 70 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                                            {data.overallScore >= 70 ? 'STRONG' : 'NEEDS IMPROVEMENT'}
-                                        </span>
+                            {/* Score Explanation + Industry Benchmark */}
+                            <div className="sm:col-span-2 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-[#131620] rounded-2xl p-5 border border-gray-200 dark:border-white/5">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-4 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
+                                        <Cpu className="w-8 h-8" />
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                        {data.overallScore >= 70
-                                            ? "Your resume is well-structured and contains many relevant keywords. Keep it up!"
-                                            : "Focus on adding more keywords and improving formatting to pass ATS filters."}
-                                    </p>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="text-gray-700 dark:text-gray-300 font-medium">Score Explanation</h4>
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                                            {data.scoreExplanation || (data.overallScore >= 70
+                                                ? "Your resume is well-structured and contains many relevant keywords. Keep it up!"
+                                                : "Focus on adding more keywords and improving formatting to pass ATS filters.")}
+                                        </p>
+
+                                        {/* Industry Benchmark Bar */}
+                                        {data.industryBenchmark && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/5">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <BarChart3 className="w-4 h-4 text-indigo-400" />
+                                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Industry Comparison</span>
+                                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${data.industryBenchmark.competitiveLevel === 'excellent' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                        data.industryBenchmark.competitiveLevel === 'above_average' ? 'bg-blue-500/20 text-blue-400' :
+                                                            data.industryBenchmark.competitiveLevel === 'average' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                                'bg-rose-500/20 text-rose-400'
+                                                        }`}>
+                                                        {data.industryBenchmark.competitiveLevel?.replace('_', ' ').toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                <div className="relative w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
+                                                    {/* Average marker */}
+                                                    <div
+                                                        className="absolute top-0 h-full w-0.5 bg-gray-400 dark:bg-gray-500 z-10"
+                                                        style={{ left: `${data.industryBenchmark.averageScoreForRole}%` }}
+                                                        title={`Average for this role: ${data.industryBenchmark.averageScoreForRole}%`}
+                                                    />
+                                                    {/* Your score */}
+                                                    <div
+                                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                                                        style={{ width: `${data.industryBenchmark.estimatedPercentile}%` }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between mt-1">
+                                                    <span className="text-xs text-gray-500">Your percentile: <strong className="text-gray-700 dark:text-gray-300">{data.industryBenchmark.estimatedPercentile}th</strong></span>
+                                                    <span className="text-xs text-gray-500">Avg: {data.industryBenchmark.averageScoreForRole}%</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -308,7 +360,32 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                         </div>
                     </div>
 
-                    {/* Bottom Section: Improvement Tips */}
+                    {/* Score Deductions Section */}
+                    {data.scoreDeductions && data.scoreDeductions.length > 0 && (
+                        <div className="bg-gray-50 dark:bg-[#131620] rounded-3xl p-6 border border-gray-200 dark:border-white/5">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <TrendingDown className="w-5 h-5 text-rose-400" />
+                                    Score Breakdown: Where You Lost Points
+                                </h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {data.scoreDeductions.map((deduction, i) => (
+                                    <div key={i} className="flex gap-4 p-4 rounded-xl bg-rose-50/50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/10">
+                                        <div className="shrink-0 w-12 h-12 rounded-lg bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center">
+                                            <span className="text-rose-500 font-bold text-lg">-{deduction.points}</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-800 dark:text-gray-200 font-medium text-sm">{deduction.category}</p>
+                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{deduction.reason}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Improvement Tips */}
                     <div className="bg-gray-50 dark:bg-[#131620] rounded-3xl p-6 border border-gray-200 dark:border-white/5">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Improvement Tips</h3>
@@ -329,6 +406,14 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                             )}
                         </div>
                     </div>
+
+                    {/* Transparency Note */}
+                    {data.transparencyNote && (
+                        <div className="flex items-start gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/10">
+                            <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                            <p className="text-sm text-blue-700 dark:text-blue-300/80 leading-relaxed">{data.transparencyNote}</p>
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </div>

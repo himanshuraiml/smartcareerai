@@ -49,3 +49,6 @@ uploads/
 
 
 env 
+
+# markdown files
+*.md

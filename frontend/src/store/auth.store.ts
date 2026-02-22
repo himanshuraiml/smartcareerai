@@ -250,11 +250,11 @@ export const useAuthStore = create<AuthState>()(
             },
 
             fetchUser: async () => {
-                const { accessToken } = get();
+                let { accessToken } = get();
                 if (!accessToken) return;
 
                 try {
-                    const response = await fetch(`${API_URL}/auth/me`, {
+                    let response = await fetch(`${API_URL}/auth/me`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: {
@@ -262,6 +262,24 @@ export const useAuthStore = create<AuthState>()(
                             'Authorization': `Bearer ${accessToken}`
                         }
                     });
+
+                    // Handle token expiration
+                    if (response.status === 401) {
+                        const refreshed = await get().refreshAccessToken();
+                        if (refreshed) {
+                            // Get new token
+                            accessToken = get().accessToken;
+                            // Retry request
+                            response = await fetch(`${API_URL}/auth/me`, {
+                                method: 'GET',
+                                credentials: 'include',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+                                }
+                            });
+                        }
+                    }
 
                     if (response.ok) {
                         const data = await response.json();

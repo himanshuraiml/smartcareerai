@@ -167,7 +167,7 @@ export default function TestPage() {
     if (!test) {
         return (
             <div className="text-center py-12">
-                <p className="text-gray-400">Test not found</p>
+                <p className="text-gray-500 dark:text-gray-400">Test not found</p>
                 <Link href="/dashboard/tests" className="text-indigo-400 hover:underline mt-2 inline-block">
                     Back to Tests
                 </Link>
@@ -187,10 +187,10 @@ export default function TestPage() {
                             <XCircle className="w-12 h-12 text-red-400" />
                         )}
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                         {result.passed ? 'Congratulations!' : 'Keep Practicing!'}
                     </h1>
-                    <p className="text-gray-400">
+                    <p className="text-gray-500 dark:text-gray-400">
                         {result.passed ? 'You passed the test!' : `You needed ${result.passingScore}% to pass`}
                     </p>
                 </div>
@@ -199,7 +199,7 @@ export default function TestPage() {
                     <p className={`text-5xl font-bold ${result.passed ? 'text-green-400' : 'text-red-400'}`}>
                         {result.score}%
                     </p>
-                    <p className="text-gray-400 mt-2">
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">
                         {result.correctAnswers} of {result.totalQuestions} correct
                     </p>
                 </div>
@@ -209,7 +209,7 @@ export default function TestPage() {
                         <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getBadgeColor(result.badge.badgeType)} flex items-center justify-center mx-auto mb-3`}>
                             <Trophy className="w-10 h-10 text-white" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">Badge Earned!</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Badge Earned!</h3>
                         <p className={`text-sm font-medium bg-gradient-to-r ${getBadgeColor(result.badge.badgeType)} bg-clip-text text-transparent`}>
                             {result.badge.badgeType} - {result.badge.skill.name}
                         </p>
@@ -217,7 +217,7 @@ export default function TestPage() {
                 )}
 
                 <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-white">Question Results</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Question Results</h3>
                     {result.questionResults.map((qr, index) => {
                         const q = test.questions.find(q => q.id === qr.questionId);
                         return (
@@ -229,8 +229,8 @@ export default function TestPage() {
                                         <XCircle className="w-5 h-5 text-red-400 mt-0.5" />
                                     )}
                                     <div className="flex-1">
-                                        <p className="text-white text-sm">{q?.questionText}</p>
-                                        <p className="text-gray-400 text-xs mt-1">
+                                        <p className="text-gray-900 dark:text-white text-sm">{q?.questionText}</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                             Your answer: <span className={qr.correct ? 'text-green-400' : 'text-red-400'}>{qr.userAnswer || 'Not answered'}</span>
                                             {!qr.correct && (
                                                 <span className="text-green-400 ml-2">• Correct: {qr.correctAnswer}</span>
@@ -246,7 +246,7 @@ export default function TestPage() {
                 <div className="flex gap-4">
                     <Link
                         href="/dashboard/tests"
-                        className="flex-1 text-center px-4 py-3 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                        className="flex-1 text-center px-4 py-3 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                     >
                         Back to Tests
                     </Link>
@@ -272,30 +272,30 @@ export default function TestPage() {
         return (
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/tests" className="text-gray-400 hover:text-white">
+                    <Link href="/dashboard/tests" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">{test.title}</h1>
-                        <p className="text-gray-400">{test.skill.name}</p>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{test.title}</h1>
+                        <p className="text-gray-500 dark:text-gray-400">{test.skill.name}</p>
                     </div>
                 </div>
 
                 <div className="p-8 rounded-2xl glass">
-                    <p className="text-gray-300 mb-6">{test.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">{test.description}</p>
 
                     <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="text-center p-4 rounded-xl bg-white/5">
+                        <div className="text-center p-4 rounded-xl bg-white dark:bg-white/5">
                             <p className="text-2xl font-bold text-indigo-400">{test.questions.length}</p>
-                            <p className="text-gray-400 text-sm">Questions</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Questions</p>
                         </div>
-                        <div className="text-center p-4 rounded-xl bg-white/5">
+                        <div className="text-center p-4 rounded-xl bg-white dark:bg-white/5">
                             <p className="text-2xl font-bold text-blue-400">{test.durationMinutes} min</p>
-                            <p className="text-gray-400 text-sm">Duration</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Duration</p>
                         </div>
-                        <div className="text-center p-4 rounded-xl bg-white/5">
+                        <div className="text-center p-4 rounded-xl bg-white dark:bg-white/5">
                             <p className="text-2xl font-bold text-green-400">{test.passingScore}%</p>
-                            <p className="text-gray-400 text-sm">To Pass</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">To Pass</p>
                         </div>
                     </div>
 
@@ -331,17 +331,17 @@ export default function TestPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-white">{test.title}</h1>
-                    <p className="text-gray-400 text-sm">Question {currentQuestion + 1} of {test.questions.length}</p>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">{test.title}</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Question {currentQuestion + 1} of {test.questions.length}</p>
                 </div>
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${timeLeft < 60 ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white'}`}>
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${timeLeft < 60 ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'}`}>
                     <Clock className="w-4 h-4" />
                     <span className="font-mono font-bold">{formatTime(timeLeft)}</span>
                 </div>
             </div>
 
             {/* Progress */}
-            <div className="w-full h-2 rounded-full bg-white/10">
+            <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-white/10">
                 <div
                     className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all"
                     style={{ width: `${((currentQuestion + 1) / test.questions.length) * 100}%` }}
@@ -350,7 +350,7 @@ export default function TestPage() {
 
             {/* Question */}
             <div className="p-6 rounded-2xl glass">
-                <p className="text-lg text-white mb-6">{question.questionText}</p>
+                <p className="text-lg text-gray-900 dark:text-white mb-6">{question.questionText}</p>
 
                 <div className="space-y-3">
                     {(question.options as string[]).map((option, index) => (
@@ -359,10 +359,10 @@ export default function TestPage() {
                             onClick={() => setAnswers({ ...answers, [question.id]: option })}
                             className={`w-full text-left p-4 rounded-lg border transition-all ${answers[question.id] === option
                                 ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                : 'border-white/10 bg-white/5 text-gray-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 hover:text-white'
+                                : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-sm font-medium mr-3">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-white/10 text-sm font-medium mr-3">
                                 {String.fromCharCode(65 + index)}
                             </span>
                             {option}
@@ -376,7 +376,7 @@ export default function TestPage() {
                 <button
                     onClick={() => setCurrentQuestion(prev => prev - 1)}
                     disabled={currentQuestion === 0}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white disabled:opacity-50 transition"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 transition"
                 >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -391,7 +391,7 @@ export default function TestPage() {
                                 ? 'bg-indigo-500 text-white'
                                 : answers[q.id]
                                     ? 'bg-green-500/20 text-green-400'
-                                    : 'bg-white/10 text-gray-400'
+                                    : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             {index + 1}

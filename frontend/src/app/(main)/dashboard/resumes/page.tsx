@@ -243,17 +243,17 @@ export default function ResumesPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-white">Resumes</h1>
-                <div className="flex p-1 bg-white/5 rounded-lg border border-white/10">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Resumes</h1>
+                <div className="flex p-1 bg-white dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
                     <button
                         onClick={() => setView('list')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'list' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'list' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                     >
                         My Resumes
                     </button>
                     <button
                         onClick={() => setView('builder')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'builder' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${view === 'builder' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                     >
                         Resume Builder
                     </button>
@@ -268,7 +268,7 @@ export default function ResumesPage() {
                     <div
                         {...getRootProps()}
                         className={`p-6 md:p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer
-                  ${isDragActive ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/5'}
+                  ${isDragActive ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-300 dark:border-white/10 hover:border-indigo-500/50 hover:bg-gray-50 dark:hover:bg-white/5'}
                   ${uploading ? 'pointer-events-none opacity-50' : ''}`}
                     >
                         <input {...getInputProps()} />
@@ -278,17 +278,17 @@ export default function ResumesPage() {
                                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                                         <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-indigo-400 animate-spin" />
                                     </div>
-                                    <p className="text-white font-medium">Uploading...</p>
+                                    <p className="text-gray-900 dark:text-white font-medium">Uploading...</p>
                                 </>
                             ) : (
                                 <>
                                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                                         <Upload className="w-6 h-6 md:w-8 md:h-8 text-indigo-400" />
                                     </div>
-                                    <p className="text-white font-medium mb-2">
+                                    <p className="text-gray-900 dark:text-white font-medium mb-2">
                                         {isDragActive ? 'Drop your resume here' : 'Drag & drop your resume'}
                                     </p>
-                                    <p className="text-gray-400 text-sm">or click to browse (PDF, DOC, DOCX - max 10MB)</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">or click to browse (PDF, DOC, DOCX - max 10MB)</p>
                                 </>
                             )}
                         </div>
@@ -303,20 +303,20 @@ export default function ResumesPage() {
 
                     {/* Resumes List */}
                     <div>
-                        <h2 className="text-xl font-semibold text-white mb-4">Your Resumes</h2>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Resumes</h2>
 
                         {loading ? (
                             <div className="p-12 rounded-2xl glass text-center">
                                 <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
-                                <p className="text-gray-400">Loading resumes...</p>
+                                <p className="text-gray-500 dark:text-gray-400">Loading resumes...</p>
                             </div>
                         ) : resumes.length === 0 ? (
                             <div className="p-12 rounded-2xl glass text-center">
                                 <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                                     <FileText className="w-8 h-8 text-indigo-400" />
                                 </div>
-                                <h3 className="text-lg font-medium text-white mb-2">No resumes yet</h3>
-                                <p className="text-gray-400">Upload your first resume or use the Builder to create one</p>
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No resumes yet</h3>
+                                <p className="text-gray-500 dark:text-gray-400">Upload your first resume or use the Builder to create one</p>
                                 <button
                                     onClick={() => setView('builder')}
                                     className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors"
@@ -327,7 +327,7 @@ export default function ResumesPage() {
                         ) : (
                             <div className="space-y-3">
                                 {resumes.map((resume) => (
-                                    <div key={resume.id} className="p-4 rounded-xl glass hover:bg-white/5 transition-colors group">
+                                    <div key={resume.id} className="p-4 rounded-xl glass hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
                                         {/* Mobile Layout: Stacked */}
                                         <div className="flex flex-col gap-4 sm:hidden">
                                             {/* File Info Row */}
@@ -336,16 +336,16 @@ export default function ResumesPage() {
                                                     <FileText className="w-5 h-5 text-indigo-400" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-white font-medium text-sm leading-tight break-all line-clamp-2">{resume.fileName}</p>
+                                                    <p className="text-gray-900 dark:text-white font-medium text-sm leading-tight break-all line-clamp-2">{resume.fileName}</p>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <p className="text-gray-400 text-xs text-nowrap">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
+                                                        <p className="text-gray-500 dark:text-gray-400 text-xs text-nowrap">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
                                                         {getStatusBadge(resume.status)}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Actions Row */}
-                                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-200 dark:border-white/5">
                                                 {resume.status === 'PARSED' ? (
                                                     resume.latestAnalysis ? (
                                                         <button
@@ -382,14 +382,14 @@ export default function ResumesPage() {
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => handleView(resume)}
-                                                        className="w-10 h-10 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                                                        className="w-10 h-10 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center justify-center"
                                                         title="View Resume"
                                                     >
                                                         <Eye className="w-5 h-5" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(resume.id)}
-                                                        className="w-10 h-10 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
+                                                        className="w-10 h-10 rounded-lg hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-5 h-5" />
@@ -404,8 +404,8 @@ export default function ResumesPage() {
                                                 <FileText className="w-6 h-6 text-indigo-400" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-white font-medium truncate">{resume.fileName}</p>
-                                                <p className="text-gray-400 text-sm">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
+                                                <p className="text-gray-900 dark:text-white font-medium truncate">{resume.fileName}</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm">Uploaded {new Date(resume.createdAt).toLocaleDateString()}</p>
                                             </div>
 
                                             {resume.latestAnalysis && (
@@ -450,17 +450,17 @@ export default function ResumesPage() {
                                                         </button>
                                                     )
                                                 )}
-                                                <div className="w-px h-8 bg-white/10 mx-2" />
+                                                <div className="w-px h-8 bg-gray-100 dark:bg-white/10 mx-2" />
                                                 <button
                                                     onClick={() => handleView(resume)}
-                                                    className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                                                    className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center justify-center"
                                                     title="View Resume Content"
                                                 >
                                                     <Eye className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(resume.id)}
-                                                    className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
+                                                    className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center"
                                                     title="Delete"
                                                 >
                                                     <Trash2 className="w-5 h-5" />
@@ -498,19 +498,19 @@ export default function ResumesPage() {
                     {/* Insufficient Credits Modal */}
                     {showCreditsModal && (
                         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-backdrop bg-black/80 backdrop-blur-sm">
-                            <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10 shadow-xl">
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-gray-200 dark:border-white/10 shadow-xl">
                                 <div className="text-center">
                                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                                         <AlertTriangle className="w-8 h-8 text-red-400" />
                                     </div>
-                                    <h2 className="text-xl font-bold text-white mb-2">No Resume Review Credits</h2>
-                                    <p className="text-gray-400 mb-6">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Resume Review Credits</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-6">
                                         You've used all your Resume Review credits. Purchase more credits or upgrade your plan to continue analyzing resumes.
                                     </p>
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => setShowCreditsModal(false)}
-                                            className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition hover:bg-white/5"
+                                            className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition hover:bg-gray-50 dark:hover:bg-white/5"
                                         >
                                             Cancel
                                         </button>

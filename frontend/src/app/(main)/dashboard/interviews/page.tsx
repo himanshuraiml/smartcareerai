@@ -125,8 +125,8 @@ export default function InterviewsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">AI Interviews</h1>
-                    <p className="text-gray-400 mt-1">Practice with AI-powered interview simulations</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">AI Interviews</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Practice with AI-powered interview simulations</p>
                 </div>
                 <button
                     onClick={() => setShowNewModal(true)}
@@ -145,8 +145,8 @@ export default function InterviewsPage() {
                             <Video className="w-6 h-6 text-indigo-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{sessions.length}</p>
-                            <p className="text-gray-400 text-sm">Total Interviews</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{sessions.length}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Total Interviews</p>
                         </div>
                     </div>
                 </div>
@@ -156,10 +156,10 @@ export default function InterviewsPage() {
                             <CheckCircle className="w-6 h-6 text-green-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {sessions.filter(s => s.status === 'COMPLETED').length}
                             </p>
-                            <p className="text-gray-400 text-sm">Completed</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Completed</p>
                         </div>
                     </div>
                 </div>
@@ -178,7 +178,7 @@ export default function InterviewsPage() {
                                         sessions.filter(s => s.overallScore).length)
                                     : '--'}%
                             </p>
-                            <p className="text-gray-400 text-sm">Avg Score</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Avg Score</p>
                         </div>
                     </div>
                 </div>
@@ -188,15 +188,15 @@ export default function InterviewsPage() {
             {loading ? (
                 <div className="p-12 text-center">
                     <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-400">Loading interviews...</p>
+                    <p className="text-gray-500 dark:text-gray-400">Loading interviews...</p>
                 </div>
             ) : sessions.length === 0 ? (
                 <div className="p-12 rounded-2xl glass text-center">
                     <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                         <Video className="w-8 h-8 text-indigo-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-white mb-2">No interviews yet</h3>
-                    <p className="text-gray-400 mb-4">Start practicing with AI interview simulations</p>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No interviews yet</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">Start practicing with AI interview simulations</p>
                     <button
                         onClick={() => setShowNewModal(true)}
                         className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition"
@@ -218,10 +218,10 @@ export default function InterviewsPage() {
                                         <Video className="w-6 h-6 text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-medium group-hover:text-indigo-400 transition line-clamp-2 md:line-clamp-none">
+                                        <h3 className="text-gray-900 dark:text-white font-medium group-hover:text-indigo-400 transition line-clamp-2 md:line-clamp-none">
                                             {session.type} Interview - {session.targetRole}
                                         </h3>
-                                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-400">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             <span className="flex items-center gap-1">
                                                 <Target className="w-3 h-3" />
                                                 {session.difficulty}
@@ -243,7 +243,7 @@ export default function InterviewsPage() {
                                         </span>
                                     )}
                                     {getStatusBadge(session.status)}
-                                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition" />
+                                    <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-indigo-400 transition" />
                                 </div>
                             </div>
                         </Link>
@@ -254,9 +254,9 @@ export default function InterviewsPage() {
             {/* New Interview Modal */}
             {showNewModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 rounded-2xl max-w-lg w-full border border-white/10 max-h-[90vh] flex flex-col">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full border border-gray-200 dark:border-white/10 max-h-[90vh] flex flex-col">
                         <div className="p-6 pb-0">
-                            <h2 className="text-xl font-bold text-white mb-4">Start New Interview</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Start New Interview</h2>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 pt-0 space-y-4">
@@ -267,15 +267,15 @@ export default function InterviewsPage() {
                                         <Video className="w-5 h-5 text-indigo-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-medium">Mock Interview Mode</h3>
-                                        <p className="text-gray-400 text-sm">Experience a realistic video interview with AI interviewer</p>
+                                        <h3 className="text-gray-900 dark:text-white font-medium">Mock Interview Mode</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">Experience a realistic video interview with AI interviewer</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Interview Type Selection - 3 Cards */}
                             <div>
-                                <label className="block text-gray-400 text-sm mb-3">Select Interview Type</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-sm mb-3">Select Interview Type</label>
                                 <div className="grid grid-cols-1 gap-3">
                                     {/* HR + Technical (Mixed) */}
                                     <button
@@ -283,17 +283,17 @@ export default function InterviewsPage() {
                                         onClick={() => setNewSession({ ...newSession, type: 'MIXED' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'MIXED'
                                             ? 'border-indigo-500 bg-indigo-500/10'
-                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 bg-gray-100 dark:bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'MIXED' ? 'bg-indigo-500/20' : 'bg-gray-700'
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'MIXED' ? 'bg-indigo-500/20' : 'bg-gray-200 dark:bg-gray-700'
                                                 }`}>
                                                 <Video className={`w-5 h-5 ${newSession.type === 'MIXED' ? 'text-indigo-400' : 'text-gray-400'}`} />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="text-white font-medium">HR + Technical</h4>
-                                                <p className="text-gray-400 text-sm mt-0.5">Complete interview with behavioral and technical questions</p>
+                                                <h4 className="text-gray-900 dark:text-white font-medium">HR + Technical</h4>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Complete interview with behavioral and technical questions</p>
                                                 <span className="text-xs text-gray-500 mt-1 inline-block">~12 questions</span>
                                             </div>
                                             {newSession.type === 'MIXED' && (
@@ -308,17 +308,17 @@ export default function InterviewsPage() {
                                         onClick={() => setNewSession({ ...newSession, type: 'TECHNICAL' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'TECHNICAL'
                                             ? 'border-blue-500 bg-blue-500/10'
-                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 bg-gray-100 dark:bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'TECHNICAL' ? 'bg-blue-500/20' : 'bg-gray-700'
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'TECHNICAL' ? 'bg-blue-500/20' : 'bg-gray-200 dark:bg-gray-700'
                                                 }`}>
                                                 <Target className={`w-5 h-5 ${newSession.type === 'TECHNICAL' ? 'text-blue-400' : 'text-gray-400'}`} />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="text-white font-medium">Technical Only</h4>
-                                                <p className="text-gray-400 text-sm mt-0.5">Coding, system design, and technical problem-solving</p>
+                                                <h4 className="text-gray-900 dark:text-white font-medium">Technical Only</h4>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Coding, system design, and technical problem-solving</p>
                                                 <span className="text-xs text-gray-500 mt-1 inline-block">~8 questions</span>
                                             </div>
                                             {newSession.type === 'TECHNICAL' && (
@@ -333,17 +333,17 @@ export default function InterviewsPage() {
                                         onClick={() => setNewSession({ ...newSession, type: 'BEHAVIORAL' })}
                                         className={`p-4 rounded-xl border text-left transition-all ${newSession.type === 'BEHAVIORAL'
                                             ? 'border-green-500 bg-green-500/10'
-                                            : 'border-white/10 hover:border-white/20 bg-gray-800/50'
+                                            : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 bg-gray-100 dark:bg-gray-800/50'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'BEHAVIORAL' ? 'bg-green-500/20' : 'bg-gray-700'
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${newSession.type === 'BEHAVIORAL' ? 'bg-green-500/20' : 'bg-gray-200 dark:bg-gray-700'
                                                 }`}>
                                                 <MessageSquare className={`w-5 h-5 ${newSession.type === 'BEHAVIORAL' ? 'text-green-400' : 'text-gray-400'}`} />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="text-white font-medium">HR / Behavioral</h4>
-                                                <p className="text-gray-400 text-sm mt-0.5">STAR-based behavioral questions and soft skills</p>
+                                                <h4 className="text-gray-900 dark:text-white font-medium">HR / Behavioral</h4>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">STAR-based behavioral questions and soft skills</p>
                                                 <span className="text-xs text-gray-500 mt-1 inline-block">~8 questions</span>
                                             </div>
                                             {newSession.type === 'BEHAVIORAL' && (
@@ -355,11 +355,11 @@ export default function InterviewsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-gray-400 text-sm mb-2">Target Role</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-sm mb-2">Target Role</label>
                                 <select
                                     value={newSession.targetRole}
                                     onChange={(e) => setNewSession({ ...newSession, targetRole: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-800 [&>option]:text-white"
+                                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-white dark:[&>option]:bg-gray-800 [&>option]:text-gray-900 dark:[&>option]:text-white"
                                 >
                                     {jobRoles.map(role => (
                                         <option key={role} value={role}>{role}</option>
@@ -368,11 +368,11 @@ export default function InterviewsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-gray-400 text-sm mb-2">Difficulty</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-sm mb-2">Difficulty</label>
                                 <select
                                     value={newSession.difficulty}
                                     onChange={(e) => setNewSession({ ...newSession, difficulty: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-gray-800 [&>option]:text-white"
+                                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-white dark:[&>option]:bg-gray-800 [&>option]:text-gray-900 dark:[&>option]:text-white"
                                 >
                                     <option value="EASY">Easy (5 questions)</option>
                                     <option value="MEDIUM">Medium (7 questions)</option>
@@ -381,10 +381,10 @@ export default function InterviewsPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 p-6 pt-4 border-t border-white/10">
+                        <div className="flex gap-3 p-6 pt-4 border-t border-gray-200 dark:border-white/10">
                             <button
                                 onClick={() => setShowNewModal(false)}
-                                className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                             >
                                 Cancel
                             </button>
@@ -404,19 +404,19 @@ export default function InterviewsPage() {
             {/* Insufficient Credits Modal */}
             {showCreditsModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-white/10">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-gray-200 dark:border-white/10">
                         <div className="text-center">
                             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                                 <AlertTriangle className="w-8 h-8 text-red-400" />
                             </div>
-                            <h2 className="text-xl font-bold text-white mb-2">No Interview Credits</h2>
-                            <p className="text-gray-400 mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Interview Credits</h2>
+                            <p className="text-gray-500 dark:text-gray-400 mb-6">
                                 You've used all your AI Interview credits. Purchase more credits or upgrade your plan to continue practicing.
                             </p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowCreditsModal(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                                 >
                                     Cancel
                                 </button>

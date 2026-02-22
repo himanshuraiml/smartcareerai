@@ -112,7 +112,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                 {/* Close Button */}
                                 <button
                                     onClick={completeTour}
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                                    className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -123,8 +123,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                 </div>
 
                                 {/* Content */}
-                                <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
-                                <p className="text-gray-400 mb-6">{step.content}</p>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{step.title}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 mb-6">{step.content}</p>
 
                                 {/* Progress Dots */}
                                 <div className="flex justify-center gap-2 mb-6">
@@ -142,7 +142,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                                     <button
                                         onClick={prevStep}
                                         disabled={currentStep === 0}
-                                        className="flex items-center gap-1 px-4 py-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                        className="flex items-center gap-1 px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
                                         Back

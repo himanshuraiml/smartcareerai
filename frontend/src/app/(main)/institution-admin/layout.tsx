@@ -38,7 +38,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
 
     if (!isAuthorized) {
         return (
-            <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0B0F19] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
             </div>
         );
@@ -50,7 +50,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-white flex">
+        <div className="min-h-screen bg-white dark:bg-[#0B0F19] text-gray-900 dark:text-white flex">
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div
@@ -62,7 +62,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
             {/* Sidebar */}
             <aside className={`
                 fixed lg:static inset-y-0 left-0 z-50
-                w-64 glass border-r border-white/5
+                w-64 glass border-r border-gray-200 dark:border-white/5
                 transform transition-transform duration-200 ease-in-out
                 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             `}>
@@ -79,7 +79,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                         </Link>
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden text-gray-400 hover:text-white"
+                            className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -97,8 +97,8 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                                     className={`
                                         flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                                         ${isActive
-                                            ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-white border border-emerald-500/30"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"}
+                                            ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-gray-900 dark:text-white border border-emerald-500/30"
+                                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white dark:bg-white/5"}
                                     `}
                                 >
                                     <item.icon className="w-5 h-5" />
@@ -109,8 +109,8 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                     </nav>
 
                     {/* User info */}
-                    <div className="p-4 border-t border-white/5">
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 mb-2">
+                    <div className="p-4 border-t border-gray-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white dark:bg-white/5 mb-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center overflow-hidden">
                                 {user?.avatarUrl ? (
                                     <Image src={user.avatarUrl} alt="Avatar" width={40} height={40} className="object-cover" />
@@ -121,13 +121,13 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">{user?.name || "Institution Admin"}</p>
-                                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name || "Institution Admin"}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                             </div>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         >
                             <LogOut className="w-4 h-4" />
                             <span className="text-sm">Logout</span>
@@ -139,17 +139,17 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
             {/* Main content */}
             <main className="flex-1 lg:ml-0 overflow-y-auto h-screen">
                 {/* Mobile header */}
-                <header className="lg:hidden sticky top-0 z-30 glass border-b border-white/5">
+                <header className="lg:hidden sticky top-0 z-30 glass border-b border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between px-4 py-3">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="text-gray-400 hover:text-white"
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         >
                             <Menu className="w-6 h-6" />
                         </button>
                         <div className="flex items-center gap-2">
                             <GraduationCap className="w-5 h-5 text-emerald-500" />
-                            <span className="font-bold text-white">Institution Portal</span>
+                            <span className="font-bold text-gray-900 dark:text-white">Institution Portal</span>
                         </div>
                         <div className="w-6" />
                     </div>

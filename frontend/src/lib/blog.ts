@@ -21,6 +21,10 @@ export interface BlogPost {
     content: string;
 }
 
+/**
+ * Returns ALL posts regardless of date.
+ * Used for generateStaticParams so Next.js can pre-render all slugs.
+ */
 export function getAllPosts(): BlogPost[] {
     const fileNames = fs.readdirSync(postsDirectory);
     const mdxFiles = fileNames.filter(fileName => fileName.endsWith('.mdx'));
@@ -45,6 +49,20 @@ export function getAllPosts(): BlogPost[] {
     });
 }
 
+/**
+ * Returns only PUBLISHED posts (date <= today).
+ * This ensures blog posts appear one per week on their scheduled date.
+ */
+export function getPublishedPosts(): BlogPost[] {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999); // Include posts published today
+
+    return getAllPosts().filter(post => {
+        const postDate = new Date(post.frontmatter.date);
+        return postDate <= now;
+    });
+}
+
 export function getPostBySlug(slug: string): BlogPost | undefined {
     try {
         const fullPath = path.join(postsDirectory, `${slug}.mdx`);
@@ -62,7 +80,8 @@ export function getPostBySlug(slug: string): BlogPost | undefined {
 }
 
 export function getAllCategories(): string[] {
-    const posts = getAllPosts();
+    const posts = getPublishedPosts();
     const categories = new Set(posts.map(post => post.frontmatter.category));
     return ["All", ...Array.from(categories)];
 }
+

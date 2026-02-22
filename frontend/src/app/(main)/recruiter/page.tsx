@@ -91,8 +91,8 @@ export default function CandidateSearchPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-white">Find Candidates</h1>
-                <p className="text-gray-400 mt-1">Search for top talent based on skills and performance</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Find Candidates</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Search for top talent based on skills and performance</p>
             </div>
 
             {/* Search Bar */}
@@ -104,13 +104,13 @@ export default function CandidateSearchPage() {
                         placeholder="Search by skills (e.g. React, Node.js)..."
                         value={skills}
                         onChange={(e) => setSkills(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-blue-500 transition"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
                     />
                 </div>
                 <button
                     type="button"
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2 transition ${showFilters ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                    className={`px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 flex items-center gap-2 transition ${showFilters ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                 >
                     <Filter className="w-5 h-5" />
                     Filters
@@ -125,9 +125,9 @@ export default function CandidateSearchPage() {
 
             {/* Expanded Filters */}
             {showFilters && (
-                <div className="p-4 rounded-xl glass border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 rounded-xl glass border border-gray-200 dark:border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div>
-                        <label className="block text-gray-400 text-sm mb-1">Location</label>
+                        <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Location</label>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
@@ -135,12 +135,12 @@ export default function CandidateSearchPage() {
                                 placeholder="City or Country"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-900/50 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                                className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-900/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-gray-400 text-sm mb-1">Min Experience (Years)</label>
+                        <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Min Experience (Years)</label>
                         <div className="relative">
                             <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
@@ -148,7 +148,7 @@ export default function CandidateSearchPage() {
                                 placeholder="0"
                                 value={experienceMin}
                                 onChange={(e) => setExperienceMin(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-900/50 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500"
+                                className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-900/50 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                             />
                         </div>
                     </div>
@@ -159,33 +159,33 @@ export default function CandidateSearchPage() {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="h-64 rounded-xl bg-white/5 animate-pulse" />
+                        <div key={i} className="h-64 rounded-xl bg-white dark:bg-white/5 animate-pulse" />
                     ))}
                 </div>
             ) : candidates.length === 0 ? (
-                <div className="text-center py-20 text-gray-400">
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400">
                     <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
                     <p>No candidates found matching your criteria</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {candidates.map((candidate) => (
-                        <div key={candidate.id} className="group p-6 rounded-xl glass border border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-1 duration-300">
+                        <div key={candidate.id} className="group p-6 rounded-xl glass border border-gray-200 dark:border-white/5 hover:border-blue-500/30 transition-all hover:-translate-y-1 duration-300">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
                                         {candidate.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-bold">{candidate.name}</h3>
+                                        <h3 className="text-gray-900 dark:text-white font-bold">{candidate.name}</h3>
                                         {candidate.latestScore && (
-                                            <p className="text-sm text-gray-400">{candidate.latestScore.jobRole}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{candidate.latestScore.jobRole}</p>
                                         )}
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleSaveCandidate(candidate.id)}
-                                    className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition"
+                                    className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                                     title="Save Candidate"
                                 >
                                     <Bookmark className="w-5 h-5" />
@@ -193,27 +193,27 @@ export default function CandidateSearchPage() {
                             </div>
 
                             {/* Stats */}
-                            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg bg-white/5">
-                                <div className="flex-1 text-center border-r border-white/10">
-                                    <p className="text-xs text-gray-400">ATS Score</p>
+                            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg bg-white dark:bg-white/5">
+                                <div className="flex-1 text-center border-r border-gray-200 dark:border-white/10">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">ATS Score</p>
                                     <p className="text-lg font-bold text-green-400">{candidate.latestScore?.overallScore || '--'}%</p>
                                 </div>
                                 <div className="flex-1 text-center">
-                                    <p className="text-xs text-gray-400">Badges</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Badges</p>
                                     <p className="text-lg font-bold text-yellow-400">{candidate.badges.length}</p>
                                 </div>
                             </div>
 
                             {/* Skills */}
                             <div className="space-y-3">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Top Skills</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Top Skills</p>
                                 <div className="flex flex-wrap gap-2">
                                     {candidate.skills.slice(0, 5).map((skill, i) => (
                                         <span
                                             key={i}
                                             className={`px-2 py-1 rounded-md text-xs font-medium border ${skill.verified
                                                 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                : 'bg-white/5 text-gray-400 border-transparent'
+                                                : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border-transparent'
                                                 }`}
                                         >
                                             {skill.name}
@@ -223,7 +223,7 @@ export default function CandidateSearchPage() {
                                 </div>
                             </div>
 
-                            <button className="w-full mt-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition">
+                            <button className="w-full mt-6 py-2 rounded-lg bg-gray-100 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 text-gray-900 dark:text-white font-medium transition">
                                 View Profile
                             </button>
                         </div>

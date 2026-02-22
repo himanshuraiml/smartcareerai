@@ -24,15 +24,19 @@ const nextConfig = {
         ],
     },
     async rewrites() {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        // Only apply rewrites if API URL is configured (for local dev proxy)
-        if (!apiUrl || process.env.VERCEL) {
+        // For local development, proxy API requests to the backend
+        // This avoids CORS issues and ensures cookies are handled correctly
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+
+        // Skip rewrites if on Vercel (handled by Vercel rewrites or distinct domains)
+        if (process.env.VERCEL) {
             return [];
         }
+
         return [
             {
-                source: '/api/:path((?!keystatic).*)',
-                destination: `${apiUrl}/api/:path*`,
+                source: '/api/v1/:path*',
+                destination: `${backendUrl}/api/v1/:path*`,
             },
         ];
     },

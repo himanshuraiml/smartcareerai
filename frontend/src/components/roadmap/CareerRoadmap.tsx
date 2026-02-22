@@ -170,20 +170,20 @@ export default function CareerRoadmap({ stages }: CareerRoadmapProps) {
                                                     </span>
                                                 )}
                                             </div>
-                                            <h3 className={`text-xl font-bold mb-1 ${stage.status === "locked" ? "text-gray-500" : "text-white"
+                                            <h3 className={`text-xl font-bold mb-1 ${stage.status === "locked" ? "text-gray-500" : "text-gray-900 dark:text-white"
                                                 }`}>
                                                 {stage.title}
                                             </h3>
-                                            <p className="text-sm text-gray-400">{stage.subtitle}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{stage.subtitle}</p>
 
                                             {/* Progress Bar (for current/active stages) */}
                                             {(stage.status === "current" || stage.status === "available") && stage.progress !== undefined && (
                                                 <div className="mt-3">
-                                                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                                                         <span>Progress</span>
                                                         <span>{stage.progress}%</span>
                                                     </div>
-                                                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                                                    <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                                                         <motion.div
                                                             className={`h-full bg-gradient-to-r ${theme.progressGradient} rounded-full`}
                                                             initial={{ width: 0 }}
@@ -217,8 +217,8 @@ export default function CareerRoadmap({ stages }: CareerRoadmapProps) {
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mx-auto mb-4 neon-emerald">
                         <Gem className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Journey Complete!</h3>
-                    <p className="text-gray-400">You&apos;ve mastered all stages. Keep exploring to level up!</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Journey Complete!</h3>
+                    <p className="text-gray-500 dark:text-gray-400">You&apos;ve mastered all stages. Keep exploring to level up!</p>
                 </motion.div>
             )}
         </div>

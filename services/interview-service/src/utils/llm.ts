@@ -27,6 +27,16 @@ export interface EvaluationResult {
         wpm?: number;
         sentiment?: string;
     };
+    // STAR Method Analysis (for behavioral/HR interviews)
+    starAnalysis?: {
+        situation: { present: boolean; feedback: string };
+        task: { present: boolean; feedback: string };
+        action: { present: boolean; feedback: string };
+        result: { present: boolean; feedback: string };
+        overallStructure: string; // e.g., "Your answer covers S and A but lacks a measurable Result."
+    };
+    // Natural framing tip to avoid sounding scripted
+    framingTip?: string;
 }
 
 function getGroq(): Groq | null {
@@ -109,7 +119,31 @@ export async function evaluateAnswer(
     interviewType: string,
     metrics?: { wpm?: number; eyeContactScore?: number; sentiment?: string }
 ): Promise<EvaluationResult> {
-    const systemPrompt = `You are an expert interviewer evaluating candidate responses.
+    // Determine if this is a behavioral/HR interview needing STAR analysis
+    const isBehavioral = ['BEHAVIORAL', 'HR', 'behavioral', 'hr'].includes(interviewType);
+
+    const systemPrompt = isBehavioral
+        ? `You are an expert HR interviewer evaluating behavioral responses using the STAR method.
+Provide comprehensive evaluation with STAR component detection, natural framing suggestions, and metrics.
+Return JSON: {
+  "score": number (0-100),
+  "feedback": "constructive feedback string",
+  "improved_answer": "a better version using natural STAR structure, NOT scripted",
+  "detailed_metrics": {
+    "clarity": number (0-100),
+    "relevance": number (0-100),
+    "confidence": number (0-100)
+  },
+  "star_analysis": {
+    "situation": {"present": boolean, "feedback": "what was good or what's missing about setting the scene"},
+    "task": {"present": boolean, "feedback": "did they explain their specific responsibility?"},
+    "action": {"present": boolean, "feedback": "did they describe concrete actions they took?"},
+    "result": {"present": boolean, "feedback": "did they share a measurable outcome or impact?"},
+    "overall_structure": "1-2 sentence summary of STAR adherence"
+  },
+  "framing_tip": "A natural way to rephrase part of the answer so it sounds conversational, not rehearsed. Example: Instead of 'In the Situation phase, I encountered...' say 'So what happened was...'"
+}`
+        : `You are an expert interviewer evaluating candidate responses.
 Provide comprehensive evaluation with score, feedback, improved answer, and detailed metrics.
 Return JSON: {
   "score": number (0-100),
@@ -129,7 +163,30 @@ Return JSON: {
         if (metrics.sentiment) metricContext += `- Detected Sentiment: ${metrics.sentiment}\n`;
     }
 
-    const userPrompt = `Evaluate this answer for a ${targetRole} ${interviewType} interview:
+    const userPrompt = isBehavioral
+        ? `Evaluate this behavioral answer for a ${targetRole} ${interviewType} interview:
+
+Question: ${question}
+
+Candidate's Answer: "${answer}"
+
+${metricContext ? `Delivery Metrics:\n${metricContext}` : ''}
+
+Analyze the answer for STAR method adherence:
+1. Did the candidate set the SCENE (Situation)?
+2. Did they explain their RESPONSIBILITY (Task)?
+3. Did they describe CONCRETE ACTIONS they took?
+4. Did they share a MEASURABLE RESULT or outcome?
+
+Also evaluate:
+- Relevance and accuracy for ${targetRole}
+- Communication clarity and natural tone
+- Whether the answer sounds authentic or scripted
+
+Provide a "framing_tip" that helps the candidate express the same idea more naturally and conversationally.
+
+Return ONLY the JSON object.`
+        : `Evaluate this answer for a ${targetRole} ${interviewType} interview:
 
 Question: ${question}
 
@@ -178,7 +235,7 @@ Return ONLY the JSON object.`;
                 { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
-            max_tokens: 1000,
+            max_tokens: 1500,
             response_format: { type: 'json_object' },
         });
 
@@ -186,7 +243,7 @@ Return ONLY the JSON object.`;
         const cleanedText = cleanJsonResponse(text);
         const result = JSON.parse(cleanedText);
 
-        return {
+        const evaluationResult: EvaluationResult = {
             score: Math.min(100, Math.max(0, result.score || 70)),
             feedback: result.feedback || 'Good response.',
             improvedAnswer: result.improved_answer || '',
@@ -198,6 +255,20 @@ Return ONLY the JSON object.`;
                 sentiment: metrics?.sentiment,
             },
         };
+
+        // Add STAR analysis for behavioral/HR interviews
+        if (isBehavioral && result.star_analysis) {
+            evaluationResult.starAnalysis = {
+                situation: result.star_analysis.situation || { present: false, feedback: 'Not detected' },
+                task: result.star_analysis.task || { present: false, feedback: 'Not detected' },
+                action: result.star_analysis.action || { present: false, feedback: 'Not detected' },
+                result: result.star_analysis.result || { present: false, feedback: 'Not detected' },
+                overallStructure: result.star_analysis.overall_structure || 'STAR analysis not available.',
+            };
+            evaluationResult.framingTip = result.framing_tip || undefined;
+        }
+
+        return evaluationResult;
     } catch (error) {
         logger.error('Failed to evaluate answer:', error);
         return {

@@ -91,7 +91,7 @@ export default function SettingsPage() {
                             onClick={() => setActiveTab(tab.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === tab.id
                                 ? "bg-indigo-50 dark:bg-white/10 text-indigo-700 dark:text-white font-medium"
-                                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
                                 }`}
                         >
                             <tab.icon className="w-5 h-5" />

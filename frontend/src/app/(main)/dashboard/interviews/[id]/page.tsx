@@ -405,8 +405,8 @@ export default function InterviewRoomPage() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                     <AlertTriangle className="w-8 h-8 text-red-400" />
                 </div>
-                <h3 className="text-white font-medium mb-2">Invalid Session ID</h3>
-                <p className="text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
+                <h3 className="text-gray-900 dark:text-white font-medium mb-2">Invalid Session ID</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">The interview session URL appears to be malformed or corrupted.</p>
                 <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
@@ -420,8 +420,8 @@ export default function InterviewRoomPage() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
                     <AlertTriangle className="w-8 h-8 text-yellow-400" />
                 </div>
-                <h3 className="text-white font-medium mb-2">Session Not Found</h3>
-                <p className="text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
+                <h3 className="text-gray-900 dark:text-white font-medium mb-2">Session Not Found</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">This interview session may have been deleted or does not exist.</p>
                 <Link href="/dashboard/interviews" className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition inline-block">
                     Return to Interviews
                 </Link>
@@ -462,18 +462,18 @@ export default function InterviewRoomPage() {
         return (
             <div className="space-y-6">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white">Dashboard</Link>
                     <span>›</span>
-                    <Link href="/dashboard/interviews" className="hover:text-white">My Interviews</Link>
+                    <Link href="/dashboard/interviews" className="hover:text-gray-900 dark:hover:text-white">My Interviews</Link>
                     <span>›</span>
-                    <span className="text-white">{session.targetRole}</span>
+                    <span className="text-gray-900 dark:text-white">{session.targetRole}</span>
                 </div>
 
                 {/* Performance Breakdown */}
                 <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-xl font-bold text-white mb-2">Performance Breakdown</h2>
-                    <p className="text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Performance Breakdown</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Score Card */}
@@ -495,11 +495,11 @@ export default function InterviewRoomPage() {
 
                         {/* Recruiter Perspective & Knowledge */}
                         <div className="lg:col-span-2 space-y-4">
-                            <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                                <h3 className="text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
-                                <div className="text-gray-400 text-sm prose prose-sm prose-invert max-w-none
+                            <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                                <h3 className="text-gray-900 dark:text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
+                                <div className="text-gray-500 dark:text-gray-400 text-sm prose prose-sm dark:prose-invert max-w-none
                                                prose-p:my-2 prose-p:leading-relaxed
-                                               prose-strong:text-white prose-strong:font-semibold
+                                               prose-strong:text-gray-900 dark:prose-strong:text-white prose-strong:font-semibold
                                                prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
                                                prose-li:my-1">
                                     <ReactMarkdown>
@@ -509,16 +509,16 @@ export default function InterviewRoomPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                                    <h3 className="text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
-                                    <p className="text-gray-400 text-sm">
+                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">
                                         Average technical score: {Math.round(avgScore)}%
                                     </p>
                                 </div>
 
-                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                                    <h3 className="text-white font-medium mb-2">Areas of Improvement</h3>
-                                    <ul className="text-gray-400 text-sm space-y-1">
+                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Areas of Improvement</h3>
+                                    <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
                                         <li className="flex items-start gap-2">
                                             <span className="text-teal-400">•</span>
                                             Provide more detailed answers
@@ -536,32 +536,32 @@ export default function InterviewRoomPage() {
 
                 {/* Analytics Section */}
                 <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-lg font-bold text-white mb-6">An in-depth look at your mock interview performance metrics.</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">An in-depth look at your mock interview performance metrics.</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Content Relevance Score */}
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <h3 className="text-white font-medium mb-2">Content Relevance Score per Question</h3>
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Content Relevance Score per Question</h3>
                             <p className="text-gray-500 text-xs mb-4">Answer quality and topic alignment rating</p>
                             <div className="space-y-2">
                                 {session.questions.map((q, i) => (
                                     <div key={q.id} className="flex items-center gap-2">
-                                        <span className="text-gray-400 text-xs w-6">Q{i + 1}</span>
-                                        <div className="flex-1 h-4 bg-gray-900 rounded-full overflow-hidden">
+                                        <span className="text-gray-500 dark:text-gray-400 text-xs w-6">Q{i + 1}</span>
+                                        <div className="flex-1 h-4 bg-gray-200 dark:bg-gray-900 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-teal-500 rounded-full"
                                                 style={{ width: `${(q.score || 0)}%` }}
                                             />
                                         </div>
-                                        <span className="text-white text-xs w-8 text-right">{q.score || 0}</span>
+                                        <span className="text-gray-900 dark:text-white text-xs w-8 text-right">{q.score || 0}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         {/* Verbal Fluency Index - Radar */}
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <h3 className="text-white font-medium mb-2">Verbal Fluency Index</h3>
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Verbal Fluency Index</h3>
                             <p className="text-gray-500 text-xs mb-4">Multi-dimensional speech quality analysis</p>
                             <div className="aspect-square max-w-[200px] mx-auto">
                                 <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -613,8 +613,8 @@ export default function InterviewRoomPage() {
                         </div>
 
                         {/* Confidence & Clarity Index - Gauge */}
-                        <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                            <h3 className="text-white font-medium mb-2">Confidence & Clarity Index</h3>
+                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Confidence & Clarity Index</h3>
                             <p className="text-gray-500 text-xs mb-4">Overall communication effectiveness score</p>
                             <div className="relative aspect-[2/1] max-w-[200px] mx-auto">
                                 <svg viewBox="0 0 200 100" className="w-full h-full">
@@ -636,7 +636,7 @@ export default function InterviewRoomPage() {
                                     <circle cx="180" cy="100" r="8" fill="#14b8a6" />
                                 </svg>
                                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                                    <p className="text-3xl font-bold text-white">{session.overallScore || 0}%</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{session.overallScore || 0}%</p>
                                 </div>
                             </div>
                         </div>
@@ -645,8 +645,8 @@ export default function InterviewRoomPage() {
 
                 {/* Question-wise Feedback */}
                 <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-xl font-bold text-white mb-2">Question wise feedback</h2>
-                    <p className="text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Question wise feedback</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
 
                     {/* Question Tabs */}
                     <div className="flex flex-wrap gap-2 mb-6">
@@ -657,8 +657,8 @@ export default function InterviewRoomPage() {
                                 className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedQuestionIndex
                                     ? 'bg-teal-500 text-white'
                                     : q.userAnswer
-                                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        : 'bg-gray-800/50 text-gray-500'
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-500'
                                     }`}
                             >
                                 {i + 1}
@@ -670,32 +670,32 @@ export default function InterviewRoomPage() {
                     {session.questions[selectedQuestionIndex] && (
                         <div className="space-y-6">
                             {/* Question */}
-                            <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                                <p className="text-white font-medium">{session.questions[selectedQuestionIndex].questionText}</p>
+                            <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                                <p className="text-gray-900 dark:text-white font-medium">{session.questions[selectedQuestionIndex].questionText}</p>
                             </div>
 
                             {/* Skills Badge - Based on question type */}
                             <div>
-                                <p className="text-gray-400 text-sm mb-2">Skill Assessed</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Skill Assessed</p>
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
                                         {session.questions[selectedQuestionIndex].questionType}
                                     </span>
-                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
                                         communication
                                     </span>
                                     {session.questions[selectedQuestionIndex].questionType === 'technical' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
                                             problem solving
                                         </span>
                                     )}
                                     {session.questions[selectedQuestionIndex].questionType === 'behavioral' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
                                             situational awareness
                                         </span>
                                     )}
                                     {session.questions[selectedQuestionIndex].questionType === 'hr' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-800 text-gray-400 border border-white/10">
+                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
                                             self-awareness
                                         </span>
                                     )}
@@ -704,9 +704,9 @@ export default function InterviewRoomPage() {
 
                             {/* Your Answer */}
                             <div>
-                                <p className="text-gray-400 text-sm mb-2">Your Answer</p>
-                                <div className="p-4 rounded-xl bg-gray-800/50 border border-white/5">
-                                    <p className="text-gray-300">
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Your Answer</p>
+                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
+                                    <p className="text-gray-600 dark:text-gray-300">
                                         {session.questions[selectedQuestionIndex].userAnswer || 'No answer recorded'}
                                     </p>
                                 </div>
@@ -714,9 +714,9 @@ export default function InterviewRoomPage() {
 
                             {/* Ideal Answer */}
                             <div>
-                                <p className="text-gray-400 text-sm mb-2">Ideal Answer</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Ideal Answer</p>
                                 <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/20">
-                                    <p className="text-gray-300">
+                                    <p className="text-gray-600 dark:text-gray-300">
                                         {session.questions[selectedQuestionIndex].improvedAnswer ||
                                             'A well-structured response would include specific examples, demonstrate clear problem-solving methodology, and show awareness of best practices in the field.'}
                                     </p>
@@ -744,33 +744,33 @@ export default function InterviewRoomPage() {
 
                             {/* Verbal Fluency Metrics */}
                             <div>
-                                <p className="text-gray-400 text-sm mb-3">Answer Quality Metrics</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Answer Quality Metrics</p>
                                 {session.questions[selectedQuestionIndex].metrics ? (
                                     <div className="grid grid-cols-3 gap-3">
-                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
-                                            <p className="text-gray-400 text-xs mb-1">Clarity</p>
-                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.clarity || 0}</p>
-                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Clarity</p>
+                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.clarity || 0}</p>
+                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
                                                 <div
                                                     className="h-full bg-teal-500 rounded-full"
                                                     style={{ width: `${session.questions[selectedQuestionIndex].metrics?.clarity || 0}%` }}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
-                                            <p className="text-gray-400 text-xs mb-1">Relevance</p>
-                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.relevance || 0}</p>
-                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Relevance</p>
+                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.relevance || 0}</p>
+                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
                                                 <div
                                                     className="h-full bg-teal-500 rounded-full"
                                                     style={{ width: `${session.questions[selectedQuestionIndex].metrics?.relevance || 0}%` }}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="p-3 rounded-xl bg-gray-800/50 border border-white/5 text-center">
-                                            <p className="text-gray-400 text-xs mb-1">Confidence</p>
-                                            <p className="text-xl font-bold text-white">{session.questions[selectedQuestionIndex].metrics?.confidence || 0}</p>
-                                            <div className="w-full h-1 bg-gray-700 rounded-full mt-2">
+                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Confidence</p>
+                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.confidence || 0}</p>
+                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
                                                 <div
                                                     className="h-full bg-teal-500 rounded-full"
                                                     style={{ width: `${session.questions[selectedQuestionIndex].metrics?.confidence || 0}%` }}
@@ -786,8 +786,8 @@ export default function InterviewRoomPage() {
                             {/* Feedback */}
                             {session.questions[selectedQuestionIndex].feedback && (
                                 <div>
-                                    <p className="text-gray-400 text-sm mb-2">How can You Improve?</p>
-                                    <p className="text-gray-300 text-sm">{session.questions[selectedQuestionIndex].feedback}</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">How can You Improve?</p>
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm">{session.questions[selectedQuestionIndex].feedback}</p>
                                 </div>
                             )}
                         </div>
@@ -798,7 +798,7 @@ export default function InterviewRoomPage() {
                 <div className="flex gap-4">
                     <Link
                         href="/dashboard/interviews"
-                        className="flex-1 text-center px-4 py-3 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                        className="flex-1 text-center px-4 py-3 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                     >
                         Back to Interviews
                     </Link>
@@ -819,12 +819,12 @@ export default function InterviewRoomPage() {
         return (
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/interviews" className="text-gray-400 hover:text-white">
+                    <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Ready to Start</h1>
-                        <p className="text-gray-400">{session.type} Interview - {session.targetRole}</p>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ready to Start</h1>
+                        <p className="text-gray-500 dark:text-gray-400">{session.type} Interview - {session.targetRole}</p>
                     </div>
                 </div>
 
@@ -832,17 +832,17 @@ export default function InterviewRoomPage() {
                     <div className="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-6">
                         <Play className="w-10 h-10 text-indigo-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                         {session.type} Interview for {session.targetRole}
                     </h2>
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">
                         Difficulty: {session.difficulty} •{' '}
                         {session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10} questions
                     </p>
 
-                    <div className="p-4 rounded-lg bg-white/5 mb-6 text-left max-w-md mx-auto">
-                        <h3 className="text-white font-medium mb-2">Tips for success:</h3>
-                        <ul className="text-gray-400 text-sm space-y-1">
+                    <div className="p-4 rounded-lg bg-white dark:bg-white/5 mb-6 text-left max-w-md mx-auto">
+                        <h3 className="text-gray-900 dark:text-white font-medium mb-2">Tips for success:</h3>
+                        <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
                             <li>• Take your time to think before answering</li>
                             <li>• Use specific examples when possible</li>
                             <li>• Structure your answers clearly</li>
@@ -883,19 +883,19 @@ export default function InterviewRoomPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/interviews" className="text-gray-400 hover:text-white">
+                    <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-white">{session.type} Interview</h1>
-                        <p className="text-gray-400 text-sm">{session.targetRole}</p>
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{session.type} Interview</h1>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">{session.targetRole}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-gray-400">
+                    <span className="text-gray-500 dark:text-gray-400">
                         Question {currentQuestionIndex + 1} of {session.questions.length}
                     </span>
-                    <div className="w-32 h-2 rounded-full bg-white/10">
+                    <div className="w-32 h-2 rounded-full bg-gray-100 dark:bg-white/10">
                         <div
                             className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all"
                             style={{ width: `${(answeredCount / session.questions.length) * 100}%` }}
@@ -919,7 +919,7 @@ export default function InterviewRoomPage() {
                             </span>
                         )}
                     </div>
-                    <p className="text-xl text-white mb-6">{currentQuestion.questionText}</p>
+                    <p className="text-xl text-gray-900 dark:text-white mb-6">{currentQuestion.questionText}</p>
 
                     {/* Text Input (default or TEXT format) */}
                     {(!session.format || session.format === 'TEXT') && (
@@ -929,7 +929,7 @@ export default function InterviewRoomPage() {
                                 onChange={(e) => setCurrentAnswer(e.target.value)}
                                 placeholder="Type your answer here..."
                                 rows={6}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
+                                className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
                             />
                             <div className="flex justify-end mt-4">
                                 <button
@@ -957,7 +957,7 @@ export default function InterviewRoomPage() {
                     {session.format === 'AUDIO' && (
                         <div className="space-y-4">
                             {/* Recording controls */}
-                            <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                            <div className="p-6 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                 {!isRecording && !audioBlob && (
                                     <div className="text-center">
                                         <button
@@ -966,7 +966,7 @@ export default function InterviewRoomPage() {
                                         >
                                             <Mic className="w-8 h-8 text-white" />
                                         </button>
-                                        <p className="text-gray-400 mt-4">Click to start recording your answer</p>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-4">Click to start recording your answer</p>
                                         <p className="text-gray-500 text-sm mt-1">Max 3 minutes</p>
                                     </div>
                                 )}
@@ -976,7 +976,7 @@ export default function InterviewRoomPage() {
                                         <div className="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center mx-auto animate-pulse">
                                             <div className="w-4 h-4 rounded-full bg-white" />
                                         </div>
-                                        <p className="text-white text-2xl font-bold mt-4">{formatTime(recordingTime)}</p>
+                                        <p className="text-gray-900 dark:text-white text-2xl font-bold mt-4">{formatTime(recordingTime)}</p>
                                         <p className="text-red-400 text-sm">Recording...</p>
                                         <div className="flex justify-center gap-3 mt-4">
                                             {isPaused ? (
@@ -1011,14 +1011,14 @@ export default function InterviewRoomPage() {
                                     <div className="space-y-4">
                                         <div className="text-center">
                                             <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
-                                            <p className="text-white font-medium">Recording Complete</p>
-                                            <p className="text-gray-400 text-sm">{formatTime(recordingTime)} recorded</p>
+                                            <p className="text-gray-900 dark:text-white font-medium">Recording Complete</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm">{formatTime(recordingTime)} recorded</p>
                                         </div>
                                         <audio src={audioUrl} controls className="w-full" />
                                         <div className="flex justify-center gap-3">
                                             <button
                                                 onClick={resetRecording}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                                             >
                                                 <RotateCcw className="w-4 h-4" />
                                                 Re-record
@@ -1055,9 +1055,9 @@ export default function InterviewRoomPage() {
                     {session.format === 'VIDEO' && (
                         <div className="space-y-4">
                             {/* Video preview/recording area */}
-                            <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                            <div className="p-6 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                 {/* Camera preview */}
-                                <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4">
+                                <div className="relative aspect-video bg-gray-200 dark:bg-gray-900 rounded-lg overflow-hidden mb-4">
                                     {previewStream && !videoUrl ? (
                                         <video
                                             ref={videoPreviewRef}
@@ -1107,7 +1107,7 @@ export default function InterviewRoomPage() {
                                         >
                                             <Video className="w-8 h-8 text-white" />
                                         </button>
-                                        <p className="text-gray-400 mt-4">Click to start recording your answer</p>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-4">Click to start recording your answer</p>
                                         <p className="text-gray-500 text-sm mt-1">Max 3 minutes</p>
                                     </div>
                                 )}
@@ -1145,8 +1145,8 @@ export default function InterviewRoomPage() {
                                     <div className="space-y-4">
                                         <div className="text-center">
                                             <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
-                                            <p className="text-white font-medium">Recording Complete</p>
-                                            <p className="text-gray-400 text-sm">{formatVideoTime(videoRecordingTime)} recorded</p>
+                                            <p className="text-gray-900 dark:text-white font-medium">Recording Complete</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm">{formatVideoTime(videoRecordingTime)} recorded</p>
                                         </div>
                                         <div className="flex justify-center gap-3">
                                             <button
@@ -1154,7 +1154,7 @@ export default function InterviewRoomPage() {
                                                     resetVideoRecording();
                                                     startPreview();
                                                 }}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                                             >
                                                 <RotateCcw className="w-4 h-4" />
                                                 Re-record
@@ -1200,35 +1200,35 @@ export default function InterviewRoomPage() {
             {lastFeedback && (
                 <div className="p-6 rounded-2xl glass border border-indigo-500/30">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-white">Answer Feedback</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Answer Feedback</h3>
                         <span className={`text-2xl font-bold ${getScoreColor(lastFeedback.score)}`}>
                             {lastFeedback.score}/100
                         </span>
                     </div>
-                    <p className="text-gray-300">{lastFeedback.feedback}</p>
+                    <p className="text-gray-600 dark:text-gray-300">{lastFeedback.feedback}</p>
 
                     {/* Audio Analysis Results */}
                     {audioAnalysis && (
                         <div className="mt-6 space-y-4">
-                            <div className="border-t border-white/10 pt-4">
-                                <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                            <div className="border-t border-gray-200 dark:border-white/10 pt-4">
+                                <h4 className="text-gray-900 dark:text-white font-medium mb-3 flex items-center gap-2">
                                     <Mic className="w-4 h-4 text-blue-400" />
                                     Speech Analysis
                                 </h4>
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                                    <div className="p-3 rounded-lg bg-white/5">
-                                        <p className="text-gray-400 text-xs">Clarity Score</p>
+                                    <div className="p-3 rounded-lg bg-white dark:bg-white/5">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Clarity Score</p>
                                         <p className={`text-xl font-bold ${audioAnalysis.clarityScore >= 80 ? 'text-green-400' :
                                             audioAnalysis.clarityScore >= 60 ? 'text-yellow-400' : 'text-red-400'
                                             }`}>
                                             {audioAnalysis.clarityScore}%
                                         </p>
                                     </div>
-                                    <div className="p-3 rounded-lg bg-white/5">
-                                        <p className="text-gray-400 text-xs">Words/Min</p>
-                                        <p className="text-xl font-bold text-white">
+                                    <div className="p-3 rounded-lg bg-white dark:bg-white/5">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Words/Min</p>
+                                        <p className="text-xl font-bold text-gray-900 dark:text-white">
                                             {audioAnalysis.speakingPace.wordsPerMinute}
                                         </p>
                                         <p className={`text-xs ${audioAnalysis.speakingPace.rating === 'good' ? 'text-green-400' : 'text-yellow-400'
@@ -1236,17 +1236,17 @@ export default function InterviewRoomPage() {
                                             ({audioAnalysis.speakingPace.rating})
                                         </p>
                                     </div>
-                                    <div className="p-3 rounded-lg bg-white/5">
-                                        <p className="text-gray-400 text-xs">Confidence</p>
+                                    <div className="p-3 rounded-lg bg-white dark:bg-white/5">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Confidence</p>
                                         <p className={`text-xl font-bold ${audioAnalysis.confidenceIndicators.overallConfidence >= 70 ? 'text-green-400' :
                                             audioAnalysis.confidenceIndicators.overallConfidence >= 50 ? 'text-yellow-400' : 'text-red-400'
                                             }`}>
                                             {audioAnalysis.confidenceIndicators.overallConfidence}%
                                         </p>
                                     </div>
-                                    <div className="p-3 rounded-lg bg-white/5">
-                                        <p className="text-gray-400 text-xs">Duration</p>
-                                        <p className="text-xl font-bold text-white">
+                                    <div className="p-3 rounded-lg bg-white dark:bg-white/5">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Duration</p>
+                                        <p className="text-xl font-bold text-gray-900 dark:text-white">
                                             {Math.round(audioAnalysis.duration)}s
                                         </p>
                                     </div>
@@ -1271,9 +1271,9 @@ export default function InterviewRoomPage() {
                                 {/* Suggestions */}
                                 {audioAnalysis.suggestions.length > 0 && (
                                     <div className="space-y-2">
-                                        <p className="text-gray-400 text-sm font-medium">Suggestions:</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Suggestions:</p>
                                         {audioAnalysis.suggestions.map((suggestion, i) => (
-                                            <p key={i} className="text-gray-300 text-sm pl-3 border-l-2 border-blue-500/50">
+                                            <p key={i} className="text-gray-600 dark:text-gray-300 text-sm pl-3 border-l-2 border-blue-500/50">
                                                 {suggestion}
                                             </p>
                                         ))}
@@ -1325,7 +1325,7 @@ export default function InterviewRoomPage() {
                             ? 'bg-indigo-500 text-white'
                             : q.userAnswer
                                 ? 'bg-green-500/20 text-green-400'
-                                : 'bg-white/10 text-gray-400'
+                                : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                             }`}
                     >
                         {q.userAnswer ? <CheckCircle className="w-4 h-4" /> : index + 1}

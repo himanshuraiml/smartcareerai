@@ -24,13 +24,15 @@ export default function KeyboardShortcuts() {
         { key: "g r", label: "Go to Resumes", action: () => router.push("/dashboard/resumes"), category: "Navigation" },
         { key: "g s", label: "Go to Skills", action: () => router.push("/dashboard/skills"), category: "Navigation" },
         { key: "g t", label: "Go to Tests", action: () => router.push("/dashboard/tests"), category: "Navigation" },
-        { key: "g i", label: "Go to Interviews", action: () => router.push("/dashboard/interviews"), category: "Navigation" },
+        { key: "g i", label: "Go to Mock Interviews", action: () => router.push("/dashboard/interviews"), category: "Navigation" },
+        { key: "g p i", label: "Go to Practice Interviews", action: () => router.push("/dashboard/practice-interview"), category: "Navigation" },
         { key: "g j", label: "Go to Jobs", action: () => router.push("/dashboard/jobs"), category: "Navigation" },
         { key: "g b", label: "Go to Billing", action: () => router.push("/dashboard/billing"), category: "Navigation" },
         { key: "g p", label: "Go to Pricing", action: () => router.push("/pricing"), category: "Navigation" },
         { key: "n r", label: "New Resume Upload", action: () => router.push("/dashboard/resumes?action=upload"), category: "Actions" },
         { key: "n t", label: "Start New Test", action: () => router.push("/dashboard/tests?action=new"), category: "Actions" },
-        { key: "n i", label: "Start Interview", action: () => router.push("/dashboard/interviews?action=new"), category: "Actions" },
+        { key: "n i", label: "Start Mock Interview", action: () => router.push("/dashboard/interviews?action=new"), category: "Actions" },
+        { key: "n p", label: "Start Practice Interview", action: () => router.push("/dashboard/practice-interview?action=new"), category: "Actions" },
         { key: "?", label: "Show Keyboard Shortcuts", action: () => setShowPalette(true), category: "Help" },
     ];
 
@@ -121,21 +123,21 @@ export default function KeyboardShortcuts() {
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
                         className="fixed top-[20%] left-1/2 -translate-x-1/2 z-[201] w-full max-w-lg"
                     >
-                        <div className="rounded-2xl glass-premium border border-white/10 overflow-hidden shadow-2xl">
+                        <div className="rounded-2xl glass-premium border border-gray-200 dark:border-white/10 overflow-hidden shadow-2xl">
                             {/* Search Input */}
-                            <div className="flex items-center gap-3 p-4 border-b border-white/10">
-                                <Command className="w-5 h-5 text-gray-400" />
+                            <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-white/10">
+                                <Command className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Type a command or search..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none"
+                                    className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 outline-none"
                                     autoFocus
                                 />
                                 <button
                                     onClick={() => setShowPalette(false)}
-                                    className="text-gray-400 hover:text-white"
+                                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -155,8 +157,8 @@ export default function KeyboardShortcuts() {
                                                 setSearch("");
                                             }}
                                             className={`w-full flex items-center justify-between p-3 rounded-lg transition ${index === selectedIndex
-                                                    ? "bg-indigo-500/20 text-white"
-                                                    : "text-gray-300 hover:bg-white/5"
+                                                ? "bg-indigo-500/20 text-indigo-700 dark:text-white"
+                                                : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
@@ -164,7 +166,7 @@ export default function KeyboardShortcuts() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-gray-500">{cmd.category}</span>
-                                                <kbd className="px-2 py-1 rounded bg-white/10 text-xs font-mono text-gray-400">
+                                                <kbd className="px-2 py-1 rounded bg-gray-100 dark:bg-white/10 text-xs font-mono text-gray-500 dark:text-gray-400">
                                                     {cmd.key}
                                                 </kbd>
                                             </div>
@@ -174,7 +176,7 @@ export default function KeyboardShortcuts() {
                             </div>
 
                             {/* Footer */}
-                            <div className="flex items-center justify-between p-3 border-t border-white/10 text-xs text-gray-500">
+                            <div className="flex items-center justify-between p-3 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500">
                                 <div className="flex items-center gap-4">
                                     <span className="flex items-center gap-1">
                                         <ArrowUp className="w-3 h-3" />

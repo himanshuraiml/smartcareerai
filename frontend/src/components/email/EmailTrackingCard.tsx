@@ -120,24 +120,24 @@ export function EmailTrackingCard() {
 
     if (loading) {
         return (
-            <div className="p-6 rounded-2xl glass">
-                <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+            <div className="p-4 rounded-2xl glass">
+                <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6 rounded-2xl glass">
-            <div className="flex items-center justify-between mb-6">
+        <div className="p-4 rounded-2xl glass">
+            <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center">
                         <Mail className="w-5 h-5 text-red-400" />
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold">Email Tracking</h3>
-                        <p className="text-gray-400 text-sm">Auto-detect job application updates</p>
+                        <h3 className="text-gray-900 dark:text-white font-semibold">Email Tracking</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Auto-detect job application updates</p>
                     </div>
                 </div>
 
@@ -146,9 +146,9 @@ export function EmailTrackingCard() {
                         <button
                             onClick={handleSync}
                             disabled={syncing}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
+                            className="p-2 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition"
                         >
-                            <RefreshCw className={`w-4 h-4 text-gray-400 ${syncing ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`w-4 h-4 text-gray-500 dark:text-gray-400 ${syncing ? 'animate-spin' : ''}`} />
                         </button>
                         <button
                             onClick={handleDisconnect}
@@ -161,8 +161,8 @@ export function EmailTrackingCard() {
             </div>
 
             {!connection?.isActive ? (
-                <div className="text-center py-6">
-                    <p className="text-gray-400 mb-4">Connect your Gmail to automatically track job application emails</p>
+                <div className="text-center py-3">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Connect your Gmail to automatically track job application emails</p>
                     <button
                         onClick={handleConnect}
                         disabled={connecting}
@@ -196,7 +196,7 @@ export function EmailTrackingCard() {
                                 const config = emailTypeConfig[email.type];
                                 const Icon = config.icon;
                                 return (
-                                    <div key={email.id} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition cursor-pointer">
+                                    <div key={email.id} className="p-3 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition cursor-pointer">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
@@ -205,8 +205,8 @@ export function EmailTrackingCard() {
                                                     </span>
                                                     <span className="text-gray-500 text-xs">{email.companyName}</span>
                                                 </div>
-                                                <p className="text-white text-sm font-medium truncate">{email.subject}</p>
-                                                <p className="text-gray-400 text-xs truncate">{email.snippet}</p>
+                                                <p className="text-gray-900 dark:text-white text-sm font-medium truncate">{email.subject}</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">{email.snippet}</p>
                                             </div>
                                             <span className="text-gray-500 text-xs whitespace-nowrap ml-2">
                                                 {new Date(email.receivedAt).toLocaleDateString()}

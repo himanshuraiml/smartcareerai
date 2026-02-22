@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                     ${isActive
                                             ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-gray-900 dark:text-white border border-red-500/30"
-                                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"}
+                                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"}
                   `}
                                 >
                                     <item.icon className="w-5 h-5" />
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     {/* Admin User info */}
                     <div className="p-4 border-t border-gray-200 dark:border-white/5">
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 dark:bg-white/5 mb-2">
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white dark:bg-white/5 mb-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                                 <span className="text-white font-medium">A</span>
                             </div>

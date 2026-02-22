@@ -10,6 +10,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { interviewRouter } from './routes/interview.routes';
+import { practiceRouter } from './routes/practice.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import { contextMiddleware } from './middleware/context.middleware';
@@ -31,6 +32,7 @@ app.get('/health', (_req, res) => {
 
 // Routes
 app.use('/', interviewRouter);
+app.use('/practice', practiceRouter);
 
 // Error handler
 app.use(errorHandler);

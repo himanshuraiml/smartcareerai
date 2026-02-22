@@ -28,24 +28,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const applyTheme = (newTheme: Theme) => {
         const root = document.documentElement;
 
-        if (newTheme === "light") {
-            root.style.setProperty("--background", "0 0% 98%");
-            root.style.setProperty("--foreground", "0 0% 10%");
-            root.style.setProperty("--card", "0 0% 100%");
-            root.style.setProperty("--card-foreground", "0 0% 10%");
-            root.style.setProperty("--muted", "0 0% 90%");
-            root.style.setProperty("--muted-foreground", "0 0% 40%");
-            root.classList.add("light-mode");
-            root.classList.remove("dark-mode", "dark");
+        if (newTheme === "dark") {
+            root.classList.add("dark");
         } else {
-            root.style.setProperty("--background", "0 0% 3.9%");
-            root.style.setProperty("--foreground", "0 0% 98%");
-            root.style.setProperty("--card", "0 0% 7%");
-            root.style.setProperty("--card-foreground", "0 0% 98%");
-            root.style.setProperty("--muted", "0 0% 14.9%");
-            root.style.setProperty("--muted-foreground", "0 0% 63.9%");
-            root.classList.add("dark-mode", "dark");
-            root.classList.remove("light-mode");
+            root.classList.remove("dark");
         }
     };
 
@@ -76,5 +62,3 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         </ThemeContext.Provider>
     );
 }
-
-

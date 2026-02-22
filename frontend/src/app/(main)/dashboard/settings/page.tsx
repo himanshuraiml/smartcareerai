@@ -246,19 +246,19 @@ export default function SettingsPage() {
         <div className="max-w-4xl mx-auto space-y-8">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-white">Settings</h1>
-                <p className="text-gray-400 mt-2">Manage your account and preferences</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your account and preferences</p>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-white/10 pb-2">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 pb-2">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
                             ? 'bg-indigo-500/20 text-indigo-400'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -276,7 +276,7 @@ export default function SettingsPage() {
                 >
                     {/* Avatar Section */}
                     <div className="p-6 rounded-2xl glass-card">
-                        <h2 className="text-lg font-bold text-white mb-4">Profile Photo</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile Photo</h2>
                         <div className="flex items-center gap-6">
                             <div className="relative">
                                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
@@ -287,8 +287,8 @@ export default function SettingsPage() {
                                 </button>
                             </div>
                             <div>
-                                <p className="text-white font-medium">{user?.name || 'User'}</p>
-                                <p className="text-gray-400 text-sm">{user?.email}</p>
+                                <p className="text-gray-900 dark:text-white font-medium">{user?.name || 'User'}</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">{user?.email}</p>
                                 <p className="text-xs text-gray-500 mt-2">
                                     Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                 </p>
@@ -298,31 +298,31 @@ export default function SettingsPage() {
 
                     {/* Basic Info */}
                     <div className="p-6 rounded-2xl glass-card">
-                        <h2 className="text-lg font-bold text-white mb-4">Basic Information</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Basic Information</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Full Name</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                     <input
                                         type="text"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                         placeholder="Your name"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email Address</label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                     <input
                                         type="email"
                                         value={formData.email}
                                         disabled
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-not-allowed"
+                                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                                     />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
@@ -334,23 +334,23 @@ export default function SettingsPage() {
                     <div className="p-6 rounded-2xl glass-card">
                         <div className="flex items-start justify-between mb-4">
                             <div>
-                                <h2 className="text-lg font-bold text-white">Institution</h2>
-                                <p className="text-sm text-gray-400">Select your university or college if you are a student</p>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Institution</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Select your university or college if you are a student</p>
                             </div>
                             <Building2 className="w-5 h-5 text-indigo-400" />
                         </div>
 
                         <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-300">Your Institution</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">Your Institution</label>
                             <select
                                 value={formData.institutionId}
                                 onChange={(e) => setFormData({ ...formData, institutionId: e.target.value })}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
                                 style={{ backgroundImage: 'none' }}
                             >
-                                <option value="" className="bg-gray-900">Not a student / Skip</option>
+                                <option value="" className="bg-white dark:bg-gray-900">Not a student / Skip</option>
                                 {institutions.map((inst) => (
-                                    <option key={inst.id} value={inst.id} className="bg-gray-900">
+                                    <option key={inst.id} value={inst.id} className="bg-white dark:bg-gray-900">
                                         {inst.name}
                                     </option>
                                 ))}
@@ -362,8 +362,8 @@ export default function SettingsPage() {
                     <div className="p-6 rounded-2xl glass-card">
                         <div className="flex items-start justify-between mb-4">
                             <div>
-                                <h2 className="text-lg font-bold text-white">Target Job Role</h2>
-                                <p className="text-sm text-gray-400">This personalizes your skill recommendations, job matches, and interview prep</p>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Target Job Role</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">This personalizes your skill recommendations, job matches, and interview prep</p>
                             </div>
                             <Briefcase className="w-5 h-5 text-indigo-400" />
                         </div>
@@ -371,26 +371,26 @@ export default function SettingsPage() {
                         {/* Current Selection */}
                         {selectedRole && (
                             <div className="mb-4 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                                <p className="text-xs text-gray-400 mb-1">Currently targeting</p>
-                                <p className="text-lg font-bold text-white">{selectedRole.title}</p>
-                                <p className="text-sm text-gray-400">{selectedRole.category}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Currently targeting</p>
+                                <p className="text-lg font-bold text-gray-900 dark:text-white">{selectedRole.title}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedRole.category}</p>
                             </div>
                         )}
 
                         {/* Role Selector */}
                         <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-300">Change Target Role</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">Change Target Role</label>
                             <select
                                 value={formData.targetJobRoleId}
                                 onChange={(e) => setFormData({ ...formData, targetJobRoleId: e.target.value })}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
                                 style={{ backgroundImage: 'none' }}
                             >
-                                <option value="" className="bg-gray-900">Select a role...</option>
+                                <option value="" className="bg-white dark:bg-gray-900">Select a role...</option>
                                 {groupedRoles.map((group) => (
-                                    <optgroup key={group.category} label={group.category} className="bg-gray-900">
+                                    <optgroup key={group.category} label={group.category} className="bg-white dark:bg-gray-900">
                                         {group.roles.map((role) => (
-                                            <option key={role.id} value={role.id} className="bg-gray-900">
+                                            <option key={role.id} value={role.id} className="bg-white dark:bg-gray-900">
                                                 {role.title}
                                             </option>
                                         ))}
@@ -428,11 +428,11 @@ export default function SettingsPage() {
                     className="space-y-6"
                 >
                     <div className="p-6 rounded-2xl glass-card">
-                        <h2 className="text-lg font-bold text-white mb-4">Change Password</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Change Password</h2>
 
                         {user?.hasGoogleAuth ? (
                             <div className="flex items-start gap-4 p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -441,8 +441,8 @@ export default function SettingsPage() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-white font-medium">Signed in with Google</p>
-                                    <p className="text-gray-400 text-sm mt-1">
+                                    <p className="text-gray-900 dark:text-white font-medium">Signed in with Google</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                         Your account uses Google for authentication. To change your password, visit your
                                         {' '}<a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline">Google Account settings</a>.
                                     </p>
@@ -464,39 +464,39 @@ export default function SettingsPage() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Current Password</label>
                                         <input
                                             type="password"
                                             value={passwordData.currentPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="••••••••"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">New Password</label>
                                         <input
                                             type="password"
                                             value={passwordData.newPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="••••••••"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Confirm New Password</label>
                                         <input
                                             type="password"
                                             value={passwordData.confirmPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             placeholder="••••••••"
                                         />
                                     </div>
                                     <button
                                         onClick={handleChangePassword}
                                         disabled={passwordLoading}
-                                        className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors disabled:opacity-50"
+                                        className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-white/20 transition-colors disabled:opacity-50"
                                     >
                                         {passwordLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
                                         {passwordLoading ? 'Updating...' : 'Update Password'}
@@ -508,7 +508,7 @@ export default function SettingsPage() {
 
                     <div className="p-6 rounded-2xl glass-card border border-red-500/20">
                         <h2 className="text-lg font-bold text-red-400 mb-2">Danger Zone</h2>
-                        <p className="text-gray-400 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
                         <button
                             onClick={() => setShowDeleteModal(true)}
                             className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20 transition-colors border border-red-500/30"
@@ -527,7 +527,7 @@ export default function SettingsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-6 rounded-2xl glass-card"
                 >
-                    <h2 className="text-lg font-bold text-white mb-4">Notification Preferences</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Notification Preferences</h2>
                     <div className="space-y-4">
                         {[
                             { id: 'job-alerts' as keyof typeof notifications, label: 'Job Alerts', description: 'New job matches based on your profile' },
@@ -535,10 +535,10 @@ export default function SettingsPage() {
                             { id: 'interview-reminders' as keyof typeof notifications, label: 'Interview Reminders', description: 'Reminders for scheduled mock interviews' },
                             { id: 'marketing' as keyof typeof notifications, label: 'Marketing Emails', description: 'Occasional updates about new features' },
                         ].map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                            <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
                                 <div>
-                                    <p className="text-white font-medium">{item.label}</p>
-                                    <p className="text-sm text-gray-400">{item.description}</p>
+                                    <p className="text-gray-900 dark:text-white font-medium">{item.label}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input
@@ -547,7 +547,7 @@ export default function SettingsPage() {
                                         onChange={(e) => setNotifications({ ...notifications, [item.id]: e.target.checked })}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                                    <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
                                 </label>
                             </div>
                         ))}
@@ -561,19 +561,19 @@ export default function SettingsPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-red-500/30"
+                        className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full border border-red-500/30"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
                                 <AlertTriangle className="w-6 h-6 text-red-400" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">Delete Account</h2>
-                                <p className="text-gray-400 text-sm">This action cannot be undone</p>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delete Account</h2>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">This action cannot be undone</p>
                             </div>
                         </div>
 
-                        <p className="text-gray-300 mb-4">
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
                             All your data, including resumes, interview history, and preferences will be permanently deleted.
                         </p>
 
@@ -586,26 +586,26 @@ export default function SettingsPage() {
                         <div className="mb-4">
                             {user?.hasGoogleAuth ? (
                                 <>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                                         Type <span className="text-red-400 font-bold">DELETE</span> to confirm
                                     </label>
                                     <input
                                         type="text"
                                         value={deleteConfirmPhrase}
                                         onChange={(e) => setDeleteConfirmPhrase(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                                         placeholder="DELETE"
                                         autoComplete="off"
                                     />
                                 </>
                             ) : (
                                 <>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Enter your password to confirm</label>
+                                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Enter your password to confirm</label>
                                     <input
                                         type="password"
                                         value={deletePassword}
                                         onChange={(e) => setDeletePassword(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        className="w-full px-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                                         placeholder="••••••••"
                                     />
                                 </>
@@ -620,7 +620,7 @@ export default function SettingsPage() {
                                     setDeleteConfirmPhrase('');
                                     setDeleteError(null);
                                 }}
-                                className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white transition"
+                                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                             >
                                 Cancel
                             </button>
