@@ -1,12 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { GoogleAuthProviderWrapper } from '@/providers/GoogleAuthProvider';
 import KeyboardShortcuts from '@/components/keyboard/KeyboardShortcuts';
-
-const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://placenxt.com'), // Replace with actual domain
@@ -62,7 +59,13 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
-            <body className={inter.className}>
+            <head>
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+                    rel="stylesheet"
+                />
+            </head>
+            <body style={{ fontFamily: "'Inter', sans-serif" }}>
                 <GoogleAuthProviderWrapper>
                     <ThemeProvider>
                         {children}
