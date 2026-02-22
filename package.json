@@ -44,6 +44,9 @@
     "infra:up": "docker-compose -f docker-compose.infra.yml up -d",
     "infra:down": "docker-compose -f docker-compose.infra.yml down"
   },
+  "dependencies": {
+    "typescript": "^5.3.3"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
@@ -54,8 +57,7 @@
     "prettier": "^3.1.1",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "ts-node": "^10.9.2"
   },
   "engines": {
     "node": ">=20.0.0"
