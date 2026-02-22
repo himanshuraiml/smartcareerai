@@ -19,12 +19,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "paths": {
-            "@smartcareer/*": [
-                "./packages/*/src/index.ts"
-            ]
-        }
+        "noFallthroughCasesInSwitch": true
     },
     "files": [],
     "references": [

@@ -8,11 +8,6 @@
     "include": [
         "src/**/*"
     ],
-    "references": [
-        {
-            "path": "../../packages/shared"
-        }
-    ],
     "exclude": [
         "node_modules",
         "dist"
