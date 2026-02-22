@@ -58,8 +58,10 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: api-gateway
     container_name: smartcareer-gateway
     restart: unless-stopped
     ports:
@@ -87,8 +89,10 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: auth-service
     container_name: smartcareer-auth
     restart: unless-stopped
     ports:
@@ -112,8 +116,10 @@ services:
   # Resume Service
   resume-service:
     build:
-      context: ./services/resume-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: resume-service
     container_name: smartcareer-resume
     restart: unless-stopped
     ports:
@@ -136,8 +142,10 @@ services:
   # Scoring Service
   scoring-service:
     build:
-      context: ./services/scoring-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: scoring-service
     container_name: smartcareer-scoring
     restart: unless-stopped
     ports:
@@ -157,8 +165,10 @@ services:
   # Skill Service
   skill-service:
     build:
-      context: ./services/skill-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: skill-service
     container_name: smartcareer-skill
     restart: unless-stopped
     ports:
@@ -175,8 +185,10 @@ services:
   # Job Service
   job-service:
     build:
-      context: ./services/job-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: job-service
     container_name: smartcareer-job
     restart: unless-stopped
     ports:
@@ -192,8 +204,10 @@ services:
   # Application Service
   application-service:
     build:
-      context: ./services/application-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: application-service
     container_name: smartcareer-application
     restart: unless-stopped
     ports:
@@ -209,8 +223,10 @@ services:
   # Interview Service
   interview-service:
     build:
-      context: ./services/interview-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: interview-service
     container_name: smartcareer-interview
     restart: unless-stopped
     ports:
@@ -230,8 +246,10 @@ services:
   # Recruiter Service
   recruiter-service:
     build:
-      context: ./services/recruiter-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: recruiter-service
     container_name: smartcareer-recruiter
     restart: unless-stopped
     ports:
@@ -247,8 +265,10 @@ services:
   # Billing Service
   billing-service:
     build:
-      context: ./services/billing-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: billing-service
     container_name: smartcareer-billing
     restart: unless-stopped
     ports:
@@ -266,8 +286,10 @@ services:
   # Validation Service
   validation-service:
     build:
-      context: ./services/validation-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: validation-service
     container_name: smartcareer-validation
     restart: unless-stopped
     ports:
@@ -283,8 +305,10 @@ services:
   # Admin Service
   admin-service:
     build:
-      context: ./services/admin-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: admin-service
     container_name: smartcareer-admin
     restart: unless-stopped
     ports:
@@ -301,8 +325,10 @@ services:
   # Email Tracking Service
   email-tracking-service:
     build:
-      context: ./services/email-tracking-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: email-tracking-service
     container_name: smartcareer-email
     restart: unless-stopped
     ports:
