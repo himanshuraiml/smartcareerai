@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc -b",
+        "build": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && tsc",
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-        "prestart": "npm run build",
+        "prestart": "cd ../../packages/shared && tsc && cd ../../services/auth-service && npm run build",
         "start": "node dist/index.js",
         "test": "jest"
     },
