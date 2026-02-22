@@ -120,7 +120,7 @@ async function fetchBankQuestions(
                 difficulty: true,
                 questionType: true,
             },
-        });
+        }) as BankQuestion[];
 
         await cacheSet(cacheKey, questions, 3600); // 1 hour
     }
