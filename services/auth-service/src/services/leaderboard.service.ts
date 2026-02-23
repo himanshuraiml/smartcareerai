@@ -54,7 +54,7 @@ export class LeaderboardService {
             rank: index + 1,
         }));
 
-        let currentUser = null;
+        let currentUser: any = null;
         if (currentUserId) {
             const userIndex = ranked.findIndex((u) => u.userId === currentUserId);
             if (userIndex !== -1) {
