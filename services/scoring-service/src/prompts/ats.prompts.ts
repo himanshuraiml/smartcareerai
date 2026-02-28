@@ -33,7 +33,8 @@ Provide a comprehensive ATS analysis in JSON format with the following structure
     "averageScoreForRole": <number 0-100, the typical ATS score for this role>,
     "competitiveLevel": "below_average | average | above_average | excellent"
   },
-  "transparencyNote": "A brief note explaining that ATS scores vary across platforms (LinkedIn, Indeed, Workday, etc.) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth."
+  "transparencyNote": "A brief note explaining that ATS scores vary across platforms (LinkedIn, Indeed, Workday, etc.) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth.",
+  "biasFlags": ["list of potential biases detected in the resume text, such as gendered language, age indicators, socioeconomic hints, or racial indicators. Empty array if none found."]
 }
 
 Scoring Guidelines:
@@ -45,6 +46,7 @@ Scoring Guidelines:
 - scoreDeductions: For EACH category, list exactly how many points were lost and why. Start from 100 for each category and deduct.
 - scoreExplanation: Summarize in plain English why the candidate got this score. Mention the top 2-3 factors.
 - industryBenchmark: Estimate where this resume stands compared to typical applicants. Be realistic.
+- biasFlags: Flag any language or details that might unconsciously bias a human recruiter (e.g. fraternity/sorority names, graduation years revealing age, gendered names/pronouns if prominent). These should NOT affect the score, but act as a warning.
 
 Be specific in your analysis and provide actionable feedback.
 `;

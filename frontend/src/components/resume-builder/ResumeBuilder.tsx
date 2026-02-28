@@ -476,14 +476,14 @@ export default function ResumeBuilder() {
         return (
             <div className="max-w-2xl mx-auto space-y-8 py-12">
                 <div className="text-center space-y-4">
-                    <h2 className="text-3xl font-bold text-white">How do you want to start?</h2>
-                    <p className="text-gray-400">Import your existing resume or LinkedIn PDF export to save time.</p>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">How do you want to start?</h2>
+                    <p className="text-gray-500 dark:text-gray-400">Import your existing resume or LinkedIn PDF export to save time.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="group p-8 rounded-2xl border-2 border-dashed border-white/10 hover:border-indigo-500 hover:bg-white/5 cursor-pointer transition-all text-center space-y-4"
+                        className="group p-8 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-all text-center space-y-4"
                     >
                         <input
                             type="file"
@@ -496,20 +496,20 @@ export default function ResumeBuilder() {
                             {importing ? <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" /> : <Upload className="w-8 h-8 text-indigo-400" />}
                         </div>
                         <div>
-                            <h3 className="text-xl font-semibold text-white">Import Resume / LinkedIn</h3>
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Import Resume / LinkedIn</h3>
                             <p className="text-sm text-gray-400 mt-2">Upload your current resume or LinkedIn profile PDF export.</p>
                         </div>
                     </div>
 
                     <div
                         onClick={() => setStep(2)}
-                        className="group p-8 rounded-2xl border-2 border-white/10 hover:border-emerald-500 hover:bg-white/5 cursor-pointer transition-all text-center space-y-4"
+                        className="group p-8 rounded-2xl border-2 border-gray-200 dark:border-white/10 hover:border-emerald-500 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-all text-center space-y-4"
                     >
                         <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                             <Plus className="w-8 h-8 text-emerald-400" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-semibold text-white">Start from Scratch</h3>
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Start from Scratch</h3>
                             <p className="text-sm text-gray-400 mt-2">Build your resume step-by-step using our smart wizard.</p>
                         </div>
                     </div>
@@ -517,7 +517,7 @@ export default function ResumeBuilder() {
 
                 <button
                     onClick={() => setStep(0)}
-                    className="mx-auto block text-gray-500 hover:text-white transition-colors"
+                    className="mx-auto block text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                     Back to Templates
                 </button>
@@ -530,7 +530,7 @@ export default function ResumeBuilder() {
         return (
             <div className="max-w-4xl mx-auto space-y-8 pb-20">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">Edit Your Resume</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Your Resume</h2>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setStep(3)}
@@ -542,43 +542,43 @@ export default function ResumeBuilder() {
                 </div>
 
                 {/* Personal Info */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-2 text-indigo-400 mb-2">
                         <User className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Personal Experience</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Experience</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
                             placeholder="Full Name"
-                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                             value={resumeData.personal.fullName}
                             onChange={e => setResumeData({ ...resumeData, personal: { ...resumeData.personal, fullName: e.target.value } })}
                         />
                         <input
                             placeholder="Email"
-                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                             value={resumeData.personal.email}
                             onChange={e => setResumeData({ ...resumeData, personal: { ...resumeData.personal, email: e.target.value } })}
                         />
                         <input
                             placeholder="Phone"
-                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                             value={resumeData.personal.phone}
                             onChange={e => setResumeData({ ...resumeData, personal: { ...resumeData.personal, phone: e.target.value } })}
                         />
                         <input
                             placeholder="LinkedIn URL"
-                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                            className="bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                             value={resumeData.personal.linkedin}
                             onChange={e => setResumeData({ ...resumeData, personal: { ...resumeData.personal, linkedin: e.target.value } })}
                         />
                     </div>
 
                     <div className="relative">
-                        <h4 className="text-sm text-gray-400 mb-2">Professional Summary</h4>
+                        <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-2">Professional Summary</h4>
                         <textarea
                             rows={4}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                             placeholder="Brief summary of your professional background..."
                             value={resumeData.personal.summary}
                             onChange={e => setResumeData({ ...resumeData, personal: { ...resumeData.personal, summary: e.target.value } })}
@@ -595,11 +595,11 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Experience */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <Briefcase className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Experience</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Experience</h3>
                         </div>
                         <button onClick={addExperience} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Experience
@@ -607,7 +607,7 @@ export default function ResumeBuilder() {
                     </div>
 
                     {resumeData.experience.map((exp, index) => (
-                        <div key={exp.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={exp.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== exp.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -618,13 +618,13 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Role / Job Title"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={exp.role}
                                     onChange={e => setResumeData(prev => ({ ...prev, experience: prev.experience.map(item => item.id === exp.id ? { ...item, role: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Company Name"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={exp.company}
                                     onChange={e => setResumeData(prev => ({ ...prev, experience: prev.experience.map(item => item.id === exp.id ? { ...item, company: e.target.value } : item) }))}
                                 />
@@ -633,7 +633,7 @@ export default function ResumeBuilder() {
                             <div className="relative">
                                 <textarea
                                     rows={4}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none text-sm"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none text-sm"
                                     placeholder="Describe your responsibilities and achievements..."
                                     value={exp.description}
                                     onChange={e => setResumeData(prev => ({ ...prev, experience: prev.experience.map(item => item.id === exp.id ? { ...item, description: e.target.value } : item) }))}
@@ -652,11 +652,11 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Education */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <GraduationCap className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Education</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Education</h3>
                         </div>
                         <button onClick={addEducation} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Education
@@ -664,7 +664,7 @@ export default function ResumeBuilder() {
                     </div>
 
                     {resumeData.education.map((edu, index) => (
-                        <div key={edu.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={edu.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, education: prev.education.filter(e => e.id !== edu.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -675,38 +675,38 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="School / University"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={edu.school}
                                     onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, school: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Degree (e.g. BSc)"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={edu.degree}
                                     onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, degree: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Field of Study"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={edu.field}
                                     onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, field: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Grade / CGPA"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={edu.grade}
                                     onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, grade: e.target.value } : item) }))}
                                 />
                                 <div className="grid grid-cols-2 gap-2">
                                     <input
                                         placeholder="Start Year"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={edu.startDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, startDate: e.target.value } : item) }))}
                                     />
                                     <input
                                         placeholder="End Year"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={edu.endDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, education: prev.education.map(item => item.id === edu.id ? { ...item, endDate: e.target.value } : item) }))}
                                     />
@@ -717,18 +717,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Internships */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <Briefcase className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Internships</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Internships</h3>
                         </div>
                         <button onClick={addInternship} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Internship
                         </button>
                     </div>
                     {resumeData.internships.map((int) => (
-                        <div key={int.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={int.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, internships: prev.internships.filter(i => i.id !== int.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -738,26 +738,26 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Role / Title"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={int.role}
                                     onChange={e => setResumeData(prev => ({ ...prev, internships: prev.internships.map(item => item.id === int.id ? { ...item, role: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Company"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={int.company}
                                     onChange={e => setResumeData(prev => ({ ...prev, internships: prev.internships.map(item => item.id === int.id ? { ...item, company: e.target.value } : item) }))}
                                 />
                                 <div className="grid grid-cols-2 gap-2">
                                     <input
                                         placeholder="Start Date"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={int.startDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, internships: prev.internships.map(item => item.id === int.id ? { ...item, startDate: e.target.value } : item) }))}
                                     />
                                     <input
                                         placeholder="End Date"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={int.endDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, internships: prev.internships.map(item => item.id === int.id ? { ...item, endDate: e.target.value } : item) }))}
                                     />
@@ -765,7 +765,7 @@ export default function ResumeBuilder() {
                             </div>
                             <textarea
                                 rows={3}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none text-sm"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none text-sm"
                                 placeholder="Description..."
                                 value={int.description}
                                 onChange={e => setResumeData(prev => ({ ...prev, internships: prev.internships.map(item => item.id === int.id ? { ...item, description: e.target.value } : item) }))}
@@ -775,18 +775,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Projects */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <FileText className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Projects</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Projects</h3>
                         </div>
                         <button onClick={addProject} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Project
                         </button>
                     </div>
                     {resumeData.projects.map((proj) => (
-                        <div key={proj.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={proj.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== proj.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -796,26 +796,26 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Project Title"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={proj.title}
                                     onChange={e => setResumeData(prev => ({ ...prev, projects: prev.projects.map(item => item.id === proj.id ? { ...item, title: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Link (Optional)"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={proj.link}
                                     onChange={e => setResumeData(prev => ({ ...prev, projects: prev.projects.map(item => item.id === proj.id ? { ...item, link: e.target.value } : item) }))}
                                 />
                             </div>
                             <input
                                 placeholder="Technologies (comma separated)"
-                                className="w-full bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                className="w-full bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                 value={proj.technologies.join(', ')}
                                 onChange={e => setResumeData(prev => ({ ...prev, projects: prev.projects.map(item => item.id === proj.id ? { ...item, technologies: e.target.value.split(',').map(t => t.trim()) } : item) }))}
                             />
                             <textarea
                                 rows={3}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none text-sm"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none text-sm"
                                 placeholder="Project Description..."
                                 value={proj.description}
                                 onChange={e => setResumeData(prev => ({ ...prev, projects: prev.projects.map(item => item.id === proj.id ? { ...item, description: e.target.value } : item) }))}
@@ -825,18 +825,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Industrial Training */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <Briefcase className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Industrial Training</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Industrial Training</h3>
                         </div>
                         <button onClick={addTraining} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Training
                         </button>
                     </div>
                     {resumeData.industrialTraining.map((tr) => (
-                        <div key={tr.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={tr.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.filter(t => t.id !== tr.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -846,26 +846,26 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Organization"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={tr.organization}
                                     onChange={e => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.map(item => item.id === tr.id ? { ...item, organization: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Project/Subject"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={tr.project}
                                     onChange={e => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.map(item => item.id === tr.id ? { ...item, project: e.target.value } : item) }))}
                                 />
                                 <div className="grid grid-cols-2 gap-2">
                                     <input
                                         placeholder="Start Date"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={tr.startDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.map(item => item.id === tr.id ? { ...item, startDate: e.target.value } : item) }))}
                                     />
                                     <input
                                         placeholder="End Date"
-                                        className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                        className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                         value={tr.endDate}
                                         onChange={e => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.map(item => item.id === tr.id ? { ...item, endDate: e.target.value } : item) }))}
                                     />
@@ -873,7 +873,7 @@ export default function ResumeBuilder() {
                             </div>
                             <textarea
                                 rows={2}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none text-sm"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none text-sm"
                                 placeholder="Details..."
                                 value={tr.description}
                                 onChange={e => setResumeData(prev => ({ ...prev, industrialTraining: prev.industrialTraining.map(item => item.id === tr.id ? { ...item, description: e.target.value } : item) }))}
@@ -883,18 +883,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Certifications */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <Award className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Certifications</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Certifications</h3>
                         </div>
                         <button onClick={addCertification} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Certification
                         </button>
                     </div>
                     {resumeData.certifications.map((cert) => (
-                        <div key={cert.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={cert.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, certifications: prev.certifications.filter(c => c.id !== cert.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -904,25 +904,25 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Name / Course"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={cert.name}
                                     onChange={e => setResumeData(prev => ({ ...prev, certifications: prev.certifications.map(item => item.id === cert.id ? { ...item, name: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Issuer"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={cert.issuer}
                                     onChange={e => setResumeData(prev => ({ ...prev, certifications: prev.certifications.map(item => item.id === cert.id ? { ...item, issuer: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Date"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={cert.date}
                                     onChange={e => setResumeData(prev => ({ ...prev, certifications: prev.certifications.map(item => item.id === cert.id ? { ...item, date: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Link (Optional)"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={cert.link}
                                     onChange={e => setResumeData(prev => ({ ...prev, certifications: prev.certifications.map(item => item.id === cert.id ? { ...item, link: e.target.value } : item) }))}
                                 />
@@ -932,18 +932,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Publications */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <BookOpen className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Publications</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Publications</h3>
                         </div>
                         <button onClick={addPublication} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Publication
                         </button>
                     </div>
                     {resumeData.publications.map((pub) => (
-                        <div key={pub.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={pub.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, publications: prev.publications.filter(p => p.id !== pub.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -953,25 +953,25 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Title"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={pub.title}
                                     onChange={e => setResumeData(prev => ({ ...prev, publications: prev.publications.map(item => item.id === pub.id ? { ...item, title: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Publisher"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={pub.publisher}
                                     onChange={e => setResumeData(prev => ({ ...prev, publications: prev.publications.map(item => item.id === pub.id ? { ...item, publisher: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Date"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={pub.date}
                                     onChange={e => setResumeData(prev => ({ ...prev, publications: prev.publications.map(item => item.id === pub.id ? { ...item, date: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Link (Optional)"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={pub.link}
                                     onChange={e => setResumeData(prev => ({ ...prev, publications: prev.publications.map(item => item.id === pub.id ? { ...item, link: e.target.value } : item) }))}
                                 />
@@ -981,18 +981,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Awards */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <Award className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Awards & Achievements</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Awards & Achievements</h3>
                         </div>
                         <button onClick={addAward} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Award
                         </button>
                     </div>
                     {resumeData.awards.map((aw) => (
-                        <div key={aw.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={aw.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, awards: prev.awards.filter(a => a.id !== aw.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1002,19 +1002,19 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Title"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={aw.title}
                                     onChange={e => setResumeData(prev => ({ ...prev, awards: prev.awards.map(item => item.id === aw.id ? { ...item, title: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Issuer"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={aw.issuer}
                                     onChange={e => setResumeData(prev => ({ ...prev, awards: prev.awards.map(item => item.id === aw.id ? { ...item, issuer: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Date"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={aw.date}
                                     onChange={e => setResumeData(prev => ({ ...prev, awards: prev.awards.map(item => item.id === aw.id ? { ...item, date: e.target.value } : item) }))}
                                 />
@@ -1024,18 +1024,18 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Industrial Visits */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                             <MapPin className="w-5 h-5" />
-                            <h3 className="text-lg font-semibold">Industrial Visits</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Industrial Visits</h3>
                         </div>
                         <button onClick={addVisit} className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
                             <Plus className="w-4 h-4" /> Add Visit
                         </button>
                     </div>
                     {resumeData.industrialVisits.map((iv) => (
-                        <div key={iv.id} className="p-4 rounded-xl bg-black/20 border border-white/5 space-y-3 relative group">
+                        <div key={iv.id} className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/5 space-y-3 relative group">
                             <button
                                 onClick={() => setResumeData(prev => ({ ...prev, industrialVisits: prev.industrialVisits.filter(v => v.id !== iv.id) }))}
                                 className="absolute top-2 right-2 p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1045,20 +1045,20 @@ export default function ResumeBuilder() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     placeholder="Company / Place"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={iv.company}
                                     onChange={e => setResumeData(prev => ({ ...prev, industrialVisits: prev.industrialVisits.map(item => item.id === iv.id ? { ...item, company: e.target.value } : item) }))}
                                 />
                                 <input
                                     placeholder="Date"
-                                    className="bg-transparent border-b border-white/10 p-2 text-white focus:border-indigo-500 outline-none"
+                                    className="bg-transparent border-b border-white/10 p-2 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                                     value={iv.date}
                                     onChange={e => setResumeData(prev => ({ ...prev, industrialVisits: prev.industrialVisits.map(item => item.id === iv.id ? { ...item, date: e.target.value } : item) }))}
                                 />
                             </div>
                             <textarea
                                 rows={2}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none text-sm"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none text-sm"
                                 placeholder="Key Learnings..."
                                 value={iv.description}
                                 onChange={e => setResumeData(prev => ({ ...prev, industrialVisits: prev.industrialVisits.map(item => item.id === iv.id ? { ...item, description: e.target.value } : item) }))}
@@ -1068,14 +1068,14 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Co-curricular Activities */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-2 text-indigo-400 mb-2">
                         <Activity className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Co-curricular Activities</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Co-curricular Activities</h3>
                     </div>
                     <textarea
                         rows={3}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                         placeholder="List your activities separated by commas..."
                         value={resumeData.coCurricular.join(', ')}
                         onChange={e => setResumeData({ ...resumeData, coCurricular: e.target.value.split(',').map(s => s.trim()) })}
@@ -1083,14 +1083,14 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Hobbies */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-2 text-indigo-400 mb-2">
                         <Heart className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Interests & Hobbies</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Interests & Hobbies</h3>
                     </div>
                     <textarea
                         rows={2}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                         placeholder="List your hobbies separated by commas..."
                         value={resumeData.hobbies.join(', ')}
                         onChange={e => setResumeData({ ...resumeData, hobbies: e.target.value.split(',').map(s => s.trim()) })}
@@ -1098,14 +1098,14 @@ export default function ResumeBuilder() {
                 </section>
 
                 {/* Skills */}
-                <section className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <section className="space-y-4 p-6 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5">
                     <div className="flex items-center gap-2 text-indigo-400 mb-2">
                         <Wand2 className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Skills</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Skills</h3>
                     </div>
                     <textarea
                         rows={3}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-gray-900 dark:text-white focus:border-indigo-500 outline-none"
                         placeholder="List your skills separated by commas (e.g. React, Node.js, Project Management)..."
                         value={resumeData.skills.join(', ')}
                         onChange={e => setResumeData({ ...resumeData, skills: e.target.value.split(',').map(s => s.trim()) })}
@@ -1115,7 +1115,7 @@ export default function ResumeBuilder() {
                 <div className="flex justify-between pt-8">
                     <button
                         onClick={() => setStep(1)}
-                        className="px-6 py-2 border border-white/10 rounded-lg text-gray-400 hover:text-white"
+                        className="px-6 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                     >
                         Back
                     </button>
@@ -1162,10 +1162,10 @@ export default function ResumeBuilder() {
                         }
                     }
                 `}} />
-                <div className="flex items-center justify-between bg-gray-900/50 p-4 rounded-xl border border-white/10 sticky top-4 z-10 backdrop-blur-md print-hidden">
+                <div className="flex items-center justify-between bg-white dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-white/10 sticky top-4 z-10 backdrop-blur-md print-hidden">
                     <button
                         onClick={() => setStep(2)}
-                        className="text-gray-400 hover:text-white flex items-center gap-2"
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
                     >
                         <ChevronLeft className="w-4 h-4" /> Edit
                     </button>
@@ -1176,7 +1176,7 @@ export default function ResumeBuilder() {
                                 // For now, let's just stick to the current selected one.
                                 setStep(0);
                             }}
-                            className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium flex items-center gap-2"
+                            className="px-4 py-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg text-gray-900 dark:text-white font-medium flex items-center gap-2"
                         >
                             <RefreshCw className="w-4 h-4" /> Change Template
                         </button>

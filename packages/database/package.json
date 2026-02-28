@@ -10,6 +10,7 @@
         "generate": "prisma generate",
         "seed": "ts-node prisma/seed.ts",
         "seed:interviews": "ts-node prisma/seed-interview-questions.ts",
+        "seed:coding": "ts-node prisma/seed-coding-challenges.ts",
         "start": "prisma migrate deploy",
         "studio": "prisma studio",
         "test": "jest"

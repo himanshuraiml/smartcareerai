@@ -390,4 +390,20 @@ export class AuthController {
             next(error);
         }
     }
+
+    async exportData(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const data = await authService.exportData(userId);
+
+            logger.info(`Data exported for user: ${userId}`);
+            res.json({
+                success: true,
+                data,
+                message: 'Data exported successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

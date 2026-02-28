@@ -141,15 +141,30 @@ export class AuthService {
     }
 
     async googleLogin(idToken: string) {
+        if (!idToken) {
+            throw new AppError('Google ID token is required', 400);
+        }
+
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            throw new AppError('Google login is not configured', 503);
+        }
+
         // Verify Google Token
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-        const ticket = await client.verifyIdToken({
-            idToken,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        let ticket;
+        try {
+            ticket = await client.verifyIdToken({
+                idToken,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+        } catch (err: any) {
+            logger.warn(`Google token verification failed: ${err.message}`);
+            throw new AppError('Invalid or expired Google token', 401);
+        }
+
         const payload = ticket.getPayload();
         if (!payload || !payload.email) {
-            throw new AppError('Invalid Google Token', 400);
+            throw new AppError('Invalid Google token payload', 401);
         }
 
         let { email, sub: googleId, name, picture: avatarUrl } = payload;
@@ -655,10 +670,62 @@ export class AuthService {
             }
         }
 
+        // Log GDPR Delete activity before deletion
+        await prisma.activityLog.create({
+            data: {
+                type: 'GDPR_DELETE',
+                message: `User ${user.email} requested GDPR permanent deletion.`,
+                userEmail: user.email,
+                status: 'SUCCESS'
+            }
+        });
+
         // Delete user (cascading deletes will handle related records)
         await prisma.user.delete({ where: { id: userId } });
 
         logger.info(`Account deleted for user ${userId}`);
+    }
+
+    /**
+     * Export all user data for GDPR compliance
+     */
+    async exportData(userId: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                targetJobRole: true,
+                institution: true,
+                resumes: true,
+                atsScores: true,
+                userSkills: { include: { skill: true } },
+                applications: { include: { job: true } },
+                interviews: { include: { questions: true } },
+                testAttempts: { include: { test: true } },
+                skillBadges: { include: { skill: true } },
+                subscription: true,
+                credits: true,
+                creditTransactions: true,
+                recruiterProfile: true,
+            },
+        });
+
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        // Log GDPR Export activity
+        await prisma.activityLog.create({
+            data: {
+                type: 'GDPR_EXPORT',
+                message: `User ${user.email} requested GDPR data export.`,
+                userId: user.id,
+                userEmail: user.email,
+                status: 'SUCCESS'
+            }
+        });
+
+        const { passwordHash: _, ...safeData } = user;
+        return safeData;
     }
 
     /**

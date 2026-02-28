@@ -2,6 +2,7 @@ import { razorpayService } from './razorpay.service';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
 import { prisma } from '../utils/prisma';
+import { promotionService } from './promotion.service';
 
 export interface CreateSubscriptionInput {
     userId: string;
@@ -10,6 +11,7 @@ export interface CreateSubscriptionInput {
     userEmail: string;
     userName: string;
     userContact?: string;
+    couponCode?: string;
 }
 
 export class SubscriptionService {
@@ -46,7 +48,7 @@ export class SubscriptionService {
      * Create a new subscription
      */
     async createSubscription(input: CreateSubscriptionInput) {
-        const { userId, planName, billingCycle = 'monthly', userEmail, userName, userContact } = input;
+        const { userId, planName, billingCycle = 'monthly', userEmail, userName, userContact, couponCode } = input;
 
         // Check for existing subscription
         const existingSubscription = await this.getUserSubscription(userId);
@@ -102,6 +104,18 @@ export class SubscriptionService {
             );
         }
 
+        // Apply coupon if provided
+        let appliedCouponId: string | undefined;
+        if (couponCode) {
+            const coupon = await promotionService.validateCoupon(couponCode, userId, 'SUBSCRIPTION');
+            // For subscriptions, Razorpay doesn't easily allow ad-hoc discounts on standard plans
+            // without creating a new plan or using addons. 
+            // For MVP, we'll validate the coupon and record that it was applied. 
+            // In a real scenario, you'd use Razorpay "Offer" or "Addon" with negative amount.
+            appliedCouponId = coupon.id;
+            logger.info(`Coupon ${couponCode} validated for subscription of user ${userId}`);
+        }
+
         // Create Razorpay subscription
         const { subscription, customerId } = await razorpayService.createSubscription({
             planId: razorpayPlanId,
@@ -136,6 +150,12 @@ export class SubscriptionService {
             },
             include: { plan: true },
         });
+
+        // Record coupon usage immediately if it's a subscription 
+        // (Assuming validation is enough for activation link generation)
+        if (appliedCouponId) {
+            await promotionService.recordUsage(appliedCouponId, userId);
+        }
 
         // NOTE: Credits are NOT initialized here. They will be added only after
         // payment is confirmed via the Razorpay webhook (handlePaymentSuccess)

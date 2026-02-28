@@ -39,6 +39,8 @@ router.post('/builder/tailor', authMiddleware, builderController.tailor);
 router.post('/upload', authMiddleware, upload.single('resume'), resumeController.upload);
 router.get('/', authMiddleware, resumeController.getAll);
 router.get('/:id', authMiddleware, resumeController.getById);
+router.get('/candidate/:candidateId/download', authMiddleware, resumeController.downloadByCandidate);
+router.get('/:id/download', authMiddleware, resumeController.download);
 router.delete('/:id', authMiddleware, resumeController.delete);
 router.post('/:id/parse', authMiddleware, resumeController.parse);
 

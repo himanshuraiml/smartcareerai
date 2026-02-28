@@ -31,5 +31,10 @@ router.get('/aggregate-for-me', authMiddleware, jobController.aggregateJobsForUs
 // One-Click Apply
 router.post('/jobs/:id/apply', authMiddleware, jobController.applyToJob);
 
+// Notifications
+router.get('/notifications', authMiddleware, jobController.getNotifications);
+router.get('/notifications/unread-count', authMiddleware, jobController.getUnreadCount);
+router.patch('/notifications/read', authMiddleware, jobController.markNotificationsRead);
+
 export { router as jobRouter };
 

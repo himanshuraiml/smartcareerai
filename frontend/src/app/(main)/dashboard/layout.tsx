@@ -263,7 +263,7 @@ export default function DashboardLayout({
                     <aside className={`
                         fixed lg:static inset-y-0 left-0 z-50
                         w-64 border-r border-gray-200/80 dark:border-white/5
-                        bg-white dark:bg-transparent
+                        bg-white dark:bg-gray-950
                         shadow-[1px_0_0_0_rgba(0,0,0,0.04)] dark:shadow-none
                         transform transition-transform duration-200 ease-in-out
                         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -272,17 +272,22 @@ export default function DashboardLayout({
                             {/* Logo */}
                             <div className="px-5 py-5 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
                                 <Link href="/dashboard" className="flex items-center gap-3 group">
-                                    <div className="relative">
-                                        <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-indigo-500/30 to-purple-500/30 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <Image
-                                            src="/logo.svg"
-                                            alt="PlaceNxt Logo"
-                                            width={36}
-                                            height={36}
-                                            className="w-9 h-9 rounded-xl relative"
-                                        />
-                                    </div>
-                                    <span className="text-xl font-bold gradient-text tracking-tight">PlaceNxt</span>
+                                    <Image
+                                        src="/logo-new-light.png"
+                                        alt="PlaceNxt Logo"
+                                        width={200}
+                                        height={50}
+                                        className="h-14 w-auto block dark:hidden"
+                                        priority
+                                    />
+                                    <Image
+                                        src="/logo-new-dark.png"
+                                        alt="PlaceNxt Logo"
+                                        width={200}
+                                        height={50}
+                                        className="h-14 w-auto hidden dark:block"
+                                        priority
+                                    />
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
@@ -440,7 +445,22 @@ export default function DashboardLayout({
                                     <Menu className="w-6 h-6" />
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl font-bold gradient-text">PlaceNxt</span>
+                                    <Image
+                                        src="/logo-new-light.png"
+                                        alt="PlaceNxt Logo"
+                                        width={160}
+                                        height={40}
+                                        className="h-10 w-auto block dark:hidden"
+                                        priority
+                                    />
+                                    <Image
+                                        src="/logo-new-dark.png"
+                                        alt="PlaceNxt Logo"
+                                        width={160}
+                                        height={40}
+                                        className="h-10 w-auto hidden dark:block"
+                                        priority
+                                    />
                                 </div>
                                 <ThemeToggle />
                             </div>

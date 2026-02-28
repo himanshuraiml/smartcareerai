@@ -34,6 +34,7 @@ const upload = multer({
 // Session management
 router.post('/sessions', controller.createSession);
 router.get('/sessions', controller.getUserSessions);
+router.get('/sessions/invitations', controller.getInvitations); // must be before /sessions/:id
 router.get('/sessions/:id', controller.getSession);
 router.post('/sessions/:id/start', controller.startSession);
 
@@ -57,5 +58,13 @@ router.get('/sessions/:id/analytics', controller.getLiveAnalytics);
 
 // Analysis capabilities status
 router.get('/analysis/status', controller.getAnalysisStatus);
+
+// Interview Replay Logs
+router.get('/sessions/:id/replay', controller.getReplayDetails);
+router.put('/sessions/:id/replay', controller.updateReplayLogs);
+
+// Copilot session data (POST is internal — called by meeting-bot-service without user context)
+router.post('/sessions/:id/copilot', controller.saveCopilotData);
+router.get('/sessions/:id/copilot', controller.getCopilotData);
 
 export { router as interviewRouter };

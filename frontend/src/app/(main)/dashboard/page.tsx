@@ -12,6 +12,7 @@ import CareerRoadmap, { RoadmapStage, DEFAULT_ROADMAP_STAGES } from '@/component
 import Leaderboard from '@/components/gamification/Leaderboard';
 import PlacementReadyScore from '@/components/gamification/PlacementReadyScore';
 import SkillTestSuggestion from '@/components/dashboard/SkillTestSuggestion';
+
 import { authFetch } from '@/lib/auth-fetch';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';

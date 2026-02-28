@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Video, FileQuestion, ArrowRight, Wallet, History, CreditCard } from "lucide-react";
+import { FileText, Video, FileQuestion, ArrowRight, Wallet, History, CreditCard, Tag, Check, Loader2, AlertCircle, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import CreditBalanceCard from "@/components/billing/CreditBalanceCard";
@@ -43,6 +43,42 @@ export default function BillingPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [purchaseType, setPurchaseType] = useState<"RESUME_REVIEW" | "AI_INTERVIEW" | "SKILL_TEST" | null>(null);
+    const [couponCode, setCouponCode] = useState("");
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponError, setCouponError] = useState<string | null>(null);
+
+    const validateCoupon = async () => {
+        if (!couponCode) return;
+        setIsValidatingCoupon(true);
+        setCouponError(null);
+        try {
+            // Check both types or just general validation? 
+            // Our backend validate endpoint requires a type. 
+            // We'll try SUBSCRIPTION first as it's common, then CREDITS if it fails?
+            // Actually, we can just allow the user to select or try one.
+            // For dashboard, we'll try a general check if we had one, but we don't.
+            // So we'll try SUBSCRIPTION by default for the dashboard input.
+            const res = await authFetch('/billing/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode, type: 'ALL' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setAppliedCoupon(data.data);
+                setCouponError(null);
+            } else {
+                setCouponError(data.message || 'Invalid coupon');
+                setAppliedCoupon(null);
+            }
+        } catch (err) {
+            setCouponError('Failed to validate coupon');
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
 
     const fetchBillingData = useCallback(async () => {
         try {
@@ -142,6 +178,66 @@ export default function BillingPage() {
                 </div>
             </div>
 
+            {/* Promotions Section */}
+            <div className="p-6 rounded-xl glass border-l-4 border-purple-500">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="space-y-1">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Tag className="w-5 h-5 text-purple-400" />
+                            Promotions & Coupons
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Have a discount code? Apply it here for your next purchase.</p>
+                    </div>
+
+                    <div className="flex flex-col w-full md:w-auto gap-2">
+                        <div className="flex gap-2">
+                            <div className="relative flex-1 md:w-64">
+                                <input
+                                    type="text"
+                                    placeholder="ENTER CODE"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    className="w-full px-4 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 transition uppercase"
+                                />
+                                {appliedCoupon && (
+                                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                )}
+                            </div>
+                            <button
+                                onClick={validateCoupon}
+                                disabled={!couponCode || isValidatingCoupon || !!appliedCoupon}
+                                className="px-6 py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 transition shadow-lg shadow-purple-500/20 whitespace-nowrap disabled:opacity-50"
+                            >
+                                {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : (appliedCoupon ? 'Applied' : 'Apply')}
+                            </button>
+                        </div>
+                        {couponError && (
+                            <p className="flex items-center gap-1 text-[10px] text-rose-500 font-bold ml-1">
+                                <AlertCircle className="w-3 h-3" /> {couponError}
+                            </p>
+                        )}
+                        {appliedCoupon && (
+                            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+                                <div className="text-[10px] text-emerald-500 font-bold">
+                                    <p>{appliedCoupon.code} applied!</p>
+                                    <p className="opacity-70">
+                                        Type: {appliedCoupon.applicableTo} |
+                                        Discount: {appliedCoupon.discountType === 'PERCENTAGE' ? `${appliedCoupon.discountValue}%` : `₹${appliedCoupon.discountValue}`}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => { setAppliedCoupon(null); setCouponCode(""); }}
+                                    className="text-emerald-500 hover:text-emerald-400"
+                                >
+                                    <X className="w-3 h-4" />
+                                </button>
+                            </div>
+                        )
+                        }
+                    </div>
+                </div>
+            </div>
+
             {/* Credit Balances */}
             <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -224,9 +320,12 @@ export default function BillingPage() {
                     isOpen={!!purchaseType}
                     onClose={() => setPurchaseType(null)}
                     creditType={purchaseType}
+                    initialCouponCode={appliedCoupon?.applicableTo === 'CREDITS' || appliedCoupon?.applicableTo === 'ALL' ? appliedCoupon.code : ""}
                     onSuccess={() => {
                         fetchBillingData();
                         setPurchaseType(null);
+                        setAppliedCoupon(null);
+                        setCouponCode("");
                     }}
                 />
             )}

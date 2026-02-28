@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
-import { generateQuestions, evaluateAnswer, generateFeedback } from '../utils/llm';
+import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion } from '../utils/llm';
 import { selectQuestionsFromBank } from '../utils/question-bank';
 import { AppError } from '../utils/errors';
 
@@ -8,6 +8,7 @@ interface CreateSessionData {
     type: 'TECHNICAL' | 'BEHAVIORAL' | 'HR' | 'MIXED';
     targetRole: string;
     difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+    jobId?: string;
 }
 
 export class InterviewService {
@@ -19,6 +20,7 @@ export class InterviewService {
                 type: data.type,
                 targetRole: data.targetRole,
                 difficulty: data.difficulty,
+                jobId: data.jobId,
                 status: 'PENDING',
             },
         });
@@ -45,6 +47,43 @@ export class InterviewService {
         });
     }
 
+    // Get pending recruiter-invited interview sessions (jobId set + status PENDING)
+    async getInvitations(userId: string) {
+        const sessions = await prisma.interviewSession.findMany({
+            where: {
+                userId,
+                jobId: { not: null },
+                status: 'PENDING',
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                job: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        recruiter: { select: { companyName: true } },
+                    },
+                },
+            },
+        });
+
+        return sessions.map(s => ({
+            sessionId: s.id,
+            jobId: s.jobId,
+            jobTitle: s.job?.title ?? s.targetRole,
+            companyName: (s.job as any)?.recruiter?.companyName ?? 'Unknown Company',
+            location: (s.job as any)?.location ?? '',
+            difficulty: s.difficulty,
+            type: s.type,
+            inviteType: (s as any).inviteType ?? 'AI', // default AI for older records
+            scheduledAt: (s as any).scheduledAt ?? null,
+            scheduledEndAt: (s as any).scheduledEndAt ?? null,
+            meetLink: (s as any).meetLink ?? null,
+            createdAt: s.createdAt,
+        }));
+    }
+
     // Get a specific session
     async getSession(sessionId: string, userId: string) {
         const session = await prisma.interviewSession.findFirst({
@@ -61,6 +100,114 @@ export class InterviewService {
         }
 
         return session;
+    }
+
+    // Get Interview Replay Details
+    async getReplayDetails(sessionId: string, userId: string) {
+        const session = await prisma.interviewSession.findFirst({
+            where: { id: sessionId, userId },
+            select: {
+                id: true,
+                isReplayAvailable: true,
+                replayUrl: true,
+                replayTranscriptUrl: true,
+                createdAt: true,
+                status: true,
+                overallScore: true,
+                questions: {
+                    select: {
+                        id: true,
+                        questionText: true,
+                        userAnswer: true,
+                        score: true,
+                        feedback: true,
+                    }
+                }
+            }
+        });
+
+        if (!session) {
+            throw new AppError('Interview session not found', 404);
+        }
+
+        return session;
+    }
+
+    // Save copilot suggestions and transcript from meeting-bot-service
+    async saveCopilotData(sessionId: string, suggestions: string[], transcriptChunks: string[], summary?: string) {
+        // Upsert the copilot session (transcript accumulation)
+        const existing = await prisma.copilotSession.findUnique({ where: { sessionId } });
+        const existingTranscript: string[] = existing ? JSON.parse(existing.transcript) : [];
+        const mergedTranscript = [...existingTranscript, ...transcriptChunks];
+
+        await prisma.copilotSession.upsert({
+            where: { sessionId },
+            update: {
+                transcript: JSON.stringify(mergedTranscript),
+                ...(summary ? { summary } : {}),
+            },
+            create: {
+                sessionId,
+                transcript: JSON.stringify(mergedTranscript),
+                summary: summary || null,
+            },
+        });
+
+        // Persist each suggestion as a separate record
+        if (suggestions.length > 0) {
+            await prisma.copilotSuggestion.createMany({
+                data: suggestions.map(text => ({ sessionId, text })),
+            });
+        }
+    }
+
+    // Get copilot data for post-mortem view
+    async getCopilotData(sessionId: string, userId: string) {
+        // Verify the session belongs to this user
+        const session = await prisma.interviewSession.findFirst({
+            where: { id: sessionId, userId },
+            select: { id: true },
+        });
+
+        if (!session) {
+            throw new AppError('Interview session not found', 404);
+        }
+
+        const [copilotSession, suggestions] = await Promise.all([
+            prisma.copilotSession.findUnique({ where: { sessionId } }),
+            prisma.copilotSuggestion.findMany({
+                where: { sessionId },
+                orderBy: { timestamp: 'asc' },
+            }),
+        ]);
+
+        return {
+            transcript: copilotSession ? JSON.parse(copilotSession.transcript) : [],
+            summary: copilotSession?.summary ? JSON.parse(copilotSession.summary) : null,
+            suggestions: suggestions.map(s => ({ text: s.text, timestamp: s.timestamp })),
+        };
+    }
+
+    // Update Interview Replay Logs
+    async updateReplayLogs(sessionId: string, userId: string, replayUrl: string, replayTranscriptUrl: string) {
+        const session = await prisma.interviewSession.findFirst({
+            where: { id: sessionId, userId }
+        });
+
+        if (!session) {
+            throw new AppError('Interview session not found', 404);
+        }
+
+        const updatedSession = await prisma.interviewSession.update({
+            where: { id: sessionId },
+            data: {
+                replayUrl,
+                replayTranscriptUrl,
+                isReplayAvailable: true
+            }
+        });
+
+        return updatedSession;
     }
 
     // Start the interview and generate questions
@@ -200,6 +347,41 @@ export class InterviewService {
             },
         });
 
+        // Determine if a follow-up is needed (Phase 2 Conversational AI)
+        // Only do this if it's not already a follow-up question (to prevent infinite loops)
+        if (!question.questionType.includes('follow-up')) {
+            const followUp = await generateFollowUpQuestion(
+                question.questionText,
+                answer,
+                session.targetRole
+            );
+
+            if (followUp.hasFollowUp && followUp.question) {
+                logger.info(`Generating dynamic follow-up for session ${sessionId}, question ${questionId}`);
+
+                // Shift subsequent questions' orderIndex down
+                await prisma.interviewQuestion.updateMany({
+                    where: {
+                        sessionId,
+                        orderIndex: { gt: question.orderIndex },
+                    },
+                    data: {
+                        orderIndex: { increment: 1 },
+                    },
+                });
+
+                // Insert the new follow-up question immediately after the current one
+                await prisma.interviewQuestion.create({
+                    data: {
+                        sessionId,
+                        questionText: followUp.question,
+                        questionType: `${question.questionType}-follow-up`,
+                        orderIndex: question.orderIndex + 1,
+                    }
+                });
+            }
+        }
+
         // Get next question
         const nextQuestion = await prisma.interviewQuestion.findFirst({
             where: {
@@ -266,7 +448,7 @@ export class InterviewService {
             },
         });
 
-        logger.info(`Completed interview session ${sessionId} with score ${overallScore}`);
+        logger.info(`Completed interview session ${sessionId} with score ${overallScore} `);
 
         return {
             session: updatedSession,

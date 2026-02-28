@@ -42,14 +42,24 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                                <Sparkles className="w-4 h-4 text-white" />
-                            </div>
-                            <span className={`text-xl font-bold tracking-tight ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                                Place<span className="text-indigo-500">Nxt</span>
-                            </span>
-                        </div>
+                        <Link href="/" className="flex items-center gap-2.5">
+                            <Image
+                                src="/logo-new-light.png"
+                                alt="PlaceNxt Logo"
+                                width={320}
+                                height={80}
+                                className="h-16 w-auto md:h-20 block dark:hidden"
+                                priority
+                            />
+                            <Image
+                                src="/logo-new-dark.png"
+                                alt="PlaceNxt Logo"
+                                width={320}
+                                height={80}
+                                className="h-16 w-auto md:h-20 hidden dark:block"
+                                priority
+                            />
+                        </Link>
 
                         {/* Desktop Nav */}
                         <div className="hidden md:flex items-center gap-1">
@@ -401,14 +411,22 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
                         {/* Brand */}
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <Sparkles className="w-4 h-4 text-white" />
-                            </div>
-                            <span className={`text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                                Place<span className="text-indigo-500">Nxt</span>
-                            </span>
-                        </div>
+                        <Link href="/" className="flex items-center gap-2.5">
+                            <Image
+                                src="/logo-new-light.png"
+                                alt="PlaceNxt Logo"
+                                width={240}
+                                height={60}
+                                className="h-14 w-auto md:h-16 block dark:hidden"
+                            />
+                            <Image
+                                src="/logo-new-dark.png"
+                                alt="PlaceNxt Logo"
+                                width={240}
+                                height={60}
+                                className="h-14 w-auto md:h-16 hidden dark:block"
+                            />
+                        </Link>
                         <p className={`text-sm ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>
                             AI-powered placement preparation — resume, skills, interviews, jobs.
                         </p>

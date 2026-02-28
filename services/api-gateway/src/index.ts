@@ -6,10 +6,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import { createProxyMiddleware, Options } from 'http-proxy-middleware';
+import { createProxyMiddleware, Options, fixRequestBody } from 'http-proxy-middleware';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import { logger } from './utils/logger';
+import { setupSocketIO } from './socket';
 import {
     securityHeaders,
     sanitizeInput,
@@ -99,24 +100,7 @@ const PORT = process.env.PORT || 3000;
 // Trust proxy - required for Railway (and other reverse proxies)
 app.set('trust proxy', 1);
 
-// Middleware
-app.use(helmet());
-
-// Security middleware - OWASP compliance
-app.use(securityHeaders);
-app.use(ipBlocklistCheck);
-app.use(suspiciousActivityDetection);
-
-// Body parsing with size limits
-app.use(express.json({ limit: requestSizeLimits.json }));
-app.use(express.urlencoded({ extended: true, limit: requestSizeLimits.urlencoded }));
-
-// Input sanitization and SQL injection prevention
-app.use(sanitizeInput);
-app.use(sqlInjectionPrevention);
-app.use(cookieParser());
-
-// CORS Configuration
+// CORS Configuration — must be first so error responses from security middleware still include CORS headers
 const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
     : ['http://localhost:3100', 'http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com'];
@@ -139,8 +123,29 @@ const corsConfig = {
     maxAge: 86400,
 };
 
+// Middleware — CORS must be first so preflight responses always include CORS headers
 app.use(cors(corsConfig));
 app.options('*', cors(corsConfig));
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+}));
+
+// Security middleware - OWASP compliance
+app.use(securityHeaders);
+app.use(ipBlocklistCheck);
+app.use(suspiciousActivityDetection);
+
+// Body parsing with size limits
+app.use(express.json({ limit: requestSizeLimits.json }));
+app.use(express.urlencoded({ extended: true, limit: requestSizeLimits.urlencoded }));
+
+// Input sanitization and SQL injection prevention
+app.use(sanitizeInput);
+app.use(sqlInjectionPrevention);
+app.use(cookieParser());
+
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 // Request ID middleware and header cleanup for tracing
@@ -260,19 +265,21 @@ const createProxyOptions = (target: string, pathRewrite: Record<string, string>)
         proxyReq.setHeader('x-request-id', (req as any).id || 'unknown');
 
         // Re-stream body if it was already parsed by express.json()
-        if (req.body && Object.keys(req.body).length > 0) {
-            const bodyData = JSON.stringify(req.body);
-            proxyReq.setHeader('Content-Type', 'application/json');
-            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-            proxyReq.write(bodyData);
-        }
+        fixRequestBody(proxyReq, req as express.Request);
     },
     onProxyRes: (proxyRes, req) => {
-        // Strip upstream CORS headers to let Gateway's cors() middleware handle it
+        // Strip upstream CORS headers — gateway manages CORS centrally
         delete proxyRes.headers['access-control-allow-origin'];
         delete proxyRes.headers['access-control-allow-methods'];
         delete proxyRes.headers['access-control-allow-headers'];
         delete proxyRes.headers['access-control-allow-credentials'];
+
+        // Re-add CORS headers on proxied responses (proxy bypasses Express middleware pipeline)
+        const origin = (req as express.Request).headers.origin;
+        if (origin && (corsOrigins.includes(origin) || corsOrigins.includes('*'))) {
+            proxyRes.headers['access-control-allow-origin'] = origin;
+            proxyRes.headers['access-control-allow-credentials'] = 'true';
+        }
 
         // Add request ID for tracing
         proxyRes.headers['x-request-id'] = (req as any).id || 'unknown';
@@ -356,7 +363,20 @@ app.use(
     createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/practice-interviews`]: '/practice' }))
 );
 
-const VALIDATION_SERVICE_URL = process.env.VALIDATION_SERVICE_URL || 'http://localhost:3008';
+// Coding Challenges (Phase 4 — Technical Simulations)
+// Apply AI rate limiting only on submit (Piston execution + Groq analysis), not on run/list/get
+app.use(`${API_PREFIX}/coding`, (req, res, next) => {
+    if (req.method === 'POST' && req.path.endsWith('/submit')) {
+        return aiRateLimiter(req, res, next);
+    }
+    next();
+});
+app.use(
+    `${API_PREFIX}/coding`,
+    createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/coding`]: '/coding' }))
+);
+
+const VALIDATION_SERVICE_URL = process.env.VALIDATION_SERVICE_URL || 'http://localhost:3010';
 
 app.use(
     `${API_PREFIX}/validation`,
@@ -367,9 +387,9 @@ app.use(
 // PHASE 4 SERVICES
 // ============================================
 
-const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3010';
+const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3009';
 const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
-const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3012';
+const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3008';
 
 app.use(
     `${API_PREFIX}/billing`,
@@ -396,7 +416,26 @@ app.use(
     createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/recruiter`]: '' }))
 );
 
-const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:3013';
+// Organization routes (handled by recruiter-service under /organization)
+app.use(
+    `${API_PREFIX}/organization`,
+    createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/organization`]: '/organization' }))
+);
+
+// Meeting bot routes (must come before the generic /public recruiter route)
+const MEETING_BOT_SERVICE_URL = process.env.MEETING_BOT_SERVICE_URL || 'http://localhost:3013';
+app.use(
+    `${API_PREFIX}/public/bot`,
+    createProxyMiddleware(createProxyOptions(MEETING_BOT_SERVICE_URL, { [`^${API_PREFIX}/public/bot`]: '/api/bot' }))
+);
+
+// Public API routes for ATS integrations
+app.use(
+    `${API_PREFIX}/public`,
+    createProxyMiddleware(createProxyOptions(RECRUITER_SERVICE_URL, { [`^${API_PREFIX}/public`]: '/api/v1/public' }))
+);
+
+const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:3012';
 
 app.use(
     `${API_PREFIX}/email`,
@@ -449,6 +488,9 @@ const server = app.listen(PORT, () => {
     logger.info(`🏢 Recruiter Service: ${RECRUITER_SERVICE_URL}`);
     logger.info(`📧 Email Tracking Service: ${EMAIL_SERVICE_URL}`);
 });
+
+// Initialize Socket.io Event Bus
+setupSocketIO(server);
 
 export default app;
 

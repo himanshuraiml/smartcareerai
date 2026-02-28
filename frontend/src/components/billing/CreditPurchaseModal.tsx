@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, X, Tag, Check, AlertCircle } from "lucide-react";
 import useRazorpay from "@/hooks/useRazorpay";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from '@/lib/auth-fetch';
@@ -13,6 +13,7 @@ interface CreditPurchaseModalProps {
     onClose: () => void;
     creditType: "RESUME_REVIEW" | "AI_INTERVIEW" | "SKILL_TEST";
     onSuccess: () => void;
+    initialCouponCode?: string;
 }
 
 const CREDIT_BUNDLES = {
@@ -37,12 +38,50 @@ export default function CreditPurchaseModal({
     isOpen,
     onClose,
     creditType,
-    onSuccess }: CreditPurchaseModalProps) {
+    onSuccess,
+    initialCouponCode }: CreditPurchaseModalProps) {
     const { user } = useAuthStore();
     const isRazorpayLoaded = useRazorpay();
     const [loading, setLoading] = useState(false);
+    const [couponCode, setCouponCode] = useState(initialCouponCode || "");
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponError, setCouponError] = useState<string | null>(null);
+
+    // Auto-validate initial coupon
+    useEffect(() => {
+        if (initialCouponCode && isOpen) {
+            validateCoupon();
+        }
+    }, [initialCouponCode, isOpen]);
 
     if (!isOpen) return null;
+
+    const validateCoupon = async () => {
+        if (!couponCode) return;
+        setIsValidatingCoupon(true);
+        setCouponError(null);
+        try {
+            const res = await authFetch('/billing/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode, type: 'CREDITS' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setAppliedCoupon(data.data);
+                setCouponError(null);
+            } else {
+                setCouponError(data.message || 'Invalid coupon');
+                setAppliedCoupon(null);
+            }
+        } catch (err) {
+            setCouponError('Failed to validate coupon');
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
 
     const handlePurchase = async (quantity: number) => {
         setLoading(true);
@@ -55,7 +94,8 @@ export default function CreditPurchaseModal({
                 },
                 body: JSON.stringify({
                     creditType,
-                    quantity
+                    quantity,
+                    couponCode: appliedCoupon?.code
                 })
             });
 
@@ -75,7 +115,7 @@ export default function CreditPurchaseModal({
                     order_id: orderId,
                     handler: async function (response: any) {
                         // 3. Confirm Purchase
-                        await confirmPurchase(response, orderId, quantity);
+                        await confirmPurchase(response, orderId, quantity, appliedCoupon?.id);
                     },
                     prefill: {
                         name: user?.name,
@@ -96,7 +136,7 @@ export default function CreditPurchaseModal({
         }
     };
 
-    const confirmPurchase = async (paymentResponse: any, orderId: string, quantity: number) => {
+    const confirmPurchase = async (paymentResponse: any, orderId: string, quantity: number, couponId?: string) => {
         try {
             const response = await authFetch(`/billing/credits/confirm`, {
                 method: "POST",
@@ -108,7 +148,8 @@ export default function CreditPurchaseModal({
                     paymentId: paymentResponse.razorpay_payment_id,
                     signature: paymentResponse.razorpay_signature,
                     creditType,
-                    quantity
+                    quantity,
+                    couponId
                 })
             });
 
@@ -138,6 +179,44 @@ export default function CreditPurchaseModal({
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Buy {creditType.replace('_', ' ')} Credits</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Select a bundle to top up your account</p>
 
+                {/* Coupon Input */}
+                <div className="mb-6 space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Have a coupon code?</label>
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                placeholder="ENTER CODE"
+                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                            {appliedCoupon && (
+                                <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                            )}
+                        </div>
+                        <button
+                            onClick={validateCoupon}
+                            disabled={!couponCode || isValidatingCoupon || !!appliedCoupon}
+                            className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm font-bold text-indigo-500 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                        >
+                            {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                        </button>
+                    </div>
+                    {couponError && (
+                        <p className="flex items-center gap-1 text-[10px] text-rose-500 font-bold ml-1">
+                            <AlertCircle className="w-3 h-3" /> {couponError}
+                        </p>
+                    )}
+                    {appliedCoupon && (
+                        <p className="text-[10px] text-emerald-500 font-bold ml-1 flex items-center justify-between">
+                            <span>Coupon "{appliedCoupon.code}" applied!</span>
+                            <button onClick={() => { setAppliedCoupon(null); setCouponCode(""); }} className="underline">Remove</button>
+                        </p>
+                    )}
+                </div>
+
                 <div className="space-y-4">
                     {bundles.map((bundle) => (
                         <button
@@ -151,7 +230,20 @@ export default function CreditPurchaseModal({
                                 <span className="text-xs text-green-400">{bundle.savings} Savings</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-xl font-bold text-gray-900 dark:text-white">₹{bundle.price}</span>
+                                <div className="text-right">
+                                    {appliedCoupon ? (
+                                        <>
+                                            <span className="text-xs text-gray-500 line-through">₹{bundle.price}</span>
+                                            <p className="text-xl font-bold text-gray-900 dark:text-white">
+                                                ₹{appliedCoupon.discountType === 'PERCENTAGE'
+                                                    ? Math.floor(bundle.price * (1 - appliedCoupon.discountValue / 100))
+                                                    : Math.max(0, bundle.price - appliedCoupon.discountValue)}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <span className="text-xl font-bold text-gray-900 dark:text-white">₹{bundle.price}</span>
+                                    )}
+                                </div>
                                 {loading ? (
                                     <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                                 ) : (

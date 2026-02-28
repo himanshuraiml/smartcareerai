@@ -131,6 +131,75 @@ export class InstitutionController {
             next(error);
         }
     }
+    /**
+     * GET /institution/placements
+     */
+    async getPlacements(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 20;
+
+            const result = await institutionService.getPlacements(institutionId, page, limit);
+
+            res.json({
+                success: true,
+                data: result.placements,
+                pagination: result.pagination
+            });
+        } catch (error) {
+            logger.error('Error fetching institution placements', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/analytics/skill-gap
+     */
+    async getSkillGapHeatmap(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+
+            const heatmap = await institutionService.getSkillGapHeatmap(institutionId);
+
+            res.json({
+                success: true,
+                data: heatmap
+            });
+        } catch (error) {
+            logger.error('Error fetching skill gap heatmap', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/recruiter-marketplace
+     */
+    async getRecruiterMarketplace(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+
+            const marketplace = await institutionService.getRecruiterMarketplace(institutionId);
+
+            res.json({
+                success: true,
+                data: marketplace
+            });
+        } catch (error) {
+            logger.error('Error fetching recruiter marketplace', error);
+            next(error);
+        }
+    }
 }
 
 export const institutionController = new InstitutionController();

@@ -64,6 +64,54 @@ class InstitutionService {
             },
         });
 
+        // B2B: Placed students (Hired)
+        const placedStudents = await prisma.user.count({
+            where: {
+                institutionId,
+                role: UserRole.USER,
+                OR: [
+                    {
+                        applications: {
+                            some: { status: 'PLACED' }
+                        }
+                    },
+                    {
+                        // Check B2B specific recruiter applications
+                        recruiterApplications: {
+                            some: { status: 'PLACED' }
+                        }
+                    }
+                ]
+            },
+        });
+
+        // B2B: Profile Completion Stats
+        const [studentsWithSkills, studentsWithTargetRole] = await Promise.all([
+            prisma.user.count({
+                where: {
+                    institutionId,
+                    role: UserRole.USER,
+                    userSkills: { some: {} },
+                },
+            }),
+            prisma.user.count({
+                where: {
+                    institutionId,
+                    role: UserRole.USER,
+                    targetJobRoleId: { not: null },
+                },
+            }),
+        ]);
+
+        const profileCompletion = {
+            hasResume: studentsWithResumes,
+            hasSkills: studentsWithSkills,
+            hasTargetRole: studentsWithTargetRole,
+            averageCompletion: totalStudents > 0
+                ? Math.round(((studentsWithResumes + studentsWithSkills + studentsWithTargetRole) / (totalStudents * 3)) * 100)
+                : 0
+        };
+
         // Average interview score
         const avgScoreResult = await prisma.interviewSession.aggregate({
             where: {
@@ -257,8 +305,10 @@ class InstitutionService {
             // Core stats
             totalStudents,
             activeStudents,
+            placedStudents,
             studentsWithResumes,
             studentsWithBadges,
+            profileCompletion,
             averageScore,
             totalInterviews,
             recentInterviewCount,
@@ -597,6 +647,150 @@ class InstitutionService {
             where: { id: institutionId },
             data,
         });
+    }
+
+    /**
+     * Get Campus Placements
+     */
+    async getPlacements(institutionId: string, page = 1, limit = 20) {
+        const skip = (page - 1) * limit;
+
+        const [placements, total] = await Promise.all([
+            prisma.campusPlacement.findMany({
+                where: { institutionId },
+                include: {
+                    user: {
+                        select: { id: true, name: true, email: true, targetJobRole: { select: { title: true } } }
+                    }
+                },
+                orderBy: { placedAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            prisma.campusPlacement.count({ where: { institutionId } })
+        ]);
+
+        return {
+            placements,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    }
+
+    /**
+     * Get Skill Gap Heatmap
+     */
+    async getSkillGapHeatmap(institutionId: string) {
+        // Find users with target job roles and their skills
+        const users = await prisma.user.findMany({
+            where: { institutionId, role: UserRole.USER, targetJobRole: { isNot: null } },
+            select: {
+                id: true,
+                targetJobRole: {
+                    select: {
+                        id: true,
+                        title: true,
+                        requiredSkills: true
+                    }
+                },
+                userSkills: {
+                    select: { skill: { select: { id: true, name: true } }, proficiencyLevel: true }
+                }
+            }
+        });
+
+        // Calculate skill gaps per role
+        const roleSkillGaps: Record<string, any> = {};
+
+        users.forEach(user => {
+            const role = user.targetJobRole!;
+            if (!roleSkillGaps[role.title]) {
+                roleSkillGaps[role.title] = { studentCount: 0, skills: {} };
+            }
+
+            roleSkillGaps[role.title].studentCount++;
+
+            const userSkillLevels = new Map(user.userSkills.map(us => [us.skill.id, us.proficiencyLevel]));
+
+            role.requiredSkills.forEach((skillName: string) => {
+                if (!roleSkillGaps[role.title].skills[skillName]) {
+                    roleSkillGaps[role.title].skills[skillName] = { acquiredCount: 0, averageProficiency: 0, totalProficiency: 0 };
+                }
+
+                // Check if user has this skill (case-insensitive approximation)
+                const userSkillMatch = user.userSkills.find(us => us.skill.name.toLowerCase() === skillName.toLowerCase());
+                if (userSkillMatch) {
+                    roleSkillGaps[role.title].skills[skillName].acquiredCount++;
+                    const levelStr = userSkillMatch.proficiencyLevel || 'BEGINNER';
+                    const levelNum = levelStr === 'BEGINNER' ? 1 : levelStr === 'INTERMEDIATE' ? 2 : levelStr === 'ADVANCED' ? 3 : levelStr === 'EXPERT' ? 4 : 1;
+                    roleSkillGaps[role.title].skills[skillName].totalProficiency += levelNum;
+                }
+            });
+        });
+
+        const heatmaps = Object.entries(roleSkillGaps).map(([roleTitle, data]: any[]) => {
+            const skillGaps = Object.entries(data.skills).map(([skillName, skillData]: any[]) => {
+                const acquiredPercentage = Math.round((skillData.acquiredCount / data.studentCount) * 100);
+                const averageProficiency = skillData.acquiredCount > 0 ? (skillData.totalProficiency / skillData.acquiredCount) : 0;
+
+                let gapLevel = 'HIGH';
+                if (acquiredPercentage >= 80 && averageProficiency >= 2.5) gapLevel = 'LOW';
+                else if (acquiredPercentage >= 50 && averageProficiency >= 1.5) gapLevel = 'MEDIUM';
+
+                return { skill: skillName, acquiredPercentage, gapLevel, averageProficiency: Number(averageProficiency.toFixed(1)) };
+            });
+
+            return { targetRole: roleTitle, studentCount: data.studentCount, skillGaps };
+        });
+
+        return heatmaps;
+    }
+
+    /**
+     * Get Recruiter-Campus Marketplace
+     */
+    async getRecruiterMarketplace(institutionId: string) {
+        // Find jobs that match the institution's top target roles
+        const users = await prisma.user.findMany({
+            where: { institutionId, targetJobRoleId: { not: null } },
+            select: { targetJobRoleId: true }
+        });
+
+        const roleCounts = users.reduce((acc: any, u) => {
+            acc[u.targetJobRoleId!] = (acc[u.targetJobRoleId!] || 0) + 1;
+            return acc;
+        }, {});
+
+        const topRoles = Object.keys(roleCounts).sort((a, b) => roleCounts[b] - roleCounts[a]).slice(0, 5);
+
+        // Find active jobs related to these top roles or just active jobs in general
+        const marketplaceJobs = await prisma.recruiterJob.findMany({
+            where: { isActive: true },
+            select: {
+                id: true,
+                title: true,
+                location: true,
+                salaryMin: true,
+                salaryMax: true,
+                requiredSkills: true,
+                recruiter: {
+                    select: {
+                        organization: { select: { name: true, logoUrl: true } }
+                    }
+                }
+            },
+            take: 20,
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return {
+            topStudentRolesIds: topRoles,
+            recommendedJobs: marketplaceJobs
+        };
     }
 }
 

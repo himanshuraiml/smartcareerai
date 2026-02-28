@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Loader2, Zap, Star, Briefcase, Gem, ArrowLeft } from "lucide-react";
+import { Check, Loader2, Zap, Star, Briefcase, Gem, ArrowLeft, Tag, X, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import useRazorpay from "@/hooks/useRazorpay";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authFetch } from "@/lib/auth-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
@@ -130,7 +130,9 @@ const PLAN_COLORS: Record<string, string> = {
     enterprise: "from-emerald-400 to-teal-400",
 };
 
-export default function PricingPage() {
+import { Suspense } from "react";
+
+function PricingContent() {
     const router = useRouter();
     const { user } = useAuthStore();
     const isRazorpayLoaded = useRazorpay();
@@ -139,6 +141,19 @@ export default function PricingPage() {
     const [isLightMode, setIsLightMode] = useState(false);
     const [plans, setPlans] = useState<PricingPlan[]>(PLANS);
     const [plansLoading, setPlansLoading] = useState(true);
+    const searchParams = useSearchParams();
+    const [couponCode, setCouponCode] = useState(searchParams.get("coupon")?.toUpperCase() || "");
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponError, setCouponError] = useState<string | null>(null);
+
+    // Auto-validate if coupon provided in URL
+    useEffect(() => {
+        const urlCoupon = searchParams.get("coupon");
+        if (urlCoupon) {
+            validateCoupon();
+        }
+    }, []);
 
     // Detect light mode
     useEffect(() => {
@@ -155,6 +170,32 @@ export default function PricingPage() {
 
         return () => observer.disconnect();
     }, []);
+
+    const validateCoupon = async () => {
+        if (!couponCode) return;
+        setIsValidatingCoupon(true);
+        setCouponError(null);
+        try {
+            const res = await authFetch('/billing/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode, type: 'SUBSCRIPTION' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setAppliedCoupon(data.data);
+                setCouponError(null);
+            } else {
+                setCouponError(data.message || 'Invalid coupon');
+                setAppliedCoupon(null);
+            }
+        } catch (err) {
+            setCouponError('Failed to validate coupon');
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
 
     // Fetch plans from API to stay in sync with admin/billing
     useEffect(() => {
@@ -250,6 +291,7 @@ export default function PricingPage() {
                         planName: "free",
                         userEmail: user?.email,
                         userName: user?.name,
+                        couponCode: appliedCoupon?.code
                     }),
                 });
 
@@ -272,14 +314,18 @@ export default function PricingPage() {
                 body: JSON.stringify({
                     planName: plan.name,
                     billingCycle: billingCycle, // Send selected billing cycle (monthly/yearly)
+                    couponCode: appliedCoupon?.code
                 }),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message || "Failed to create subscription");
+                const data = await response.json();
+                const errorMessage = data.error?.message || data.message || "Failed to create subscription";
+                console.error("Subscription Error:", errorMessage, data);
+                throw new Error(errorMessage);
             }
+
+            const data = await response.json();
 
             const { razorpaySubscriptionId, paymentUrl } = data.data;
 
@@ -290,7 +336,7 @@ export default function PricingPage() {
                     subscription_id: razorpaySubscriptionId,
                     name: "PlaceNxt",
                     description: `${plan.displayName} Subscription`,
-                    image: "/logo.svg", // Ensure this exists
+                    image: "/logo-new.png", // Ensure this exists
                     handler: function (response: any) {
                         // Payment successful
                         // You can optionally call a verification backend endpoint here
@@ -358,6 +404,49 @@ export default function PricingPage() {
                         Yearly <span className="text-green-400 text-xs ml-1">(Save ~20%)</span>
                     </span>
                 </div>
+
+                {/* Coupon Code Section */}
+                <div className="mt-8 flex flex-col items-center justify-center">
+                    <div className="relative w-full max-w-xs group">
+                        <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    placeholder="Enter Coupon Code"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                />
+                                {appliedCoupon && (
+                                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                )}
+                            </div>
+                            <button
+                                onClick={validateCoupon}
+                                disabled={!couponCode || isValidatingCoupon || !!appliedCoupon}
+                                className="px-6 py-2.5 rounded-xl bg-indigo-500 text-white font-bold text-sm hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20"
+                            >
+                                {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                            </button>
+                        </div>
+                        {couponError && (
+                            <p className="mt-2 text-xs text-rose-500 font-medium flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> {couponError}
+                            </p>
+                        )}
+                        {appliedCoupon && (
+                            <div className="mt-2 flex items-center justify-between w-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+                                <span className="text-xs text-emerald-500 font-bold">
+                                    {appliedCoupon.code} applied: {appliedCoupon.discountType === 'PERCENTAGE' ? `${appliedCoupon.discountValue}% Off` : `₹${appliedCoupon.discountValue} Off`}
+                                </span>
+                                <button onClick={() => { setAppliedCoupon(null); setCouponCode(""); }} className="text-emerald-500">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Plans Grid */}
@@ -392,17 +481,45 @@ export default function PricingPage() {
                         >
                             {plan.displayName}
                         </h3>
-                        <div className="flex items-baseline gap-1 mb-4">
-                            <span
-                                className="text-3xl font-bold"
-                                style={{ color: isLightMode ? '#1e293b' : '#ffffff' }}
-                            >
-                                ₹{billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12)}
-                            </span>
-                            <span style={{ color: isLightMode ? '#64748b' : '#9ca3af' }} className="text-sm">/month</span>
-                        </div>
-                        {billingCycle === "yearly" && plan.priceYearly > 0 && (
-                            <p className="text-xs mb-4" style={{ color: '#16a34a' }}>Billed ₹{plan.priceYearly} yearly</p>
+                        {plan.name === 'enterprise' ? (
+                            <div className="flex items-baseline gap-1 mb-4">
+                                <span
+                                    className="text-3xl font-bold"
+                                    style={{ color: isLightMode ? '#1e293b' : '#ffffff' }}
+                                >
+                                    Custom
+                                </span>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-baseline gap-1 mb-4">
+                                    <span
+                                        className="text-3xl font-bold"
+                                        style={{ color: isLightMode ? '#1e293b' : '#ffffff' }}
+                                    >
+                                        ₹{appliedCoupon ? (
+                                            appliedCoupon.discountType === 'PERCENTAGE'
+                                                ? Math.floor((billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12)) * (1 - appliedCoupon.discountValue / 100))
+                                                : Math.max(0, (billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12)) - appliedCoupon.discountValue)
+                                        ) : (
+                                            billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12)
+                                        )}
+                                    </span>
+                                    <span style={{ color: isLightMode ? '#64748b' : '#9ca3af' }} className="text-sm">/month</span>
+                                    {appliedCoupon && (
+                                        <span className="text-xs text-gray-500 line-through ml-1">
+                                            ₹{billingCycle === "monthly" ? plan.priceMonthly : Math.round(plan.priceYearly / 12)}
+                                        </span>
+                                    )}
+                                </div>
+                                {billingCycle === "yearly" && plan.priceYearly > 0 && (
+                                    <p className="text-xs mb-4" style={{ color: '#16a34a' }}>Billed ₹{appliedCoupon ? (
+                                        appliedCoupon.discountType === 'PERCENTAGE'
+                                            ? Math.floor(plan.priceYearly * (1 - appliedCoupon.discountValue / 100))
+                                            : Math.max(0, plan.priceYearly - appliedCoupon.discountValue * (appliedCoupon.applicableTo === 'ALL' ? 12 : 1))
+                                    ) : plan.priceYearly} yearly</p>
+                                )}
+                            </>
                         )}
 
                         <p
@@ -413,7 +530,13 @@ export default function PricingPage() {
                         </p>
 
                         <button
-                            onClick={() => handleSubscribe(plan)}
+                            onClick={() => {
+                                if (plan.name === 'enterprise') {
+                                    router.push('/contact');
+                                } else {
+                                    handleSubscribe(plan);
+                                }
+                            }}
                             disabled={loading === plan.id}
                             className={`w-full py-3 rounded-xl font-medium transition-all mb-8 flex items-center justify-center gap-2`}
                             style={plan.popular ? {
@@ -427,6 +550,8 @@ export default function PricingPage() {
                         >
                             {loading === plan.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : plan.name === 'enterprise' ? (
+                                "Contact Us"
                             ) : (
                                 plan.priceMonthly === 0 ? "Get Started" : "Subscribe Now"
                             )}
@@ -466,4 +591,14 @@ export default function PricingPage() {
     );
 }
 
-
+export default function PricingPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0B0F19]">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            </div>
+        }>
+            <PricingContent />
+        </Suspense>
+    );
+}

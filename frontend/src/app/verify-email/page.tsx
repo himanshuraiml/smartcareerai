@@ -19,7 +19,9 @@ function VerifyEmailContent() {
 
     useEffect(() => {
         if (!token) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStatus('error');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setMessage('Invalid verification link. Token is missing.');
             return;
         }
@@ -50,15 +52,23 @@ function VerifyEmailContent() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2">
+                    <Link href="/" className="inline-block">
                         <Image
-                            src="/logo.svg"
+                            src="/logo-new-light.png"
                             alt="PlaceNxt Logo"
-                            width={40}
-                            height={40}
-                            className="w-10 h-10 rounded-xl"
+                            width={240}
+                            height={60}
+                            className="h-14 w-auto mx-auto block dark:hidden"
+                            priority
                         />
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-violet-400">PlaceNxt</span>
+                        <Image
+                            src="/logo-new-dark.png"
+                            alt="PlaceNxt Logo"
+                            width={240}
+                            height={60}
+                            className="h-14 w-auto mx-auto hidden dark:block"
+                            priority
+                        />
                     </Link>
                 </div>
 

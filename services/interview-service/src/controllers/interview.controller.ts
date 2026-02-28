@@ -13,6 +13,7 @@ const createSessionSchema = z.object({
     targetRole: z.string().min(1),
     difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).default('MEDIUM'),
     format: z.enum(['TEXT', 'AUDIO', 'VIDEO']).default('TEXT'),
+    jobId: z.string().uuid().optional(),
 });
 
 const answerSchema = z.object({
@@ -67,6 +68,21 @@ export class InterviewController {
             res.json({ success: true, data: sessions });
         } catch (error) {
             logger.error('Get sessions error:', error);
+            next(error);
+        }
+    };
+
+    getInvitations = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const invitations = await interviewService.getInvitations(userId);
+            res.json({ success: true, data: invitations });
+        } catch (error) {
+            logger.error('Get invitations error:', error);
             next(error);
         }
     };
@@ -366,6 +382,89 @@ export class InterviewController {
             res.json({ success: true, data: analytics });
         } catch (error) {
             logger.error('Get live analytics error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Get Interview Replay Details
+     */
+    getReplayDetails = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            const { id } = req.params;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const replayDetails = await interviewService.getReplayDetails(id, userId);
+            res.json({ success: true, data: replayDetails });
+        } catch (error) {
+            logger.error('Get replay details error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Update Interview Replay Logs
+     */
+    updateReplayLogs = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            const { id } = req.params;
+            const { replayUrl, replayTranscriptUrl } = req.body;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            if (!replayUrl || !replayTranscriptUrl) {
+                return res.status(400).json({ error: 'Replay URL and Transcript URL are required' });
+            }
+
+            const updatedSession = await interviewService.updateReplayLogs(id, userId, replayUrl, replayTranscriptUrl);
+            res.json({ success: true, data: updatedSession });
+        } catch (error) {
+            logger.error('Update replay logs error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Save Copilot Data (called by meeting-bot-service; no user auth — uses internal service key)
+     * POST /sessions/:id/copilot
+     */
+    saveCopilotData = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { suggestions = [], transcriptChunks = [], summary } = req.body;
+
+            await interviewService.saveCopilotData(id, suggestions, transcriptChunks, summary);
+            res.json({ success: true });
+        } catch (error) {
+            logger.error('Save copilot data error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * Get Copilot Data for Post-Mortem view
+     * GET /sessions/:id/copilot
+     */
+    getCopilotData = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.headers['x-user-id'] as string;
+            const { id } = req.params;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const data = await interviewService.getCopilotData(id, userId);
+            res.json({ success: true, data });
+        } catch (error) {
+            logger.error('Get copilot data error:', error);
             next(error);
         }
     };

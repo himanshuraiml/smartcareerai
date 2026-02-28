@@ -546,3 +546,4 @@ export class InstitutionAdminController {
 }
 
 export const institutionAdminController = new InstitutionAdminController();
+

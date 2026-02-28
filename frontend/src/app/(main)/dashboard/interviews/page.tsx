@@ -5,7 +5,8 @@ import Link from 'next/link';
 import {
     Video, Plus, Clock, Target, TrendingUp, ChevronRight,
     Loader2, Play, CheckCircle, XCircle, MessageSquare, Mic,
-    CreditCard, AlertTriangle
+    CreditCard, AlertTriangle, Building2, ArrowRight, Bell, Bot,
+    Calendar, ExternalLink, CalendarPlus
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
@@ -20,6 +21,23 @@ interface InterviewSession {
     createdAt: string;
     completedAt: string | null;
     questions: Array<{ id: string; score: number | null }>;
+    jobId: string | null;
+    inviteType: 'AI' | 'COPILOT' | null;
+}
+
+interface Invitation {
+    sessionId: string;
+    jobId: string;
+    jobTitle: string;
+    companyName: string;
+    location: string;
+    difficulty: string;
+    type: string;
+    inviteType: 'AI' | 'COPILOT';
+    scheduledAt: string | null;
+    scheduledEndAt: string | null;
+    meetLink: string | null;
+    createdAt: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -27,6 +45,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1
 export default function InterviewsPage() {
     const { user } = useAuthStore();
     const [sessions, setSessions] = useState<InterviewSession[]>([]);
+    const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [loading, setLoading] = useState(true);
     const [showNewModal, setShowNewModal] = useState(false);
     const [creating, setCreating] = useState(false);
@@ -47,10 +66,17 @@ export default function InterviewsPage() {
 
     const fetchSessions = useCallback(async () => {
         try {
-            const response = await authFetch('/interviews/sessions');
-            if (response.ok) {
-                const data = await response.json();
+            const [sessRes, invRes] = await Promise.all([
+                authFetch('/interviews/sessions'),
+                authFetch('/interviews/sessions/invitations'),
+            ]);
+            if (sessRes.ok) {
+                const data = await sessRes.json();
                 setSessions(data.data || []);
+            }
+            if (invRes.ok) {
+                const data = await invRes.json();
+                setInvitations(data.data || []);
             }
         } catch (err) {
             console.error('Failed to fetch sessions:', err);
@@ -100,33 +126,13 @@ export default function InterviewsPage() {
         }
     };
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'COMPLETED':
-                return <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">Completed</span>;
-            case 'IN_PROGRESS':
-                return <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">In Progress</span>;
-            case 'CANCELLED':
-                return <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">Cancelled</span>;
-            default:
-                return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs">Pending</span>;
-        }
-    };
-
-    const getScoreColor = (score: number | null) => {
-        if (!score) return 'text-gray-400';
-        if (score >= 80) return 'text-green-400';
-        if (score >= 60) return 'text-yellow-400';
-        return 'text-red-400';
-    };
-
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">AI Interviews</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Practice with AI-powered interview simulations</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Interviews</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">AI mock practice, recruiter AI interviews, and live co-pilot sessions</p>
                 </div>
                 <button
                     onClick={() => setShowNewModal(true)}
@@ -184,13 +190,60 @@ export default function InterviewsPage() {
                 </div>
             </div>
 
-            {/* Sessions List */}
+            {/* ── AI Interview Invitations (Full AI, async) ── */}
+            {invitations.filter(i => i.inviteType === 'AI').length > 0 && (
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-indigo-500" />
+                        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                            AI Interview Invitations ({invitations.filter(i => i.inviteType === 'AI').length})
+                        </h2>
+                    </div>
+                    {invitations.filter(i => i.inviteType === 'AI').map(inv => (
+                        <div key={inv.sessionId} className="flex items-center justify-between p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-500/5 border border-indigo-200 dark:border-indigo-500/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Bot className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{inv.jobTitle}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{inv.companyName}{inv.location ? ` · ${inv.location}` : ''}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{inv.type} · {inv.difficulty} · Invited {new Date(inv.createdAt).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <Link
+                                href={`/dashboard/interviews/${inv.sessionId}`}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500 text-white text-xs font-bold hover:bg-indigo-600 transition-colors flex-shrink-0"
+                            >
+                                Start <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* ── Co-pilot Interview Invitations (live, recruiter-led) ── */}
+            {invitations.filter(i => i.inviteType === 'COPILOT').length > 0 && (
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-teal-500" />
+                        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                            Live Interview Invitations ({invitations.filter(i => i.inviteType === 'COPILOT').length})
+                        </h2>
+                    </div>
+                    {invitations.filter(i => i.inviteType === 'COPILOT').map(inv => (
+                        <CopilotInvitationCard key={inv.sessionId} inv={inv} />
+                    ))}
+                </div>
+            )}
+
+            {/* Sessions List — split: Recruiter AI Interviews + Practice Sessions */}
             {loading ? (
                 <div className="p-12 text-center">
                     <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-500 dark:text-gray-400">Loading interviews...</p>
                 </div>
-            ) : sessions.length === 0 ? (
+            ) : sessions.length === 0 && invitations.length === 0 ? (
                 <div className="p-12 rounded-2xl glass text-center">
                     <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
                         <Video className="w-8 h-8 text-indigo-400" />
@@ -205,50 +258,58 @@ export default function InterviewsPage() {
                     </button>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {sessions.map((session) => (
-                        <Link
-                            key={session.id}
-                            href={`/dashboard/interviews/${session.id}`}
-                            className="block p-6 rounded-xl glass hover:border-indigo-500/30 transition-all group"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                                        <Video className="w-6 h-6 text-indigo-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-gray-900 dark:text-white font-medium group-hover:text-indigo-400 transition line-clamp-2 md:line-clamp-none">
-                                            {session.type} Interview - {session.targetRole}
-                                        </h3>
-                                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                            <span className="flex items-center gap-1">
-                                                <Target className="w-3 h-3" />
-                                                {session.difficulty}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {new Date(session.createdAt).toLocaleDateString()}
-                                            </span>
-                                            {session.questions.length > 0 && (
-                                                <span>{session.questions.length} questions</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    {session.overallScore !== null && (
-                                        <span className={`text-2xl font-bold ${getScoreColor(session.overallScore)}`}>
-                                            {session.overallScore}%
-                                        </span>
-                                    )}
-                                    {getStatusBadge(session.status)}
-                                    <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-indigo-400 transition" />
-                                </div>
+                <>
+                    {/* Recruiter AI Interviews (completed/in-progress) */}
+                    {sessions.filter(s => s.jobId && s.inviteType !== 'COPILOT').length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-violet-500" />
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                                    Recruiter AI Interviews
+                                </h2>
                             </div>
-                        </Link>
-                    ))}
-                </div>
+                            <div className="space-y-3">
+                                {sessions.filter(s => s.jobId && s.inviteType !== 'COPILOT').map((session) => (
+                                    <SessionCard key={session.id} session={session} tag="AI" tagColor="violet" />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Recruiter Co-pilot Sessions (completed) */}
+                    {sessions.filter(s => s.jobId && s.inviteType === 'COPILOT').length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Video className="w-4 h-4 text-teal-500" />
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                                    Live Interview Sessions
+                                </h2>
+                            </div>
+                            <div className="space-y-3">
+                                {sessions.filter(s => s.jobId && s.inviteType === 'COPILOT').map((session) => (
+                                    <SessionCard key={session.id} session={session} tag="Live" tagColor="teal" />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Self-practice sessions */}
+                    {sessions.filter(s => !s.jobId).length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-indigo-500" />
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                                    Practice Sessions
+                                </h2>
+                            </div>
+                            <div className="space-y-3">
+                                {sessions.filter(s => !s.jobId).map((session) => (
+                                    <SessionCard key={session.id} session={session} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* New Interview Modal */}
@@ -445,5 +506,246 @@ export default function InterviewsPage() {
     );
 }
 
+// ── Google Calendar quick-add URL ────────────────────────────────────
+function buildGCalUrl(title: string, start: string, end: string, details: string, location?: string) {
+    const fmt = (iso: string) =>
+        new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: title,
+        dates: `${fmt(start)}/${fmt(end)}`,
+        details,
+    });
+    if (location) params.set('location', location);
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
+// ── Module-level helpers ──────────────────────────────────────────────
+function getStatusBadge(status: string) {
+    switch (status) {
+        case 'COMPLETED':
+            return <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">Completed</span>;
+        case 'IN_PROGRESS':
+            return <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs">In Progress</span>;
+        case 'CANCELLED':
+            return <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">Cancelled</span>;
+        default:
+            return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs">Pending</span>;
+    }
+}
 
+function getScoreColor(score: number | null) {
+    if (!score) return 'text-gray-400';
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-red-400';
+}
+
+// ── Reusable session card ──────────────────────────────────────────────
+interface InterviewSessionForCard {
+    id: string;
+    type: string;
+    targetRole: string;
+    difficulty: string;
+    status: string;
+    overallScore: number | null;
+    createdAt: string;
+    questions: Array<{ id: string; score: number | null }>;
+    jobId: string | null;
+    inviteType: 'AI' | 'COPILOT' | null;
+}
+
+// ── Co-pilot invitation card ──────────────────────────────────────────
+interface CopilotInvitationCardProps {
+    inv: {
+        sessionId: string;
+        jobTitle: string;
+        companyName: string;
+        location: string;
+        difficulty: string;
+        type: string;
+        scheduledAt: string | null;
+        scheduledEndAt: string | null;
+        meetLink: string | null;
+        createdAt: string;
+    };
+}
+
+function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
+    const hasSchedule = !!inv.scheduledAt;
+    const isUpcoming = hasSchedule && new Date(inv.scheduledAt!) > new Date();
+
+    const scheduledDate = inv.scheduledAt
+        ? new Date(inv.scheduledAt).toLocaleDateString('en-US', {
+              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+          })
+        : null;
+    const scheduledTime = inv.scheduledAt
+        ? new Date(inv.scheduledAt).toLocaleTimeString('en-US', {
+              hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+          })
+        : null;
+    const durationMins =
+        inv.scheduledAt && inv.scheduledEndAt
+            ? Math.round(
+                  (new Date(inv.scheduledEndAt).getTime() - new Date(inv.scheduledAt).getTime()) / 60000,
+              )
+            : null;
+
+    const gcalUrl =
+        hasSchedule
+            ? buildGCalUrl(
+                  `Interview: ${inv.jobTitle} at ${inv.companyName}`,
+                  inv.scheduledAt!,
+                  inv.scheduledEndAt || new Date(new Date(inv.scheduledAt!).getTime() + 60 * 60000).toISOString(),
+                  `Live interview for ${inv.jobTitle} at ${inv.companyName}.\n\nPowered by SmartCareerAI.`,
+                  inv.meetLink || undefined,
+              )
+            : null;
+
+    return (
+        <div className="p-4 rounded-xl bg-teal-50/60 dark:bg-teal-500/5 border border-teal-200 dark:border-teal-500/20 space-y-3">
+            {/* Top row: icon + job info + status badge */}
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Video className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{inv.jobTitle}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {inv.companyName}{inv.location ? ` · ${inv.location}` : ''}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                            {inv.type} · {inv.difficulty} · Invited {new Date(inv.createdAt).toLocaleDateString()}
+                        </p>
+                    </div>
+                </div>
+                <span className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex-shrink-0 ${
+                    isUpcoming
+                        ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                }`}>
+                    {isUpcoming ? 'Scheduled' : hasSchedule ? 'Awaiting Live Call' : 'Awaiting Live Call'}
+                </span>
+            </div>
+
+            {/* Schedule info block */}
+            {hasSchedule && (
+                <div className="flex items-start gap-2 pl-1">
+                    <Calendar className="w-4 h-4 text-teal-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{scheduledDate}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {scheduledTime}{durationMins ? ` · ${durationMins} min` : ''}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+                {inv.meetLink && (
+                    <a
+                        href={inv.meetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500 text-white text-xs font-bold hover:bg-teal-600 transition-colors"
+                    >
+                        <Video className="w-3.5 h-3.5" />
+                        Join Meeting
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                    </a>
+                )}
+                {gcalUrl && (
+                    <a
+                        href={gcalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-500/30 text-teal-600 dark:text-teal-400 text-xs font-bold hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
+                    >
+                        <CalendarPlus className="w-3.5 h-3.5" />
+                        Add to Google Calendar
+                    </a>
+                )}
+                <Link
+                    href={`/dashboard/interviews/${inv.sessionId}/post-mortem`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-500/30 text-teal-600 dark:text-teal-400 text-xs font-bold hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
+                >
+                    Results
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function SessionCard({ session, tag, tagColor }: {
+    session: InterviewSessionForCard;
+    tag?: string;
+    tagColor?: 'violet' | 'teal' | 'indigo';
+}) {
+    const colorMap: Record<string, string> = {
+        violet: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30',
+        teal: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30',
+        indigo: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30',
+    };
+    const iconBg = tagColor === 'violet'
+        ? 'bg-violet-500/20'
+        : tagColor === 'teal' ? 'bg-teal-500/20' : 'bg-indigo-500/20';
+    const iconColor = tagColor === 'violet'
+        ? 'text-violet-400'
+        : tagColor === 'teal' ? 'text-teal-400' : 'text-indigo-400';
+
+    return (
+        <Link
+            href={`/dashboard/interviews/${session.id}`}
+            className="block p-5 rounded-xl glass hover:border-indigo-500/30 transition-all group"
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
+                        {session.inviteType === 'COPILOT' ? (
+                            <Video className={`w-5 h-5 ${iconColor}`} />
+                        ) : (
+                            <Bot className={`w-5 h-5 ${iconColor}`} />
+                        )}
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-gray-900 dark:text-white font-medium group-hover:text-indigo-400 transition">
+                                {session.type} Interview — {session.targetRole}
+                            </h3>
+                            {tag && tagColor && (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorMap[tagColor]}`}>
+                                    {tag}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1">
+                                <Target className="w-3 h-3" />
+                                {session.difficulty}
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {new Date(session.createdAt).toLocaleDateString()}
+                            </span>
+                            {session.questions.length > 0 && (
+                                <span>{session.questions.length} questions</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    {session.overallScore !== null && (
+                        <span className={`text-2xl font-bold ${getScoreColor(session.overallScore)}`}>
+                            {session.overallScore}%
+                        </span>
+                    )}
+                    {getStatusBadge(session.status)}
+                    <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-indigo-400 transition" />
+                </div>
+            </div>
+        </Link>
+    );
+}

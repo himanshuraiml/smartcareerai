@@ -44,16 +44,25 @@ export default function ForgotPasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center px-4">
                 <div className="w-full max-w-md">
+                    {/* Logo */}
                     <div className="text-center mb-8">
-                        <Link href="/" className="inline-flex items-center gap-2">
+                        <Link href="/" className="inline-block">
                             <Image
-                                src="/logo.svg"
+                                src="/logo-new-light.png"
                                 alt="PlaceNxt Logo"
-                                width={40}
-                                height={40}
-                                className="w-10 h-10 rounded-xl"
+                                width={320}
+                                height={80}
+                                className="h-20 w-auto mx-auto block dark:hidden"
+                                priority
                             />
-                            <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
+                            <Image
+                                src="/logo-new-dark.png"
+                                alt="PlaceNxt Logo"
+                                width={320}
+                                height={80}
+                                className="h-20 w-auto mx-auto hidden dark:block"
+                                priority
+                            />
                         </Link>
                     </div>
 

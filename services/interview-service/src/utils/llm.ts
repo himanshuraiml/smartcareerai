@@ -278,6 +278,55 @@ Return ONLY the JSON object.`;
     }
 }
 
+// Generate dynamic follow-up question based on answer
+export async function generateFollowUpQuestion(
+    originalQuestion: string,
+    answer: string,
+    targetRole: string
+): Promise<{ hasFollowUp: boolean; question?: string }> {
+    const systemPrompt = `You are an expert interviewer. Based on the candidate's answer to the original question, determine if a follow-up question is necessary to probe deeper, clarify vague points, or challenge their assumptions.
+Return JSON: {"hasFollowUp": boolean, "question": "the follow-up question string (or empty if none)"}`;
+
+    const userPrompt = `Role: ${targetRole}
+Original Question: "${originalQuestion}"
+Candidate Answer: "${answer}"
+
+Does this answer warrant a follow-up question? If it's too brief, vague, or mentions something interesting that needs elaboration, generate a single, highly specific follow-up question.
+If the answer is comprehensive and solid, set hasFollowUp to false.
+
+Return ONLY the JSON.`;
+
+    try {
+        const client = getGroq();
+        if (!client) {
+            return { hasFollowUp: false };
+        }
+
+        const response = await client.chat.completions.create({
+            model: AI_MODEL_NAME,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.5,
+            max_tokens: 300,
+            response_format: { type: 'json_object' },
+        });
+
+        const text = response.choices[0]?.message?.content || '{}';
+        const cleanedText = cleanJsonResponse(text);
+        const result = JSON.parse(cleanedText);
+
+        return {
+            hasFollowUp: !!result.hasFollowUp && !!result.question,
+            question: result.question || undefined,
+        };
+    } catch (error) {
+        logger.error('Failed to generate follow-up question:', error);
+        return { hasFollowUp: false };
+    }
+}
+
 // Generate overall interview feedback
 export async function generateFeedback(
     targetRole: string,
@@ -505,6 +554,114 @@ function getFallbackQuestions(interviewType: string, targetRole: string, count: 
     }
 
     return questions.slice(0, count);
+}
+
+// ============================================
+// PHASE 4: Code Evaluation (Technical Simulations)
+// ============================================
+
+export interface CodeEvaluationResult {
+    score: number;            // 0-100
+    feedback: string;         // Human-readable overall feedback
+    timeComplexity: string;   // e.g. "O(n log n)"
+    spaceComplexity: string;  // e.g. "O(n)"
+    improvements: string[];   // Actionable suggestions
+    codeQuality: {
+        readability: number;  // 0-100
+        efficiency: number;   // 0-100
+        correctness: number;  // 0-100
+    };
+    alternativeApproach?: string; // Brief description of a better approach if one exists
+}
+
+/**
+ * Use the LLM to qualitatively evaluate a code submission.
+ * testResults contains the automated pass/fail output from Piston.
+ */
+export async function evaluateCode(
+    problem: string,
+    language: string,
+    code: string,
+    testResults: { passed: number; total: number; error?: string }
+): Promise<CodeEvaluationResult> {
+    const passRate = testResults.total > 0 ? (testResults.passed / testResults.total) * 100 : 0;
+
+    const systemPrompt = `You are an expert software engineer evaluating a coding challenge submission.
+Analyze the code for correctness, time/space complexity, readability, and efficiency.
+Return JSON only:
+{
+  "score": number (0-100, weight: 60% test pass rate + 40% code quality),
+  "feedback": "2-3 sentence overall assessment",
+  "time_complexity": "Big-O notation e.g. O(n log n)",
+  "space_complexity": "Big-O notation e.g. O(n)",
+  "improvements": ["actionable suggestion 1", "actionable suggestion 2"],
+  "code_quality": {
+    "readability": number (0-100),
+    "efficiency": number (0-100),
+    "correctness": number (0-100)
+  },
+  "alternative_approach": "Optional: brief description of a more optimal approach if the submitted solution is suboptimal"
+}`;
+
+    const userPrompt = `Problem Statement:
+${problem}
+
+Language: ${language}
+
+Submitted Code:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Automated Test Results: ${testResults.passed}/${testResults.total} test cases passed (${passRate.toFixed(0)}%)
+${testResults.error ? `Execution Error: ${testResults.error}` : ''}
+
+Evaluate the solution and return ONLY the JSON object.`;
+
+    const fallback: CodeEvaluationResult = {
+        score: Math.round(passRate * 0.6 + 40 * 0.4),
+        feedback: `Your solution passed ${testResults.passed} out of ${testResults.total} test cases.`,
+        timeComplexity: 'Unknown',
+        spaceComplexity: 'Unknown',
+        improvements: ['Review edge cases', 'Consider time complexity'],
+        codeQuality: { readability: 70, efficiency: 60, correctness: Math.round(passRate) },
+    };
+
+    try {
+        const client = getGroq();
+        if (!client) return fallback;
+
+        const response = await client.chat.completions.create({
+            model: AI_MODEL_NAME,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 800,
+            response_format: { type: 'json_object' },
+        });
+
+        const text = response.choices[0]?.message?.content || '{}';
+        const result = JSON.parse(cleanJsonResponse(text));
+
+        return {
+            score: Math.min(100, Math.max(0, result.score ?? fallback.score)),
+            feedback: result.feedback || fallback.feedback,
+            timeComplexity: result.time_complexity || 'Unknown',
+            spaceComplexity: result.space_complexity || 'Unknown',
+            improvements: Array.isArray(result.improvements) ? result.improvements : fallback.improvements,
+            codeQuality: {
+                readability: Math.min(100, Math.max(0, result.code_quality?.readability ?? 70)),
+                efficiency: Math.min(100, Math.max(0, result.code_quality?.efficiency ?? 60)),
+                correctness: Math.min(100, Math.max(0, result.code_quality?.correctness ?? Math.round(passRate))),
+            },
+            alternativeApproach: result.alternative_approach || undefined,
+        };
+    } catch (error) {
+        logger.error('Failed to evaluate code:', error);
+        return fallback;
+    }
 }
 
 function getBasicFeedback(score: number): string {

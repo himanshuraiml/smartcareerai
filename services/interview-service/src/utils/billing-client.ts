@@ -1,6 +1,6 @@
 import { logger } from './logger';
 
-const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3010';
+const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3009';
 
 export type CreditType = 'RESUME_REVIEW' | 'AI_INTERVIEW' | 'SKILL_TEST';
 

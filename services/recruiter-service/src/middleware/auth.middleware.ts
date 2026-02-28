@@ -63,6 +63,29 @@ export const authMiddleware = async (
     }
 };
 
+/**
+ * Lightweight middleware: verifies the user has RECRUITER (or ADMIN) role.
+ * Does NOT require a Recruiter profile record to exist in the DB.
+ * Use for routes that work with req.user.id directly (e.g. organization CRUD).
+ */
+export const recruiterRoleMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        if (!req.user) {
+            throw createError('Authentication required', 401, 'NO_AUTH');
+        }
+        if (req.user.role !== 'RECRUITER' && req.user.role !== 'ADMIN') {
+            throw createError('Recruiter access required', 403, 'FORBIDDEN');
+        }
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const recruiterMiddleware = async (
     req: Request,
     res: Response,

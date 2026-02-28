@@ -6,9 +6,13 @@ import { billingController } from '../controllers/billing.controller';
 import { errorMonitoringController } from '../controllers/error-monitoring.controller';
 import { activityController } from '../controllers/activity.controller';
 import { settingsController } from '../controllers/settings.controller';
+import { couponController } from '../controllers/coupon.controller';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// Internal service route — no auth required (called by other services to report errors)
+router.post('/errors/log', errorMonitoringController.logError);
 
 // All routes require admin authentication
 router.use(authMiddleware);
@@ -59,6 +63,13 @@ router.get('/billing/credit-pricing', billingController.getCreditPricing);
 router.put('/billing/credit-pricing', billingController.updateCreditPricing);
 router.get('/billing/stats', billingController.getBillingStats);
 
+// Coupon Management
+router.post('/billing/coupons', couponController.createCoupon);
+router.get('/billing/coupons', couponController.getCoupons);
+router.get('/billing/coupons/:id', couponController.getCouponById);
+router.put('/billing/coupons/:id', couponController.updateCoupon);
+router.delete('/billing/coupons/:id', couponController.deleteCoupon);
+
 // Error Monitoring
 router.get('/errors/logs', errorMonitoringController.getErrorLogs);
 router.get('/errors/stats', errorMonitoringController.getErrorStats);
@@ -70,6 +81,7 @@ router.get('/errors/circuit-breakers', errorMonitoringController.getCircuitBreak
 router.post('/errors/circuit-breaker', errorMonitoringController.updateCircuitBreaker);
 
 // Activity Logs
+router.get('/activity/audit', activityController.getAuditLogs);
 router.get('/activity', activityController.getActivityLogs);
 router.get('/activity/stats', activityController.getActivityStats);
 

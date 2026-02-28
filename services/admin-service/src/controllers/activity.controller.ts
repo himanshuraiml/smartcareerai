@@ -138,6 +138,55 @@ export class ActivityController {
     }
 
     /**
+     * Get compliance and audit logs
+     */
+    async getAuditLogs(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { page = '1', limit = '20', search } = req.query;
+            const pageNum = parseInt(page as string);
+            const limitNum = parseInt(limit as string);
+            const skip = (pageNum - 1) * limitNum;
+
+            const where: any = {
+                type: {
+                    in: ['GDPR_EXPORT', 'GDPR_DELETE', 'COMPLIANCE_AUDIT']
+                }
+            };
+
+            if (search) {
+                where.OR = [
+                    { message: { contains: search as string, mode: 'insensitive' } },
+                    { userEmail: { contains: search as string, mode: 'insensitive' } }
+                ];
+            }
+
+            const [logs, total] = await Promise.all([
+                prisma.activityLog.findMany({
+                    where,
+                    orderBy: { createdAt: 'desc' },
+                    skip,
+                    take: limitNum
+                }),
+                prisma.activityLog.count({ where })
+            ]);
+
+            res.json({
+                success: true,
+                data: logs,
+                pagination: {
+                    page: pageNum,
+                    limit: limitNum,
+                    total,
+                    totalPages: Math.ceil(total / limitNum)
+                }
+            });
+        } catch (error) {
+            logger.error('Error fetching audit logs:', error);
+            next(error);
+        }
+    }
+
+    /**
      * Log a new activity (internal use)
      */
     static async log(data: {

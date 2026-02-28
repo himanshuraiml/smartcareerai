@@ -51,7 +51,7 @@ export class MotivationService {
                     });
 
                     if (response.ok) {
-                        const data = await response.json();
+                        const data: any = await response.json();
                         const content = data.choices[0]?.message?.content;
                         if (content) {
                             const parsed = JSON.parse(content);

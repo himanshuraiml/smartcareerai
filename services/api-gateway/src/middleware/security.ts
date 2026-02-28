@@ -92,9 +92,8 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
     // Referrer policy - allow Google to receive referrer for auth
     res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
 
-    // Cross-Origin policies for Google Sign-in popups
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+    // Cross-Origin policies — intentionally omitted here; handled by helmet config
+    // in the gateway to avoid conflicting with CORS.
 
     // Permissions policy - allow camera/microphone for interview features
     res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
@@ -199,7 +198,11 @@ export const sqlInjectionPrevention = (req: Request, res: Response, next: NextFu
         return false;
     };
 
-    if (checkObject(req.query) || checkObject(req.body) || checkObject(req.params)) {
+    // Only check query params and URL params — NOT request body.
+    // JSON request bodies are safely handled by Prisma's parameterized queries,
+    // and the broad regex patterns produce false positives on legitimate content
+    // (e.g. job descriptions containing apostrophes or # characters).
+    if (checkObject(req.query) || checkObject(req.params)) {
         logger.warn({
             type: 'SQL_INJECTION_ATTEMPT',
             ip: req.ip,

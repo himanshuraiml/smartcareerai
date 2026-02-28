@@ -2,6 +2,44 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 
 export class ApplicationService {
+    // Fetch platform job applications (RecruiterJobApplicant) and normalize to Application shape
+    private async getPlatformApplications(userId: string, status?: string) {
+        const where: any = { candidateId: userId };
+        if (status) where.status = status;
+
+        const platformApps = await (prisma as any).recruiterJobApplicant.findMany({
+            where,
+            include: {
+                job: {
+                    include: {
+                        recruiter: { select: { companyName: true } },
+                    },
+                },
+            },
+            orderBy: { updatedAt: 'desc' },
+        });
+
+        return platformApps.map((pApp: any) => ({
+            id: pApp.id,
+            userId,
+            jobId: pApp.jobId,
+            job: {
+                id: pApp.jobId,
+                title: pApp.job?.title ?? 'Unknown Role',
+                company: pApp.job?.recruiter?.companyName ?? 'Unknown Company',
+                location: pApp.job?.location ?? '',
+                source: 'platform',
+            },
+            status: pApp.status,
+            appliedAt: pApp.appliedAt,
+            interviewDate: null,
+            notes: pApp.notes,
+            createdAt: pApp.createdAt,
+            updatedAt: pApp.updatedAt,
+            isPlatformJob: true,
+        }));
+    }
+
     // Get all applications for a user
     async getApplications(userId: string, status?: string) {
         const where: any = { userId };
@@ -10,11 +48,20 @@ export class ApplicationService {
             where.status = status;
         }
 
-        return prisma.application.findMany({
-            where,
-            include: { job: true },
-            orderBy: { updatedAt: 'desc' },
-        });
+        const [regularApps, platformApps] = await Promise.all([
+            prisma.application.findMany({
+                where,
+                include: { job: true },
+                orderBy: { updatedAt: 'desc' },
+            }),
+            this.getPlatformApplications(userId, status),
+        ]);
+
+        // Tag regular apps and merge, sorted by updatedAt descending
+        const tagged = regularApps.map((a: any) => ({ ...a, isPlatformJob: false }));
+        const merged = [...tagged, ...platformApps];
+        merged.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        return merged;
     }
 
     // Get single application by ID
@@ -158,9 +205,12 @@ export class ApplicationService {
 
     // Get application statistics for dashboard
     async getStats(userId: string) {
-        const applications = await prisma.application.findMany({
-            where: { userId },
-        });
+        const [regularApps, platformApps] = await Promise.all([
+            prisma.application.findMany({ where: { userId } }),
+            this.getPlatformApplications(userId),
+        ]);
+
+        const applications = [...regularApps, ...platformApps];
 
         const stats = {
             total: applications.length,

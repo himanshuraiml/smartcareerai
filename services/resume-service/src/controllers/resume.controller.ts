@@ -77,6 +77,34 @@ export class ResumeController {
         }
     }
 
+    async download(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await resumeService.getDownloadUrl(id);
+
+            res.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async downloadByCandidate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { candidateId } = req.params;
+            const result = await resumeService.getDownloadUrlByCandidate(candidateId);
+
+            res.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async parse(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;

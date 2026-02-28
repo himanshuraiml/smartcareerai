@@ -21,6 +21,7 @@ interface Application {
     interviewDate?: string;
     notes?: string;
     updatedAt: string;
+    isPlatformJob?: boolean;
 }
 interface Stats {
     total: number; saved: number; applied: number;
@@ -62,6 +63,7 @@ export default function ApplicationsPage() {
     }, [user]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (user) Promise.all([fetchApplications(), fetchStats()]).finally(() => setLoading(false));
     }, [user, fetchApplications, fetchStats]);
 
@@ -75,6 +77,8 @@ export default function ApplicationsPage() {
     }, [searchParams, user, fetchApplications, fetchStats]);
 
     const handleStatusChange = async (appId: string, newStatus: string) => {
+        const app = applications.find(a => a.id === appId);
+        if (app?.isPlatformJob) return; // Recruiter controls pipeline status
         setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus as any } : a));
         try {
             await authFetch(`/applications/applications/${appId}/status`, {
@@ -86,6 +90,8 @@ export default function ApplicationsPage() {
     };
 
     const handleDelete = async (appId: string) => {
+        const app = applications.find(a => a.id === appId);
+        if (app?.isPlatformJob) return; // Cannot delete platform applications
         if (!confirm('Delete this application?')) return;
         try {
             await authFetch(`/applications/applications/${appId}`, { method: 'DELETE' });
@@ -186,21 +192,31 @@ export default function ApplicationsPage() {
                                                 <div className="p-4 overflow-x-auto">
                                                     <div className="flex gap-3 min-w-min pb-1">
                                                         {apps.map(app => (
-                                                            <div key={app.id} draggable
-                                                                onDragStart={e => e.dataTransfer.setData('appId', app.id)}
-                                                                className="group w-64 flex-shrink-0 p-4 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 hover:border-indigo-200 dark:hover:border-indigo-500/20 hover:shadow-[0_4px_16px_rgba(99,102,241,0.1)] cursor-grab active:cursor-grabbing transition-all duration-200 flex flex-col gap-2"
+                                                            <div key={app.id}
+                                                                draggable={!app.isPlatformJob}
+                                                                onDragStart={e => !app.isPlatformJob && e.dataTransfer.setData('appId', app.id)}
+                                                                className={`group w-64 flex-shrink-0 p-4 rounded-xl border transition-all duration-200 flex flex-col gap-2 ${app.isPlatformJob
+                                                                    ? 'bg-indigo-50/50 dark:bg-indigo-500/5 border-indigo-200 dark:border-indigo-500/20 cursor-default'
+                                                                    : 'bg-gray-50 dark:bg-white/[0.03] border-gray-200 dark:border-white/5 hover:border-indigo-200 dark:hover:border-indigo-500/20 hover:shadow-[0_4px_16px_rgba(99,102,241,0.1)] cursor-grab active:cursor-grabbing'}`}
                                                             >
                                                                 <div className="flex items-start justify-between gap-2">
                                                                     <div className="flex-1 min-w-0">
-                                                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{app.job.title}</h4>
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{app.job.title}</h4>
+                                                                            {app.isPlatformJob && (
+                                                                                <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">Platform</span>
+                                                                            )}
+                                                                        </div>
                                                                         <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                                                                             <Building2 className="w-3 h-3" />{app.job.company}
                                                                         </p>
                                                                     </div>
-                                                                    <button onClick={() => setSelectedApp(app)}
-                                                                        className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-500 transition-all flex-shrink-0">
-                                                                        <Edit3 className="w-3.5 h-3.5" />
-                                                                    </button>
+                                                                    {!app.isPlatformJob && (
+                                                                        <button onClick={() => setSelectedApp(app)}
+                                                                            className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-500 transition-all flex-shrink-0">
+                                                                            <Edit3 className="w-3.5 h-3.5" />
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2 border-t border-gray-200 dark:border-white/5 mt-auto">
                                                                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
@@ -249,7 +265,14 @@ export default function ApplicationsPage() {
                                                 return (
                                                     <motion.tr key={app.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                                                         className="group hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors">
-                                                        <td className="px-5 py-4 text-[15px] font-semibold text-gray-900 dark:text-white max-w-[180px] truncate">{app.job.title}</td>
+                                                        <td className="px-5 py-4 max-w-[200px]">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[15px] font-semibold text-gray-900 dark:text-white truncate">{app.job.title}</span>
+                                                                {app.isPlatformJob && (
+                                                                    <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">Platform</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                                                             <div className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-gray-400" />{app.job.company}</div>
                                                         </td>
@@ -263,16 +286,18 @@ export default function ApplicationsPage() {
                                                             {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                         </td>
                                                         <td className="px-5 py-4">
-                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={() => setSelectedApp(app)}
-                                                                    className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-500 transition-colors">
-                                                                    <Edit3 className="w-3.5 h-3.5" />
-                                                                </button>
-                                                                <button onClick={() => handleDelete(app.id)}
-                                                                    className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 text-gray-400 hover:text-rose-500 transition-colors">
-                                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                                </button>
-                                                            </div>
+                                                            {!app.isPlatformJob && (
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button onClick={() => setSelectedApp(app)}
+                                                                        className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-500 transition-colors">
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button onClick={() => handleDelete(app.id)}
+                                                                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 text-gray-400 hover:text-rose-500 transition-colors">
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </td>
                                                     </motion.tr>
                                                 );

@@ -11,6 +11,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { interviewRouter } from './routes/interview.routes';
 import { practiceRouter } from './routes/practice.routes';
+import { codingRouter } from './routes/coding.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import { contextMiddleware } from './middleware/context.middleware';
@@ -33,6 +34,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/', interviewRouter);
 app.use('/practice', practiceRouter);
+app.use('/coding', codingRouter);
 
 // Error handler
 app.use(errorHandler);

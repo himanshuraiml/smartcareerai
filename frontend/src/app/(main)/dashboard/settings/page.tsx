@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
     User, Mail, Briefcase, Camera, Save, Check, Loader2,
-    ChevronDown, Shield, Bell, Key, Trash2, AlertTriangle, Building2
+    ChevronDown, Shield, Bell, Key, Trash2, AlertTriangle, Building2, Download
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
@@ -26,7 +26,7 @@ export default function SettingsPage() {
     const [success, setSuccess] = useState(false);
     const [jobRoles, setJobRoles] = useState<JobRole[]>([]);
     const [institutions, setInstitutions] = useState<{ id: string; name: string }[]>([]);
-    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'privacy'>('profile');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -59,6 +59,10 @@ export default function SettingsPage() {
         'interview-reminders': true,
         'marketing': false
     });
+
+    // GDPR Export state
+    const [exportLoading, setExportLoading] = useState(false);
+    const [exportSuccess, setExportSuccess] = useState(false);
 
     // Fetch job roles
     useEffect(() => {
@@ -228,6 +232,42 @@ export default function SettingsPage() {
         }
     };
 
+    const handleExportData = async () => {
+        if (!user) return;
+        setExportLoading(true);
+        setExportSuccess(false);
+
+        try {
+            const res = await authFetch('/auth/me/export', {
+                method: 'GET'
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || 'Failed to export data');
+            }
+
+            // Handle file download
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `smartcareerai-data-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            setExportSuccess(true);
+            setTimeout(() => setExportSuccess(false), 5000);
+        } catch (error: any) {
+            console.error('Export error:', error);
+            alert(error.message || 'Failed to export data');
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
     // Group job roles by category
     const groupedRoles = Array.from(new Set(jobRoles.map(r => r.category))).map(cat => ({
         category: cat,
@@ -240,6 +280,7 @@ export default function SettingsPage() {
         { id: 'profile', label: 'Profile', icon: User },
         { id: 'security', label: 'Security', icon: Shield },
         { id: 'notifications', label: 'Notifications', icon: Bell },
+        { id: 'privacy', label: 'Privacy & Data', icon: Shield },
     ];
 
     return (
@@ -515,6 +556,58 @@ export default function SettingsPage() {
                         >
                             <Trash2 className="w-4 h-4" />
                             Delete Account
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Privacy & Data Tab */}
+            {activeTab === 'privacy' && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                >
+                    {/* GDPR Data Export */}
+                    <div className="p-6 rounded-2xl glass-card">
+                        <div className="flex items-start justify-between mb-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Download Your Data</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Get a copy of your personal data, interview history, and resume information.
+                                </p>
+                            </div>
+                            <Download className="w-5 h-5 text-indigo-400" />
+                        </div>
+
+                        {exportSuccess && (
+                            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+                                Data exported successfully! Your download should begin shortly.
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleExportData}
+                            disabled={exportLoading}
+                            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-white/20 transition-colors disabled:opacity-50"
+                        >
+                            {exportLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                            {exportLoading ? 'Processing Export...' : 'Export Data (JSON)'}
+                        </button>
+                    </div>
+
+                    {/* Account Deletion */}
+                    <div className="p-6 rounded-2xl glass-card border border-red-500/20">
+                        <h2 className="text-lg font-bold text-red-400 mb-2">Delete Account & Data</h2>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                            Permanently delete your account and all associated data in accordance with GDPR. This action cannot be undone.
+                        </p>
+                        <button
+                            onClick={() => setShowDeleteModal(true)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20 transition-colors border border-red-500/30"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Account & Data
                         </button>
                     </div>
                 </motion.div>

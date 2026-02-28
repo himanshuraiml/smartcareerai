@@ -18,7 +18,7 @@ interface SkillTest {
     difficulty: 'EASY' | 'MEDIUM' | 'HARD'; durationMinutes: number;
     passingScore: number; questionsCount: number; questions: TestQuestion[];
 }
-interface TestResult { score: number; passed: boolean; correctCount: number; totalCount: number; }
+interface TestResult { score: number; passed: boolean; correctAnswers: number; totalQuestions: number; }
 
 const DIFFICULTY_CONFIG = {
     EASY: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -202,18 +202,18 @@ export default function TestPage({ params }: { params: Promise<{ testId: string 
                             {passed ? 'You Passed! 🎉' : 'Test Failed — Keep Practicing'}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {result.correctCount} of {result.totalCount} questions correct
+                            {result.correctAnswers} of {result.totalQuestions} questions correct
                         </p>
                     </div>
 
                     {/* Stat chips */}
                     <div className="relative flex gap-3 w-full">
                         <div className="flex-1 py-3 px-4 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{result.correctCount}</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{result.correctAnswers}</p>
                             <p className="text-xs text-gray-400">Correct</p>
                         </div>
                         <div className="flex-1 py-3 px-4 rounded-xl bg-gray-50 dark:bg-white/5 text-center">
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{result.totalCount - result.correctCount}</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{result.totalQuestions - result.correctAnswers}</p>
                             <p className="text-xs text-gray-400">Incorrect</p>
                         </div>
                         <div className="flex-1 py-3 px-4 rounded-xl bg-gray-50 dark:bg-white/5 text-center">

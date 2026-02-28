@@ -15,11 +15,13 @@
     "blog:status": "tsx scripts/blog-generator.ts --status"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@keystatic/core": "^0.5.48",
     "@keystatic/next": "^5.0.4",
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/drawing_utils": "^0.3.1675466124",
     "@mediapipe/face_mesh": "^0.4.1633559619",
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-progress": "^1.0.3",
@@ -43,6 +45,8 @@
     "react-dropzone": "^14.2.3",
     "react-markdown": "^10.1.0",
     "recharts": "^2.10.3",
+    "remark-gfm": "^4.0.1",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.1.0",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"

@@ -6,12 +6,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { recruiterRouter } from './routes/recruiter.routes';
 import { messageRouter } from './routes/message.routes';
+import { organizationRouter } from './routes/organization.routes';
+import { publicRouter } from './routes/public.routes';
+import { sourcingRouter } from './routes/sourcing.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
 
 const app = express();
-const PORT = process.env.PORT || 3012;
+const PORT = process.env.PORT || 3008;
 
 // Middleware
 app.use(helmet());
@@ -25,7 +28,10 @@ app.get('/health', (_req, res) => {
 
 // Routes
 app.use('/', recruiterRouter);
+app.use('/organization', organizationRouter);
 app.use('/messages', messageRouter);
+app.use('/sourcing', sourcingRouter);
+app.use('/api/v1/public', publicRouter);
 
 // Error handler
 app.use(errorHandler);

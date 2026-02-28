@@ -69,18 +69,21 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-4f8b2c9e7a1d3f5e0b6c4a8d2e9f1b3c5a7d8e2f0b4c6a9d1e3f5b7c9a2d4e6f}
+      # auth-service runs in Docker on the same network
       - AUTH_SERVICE_URL=http://auth-service:3001
-      - RESUME_SERVICE_URL=http://resume-service:3002
-      - SCORING_SERVICE_URL=http://scoring-service:3003
-      - SKILL_SERVICE_URL=http://skill-service:3004
-      - JOB_SERVICE_URL=http://job-service:3005
-      - APPLICATION_SERVICE_URL=http://application-service:3006
-      - INTERVIEW_SERVICE_URL=http://interview-service:3007
-      - RECRUITER_SERVICE_URL=http://recruiter-service:3008
-      - BILLING_SERVICE_URL=http://billing-service:3009
-      - VALIDATION_SERVICE_URL=http://validation-service:3010
-      - ADMIN_SERVICE_URL=http://admin-service:3011
-      - EMAIL_SERVICE_URL=http://email-tracking-service:3012
+      # All other services run locally — use host.docker.internal to reach the host machine
+      - RESUME_SERVICE_URL=http://host.docker.internal:3002
+      - SCORING_SERVICE_URL=http://host.docker.internal:3003
+      - SKILL_SERVICE_URL=http://host.docker.internal:3004
+      - JOB_SERVICE_URL=http://host.docker.internal:3005
+      - APPLICATION_SERVICE_URL=http://host.docker.internal:3006
+      - INTERVIEW_SERVICE_URL=http://host.docker.internal:3007
+      - RECRUITER_SERVICE_URL=http://host.docker.internal:3008
+      - BILLING_SERVICE_URL=http://host.docker.internal:3009
+      - VALIDATION_SERVICE_URL=http://host.docker.internal:3010
+      - ADMIN_SERVICE_URL=http://host.docker.internal:3011
+      - EMAIL_SERVICE_URL=http://host.docker.internal:3012
       - REDIS_URL=redis://redis:6379
     depends_on:
       redis:
@@ -101,7 +104,7 @@ services:
       - NODE_ENV=development
       - PORT=3001
       - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - JWT_SECRET=${JWT_SECRET:-4f8b2c9e7a1d3f5e0b6c4a8d2e9f1b3c5a7d8e2f0b4c6a9d1e3f5b7c9a2d4e6f}
       - JWT_EXPIRES_IN=15m
       - REFRESH_TOKEN_EXPIRES_IN=7d
       - REDIS_URL=redis://redis:6379

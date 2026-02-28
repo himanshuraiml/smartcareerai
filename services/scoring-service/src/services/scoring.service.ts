@@ -31,6 +31,7 @@ interface ATSAnalysisResult {
     scoreExplanation: string;
     industryBenchmark: IndustryBenchmark;
     transparencyNote: string;
+    biasFlags: string[];
 }
 
 export class ScoringService {
@@ -203,6 +204,7 @@ export class ScoringService {
                     competitiveLevel: 'average',
                 },
                 transparencyNote: result.transparencyNote || 'ATS scores vary across platforms (LinkedIn, Indeed, Workday) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
+                biasFlags: result.biasFlags || [],
             };
         } catch (error) {
             logger.error('LLM analysis failed', error);
@@ -354,6 +356,7 @@ export class ScoringService {
             scoreExplanation,
             industryBenchmark,
             transparencyNote: 'ATS scores vary across platforms (LinkedIn, Indeed, Workday) because each uses different keyword weighting and parsing algorithms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
+            biasFlags: [],
         };
     }
 
@@ -378,6 +381,7 @@ export class ScoringService {
             scoreExplanation: raw.scoreExplanation || null,
             industryBenchmark: raw.industryBenchmark || null,
             transparencyNote: raw.transparencyNote || 'ATS scores vary across platforms. Our score focuses on keyword relevance, formatting compliance, and content depth.',
+            biasFlags: raw.biasFlags || [],
             createdAt: score.createdAt.toISOString(),
         };
     }

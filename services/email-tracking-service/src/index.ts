@@ -10,7 +10,7 @@ import { startEmailScanJob } from './jobs/email-scan.job';
 
 
 const app = express();
-const PORT = process.env.PORT || 3013;
+const PORT = process.env.PORT || 3012;
 
 // Middleware
 app.use(helmet());

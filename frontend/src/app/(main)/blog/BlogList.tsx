@@ -43,12 +43,22 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                         {/* Brand */}
                         <div onClick={() => router.push('/')} role="button" tabIndex={0}
                             className="flex items-center gap-2.5 cursor-pointer">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                                <Sparkles className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                Place<span className="text-indigo-500">Nxt</span>
-                            </span>
+                            <Image
+                                src="/logo-new-light.png"
+                                alt="PlaceNxt Logo"
+                                width={320}
+                                height={80}
+                                className="h-16 w-auto md:h-20 block dark:hidden"
+                                priority
+                            />
+                            <Image
+                                src="/logo-new-dark.png"
+                                alt="PlaceNxt Logo"
+                                width={320}
+                                height={80}
+                                className="h-16 w-auto md:h-20 hidden dark:block"
+                                priority
+                            />
                         </div>
 
                         {/* Desktop nav */}

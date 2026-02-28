@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { subscriptionRouter } from './routes/subscription.routes';
 import { creditRouter } from './routes/credit.routes';
 import { webhookRouter } from './routes/webhook.routes';
+import { promotionRouter } from './routes/promotion.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { contextMiddleware } from './middleware/context.middleware';
 import { logger } from './utils/logger';
@@ -23,7 +24,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3010;
+const PORT = process.env.PORT || 3009;
 
 // Middleware
 app.use(helmet());
@@ -42,6 +43,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/subscriptions', subscriptionRouter);
 app.use('/credits', creditRouter);
+app.use('/promotions', promotionRouter);
 app.use('/webhook', webhookRouter);
 
 // Error handler

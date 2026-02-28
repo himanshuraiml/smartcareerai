@@ -148,6 +148,37 @@ export class RecruiterController {
         }
     }
 
+    async getCandidateById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const candidate = await recruiterService.getCandidateById(req.params.candidateId);
+            res.json({ success: true, data: candidate });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getCandidateApplications(req: Request, res: Response, next: NextFunction) {
+        try {
+            const recruiterId = req.recruiter!.id;
+            const applications = await recruiterService.getCandidateApplications(req.params.candidateId, recruiterId);
+            res.json({ success: true, data: applications });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getInstitutions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutions = await jobService.getInstitutions();
+            res.json({
+                success: true,
+                data: institutions,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // ============================================
     // Job Management
     // ============================================
@@ -193,6 +224,87 @@ export class RecruiterController {
             res.json({
                 success: true,
                 data: job,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getPublicJobById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const job = await jobService.getPublicJobById(req.params.id);
+
+            res.json({
+                success: true,
+                data: job,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // ============================================
+    // Candidate-facing: apply to a platform job
+    // ============================================
+
+    async applyToJob(req: Request, res: Response, next: NextFunction) {
+        try {
+            const candidateId = req.user!.id;
+            const { id: jobId } = req.params;
+            const { coverLetter, resumeId } = req.body;
+
+            const result = await jobService.candidateApply(candidateId, jobId, coverLetter, resumeId);
+
+            res.status(201).json({
+                success: true,
+                data: result,
+                message: 'Application submitted successfully! The recruiter will review your profile.',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async checkMyApplication(req: Request, res: Response, next: NextFunction) {
+        try {
+            const candidateId = req.user!.id;
+            const { id: jobId } = req.params;
+
+            const application = await jobService.getMyApplication(candidateId, jobId);
+
+            res.json({
+                success: true,
+                data: application, // null if not applied
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // ============================================
+    // Invite applicant to AI interview
+    // ============================================
+
+    async inviteToInterview(req: Request, res: Response, next: NextFunction) {
+        try {
+            const recruiterId = req.recruiter!.id;
+            const { id: jobId, applicationId } = req.params;
+            const { customMessage, inviteType, scheduledAt, durationMinutes } = req.body;
+
+            const result = await jobService.inviteApplicantToInterview(
+                recruiterId,
+                jobId,
+                applicationId,
+                inviteType || 'AI',
+                customMessage,
+                scheduledAt,
+                durationMinutes ? Number(durationMinutes) : undefined,
+            );
+
+            res.status(201).json({
+                success: true,
+                data: result,
+                message: `Interview invitation sent to ${result.candidateName}`,
             });
         } catch (error) {
             next(error);

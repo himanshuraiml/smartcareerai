@@ -3,7 +3,8 @@
 // Phase 2: Skills, Courses, Jobs, Applications
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -28,6 +29,7 @@ model User {
   role         UserRole  @default(USER)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
+  googleId     String?   @unique @map("google_id")
 
   // Relations
   resumes            Resume[]
@@ -56,6 +58,11 @@ model User {
   // Institution admin relation
   adminForInstitutionId String?      @map("admin_for_institution_id")
   adminForInstitution   Institution? @relation("InstitutionAdmins", fields: [adminForInstitutionId], references: [id])
+
+  recruiterApplications RecruiterJobApplicant[]
+  campusPlacements      CampusPlacement[]
+  couponUsages          CouponUsage[]
+  notifications         Notification[]
 
   @@map("users")
 }
@@ -147,9 +154,11 @@ model JobRole {
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Users targeting this job role
-  usersTargeting User[]
+  usersTargeting         User[]
   // Cache for LLM-generated content
-  cache          JobRoleCache?
+  cache                  JobRoleCache?
+  // Interview question bank
+  interviewBankQuestions  InterviewBankQuestion[]
 
   @@map("job_roles")
 }
@@ -179,6 +188,7 @@ model Skill {
   name        String   @unique
   category    String // e.g., "Programming", "Framework", "Soft Skill"
   demandScore Int      @default(50) @map("demand_score") // 0-100 market demand
+  source      String   @default("seeded") // "seeded", "auto-discovered"
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -296,6 +306,7 @@ enum ApplicationStatus {
   SCREENING // Resume screening phase
   INTERVIEWING // In interview process
   OFFER // Received offer
+  PLACED // Hired / Placement successful
   REJECTED // Application rejected
   WITHDRAWN // User withdrew application
 }
@@ -316,8 +327,16 @@ model InterviewSession {
   startedAt    DateTime?       @map("started_at")
   completedAt  DateTime?       @map("completed_at")
   createdAt    DateTime        @default(now()) @map("created_at")
+  
+  // Phase 5: Interview Replay
+  replayUrl             String?         @map("replay_url")
+  replayTranscriptUrl   String?         @map("replay_transcript_url")
+  isReplayAvailable     Boolean         @default(false) @map("is_replay_available")
+
+  jobId        String?         @map("job_id")
 
   // Relations
+  job       RecruiterJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   questions InterviewQuestion[]
 
@@ -333,14 +352,38 @@ model InterviewQuestion {
   score          Int?
   feedback       String?  @db.Text
   metrics        Json?    // Stores WPM, clarity, relevance, confidence, sentiment
-  improvedAnswer String?  @map("improved_answer") @db.Text // AI-suggested better version
-  orderIndex     Int      @default(0) @map("order_index")
-  createdAt      DateTime @default(now()) @map("created_at")
+  improvedAnswer  String?  @map("improved_answer") @db.Text // AI-suggested better version
+  bankQuestionId  String?  @map("bank_question_id") // Reference to curated question bank
+  orderIndex      Int      @default(0) @map("order_index")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
   session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("interview_questions")
+}
+
+// ============================================
+// INTERVIEW QUESTION BANK (Curated Q&A)
+// ============================================
+
+model InterviewBankQuestion {
+  id            String        @id @default(uuid())
+  questionText  String        @map("question_text") @db.Text
+  idealAnswer   String        @map("ideal_answer") @db.Text
+  category      String        // e.g., "JavaScript", "System Design", "HR", "Behavioral"
+  difficulty    Difficulty    @default(MEDIUM)
+  questionType  InterviewType @map("question_type") // TECHNICAL, HR, BEHAVIORAL
+  jobRoleId     String?       @map("job_role_id")   // NULL for HR/shared questions
+  tags          String[]
+  isActive      Boolean       @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  jobRole       JobRole?      @relation(fields: [jobRoleId], references: [id], onDelete: SetNull)
+
+  @@index([jobRoleId, questionType, difficulty])
+  @@map("interview_bank_questions")
 }
 
 enum InterviewType {
@@ -473,10 +516,75 @@ model Institution {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  students User[] @relation("InstitutionStudents")
-  admins   User[] @relation("InstitutionAdmins")
+  students       User[]            @relation("InstitutionStudents")
+  admins         User[]            @relation("InstitutionAdmins")
+  targetedJobs   RecruiterJob[]
+  placements     CampusPlacement[]
 
   @@map("institutions")
+}
+
+model SystemSettings {
+  id           String   @id @default(uuid())
+  settingKey   String   @unique @map("setting_key")
+  settingValue Json     @map("setting_value")
+  description  String?
+  updatedBy    String?  @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+// ============================================
+// ACTIVITY LOG (System Events)
+// ============================================
+
+model ActivityLog {
+  id        String         @id @default(uuid())
+  type      ActivityType
+  message   String
+  userId    String?        @map("user_id")
+  userEmail String?        @map("user_email")
+  metadata  Json?
+  ipAddress String?        @map("ip_address")
+  status    ActivityStatus @default(SUCCESS)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+enum ActivityType {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGOUT
+  PASSWORD_RESET
+  RESUME_UPLOAD
+  RESUME_ANALYSIS
+  INTERVIEW_START
+  INTERVIEW_COMPLETE
+  TEST_START
+  TEST_COMPLETE
+  SUBSCRIPTION_CHANGE
+  CREDIT_PURCHASE
+  ADMIN_ACTION
+  SYSTEM_ALERT
+  SETTINGS_CHANGE
+  PIPELINE_MOVE
+  EVALUATION_RUN
+  // Phase 5: Fairness & Compliance
+  GDPR_EXPORT
+  GDPR_DELETE
+  COMPLIANCE_AUDIT
+}
+
+enum ActivityStatus {
+  SUCCESS
+  WARNING
+  ERROR
 }
 
 // ============================================
@@ -484,16 +592,17 @@ model Institution {
 // ============================================
 
 model SubscriptionPlan {
-  id             String   @id @default(uuid())
-  name           String   @unique // 'free', 'starter', 'pro', 'enterprise'
-  displayName    String   @map("display_name")
-  priceMonthly   Decimal  @map("price_monthly") @db.Decimal(10, 2) // INR
-  priceYearly    Decimal  @map("price_yearly") @db.Decimal(10, 2) // INR
-  features       Json // { "resumeReviews": 5, "interviews": 10, "skillTests": 3 }
-  razorpayPlanId String?  @map("razorpay_plan_id")
-  isActive       Boolean  @default(true) @map("is_active")
-  sortOrder      Int      @default(0) @map("sort_order")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id                   String   @id @default(uuid())
+  name                 String   @unique // 'free', 'starter', 'pro', 'enterprise'
+  displayName          String   @map("display_name")
+  priceMonthly         Decimal  @map("price_monthly") @db.Decimal(10, 2) // INR
+  priceYearly          Decimal  @map("price_yearly") @db.Decimal(10, 2) // INR
+  features             Json // { "resumeReviews": 5, "interviews": 10, "skillTests": 3 }
+  razorpayPlanId       String?  @map("razorpay_plan_id") // Monthly Razorpay plan ID
+  razorpayPlanIdYearly String?  @map("razorpay_plan_id_yearly") // Yearly Razorpay plan ID
+  isActive             Boolean  @default(true) @map("is_active")
+  sortOrder            Int      @default(0) @map("sort_order")
+  createdAt            DateTime @default(now()) @map("created_at")
 
   // Relations
   subscriptions UserSubscription[]
@@ -522,6 +631,7 @@ model UserSubscription {
 }
 
 enum SubscriptionStatus {
+  PENDING
   ACTIVE
   CANCELLED
   PAST_DUE
@@ -578,24 +688,146 @@ enum TransactionType {
 }
 
 // ============================================
+// PHASE 6: ORGANIZATIONS (Multi-Tenant B2B)
+// ============================================
+
+model Organization {
+  id             String    @id @default(uuid())
+  name           String
+  domain         String?   @unique
+  domainVerificationToken String? @map("domain_verification_token")
+  logoUrl        String?   @map("logo_url")
+  website        String?
+  industry       String?
+  companySize    String?   @map("company_size")
+  isVerified     Boolean   @default(false) @map("is_verified")
+  
+  // Phase 3: White-Label Enterprise Mode
+  customDomain   String?   @unique @map("custom_domain")
+  isWhiteLabel   Boolean   @default(false) @map("is_white_label")
+  theme          Json?     // { primaryColor, secondaryColor, font, etc. }
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  recruiters     Recruiter[]
+  jobs           RecruiterJob[]
+  atsIntegrations AtsIntegration[]
+  calendarIntegrations CalendarIntegration[]
+  scoringTemplates ScoringTemplate[]
+
+  @@map("organizations")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  HR
+  HIRING_MANAGER
+  INTERVIEWER
+  RECRUITER
+}
+
+// ============================================
+// PHASE 3: ATS INTEGRATION
+// ============================================
+
+model AtsIntegration {
+  id             String    @id @default(uuid())
+  organizationId String    @map("organization_id")
+  platform       String    // e.g., 'greenhouse', 'workable', 'custom'
+  apiKeyHash     String    @map("api_key_hash") // Hashed API key for public endpoints
+  webhookUrl     String?   @map("webhook_url")
+  webhookSecret  String?   @map("webhook_secret")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  webhookEvents  WebhookEvent[]
+
+  @@unique([organizationId, platform])
+  @@map("ats_integrations")
+}
+
+model CalendarIntegration {
+  id             String    @id @default(uuid())
+  organizationId String    @unique @map("organization_id")
+  platform       String    @default("google") // e.g., 'google', 'outlook'
+  accessToken    String    @map("access_token") @db.Text
+  refreshToken   String?   @map("refresh_token") @db.Text
+  expiryDate     BigInt?   @map("expiry_date")  // Google auth library uses unix timestamp in ms
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_integrations")
+}
+
+model WebhookEvent {
+  id               String   @id @default(uuid())
+  integrationId    String   @map("integration_id")
+  eventType        String   @map("event_type") // e.g., 'candidate.status_changed'
+  payload          Json
+  responseStatus   Int?     @map("response_status")
+  responseBody     String?  @map("response_body") @db.Text
+  status           WebhookDeliveryStatus @default(PENDING)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  integration      AtsIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_events")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ============================================
+// PHASE 3: WHITE-LABEL & SCORING TEMPLATES
+// ============================================
+
+model ScoringTemplate {
+  id             String    @id @default(uuid())
+  organizationId String    @map("organization_id")
+  name           String
+  description    String?   @db.Text
+  weights        Json      // { technical: 0.4, communication: 0.3, problem_solving: 0.3 }
+  isDefault      Boolean   @default(false) @map("is_default")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("scoring_templates")
+}
+
+// ============================================
 // PHASE 4: RECRUITERS
 // ============================================
 
 model Recruiter {
-  id          String   @id @default(uuid())
-  userId      String   @unique @map("user_id")
-  companyName String   @map("company_name")
-  companyLogo String?  @map("company_logo")
-  companySize String?  @map("company_size") // '1-10', '11-50', '51-200', '201-500', '500+'
-  industry    String?
-  website     String?
-  location    String?
-  isVerified  Boolean  @default(false) @map("is_verified")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             String        @id @default(uuid())
+  userId         String        @unique @map("user_id")
+  organizationId String?       @map("organization_id")
+  orgRole        OrgRole       @default(RECRUITER) @map("org_role")
+  companyName    String        @map("company_name")
+  companyLogo    String?       @map("company_logo")
+  companySize    String?       @map("company_size") // '1-10', '11-50', '51-200', '201-500', '500+'
+  industry       String?
+  website        String?
+  location       String?
+  isVerified     Boolean       @default(false) @map("is_verified")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   // Relations
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   savedCandidates SavedCandidate[]
   jobPostings     RecruiterJob[]
 
@@ -619,26 +851,83 @@ model SavedCandidate {
 }
 
 model RecruiterJob {
-  id             String   @id @default(uuid())
-  recruiterId    String   @map("recruiter_id")
+  id             String         @id @default(uuid())
+  recruiterId    String         @map("recruiter_id")
+  organizationId String?        @map("organization_id")
   title          String
-  description    String   @db.Text
+  description    String         @db.Text
   requirements   String[]
-  requiredSkills String[] @map("required_skills")
+  requiredSkills String[]       @map("required_skills")
   location       String
-  locationType   String   @default("onsite") @map("location_type") // 'onsite', 'remote', 'hybrid'
-  salaryMin      Int?     @map("salary_min")
-  salaryMax      Int?     @map("salary_max")
-  experienceMin  Int?     @map("experience_min")
-  experienceMax  Int?     @map("experience_max")
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  locationType   String         @default("onsite") @map("location_type")
+  salaryMin      Int?           @map("salary_min")
+  salaryMax      Int?           @map("salary_max")
+  experienceMin  Int?           @map("experience_min")
+  experienceMax  Int?           @map("experience_max")
+  isActive       Boolean        @default(true) @map("is_active")
+  approvalStatus ApprovalStatus @default(PENDING) @map("approval_status")
+  
+  // B2B: Target specific institution
+  targetInstitutionId String?   @map("target_institution_id")
+  targetInstitution   Institution? @relation(fields: [targetInstitutionId], references: [id])
+  
+  // Recruiter Workflow Configurations
+  aiInterviewConfig Json?       @map("ai_interview_config") // Structure defining generated questions, duration
+
+  // Phase 5: AI Hiring Assistant
+  salaryBandMin     Int?        @map("salary_band_min")
+  salaryBandMax     Int?        @map("salary_band_max")
+  autoGeneratedJd   Boolean     @default(false) @map("auto_generated_jd")
+
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   // Relations
-  recruiter Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  recruiter      Recruiter              @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  organization   Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  applicants     RecruiterJobApplicant[]
+  interviewSessions InterviewSession[]
 
   @@map("recruiter_jobs")
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model RecruiterJobApplicant {
+  id          String            @id @default(uuid())
+  jobId       String            @map("job_id")
+  candidateId String            @map("candidate_id")
+  status      ApplicationStatus @default(APPLIED) @map("status")
+  appliedAt   DateTime          @default(now()) @map("applied_at")
+  notes       String?           @db.Text
+
+  // Candidate AI Evaluation
+  overallScore Float?           @map("overall_score")
+  aiEvaluation Json?            @map("ai_evaluation") // Resume + Interview Correlation insights
+  
+  // Phase 3: Predictive Ranking & Bias
+  fitScore             Float?  @map("fit_score")
+  dropoutRisk          String? @map("dropout_risk") // LOW, MEDIUM, HIGH
+  acceptanceLikelihood Float?  @map("acceptance_likelihood")
+  biasFlags            Json?   @map("bias_flags") // Array of detected biased language/factors
+
+  // Phase 5: AI Hiring Assistant
+  candidateSummary       String? @db.Text @map("candidate_summary")
+  shortlistJustification String? @db.Text @map("shortlist_justification")
+  salaryRecommendation   Int?    @map("salary_recommendation")
+
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  job RecruiterJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, candidateId])
+  @@map("recruiter_job_applicants")
 }
 
 model Message {
@@ -653,4 +942,213 @@ model Message {
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+}
+
+// ============================================
+// EMAIL TRACKING
+// ============================================
+
+model EmailConnection {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  email        String
+  accessToken  String    @map("access_token") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  tokenExpiry  DateTime? @map("token_expiry")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSyncAt   DateTime? @map("last_sync_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("email_connections")
+}
+
+model TrackedEmail {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  messageId   String           @map("message_id")
+  subject     String
+  sender      String
+  snippet     String?          @db.Text
+  type        TrackedEmailType @default(OTHER)
+  companyName String?          @map("company_name")
+  receivedAt  DateTime         @map("received_at")
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@unique([userId, messageId])
+  @@map("tracked_emails")
+}
+
+enum TrackedEmailType {
+  APPLICATION_RECEIVED
+  INTERVIEW
+  OFFER
+  REJECTION
+  UPDATE
+  OTHER
+}
+
+// ============================================
+// EMAIL MANAGEMENT (Admin)
+// ============================================
+
+model EmailTemplate {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  subject     String
+  htmlContent String           @map("html_content") @db.Text
+  textContent String?          @map("text_content") @db.Text
+  category    EmailCategory    @default(GENERAL)
+  variables   String[]         // e.g., ["userName", "companyName"] for dynamic content
+  isActive    Boolean          @default(true) @map("is_active")
+  createdBy   String?          @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  emailLogs   EmailLog[]
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id           String        @id @default(uuid())
+  templateId   String?       @map("template_id")
+  recipientId  String?       @map("recipient_id")  // User ID if sent to a registered user
+  recipientEmail String      @map("recipient_email")
+  subject      String
+  emailType    EmailType     @map("email_type")
+  status       EmailStatus   @default(PENDING)
+  errorMessage String?       @map("error_message")
+  metadata     Json?         // Additional data like variables used, bulk email ID, etc.
+  sentBy       String?       @map("sent_by")       // Admin user ID who triggered the email
+  sentAt       DateTime?     @map("sent_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  template     EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([recipientEmail])
+  @@index([emailType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+enum EmailCategory {
+  INVITATION
+  NEWSLETTER
+  PROMOTIONAL
+  TRANSACTIONAL
+  NOTIFICATION
+  GENERAL
+}
+
+enum EmailType {
+  INSTITUTION_ADMIN_INVITE
+  STUDENT_WELCOME
+  RECRUITER_WELCOME
+  NEWSLETTER
+  PROMOTIONAL
+  PASSWORD_RESET
+  VERIFICATION
+  NOTIFICATION
+  BULK
+  OTHER
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+}
+
+// ============================================
+// PHASE 5: PLACEMENTS & ANALYTICS
+// ============================================
+
+model CampusPlacement {
+  id             String      @id @default(uuid())
+  institutionId  String      @map("institution_id")
+  userId         String      @map("user_id")
+  companyName    String      @map("company_name")
+  jobTitle       String      @map("job_title")
+  salaryOffered  Int?        @map("salary_offered")
+  placedAt       DateTime    @default(now()) @map("placed_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  institution    Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("campus_placements")
+}
+
+// ============================================
+// PHASE 4: COUPONS & DISCOUNTS
+// ============================================
+
+model Coupon {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  discountType  DiscountType @map("discount_type")
+  discountValue Float        @map("discount_value")
+  applicableTo  CouponType   @default(ALL) @map("applicable_to")
+  maxUses       Int?         @map("max_uses")
+  usedCount     Int          @default(0) @map("used_count")
+  expiryDate    DateTime?    @map("expiry_date")
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  usages        CouponUsage[]
+
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id        String   @id @default(uuid())
+  couponId  String   @map("coupon_id")
+  userId    String   @map("user_id")
+  usedAt    DateTime @default(now()) @map("used_at")
+
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("coupon_usages")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum CouponType {
+  SUBSCRIPTION
+  CREDITS
+  ALL
+}
+
+// ============================================
+// NOTIFICATIONS (Job Alerts)
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   @default("job_alert") // job_alert, system, etc.
+  title     String
+  message   String
+  metadata  Json?    // { recruiterJobId, companyName, etc. }
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

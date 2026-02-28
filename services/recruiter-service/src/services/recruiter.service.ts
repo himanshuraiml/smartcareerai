@@ -268,6 +268,75 @@ export class RecruiterService {
             },
         });
     }
+
+    /**
+     * Get a single candidate profile by userId — for the recruiter candidate detail page.
+     */
+    async getCandidateById(candidateId: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: candidateId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                createdAt: true,
+                targetJobRole: { select: { title: true } },
+                userSkills: {
+                    select: {
+                        proficiencyLevel: true,
+                        skill: { select: { name: true } },
+                    },
+                },
+                resumes: {
+                    where: { isActive: true },
+                    orderBy: { createdAt: 'desc' },
+                    take: 1,
+                    select: { id: true, fileName: true, fileUrl: true },
+                },
+            },
+        });
+
+        if (!user) throw createError('Candidate not found', 404, 'CANDIDATE_NOT_FOUND');
+
+        const { resumes, ...rest } = user;
+        return {
+            ...rest,
+            resumeId: resumes[0]?.id || null,
+            resumeUrl: resumes[0]?.fileUrl || null,
+        };
+    }
+
+    /**
+     * Get all applications a candidate has submitted to this recruiter's jobs.
+     */
+    async getCandidateApplications(candidateId: string, recruiterId: string) {
+        const recruiter = await prisma.recruiter.findUnique({ where: { id: recruiterId } });
+        if (!recruiter) throw createError('Recruiter not found', 404, 'RECRUITER_NOT_FOUND');
+
+        const applications = await prisma.recruiterJobApplicant.findMany({
+            where: {
+                candidateId,
+                job: { recruiterId },
+            },
+            include: {
+                job: { select: { id: true, title: true } },
+            },
+            orderBy: { appliedAt: 'desc' },
+        });
+
+        return applications.map(a => ({
+            id: a.id,
+            jobId: a.job.id,
+            jobTitle: a.job.title,
+            status: a.status,
+            appliedAt: a.appliedAt,
+            overallScore: a.overallScore,
+            fitScore: a.fitScore,
+            dropoutRisk: a.dropoutRisk,
+            acceptanceLikelihood: a.acceptanceLikelihood,
+        }));
+    }
 }
 
 export const recruiterService = new RecruiterService();

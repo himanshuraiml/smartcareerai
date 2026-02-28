@@ -119,8 +119,8 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
     return (
         <div className="space-y-6">
             <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-white mb-2">Choose a Resume Template</h2>
-                <p className="text-gray-400">Select a professionally designed template to get started. All templates are ATS-optimized and support your new sections.</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Choose a Resume Template</h2>
+                <p className="text-gray-500 dark:text-gray-400">Select a professionally designed template to get started. All templates are ATS-optimized and support your new sections.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -130,8 +130,8 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
                         onClick={() => setSelectedId(template.id)}
                         className={`group relative rounded-xl overflow-hidden cursor-pointer transition-all border-2 flex flex-col
                             ${selectedId === template.id
-                                ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-900/10'
-                                : 'border-white/5 hover:border-indigo-500/50 hover:bg-white/5'
+                                ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50 dark:bg-indigo-900/10'
+                                : 'border-gray-200 dark:border-white/5 hover:border-indigo-500/50 hover:bg-gray-50 dark:hover:bg-white/5'
                             }`}
                     >
                         {/* Renderer Preview Container */}
@@ -174,20 +174,20 @@ export default function ResumeTemplates({ onSelect }: ResumeTemplatesProps) {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-white/5 bg-white/5 flex-grow flex flex-col justify-end">
+                        <div className="p-4 border-t border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 flex-grow flex flex-col justify-end">
                             <div className="flex justify-between items-start mb-1">
-                                <h3 className="font-semibold text-white">{template.name}</h3>
-                                <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-white/10 text-gray-300">
+                                <h3 className="font-semibold text-gray-900 dark:text-white">{template.name}</h3>
+                                <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-300">
                                     {template.category}
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-400 line-clamp-2">{template.description}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{template.description}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-white/10">
+            <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-white/10">
                 <button
                     onClick={() => selectedId && onSelect(selectedId)}
                     disabled={!selectedId}

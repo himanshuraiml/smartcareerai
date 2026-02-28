@@ -1,6 +1,7 @@
 import { CreditType, TransactionType } from '@prisma/client';
 import { razorpayService } from './razorpay.service';
 import { subscriptionService } from './subscription.service';
+import { promotionService } from './promotion.service';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
 import { prisma } from '../utils/prisma';
@@ -172,7 +173,8 @@ export class CreditService {
     async createPurchaseOrder(
         userId: string,
         creditType: CreditType,
-        quantity: number
+        quantity: number,
+        couponCode?: string
     ) {
         try {
             logger.info(`Creating purchase order: userId=${userId}, creditType=${creditType}, quantity=${quantity}`);
@@ -190,6 +192,18 @@ export class CreditService {
             } else {
                 amount = prices[creditType] * quantity;
                 logger.info(`Using per-credit pricing: ${quantity} x ₹${prices[creditType] / 100} = ₹${amount / 100}`);
+            }
+
+            // Apply coupon if provided
+            let discount = 0;
+            let appliedCouponId: string | undefined;
+
+            if (couponCode) {
+                const coupon = await promotionService.validateCoupon(couponCode, userId, 'CREDITS');
+                discount = promotionService.calculateDiscount(amount, coupon);
+                amount = Math.max(0, amount - discount);
+                appliedCouponId = coupon.id;
+                logger.info(`Applied coupon ${couponCode}: Discount = ₹${discount / 100}, Final Amount = ₹${amount / 100}`);
             }
 
             // Validate amount
@@ -220,6 +234,7 @@ export class CreditService {
                 currency: 'INR',
                 creditType,
                 quantity,
+                couponId: appliedCouponId,
                 razorpayKeyId: process.env.RAZORPAY_KEY_ID,
             };
         } catch (error: any) {
@@ -249,7 +264,8 @@ export class CreditService {
         paymentId: string,
         signature: string,
         creditType: CreditType,
-        quantity: number
+        quantity: number,
+        couponId?: string
     ) {
         // Verify payment signature
         const isValid = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
@@ -284,6 +300,12 @@ export class CreditService {
                 referenceId: paymentId,
             },
         });
+
+        // Record coupon usage if applied
+        if (couponId) {
+            await promotionService.recordUsage(couponId, userId);
+            logger.info(`Recorded usage for coupon ${couponId} by user ${userId}`);
+        }
 
         logger.info(`Credit purchase confirmed: ${quantity} ${creditType} for user ${userId}`);
 

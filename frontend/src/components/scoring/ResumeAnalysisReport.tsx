@@ -1,4 +1,5 @@
 import React from 'react';
+import ATSActivityRings from '@/components/dashboard/ATSActivityRings';
 import {
     PolarAngleAxis,
     PolarGrid,
@@ -153,40 +154,21 @@ export default function ResumeAnalysisReport({ data, fileName, onClose, onReanal
                 <div className="p-6 space-y-6" style={modalBgStyle}>
                     {/* Top Stats Row */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        {/* Overall Score Gauge */}
-                        <div className="md:col-span-4 lg:col-span-3 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-3xl p-6 border border-indigo-200 dark:border-indigo-500/20 relative overflow-hidden flex flex-col items-center justify-center">
-                            <div className="absolute top-0 right-0 p-4 opacity-20">
-                                <Target className="w-24 h-24 text-indigo-500" />
-                            </div>
-
-                            <div className="relative w-48 h-48 flex items-center justify-center">
-                                {/* SVG Gauge */}
-                                <svg className="w-full h-full transform -rotate-90">
-                                    <circle
-                                        cx="50%" cy="50%" r="45%"
-                                        className="text-gray-200 dark:text-gray-800 stroke-current"
-                                        strokeWidth="8"
-                                        fill="transparent"
-                                    />
-                                    <circle
-                                        cx="50%" cy="50%" r="45%"
-                                        className={`${getScoreColor(data.overallScore)} stroke-current transition-all duration-1000 ease-out`}
-                                        strokeWidth="8"
-                                        strokeLinecap="round"
-                                        fill="transparent"
-                                        strokeDasharray={283} // 2 * pi * 45
-                                        strokeDashoffset={283 - (283 * data.overallScore) / 100}
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-900 dark:text-white">
-                                    <span className={`text-6xl font-bold ${getScoreColor(data.overallScore)}`}>{data.overallScore}</span>
-                                    <span className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">Score</span>
-                                </div>
-                            </div>
+                        {/* ATS Activity Rings — replaces plain overall gauge */}
+                        <div className="md:col-span-5 lg:col-span-5">
+                            <ATSActivityRings
+                                score={{
+                                    overallScore: data.overallScore,
+                                    keywordMatchPercent: data.keywordMatchPercent,
+                                    formattingScore: data.formattingScore,
+                                    experienceScore: data.experienceScore ?? 0,
+                                    educationScore: data.educationScore ?? 0,
+                                }}
+                            />
                         </div>
 
                         {/* Key Metrics */}
-                        <div className="md:col-span-8 lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="md:col-span-7 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Keyword Match */}
                             <div className="bg-gray-50 dark:bg-[#131620] rounded-2xl p-5 border border-gray-200 dark:border-white/5 flex flex-col justify-between group hover:border-indigo-500/30 transition-colors">
                                 <div className="flex items-start justify-between mb-4">

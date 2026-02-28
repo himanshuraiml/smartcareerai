@@ -62,7 +62,7 @@ export class CreditController {
     async createOrder(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user!.id;
-            const { creditType, quantity } = req.body;
+            const { creditType, quantity, couponCode } = req.body;
 
             logger.info(`Credit order request: userId=${userId}, creditType=${creditType}, quantity=${quantity}`);
 
@@ -84,7 +84,8 @@ export class CreditController {
             const order = await creditService.createPurchaseOrder(
                 userId,
                 creditType as CreditType,
-                parsedQuantity
+                parsedQuantity,
+                couponCode
             );
 
             logger.info(`Credit order created successfully: ${order.orderId}`);
@@ -105,7 +106,7 @@ export class CreditController {
     async confirmPurchase(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user!.id;
-            const { orderId, paymentId, signature, creditType, quantity } = req.body;
+            const { orderId, paymentId, signature, creditType, quantity, couponId } = req.body;
 
             const userCredit = await creditService.confirmPurchase(
                 userId,
@@ -113,7 +114,8 @@ export class CreditController {
                 paymentId,
                 signature,
                 creditType as CreditType,
-                quantity
+                quantity,
+                couponId
             );
 
             res.json({

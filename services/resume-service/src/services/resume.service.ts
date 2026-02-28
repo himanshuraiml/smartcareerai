@@ -6,6 +6,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { parseResumeContent } from '../utils/ai';
+import { generateEmbedding, upsertVector } from '@smartcareer/shared';
 
 interface UploadedFile {
     originalname: string;
@@ -180,6 +181,44 @@ export class ResumeService {
         return this.formatResume(resume);
     }
 
+    async getDownloadUrl(resumeId: string) {
+        const resume = await prisma.resume.findFirst({
+            where: { id: resumeId, isActive: true },
+        });
+
+        if (!resume) {
+            throw new AppError('Resume not found', 404);
+        }
+
+        // Generate a fresh presigned URL valid for 1 hour
+        const url = await this.minioClient.presignedGetObject(
+            this.bucketName,
+            resume.fileName,
+            60 * 60
+        );
+
+        return { url };
+    }
+
+    async getDownloadUrlByCandidate(candidateId: string) {
+        const resume = await prisma.resume.findFirst({
+            where: { userId: candidateId, isActive: true },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        if (!resume) {
+            throw new AppError('Resume not found', 404);
+        }
+
+        const url = await this.minioClient.presignedGetObject(
+            this.bucketName,
+            resume.fileName,
+            60 * 60
+        );
+
+        return { url };
+    }
+
     async deleteResume(resumeId: string, userId: string) {
         const resume = await prisma.resume.findFirst({
             where: { id: resumeId, userId },
@@ -259,14 +298,49 @@ export class ResumeService {
             });
 
             const parsedText = await this.extractText(buffer, mimeType);
+            const structuredData = await parseResumeContent(parsedText);
 
-            await prisma.resume.update({
+            const updatedResume = await prisma.resume.update({
                 where: { id: resumeId },
                 data: {
                     parsedText,
                     status: 'PARSED',
                 },
             });
+
+            // Phase 2: AI Sourcing - Generate embedding and upsert to Pinecone
+            try {
+                // Determine text to embed
+                const embedText = `
+                Name: ${structuredData.personalInfo?.name || ''}
+                Skills: ${structuredData.skills?.join(', ') || ''}
+                Experience: ${structuredData.experience?.map((e: any) => `${e.title} at ${e.company} - ${e.description}`).join('; ') || ''}
+                Education: ${structuredData.education?.map((e: any) => `${e.degree} at ${e.institution}`).join('; ') || ''}
+                Raw Text: ${parsedText.substring(0, 500)} // First 500 chars as context
+                `;
+
+                // Fetch user info for metadata
+                const user = await prisma.user.findUnique({ where: { id: updatedResume.userId } });
+
+                const vector = await generateEmbedding(embedText);
+                await upsertVector(
+                    process.env.PINECONE_INDEX || 'smartcareer',
+                    'candidates',
+                    updatedResume.userId, // Use User ID as vector ID so they get overwritten with the latest resume
+                    vector,
+                    {
+                        candidateId: updatedResume.userId,
+                        candidateName: user?.name || structuredData.personalInfo?.name || 'Unknown',
+                        email: user?.email || structuredData.personalInfo?.email || '',
+                        skills: structuredData.skills || [],
+                        latestResumeId: resumeId
+                    }
+                );
+                logger.info(`Candidate embedding upserted for user ${updatedResume.userId}`);
+            } catch (embedError) {
+                // don't fail parsing if embedding fails
+                logger.error(`Failed to generate/upsert embedding for resume ${resumeId}:`, embedError);
+            }
 
             logger.info(`Resume parsed successfully: ${resumeId}`);
         } catch (error) {

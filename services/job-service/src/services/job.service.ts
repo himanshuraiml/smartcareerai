@@ -20,8 +20,67 @@ interface SearchFilters {
     limit: number;
 }
 
+// Shape returned for platform (recruiter-posted) jobs — normalised to look like a JobListing
+function normalizePlatformJob(rj: any): any {
+    const company =
+        rj.recruiter?.organization?.name ||
+        rj.recruiter?.companyName ||
+        'Company';
+
+    return {
+        id: rj.id,
+        title: rj.title,
+        company,
+        companyLogo: rj.recruiter?.companyLogo || rj.recruiter?.organization?.logoUrl || null,
+        location: rj.location,
+        locationType: rj.locationType,
+        description: rj.description,
+        requirements: rj.requirements,
+        requiredSkills: rj.requiredSkills,
+        salaryMin: rj.salaryMin,
+        salaryMax: rj.salaryMax,
+        salaryCurrency: 'INR',
+        experienceMin: rj.experienceMin,
+        experienceMax: rj.experienceMax,
+        source: 'platform',
+        sourceUrl: null,
+        postedAt: rj.createdAt,
+        createdAt: rj.createdAt,
+        isActive: rj.isActive,
+        // Extra fields that signal this is a recruiter-posted platform job
+        isPlatformJob: true,
+        recruiterId: rj.recruiterId,
+    };
+}
+
+async function fetchActivePlatformJobs(where: {
+    title?: object;
+    requiredSkills?: object;
+    location?: object;
+    locationType?: string;
+} = {}): Promise<any[]> {
+    const jobs = await (prisma as any).recruiterJob.findMany({
+        where: {
+            isActive: true,
+            ...where,
+        },
+        include: {
+            recruiter: {
+                select: {
+                    companyName: true,
+                    companyLogo: true,
+                    organization: { select: { name: true, logoUrl: true } },
+                },
+            },
+        },
+        orderBy: { createdAt: 'desc' },
+    });
+
+    return jobs.map(normalizePlatformJob);
+}
+
 export class JobService {
-    // Get paginated job listings
+    // Get paginated job listings (includes platform jobs at top)
     async getJobs(filters: JobFilters) {
         const { page, limit, location, locationType, experienceMin, experienceMax } = filters;
         const skip = (page - 1) * limit;
@@ -31,51 +90,60 @@ export class JobService {
         if (location) {
             where.location = { contains: location, mode: 'insensitive' };
         }
-
         if (locationType) {
             where.locationType = locationType;
         }
-
         if (experienceMin !== undefined) {
             where.experienceMin = { gte: experienceMin };
         }
-
         if (experienceMax !== undefined) {
             where.experienceMax = { lte: experienceMax };
         }
 
-        const [jobs, total] = await Promise.all([
-            prisma.jobListing.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            }),
+        const platformWhere: any = {};
+        if (location) platformWhere.location = { contains: location, mode: 'insensitive' };
+        if (locationType) platformWhere.locationType = locationType;
+
+        const [regularJobs, total, platformJobs] = await Promise.all([
+            prisma.jobListing.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
             prisma.jobListing.count({ where }),
+            fetchActivePlatformJobs(platformWhere),
         ]);
 
         return {
-            jobs,
+            jobs: [...platformJobs, ...regularJobs],
             pagination: {
                 page,
                 limit,
-                total,
-                totalPages: Math.ceil(total / limit),
+                total: total + platformJobs.length,
+                totalPages: Math.ceil((total + platformJobs.length) / limit),
             },
         };
     }
 
-    // Get single job by ID
+    // Get single job by ID (checks both tables)
     async getJobById(jobId: string) {
-        const job = await prisma.jobListing.findUnique({
-            where: { id: jobId },
+        // Try JobListing first
+        const job = await prisma.jobListing.findUnique({ where: { id: jobId } });
+        if (job) return job;
+
+        // Fall back to RecruiterJob
+        const rj = await (prisma as any).recruiterJob.findFirst({
+            where: { id: jobId, isActive: true },
+            include: {
+                recruiter: {
+                    select: {
+                        companyName: true,
+                        companyLogo: true,
+                        organization: { select: { name: true, logoUrl: true } },
+                    },
+                },
+            },
         });
 
-        if (!job) {
-            throw new AppError('Job not found', 404);
-        }
+        if (rj) return normalizePlatformJob(rj);
 
-        return job;
+        throw new AppError('Job not found', 404);
     }
 
     // Create job listing (manual/admin)
@@ -104,31 +172,22 @@ export class JobService {
     // Update job listing
     async updateJob(jobId: string, data: any) {
         const job = await prisma.jobListing.findUnique({ where: { id: jobId } });
-
-        if (!job) {
-            throw new AppError('Job not found', 404);
-        }
-
-        return prisma.jobListing.update({
-            where: { id: jobId },
-            data,
-        });
+        if (!job) throw new AppError('Job not found', 404);
+        return prisma.jobListing.update({ where: { id: jobId }, data });
     }
 
     // Soft delete job
     async deleteJob(jobId: string) {
-        await prisma.jobListing.update({
-            where: { id: jobId },
-            data: { isActive: false },
-        });
+        await prisma.jobListing.update({ where: { id: jobId }, data: { isActive: false } });
     }
 
-    // Search jobs with filters
+    // Search jobs with filters (platform jobs at top)
     async searchJobs(filters: SearchFilters) {
         const { query, location, skills, remote, page, limit } = filters;
         const skip = (page - 1) * limit;
 
         const where: any = { isActive: true };
+        const platformWhere: any = {};
 
         if (query) {
             where.OR = [
@@ -136,44 +195,43 @@ export class JobService {
                 { company: { contains: query, mode: 'insensitive' } },
                 { description: { contains: query, mode: 'insensitive' } },
             ];
+            platformWhere.OR = [
+                { title: { contains: query, mode: 'insensitive' } },
+                { description: { contains: query, mode: 'insensitive' } },
+            ];
         }
-
         if (location) {
             where.location = { contains: location, mode: 'insensitive' };
+            platformWhere.location = { contains: location, mode: 'insensitive' };
         }
-
         if (remote) {
             where.locationType = 'remote';
+            platformWhere.locationType = 'remote';
         }
-
         if (skills && skills.length > 0) {
             where.requiredSkills = { hasSome: skills };
+            platformWhere.requiredSkills = { hasSome: skills };
         }
 
-        const [jobs, total] = await Promise.all([
-            prisma.jobListing.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            }),
+        const [regularJobs, total, platformJobs] = await Promise.all([
+            prisma.jobListing.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
             prisma.jobListing.count({ where }),
+            fetchActivePlatformJobs(platformWhere),
         ]);
 
         return {
-            jobs,
+            jobs: [...platformJobs, ...regularJobs],
             pagination: {
                 page,
                 limit,
-                total,
-                totalPages: Math.ceil(total / limit),
+                total: total + platformJobs.length,
+                totalPages: Math.ceil((total + platformJobs.length) / limit),
             },
         };
     }
 
-    // Get jobs matching user's skills
+    // Get jobs matching user's skills (platform jobs at top)
     async getMatchingJobs(userId: string, limit: number) {
-        // Get user's skills
         const userSkills = await prisma.userSkill.findMany({
             where: { userId },
             include: { skill: true },
@@ -181,128 +239,116 @@ export class JobService {
 
         const skillNames = userSkills.map(us => us.skill.name);
 
+        const [platformJobs, regularJobs] = await Promise.all([
+            fetchActivePlatformJobs(skillNames.length > 0 ? { requiredSkills: { hasSome: skillNames } } : {}),
+            skillNames.length === 0
+                ? prisma.jobListing.findMany({ where: { isActive: true }, take: limit, orderBy: { createdAt: 'desc' } })
+                : prisma.jobListing.findMany({
+                    where: { isActive: true, requiredSkills: { hasSome: skillNames } },
+                    take: limit * 2,
+                    orderBy: { createdAt: 'desc' },
+                }),
+        ]);
+
         if (skillNames.length === 0) {
-            // Return latest jobs if user has no skills
-            return prisma.jobListing.findMany({
-                where: { isActive: true },
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            });
+            return [
+                ...platformJobs.slice(0, limit),
+                ...regularJobs.slice(0, Math.max(0, limit - platformJobs.length)),
+            ];
         }
 
-        // Find jobs that match user's skills
-        const jobs = await prisma.jobListing.findMany({
-            where: {
-                isActive: true,
-                requiredSkills: { hasSome: skillNames },
-            },
-            take: limit * 2, // Get more to score and rank
-            orderBy: { createdAt: 'desc' },
-        });
-
-        // Score jobs by skill match percentage
-        const scoredJobs = jobs.map(job => {
-            const requiredSkills = job.requiredSkills as string[];
+        const scoreJob = (requiredSkills: string[]) => {
             const matchedCount = requiredSkills.filter(skill =>
                 skillNames.some(us => us.toLowerCase() === skill.toLowerCase())
             ).length;
-            const matchPercent = requiredSkills.length > 0
+            return requiredSkills.length > 0
                 ? Math.round((matchedCount / requiredSkills.length) * 100)
                 : 0;
+        };
 
-            return {
-                ...job,
-                matchPercent,
-                matchedSkills: matchedCount,
-                totalRequired: requiredSkills.length,
-            };
-        });
+        const scoredRegular = regularJobs.map(job => ({
+            ...job,
+            matchPercent: scoreJob(job.requiredSkills as string[]),
+        })).sort((a, b) => b.matchPercent - a.matchPercent);
 
-        // Sort by match percentage and return top results
-        return scoredJobs
-            .sort((a, b) => b.matchPercent - a.matchPercent)
-            .slice(0, limit);
+        const scoredPlatform = platformJobs.map(job => ({
+            ...job,
+            matchPercent: scoreJob(job.requiredSkills as string[]),
+        })).sort((a, b) => b.matchPercent - a.matchPercent);
+
+        // Platform jobs come first, then regular
+        return [...scoredPlatform, ...scoredRegular].slice(0, limit);
     }
 
-    // Get jobs personalized for user based on their target job role
+    // Get jobs personalized for user based on their target job role (platform jobs pinned at top)
     async getJobsForUser(userId: string, limit: number = 20) {
-        // Get user's target job role
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { targetJobRole: true },
         });
 
         if (!user?.targetJobRole) {
-            // No target role - fall back to matching jobs or latest
             return this.getMatchingJobs(userId, limit);
         }
 
         const roleTitle = user.targetJobRole.title;
         const roleRequiredSkills = user.targetJobRole.requiredSkills as string[] || [];
 
-        // Search jobs that match the role title OR have overlapping skills
-        const jobs = await prisma.jobListing.findMany({
-            where: {
-                isActive: true,
-                OR: [
-                    // Match by title containing role
-                    { title: { contains: roleTitle.split(' ')[0], mode: 'insensitive' } },
-                    // Match by required skills overlap
-                    ...(roleRequiredSkills.length > 0 ? [{ requiredSkills: { hasSome: roleRequiredSkills } }] : []),
-                ],
-            },
-            take: limit * 2,
-            orderBy: { createdAt: 'desc' },
-        });
+        const titleWord = roleTitle.split(' ')[0];
 
-        // Get user's skills for scoring
-        const userSkills = await prisma.userSkill.findMany({
-            where: { userId },
-            include: { skill: true },
-        });
+        const jobListingWhere: any = {
+            isActive: true,
+            OR: [
+                { title: { contains: titleWord, mode: 'insensitive' } },
+                ...(roleRequiredSkills.length > 0 ? [{ requiredSkills: { hasSome: roleRequiredSkills } }] : []),
+            ],
+        };
+
+        const platformWhere: any = {
+            OR: [
+                { title: { contains: titleWord, mode: 'insensitive' } },
+                ...(roleRequiredSkills.length > 0 ? [{ requiredSkills: { hasSome: roleRequiredSkills } }] : []),
+            ],
+        };
+
+        const [regularJobs, userSkills, platformJobs] = await Promise.all([
+            prisma.jobListing.findMany({ where: jobListingWhere, take: limit * 2, orderBy: { createdAt: 'desc' } }),
+            prisma.userSkill.findMany({ where: { userId }, include: { skill: true } }),
+            fetchActivePlatformJobs(platformWhere),
+        ]);
+
         const userSkillNames = userSkills.map(us => us.skill.name.toLowerCase().replace(/[-\s]/g, ''));
+        const normalizeSkill = (s: string) => s.toLowerCase().replace(/[-\s]/g, '');
 
-        // Helper to normalize skill names for comparison
-        const normalizeSkill = (skill: string) => skill.toLowerCase().replace(/[-\s]/g, '');
-
-        // Score and rank jobs
-        const scoredJobs = jobs.map(job => {
-            const requiredSkills = job.requiredSkills as string[];
+        const scoreJob = (job: any) => {
+            const requiredSkills: string[] = job.requiredSkills || [];
             const normalizedJobSkills = requiredSkills.map(normalizeSkill);
 
-            // Score based on user's skills
             const matchedCount = normalizedJobSkills.filter(skill =>
                 userSkillNames.some(us => us === skill || us.includes(skill) || skill.includes(us))
             ).length;
 
-            // Calculate skill match percentage
             let skillMatchPercent = 0;
             if (requiredSkills.length > 0) {
                 skillMatchPercent = Math.round((matchedCount / requiredSkills.length) * 100);
             } else if (userSkillNames.length > 0) {
-                // If job has no required skills listed, give a base score
                 skillMatchPercent = 40;
             }
 
-            // Bonus for role title match - more generous matching
             const normalizedTitle = job.title.toLowerCase();
             const normalizedRoleTitle = roleTitle.toLowerCase();
-            const roleTitleWords = normalizedRoleTitle.split(' ').filter(w => w.length > 2);
+            const roleTitleWords = normalizedRoleTitle.split(' ').filter((w: string) => w.length > 2);
 
             let titleMatchBonus = 0;
             if (normalizedTitle.includes(normalizedRoleTitle)) {
-                // Exact role match - 50% bonus
                 titleMatchBonus = 50;
-            } else if (roleTitleWords.some(word => normalizedTitle.includes(word))) {
-                // Partial role match - 30% bonus
+            } else if (roleTitleWords.some((word: string) => normalizedTitle.includes(word))) {
                 titleMatchBonus = 30;
             }
 
-            // Final match percentage: combination of skill match and title match
-            // If user has no skills yet, rely more on title matching
             const finalMatch = userSkillNames.length > 0
                 ? Math.min(Math.round(skillMatchPercent * 0.5 + titleMatchBonus), 100)
-                : Math.min(titleMatchBonus + 20, 100); // Give base 20% + title bonus for new users
+                : Math.min(titleMatchBonus + 20, 100);
 
             return {
                 ...job,
@@ -310,14 +356,21 @@ export class JobService {
                 matchedSkills: matchedCount,
                 totalRequired: requiredSkills.length,
             };
-        });
+        };
 
-        // Sort by match percentage and return top results
-        const result = scoredJobs
+        const scoredRegular = regularJobs
+            .map(j => scoreJob(j))
             .sort((a, b) => b.matchPercent - a.matchPercent)
             .slice(0, limit);
 
-        logger.info(`Found ${result.length} jobs for user ${userId} with role ${roleTitle}`);
+        // Platform jobs always go first, scored as well
+        const scoredPlatform = platformJobs
+            .map(j => scoreJob(j))
+            .sort((a, b) => b.matchPercent - a.matchPercent);
+
+        const result = [...scoredPlatform, ...scoredRegular].slice(0, limit + scoredPlatform.length);
+
+        logger.info(`Found ${result.length} jobs (${scoredPlatform.length} platform) for user ${userId} with role ${roleTitle}`);
         return result;
     }
 
@@ -330,15 +383,9 @@ export class JobService {
         }
 
         return prisma.application.upsert({
-            where: {
-                userId_jobId: { userId, jobId },
-            },
-            create: {
-                userId,
-                jobId,
-                status: 'SAVED',
-            },
-            update: {}, // Don't update if exists
+            where: { userId_jobId: { userId, jobId } },
+            create: { userId, jobId, status: 'SAVED' },
+            update: {},
             include: { job: true },
         });
     }
@@ -350,9 +397,7 @@ export class JobService {
         });
 
         if (app && app.status === 'SAVED') {
-            await prisma.application.delete({
-                where: { userId_jobId: { userId, jobId } },
-            });
+            await prisma.application.delete({ where: { userId_jobId: { userId, jobId } } });
         }
     }
 
@@ -375,7 +420,6 @@ export class JobService {
             throw new AppError('Job not found', 404);
         }
 
-        // Check existing application
         const existing = await prisma.application.findUnique({
             where: { userId_jobId: { userId, jobId } },
         });
@@ -384,7 +428,6 @@ export class JobService {
             throw new AppError('Already applied to this job', 400);
         }
 
-        // Create or update application
         const application = await prisma.application.upsert({
             where: { userId_jobId: { userId, jobId } },
             create: {
@@ -411,5 +454,30 @@ export class JobService {
         logger.info(`User ${userId} applied to job ${jobId}`);
         return application;
     }
-}
 
+    // Get user's notifications
+    async getNotifications(userId: string, unreadOnly = false) {
+        const where: any = { userId };
+        if (unreadOnly) where.isRead = false;
+
+        return (prisma as any).notification.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+        });
+    }
+
+    // Mark notifications as read
+    async markNotificationsRead(userId: string, notificationIds?: string[]) {
+        const where: any = { userId };
+        if (notificationIds && notificationIds.length > 0) {
+            where.id = { in: notificationIds };
+        }
+        await (prisma as any).notification.updateMany({ where, data: { isRead: true } });
+    }
+
+    // Count unread notifications
+    async getUnreadCount(userId: string) {
+        return (prisma as any).notification.count({ where: { userId, isRead: false } });
+    }
+}

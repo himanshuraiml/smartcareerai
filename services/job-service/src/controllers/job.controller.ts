@@ -198,6 +198,41 @@ export class JobController {
         }
     }
 
+    // Get user notifications
+    async getNotifications(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const unreadOnly = req.query.unread === 'true';
+            const notifications = await jobService.getNotifications(userId, unreadOnly);
+            res.json({ success: true, data: notifications });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Get unread notification count
+    async getUnreadCount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const count = await jobService.getUnreadCount(userId);
+            res.json({ success: true, data: { count } });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Mark notifications as read
+    async markNotificationsRead(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const { ids } = req.body;
+            await jobService.markNotificationsRead(userId, ids);
+            res.json({ success: true });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // One-Click Apply - create application and redirect to job source
     async applyToJob(req: Request, res: Response, next: NextFunction) {
         try {
