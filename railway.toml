@@ -1,31 +1,17 @@
 # railway.toml — SmartCareerAI / PlaceNxt Monorepo
 #
-# This file configures the Railway deployment for the whole monorepo.
-# Each service in Railway should separately point to this repo with:
-#   - Dockerfile Path set in the service's Railway settings
-#   - SERVICE_NAME build arg set as a Railway build variable
+# Railway reads this file from the repo root.
+# Each Railway service must be configured in the dashboard with:
+#   Root Directory  : (empty — repo root)
+#   Dockerfile Path : services/<service-name>/Dockerfile
+#
+# Every service has its own self-contained Dockerfile under services/<name>/Dockerfile
+# No build args (SERVICE_NAME) are required — it is baked into each Dockerfile.
 #
 # Reference: https://docs.railway.app/reference/config-as-code
-
-# ─── Default build settings (applies to all services using docker/Dockerfile.prod) ───
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "docker/Dockerfile.prod"
 
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/health"
 healthcheckTimeout = 30
-
-# ─── Service-specific overrides ──────────────────────────────────────────────
-# Railway reads these when you set the "Root Directory" to a service folder,
-# OR they can be referenced per-service in the Railway dashboard.
-
-# Each entry below maps to a Railway service. Set SERVICE_NAME as a build
-# variable in each Railway service's Settings → Build → Build Args.
-
-# ─── Media Service (special: has its own Dockerfile) ─────────────────────────
-# In Railway dashboard for media-service, set:
-#   Dockerfile Path: services/media-service/Dockerfile
-#   Root Directory : (empty — repo root)
