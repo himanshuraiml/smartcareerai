@@ -1,5 +1,5 @@
 {
-    "name": "@smartcareer/skill-service",
+    "name": "@placenxt/skill-service",
     "version": "1.0.0",
     "private": true,
     "scripts": {
@@ -10,7 +10,7 @@
         "test": "jest"
     },
     "dependencies": {
-        "@smartcareer/shared": "*",
+        "@placenxt/shared": "*",
         "@google/generative-ai": "^0.24.1",
         "@prisma/client": "^5.7.0",
         "cors": "^2.8.5",

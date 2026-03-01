@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
-import { cacheGet, cacheSet } from '@smartcareer/shared';
+import { cacheGet, cacheSet } from '@placenxt/shared';
 
 export class ValidationService {
     // Get all available tests (only those with real curated questions)

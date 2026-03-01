@@ -17,13 +17,12 @@ import {
     Menu,
     X,
     CreditCard,
-    Lock,
-    Sparkles,
     RotateCw,
     AlertTriangle,
     User,
     Send,
-    MessageSquare
+    MessageSquare,
+    FlaskConical
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -31,36 +30,40 @@ import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
-// Nav items with unlock requirements
 interface NavItem {
     href: string;
     icon: any;
     label: string;
-    unlockStage: number; // 0 = always visible, 1+ = unlocks at that stage
-    iconColor: string; // Tailwind text color for the icon
-    badge?: string; // Optional badge text
+    iconColor: string;
+    badge?: string;
 }
 
-const navItems: NavItem[] = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', unlockStage: 0, iconColor: 'text-indigo-400' },
-    { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', unlockStage: 0, iconColor: 'text-blue-400' },
-    { href: '/dashboard/skills', icon: Target, label: 'Skills', unlockStage: 2, iconColor: 'text-cyan-400' },
-    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', unlockStage: 2, iconColor: 'text-amber-400' },
-    { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'Practice Interview', unlockStage: 0, iconColor: 'text-emerald-400', badge: 'Free' },
-    { href: '/dashboard/interviews', icon: Video, label: 'Mock Interviews', unlockStage: 3, iconColor: 'text-rose-400' },
-    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', unlockStage: 3, iconColor: 'text-emerald-400' },
-    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', unlockStage: 3, iconColor: 'text-violet-400' },
-    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', unlockStage: 0, iconColor: 'text-orange-400' },
+// Career workflow — shown under "Your Career Journey"
+const journeyItems: NavItem[] = [
+    { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', iconColor: 'text-blue-400' },
+    { href: '/dashboard/skills', icon: Target, label: 'Skills', iconColor: 'text-cyan-400' },
+    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', iconColor: 'text-amber-400' },
+    { href: '/dashboard/interviews', icon: Video, label: 'Mock Interviews', iconColor: 'text-rose-400' },
+    { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', iconColor: 'text-emerald-400' },
+    { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', iconColor: 'text-violet-400' },
 ];
+
+// General / standalone features
+const otherItems: NavItem[] = [
+    { href: '/dashboard/future-lab', icon: FlaskConical, label: 'Future-Ready Lab', iconColor: 'text-violet-400', badge: 'New' },
+    { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'Practice Interview', iconColor: 'text-emerald-400', badge: 'Free' },
+    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', iconColor: 'text-orange-400' },
+];
+
+const dashboardItem: NavItem = { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconColor: 'text-indigo-400' };
+const allNavItems = [dashboardItem, ...journeyItems, ...otherItems];
 
 // Helper function to get proper page title from pathname
 const getPageTitle = (pathname: string | null): string => {
     if (!pathname) return 'Dashboard';
 
-    // Sort navItems by href length (longest first) to match more specific paths first
-    const sortedNavItems = [...navItems].sort((a, b) => b.href.length - a.href.length);
+    // Sort by href length (longest first) to match more specific paths first
+    const sortedNavItems = [...allNavItems].sort((a, b) => b.href.length - a.href.length);
 
     // Check if it matches any nav item
     const matchedItem = sortedNavItems.find(item => {
@@ -84,7 +87,6 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { user, logout, fetchUser, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [userStage, setUserStage] = useState(0); // 0=new, 1=has resume, 2=has ats score, 3=applied to jobs
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const { toast } = useToast();
     const [isResending, setIsResending] = useState(false);
@@ -153,55 +155,6 @@ export default function DashboardLayout({
         };
     }, [user, handleLogout]);
 
-    // Fetch user progress to determine sidebar visibility
-    const fetchUserProgress = useCallback(async () => {
-        if (!user) return;
-
-        try {
-
-            // Fetch each endpoint individually to avoid one failure blocking all
-            const resumeData = await authFetch('/resumes')
-                .then(res => res.ok ? res.json() : { data: [] })
-                .catch(() => ({ data: [] }));
-
-            const skillsData = await authFetch('/skills/user-skills')
-                .then(res => res.ok ? res.json() : { data: [] })
-                .catch(() => ({ data: [] }));
-
-            const testsData = await authFetch('/validation/attempts')
-                .then(res => res.ok ? res.json() : { data: [] })
-                .catch(() => ({ data: [] }));
-
-            const interviewData = await authFetch('/interviews/sessions')
-                .then(res => res.ok ? res.json() : { data: [] })
-                .catch(() => ({ data: [] }));
-
-            const appData = await authFetch('/applications/stats')
-                .then(res => res.ok ? res.json() : { data: { applied: 0 } })
-                .catch(() => ({ data: { applied: 0 } }));
-
-            const hasResume = (resumeData.data?.length || 0) > 0;
-            const hasSkillsAnalyzed = (skillsData.data?.length || 0) > 0;
-            const hasTests = (testsData.data?.length || 0) > 0;
-            const hasInterviews = (interviewData.data?.length || 0) > 0;
-            const hasApplied = (appData.data?.applied || 0) > 0;
-
-            // Calculate stage - be more lenient
-            // If user has resume, unlock skills (stage 1)
-            // If user has resume, also unlock skill tests (stage 2) - people often do these together
-            let stage = 0;
-            if (hasResume) stage = 2; // Unlock both Skills and Skill Tests with resume
-            if (hasSkillsAnalyzed || hasTests) stage = Math.max(stage, 3); // Unlock Interviews
-            if (hasInterviews) stage = 4; // Unlock Jobs/Applications
-            if (hasApplied) stage = 5;
-
-            setUserStage(stage);
-        } catch (err) {
-            // Failed to fetch user progress - default to stage 1 so users aren't fully blocked
-            setUserStage(1);
-        }
-    }, [user]);
-
     useEffect(() => {
         // Wait for hydration before checking auth
         if (!_hasHydrated) return;
@@ -210,13 +163,6 @@ export default function DashboardLayout({
             router.push('/login');
         }
     }, [user, router, _hasHydrated]);
-
-    useEffect(() => {
-        if (_hasHydrated && user) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- async data fetching
-            fetchUserProgress();
-        }
-    }, [_hasHydrated, user, fetchUserProgress]);
 
 
 
@@ -229,22 +175,10 @@ export default function DashboardLayout({
         );
     }
 
-    // Calculate which items are unlocked
-    const getUnlockedItems = () => {
-        return navItems.filter(item => item.unlockStage <= userStage);
-    };
-
-    const getLockedItems = () => {
-        return navItems.filter(item => item.unlockStage > userStage);
-    };
-
-    const unlockedItems = getUnlockedItems();
-    const lockedItems = getLockedItems();
-    const isNewUser = userStage === 0;
-
-    // Detect if user is in an interview room (should hide sidebar)
-    const isInterviewRoom = pathname?.includes('/interviews/') &&
-        (pathname?.includes('/room') || pathname?.includes('/hr-room') || pathname?.includes('/mixed-room'));
+    // Detect if user is in an interview room or meeting (should hide sidebar)
+    const isInterviewRoom = (pathname?.includes('/interviews/') &&
+        (pathname?.includes('/room') || pathname?.includes('/hr-room') || pathname?.includes('/mixed-room'))) ||
+        pathname?.includes('/meetings/');
 
     return (
         <div className="h-screen overflow-hidden flex bg-gray-50 dark:bg-gray-950">
@@ -297,72 +231,98 @@ export default function DashboardLayout({
                                 </button>
                             </div>
 
-                            {/* New User Welcome */}
-                            {isNewUser && (
-                                <div className="mx-4 mt-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-500/20 dark:to-violet-500/20 border border-indigo-200 dark:border-indigo-500/30">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                                        <span className="text-sm font-bold text-indigo-700 dark:text-white">Welcome!</span>
-                                    </div>
-                                    <p className="text-xs text-indigo-600/70 dark:text-gray-300">
-                                        Follow your career roadmap to unlock more features.
-                                    </p>
-                                </div>
-                            )}
+                            {/* Navigation */}
+                            <nav className="flex-1 px-3 py-4 overflow-y-auto">
 
-                            {/* Navigation - Unlocked Items */}
-                            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-
-                                {unlockedItems.map((item) => {
-                                    const isActive = item.href === '/dashboard'
-                                        ? pathname === item.href
-                                        : pathname === item.href || pathname?.startsWith(`${item.href}/`);
-                                    return (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            onClick={() => setSidebarOpen(false)}
-                                            className={`
-                                                relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
-                                                ${isActive
-                                                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
-                                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
-                                              `}
-                                        >
-                                            {isActive && (
-                                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
-                                            )}
-                                            <item.icon className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
-                                            <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
-                                            {item.badge && (
-                                                <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
-                                                    {item.badge}
-                                                </span>
-                                            )}
-                                        </Link>
-                                    );
-                                })}
-
-                                {/* Locked Items Section */}
-                                {lockedItems.length > 0 && (
-                                    <>
-                                        <div className="pt-4 pb-1">
-                                            <p className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                                                Unlock by progressing
-                                            </p>
-                                        </div>
-                                        {lockedItems.map((item) => (
-                                            <div
-                                                key={item.href}
-                                                title="Complete earlier stages to unlock"
-                                                className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-400 dark:text-gray-600 cursor-not-allowed select-none"
+                                {/* Dashboard */}
+                                <div className="mb-3">
+                                    {(() => {
+                                        const isActive = pathname === '/dashboard';
+                                        return (
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={`
+                                                    relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                    ${isActive
+                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                                `}
                                             >
-                                                <Lock className="w-4 h-4 flex-shrink-0" />
-                                                <span className="font-semibold text-[15px]">{item.label}</span>
-                                            </div>
-                                        ))}
-                                    </>
-                                )}
+                                                {isActive && (
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                )}
+                                                <LayoutDashboard className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-400'}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>Dashboard</span>
+                                            </Link>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Your Career Journey */}
+                                <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                    Your Career Journey
+                                </p>
+                                <div className="space-y-1 mb-3">
+                                    {journeyItems.map((item) => {
+                                        const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={`
+                                                    relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                    ${isActive
+                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                                `}
+                                            >
+                                                {isActive && (
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                )}
+                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Divider */}
+                                <div className="mx-2 mb-3 h-px bg-gray-100 dark:bg-white/5" />
+
+                                {/* Other */}
+                                <div className="space-y-1">
+                                    {otherItems.map((item) => {
+                                        const isActive = item.href === '/dashboard'
+                                            ? pathname === item.href
+                                            : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={`
+                                                    relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                    ${isActive
+                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                                `}
+                                            >
+                                                {isActive && (
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                )}
+                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                {item.badge && (
+                                                    <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
+                                                        {item.badge}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
                             </nav>
 
                             {/* User Profile Dropdown Trigger */}

@@ -3,7 +3,7 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
-import { cacheGet, cacheSet, normalizeSkillList } from '@smartcareer/shared';
+import { cacheGet, cacheSet, normalizeSkillList } from '@placenxt/shared';
 
 interface ScoreDeduction {
     category: string;

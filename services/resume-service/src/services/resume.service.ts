@@ -6,7 +6,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { parseResumeContent } from '../utils/ai';
-import { generateEmbedding, upsertVector } from '@smartcareer/shared';
+import { generateEmbedding, upsertVector } from '@placenxt/shared';
 
 interface UploadedFile {
     originalname: string;
@@ -324,7 +324,7 @@ export class ResumeService {
 
                 const vector = await generateEmbedding(embedText);
                 await upsertVector(
-                    process.env.PINECONE_INDEX || 'smartcareer',
+                    process.env.PINECONE_INDEX || 'placenxt',
                     'candidates',
                     updatedResume.userId, // Use User ID as vector ID so they get overwritten with the latest resume
                     vector,

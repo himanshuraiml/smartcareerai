@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { generateEmbedding, querySimilarVectors } from '@smartcareer/shared';
+import { generateEmbedding, querySimilarVectors } from '@placenxt/shared';
 
 export class SourcingController {
     async rediscoverCandidates(req: Request, res: Response, next: NextFunction) {
@@ -56,7 +56,7 @@ export class SourcingController {
                     : undefined;
 
                 pineconeMatches = await querySimilarVectors(
-                    process.env.PINECONE_INDEX || 'smartcareer',
+                    process.env.PINECONE_INDEX || 'placenxt',
                     'candidates',
                     queryVector,
                     15, // Top K to return

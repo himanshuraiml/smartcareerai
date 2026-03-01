@@ -10,7 +10,7 @@ jest.mock('../utils/prisma', () => ({
     },
 }));
 
-jest.mock('@smartcareer/shared', () => ({
+jest.mock('@placenxt/shared', () => ({
     generateEmbedding: jest.fn(),
     querySimilarVectors: jest.fn(),
 }));
@@ -21,7 +21,7 @@ jest.mock('../utils/logger', () => ({
 
 // ── Import mocks after jest.mock declarations ────────────────────────
 import { prisma } from '../utils/prisma';
-import { generateEmbedding, querySimilarVectors } from '@smartcareer/shared';
+import { generateEmbedding, querySimilarVectors } from '@placenxt/shared';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockGenerateEmbedding = generateEmbedding as jest.MockedFunction<typeof generateEmbedding>;

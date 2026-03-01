@@ -1,5 +1,5 @@
 {
-    "name": "@smartcareer/auth-service",
+    "name": "@placenxt/auth-service",
     "version": "1.0.0",
     "private": true,
     "scripts": {
@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "@prisma/client": "^5.7.0",
-        "@smartcareer/shared": "*",
+        "@placenxt/shared": "*",
         "@types/cookie-parser": "^1.4.10",
         "bcryptjs": "^2.4.3",
         "cookie-parser": "^1.4.7",

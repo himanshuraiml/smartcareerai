@@ -573,7 +573,11 @@ interface CopilotInvitationCardProps {
 
 function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
     const hasSchedule = !!inv.scheduledAt;
-    const isUpcoming = hasSchedule && new Date(inv.scheduledAt!) > new Date();
+    const now = new Date();
+    const scheduledTime_dt = inv.scheduledAt ? new Date(inv.scheduledAt) : null;
+    const endTime_dt = inv.scheduledEndAt ? new Date(inv.scheduledEndAt) : (scheduledTime_dt ? new Date(scheduledTime_dt.getTime() + 60 * 60000) : null);
+    const isUpcoming = hasSchedule && scheduledTime_dt! > now;
+    const isLiveNow = hasSchedule && scheduledTime_dt! <= now && endTime_dt! > now;
 
     const scheduledDate = inv.scheduledAt
         ? new Date(inv.scheduledAt).toLocaleDateString('en-US', {
@@ -622,11 +626,13 @@ function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
                     </div>
                 </div>
                 <span className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex-shrink-0 ${
-                    isUpcoming
+                    isLiveNow
+                        ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 animate-pulse'
+                        : isUpcoming
                         ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}>
-                    {isUpcoming ? 'Scheduled' : hasSchedule ? 'Awaiting Live Call' : 'Awaiting Live Call'}
+                    {isLiveNow ? 'Live Now — Join Meeting' : isUpcoming ? 'Scheduled' : hasSchedule ? 'Completed' : 'Pending Schedule'}
                 </span>
             </div>
 

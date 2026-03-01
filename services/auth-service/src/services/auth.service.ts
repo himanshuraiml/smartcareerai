@@ -6,7 +6,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../utils/email';
-import { cacheGet, cacheSet } from '@smartcareer/shared';
+import { cacheGet, cacheSet } from '@placenxt/shared';
 
 interface TokenPayload {
     id: string;

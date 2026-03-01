@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
-import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion } from '../utils/llm';
+import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion, generateCopilotSuggestionsFromTranscript } from '../utils/llm';
 import { selectQuestionsFromBank } from '../utils/question-bank';
 import { AppError } from '../utils/errors';
 
@@ -186,6 +186,11 @@ export class InterviewService {
             summary: copilotSession?.summary ? JSON.parse(copilotSession.summary) : null,
             suggestions: suggestions.map(s => ({ text: s.text, timestamp: s.timestamp })),
         };
+    }
+
+    // Generate real-time copilot suggestions from transcript (called by gateway socket)
+    async generateCopilotSuggestions(sessionId: string, transcriptText: string): Promise<string[]> {
+        return generateCopilotSuggestionsFromTranscript(transcriptText);
     }
 
     // Update Interview Replay Logs

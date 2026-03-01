@@ -14,7 +14,7 @@ async function main() {
     const adminHash = await bcrypt.hash(adminPassword, salt);
 
     const admin = await prisma.user.update({
-        where: { email: 'admin@smartcareer.ai' },
+        where: { email: 'admin@placenxt.com' },
         data: { passwordHash: adminHash }
     });
     console.log(`✅ Admin password reset to '${adminPassword}'`);

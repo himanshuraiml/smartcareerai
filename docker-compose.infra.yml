@@ -1,30 +1,29 @@
-# Infrastructure only - Use this when running services via npm
+# PlaceNxt — Infrastructure only
+# Use when running services locally with: npm run dev:services
 # Usage: docker-compose -f docker-compose.infra.yml up -d
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: smartcareer-postgres
+    container_name: placenxt-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-smartcareer}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-smartcareer123}
-      POSTGRES_DB: ${DB_NAME:-smartcareer_db}
+      POSTGRES_USER: ${DB_USER:-placenxt}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-placenxt123}
+      POSTGRES_DB: ${DB_NAME:-placenxt_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-smartcareer} -d ${DB_NAME:-smartcareer_db}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-placenxt} -d ${DB_NAME:-placenxt_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: smartcareer-redis
+    container_name: placenxt-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -32,15 +31,14 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # MinIO (S3-compatible storage)
   minio:
     image: minio/minio:latest
-    container_name: smartcareer-minio
+    container_name: placenxt-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
@@ -52,17 +50,35 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
+
+  # Coturn TURN Server (WebRTC NAT traversal)
+  coturn:
+    image: coturn/coturn:latest
+    container_name: placenxt-coturn
+    restart: unless-stopped
+    network_mode: host
+    command: >
+      -n
+      --log-file=stdout
+      --min-port=49152
+      --max-port=49252
+      --realm=placenxt.com
+      --fingerprint
+      --lt-cred-mech
+      --user=${TURN_USERNAME:-turnuser}:${TURN_CREDENTIAL:-turnpassword}
+      --no-tls
+      --no-dtls
+      --listening-port=3478
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
 
-
 networks:
   default:
-    name: smartcareer-network
+    name: placenxt-network

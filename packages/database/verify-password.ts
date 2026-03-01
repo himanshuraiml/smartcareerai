@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
     // Find admin user
     const admin = await prisma.user.findUnique({
-        where: { email: 'admin@smartcareer.ai' }
+        where: { email: 'admin@placenxt.com' }
     });
 
     if (!admin) {

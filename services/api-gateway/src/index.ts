@@ -397,6 +397,16 @@ app.use(
 );
 
 app.use(
+    `${API_PREFIX}/engagement`,
+    createProxyMiddleware(createProxyOptions(BILLING_SERVICE_URL, { [`^${API_PREFIX}/engagement`]: '/engagement' }))
+);
+
+app.use(
+    `${API_PREFIX}/future-lab`,
+    createProxyMiddleware(createProxyOptions(BILLING_SERVICE_URL, { [`^${API_PREFIX}/future-lab`]: '/future-lab' }))
+);
+
+app.use(
     `${API_PREFIX}/institutions`,
     createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/institutions`]: '/institutions' }))
 );
@@ -440,6 +450,22 @@ const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:301
 app.use(
     `${API_PREFIX}/email`,
     createProxyMiddleware(createProxyOptions(EMAIL_SERVICE_URL, { [`^${API_PREFIX}/email`]: '' }))
+);
+
+// ============================================
+// MEDIA SERVICE (WebRTC Meetings)
+// ============================================
+
+const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || 'http://localhost:3014';
+
+app.use(
+    `${API_PREFIX}/meetings`,
+    createProxyMiddleware(createProxyOptions(MEDIA_SERVICE_URL, { [`^${API_PREFIX}/meetings`]: '/meetings' }))
+);
+
+app.use(
+    `${API_PREFIX}/meeting-analysis`,
+    createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/meeting-analysis`]: '/meeting-analysis' }))
 );
 
 // Note: JSON parsing already configured above with size limits
@@ -487,6 +513,7 @@ const server = app.listen(PORT, () => {
     logger.info(`👑 Admin Service: ${ADMIN_SERVICE_URL}`);
     logger.info(`🏢 Recruiter Service: ${RECRUITER_SERVICE_URL}`);
     logger.info(`📧 Email Tracking Service: ${EMAIL_SERVICE_URL}`);
+    logger.info(`📹 Media Service: ${MEDIA_SERVICE_URL}`);
 });
 
 // Initialize Socket.io Event Bus

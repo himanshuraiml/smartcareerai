@@ -32,6 +32,7 @@ export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps)
 
     const socketRef = useRef<Socket | null>(null);
     const recognitionRef = useRef<any>(null);
+    const isListeningRef = useRef(false);
 
     // Connect to socket.io on mount
     useEffect(() => {
@@ -121,7 +122,7 @@ export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps)
 
         recognition.onend = () => {
             // Auto-restart if still supposed to be listening (browser stops after silence)
-            if (recognitionRef.current && isListening) {
+            if (isListeningRef.current) {
                 try {
                     recognition.start();
                 } catch {
@@ -131,13 +132,14 @@ export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps)
         };
 
         recognitionRef.current = recognition;
+        isListeningRef.current = true;
         recognition.start();
         setIsListening(true);
-    }, [interviewId, isListening]);
+    }, [interviewId]);
 
     const stopListening = useCallback(() => {
+        isListeningRef.current = false;
         if (recognitionRef.current) {
-            recognitionRef.current.onend = null; // Prevent auto-restart
             recognitionRef.current.stop();
             recognitionRef.current = null;
         }
@@ -150,8 +152,8 @@ export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps)
     // Cleanup on unmount
     useEffect(() => {
         return () => {
+            isListeningRef.current = false;
             if (recognitionRef.current) {
-                recognitionRef.current.onend = null;
                 recognitionRef.current.stop();
             }
         };

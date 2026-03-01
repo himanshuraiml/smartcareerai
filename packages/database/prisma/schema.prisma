@@ -65,6 +65,19 @@ model User {
   couponUsages          CouponUsage[]
   notifications         Notification[]
 
+  // Engagement / Gamification fields
+  lastLoginAt  DateTime? @map("last_login_at")
+  streakCount  Int       @default(0) @map("streak_count")
+  xp           Int       @default(0)
+
+  // Future-Ready Lab relations
+  labProgress          UserLabProgress[]
+  challengeSubmissions ChallengeSubmission[]
+
+  // Meeting relations
+  hostedMeetings       MeetingRoom[]          @relation("HostedMeetings")
+  meetingParticipants  MeetingParticipant[]
+
   @@map("users")
 }
 
@@ -349,6 +362,7 @@ model InterviewSession {
   questions          InterviewQuestion[]
   copilotSuggestions CopilotSuggestion[]
   copilotSession     CopilotSession?
+  meetingRoom        MeetingRoom?
 
   @@map("interview_sessions")
 }
@@ -948,6 +962,10 @@ model RecruiterJobApplicant {
   appliedAt   DateTime          @default(now()) @map("applied_at")
   notes       String?           @db.Text
 
+  // Application details
+  resumeUrl   String? @db.Text @map("resume_url")
+  coverLetter String? @db.Text @map("cover_letter")
+
   // Candidate AI Evaluation
   overallScore Float?           @map("overall_score")
   aiEvaluation Json?            @map("ai_evaluation") // Resume + Interview Correlation insights
@@ -1242,4 +1260,237 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+// ============================================
+// FUTURE-READY LAB
+// ============================================
+
+model LabTrack {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  title            String
+  description      String
+  icon             String   // Lucide icon name, e.g. "Bot"
+  gradient         String   // Tailwind gradient classes
+  cardBg           String   @map("card_bg") // Tailwind bg classes (light + dark)
+  border           String   // Tailwind border classes
+  tag              String   // e.g. "🔥 Hottest Skill"
+  tagColor         String   @map("tag_color") // Tailwind tag badge classes
+  totalMinutes     Int      @default(0) @map("total_minutes")
+  isActive         Boolean  @default(true) @map("is_active")
+  order            Int      @default(0)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  labs             Lab[]
+  userProgress     UserLabProgress[]
+
+  @@map("lab_tracks")
+}
+
+model Lab {
+  id          String   @id @default(uuid())
+  trackId     String   @map("track_id")
+  title       String
+  content     String?  // Markdown content shown in the lab
+  duration    String   // Display string e.g. "15 min"
+  durationMin Int      @default(0) @map("duration_min")
+  isFree      Boolean  @default(false) @map("is_free")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  track    LabTrack          @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  progress UserLabProgress[]
+
+  @@index([trackId])
+  @@map("labs")
+}
+
+model UserLabProgress {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  trackId     String    @map("track_id")
+  labId       String    @map("lab_id")
+  status      LabStatus @default(NOT_STARTED)
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track LabTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lab   Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, labId])
+  @@index([userId, trackId])
+  @@map("user_lab_progress")
+}
+
+enum LabStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model WeeklyChallenge {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  difficulty  String   @default("Intermediate")
+  reward      String   // Display string e.g. "+150 XP + Builder Badge"
+  xpReward    Int      @default(150) @map("xp_reward")
+  deadline    DateTime
+  weekNumber  Int      @map("week_number")
+  year        Int
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  submissions ChallengeSubmission[]
+
+  @@unique([weekNumber, year])
+  @@map("weekly_challenges")
+}
+
+model ChallengeSubmission {
+  id          String           @id @default(uuid())
+  challengeId String           @map("challenge_id")
+  userId      String           @map("user_id")
+  githubUrl   String?          @map("github_url")
+  writeup     String?
+  score       Int?
+  aiFeedback  String?          @map("ai_feedback")
+  status      SubmissionStatus @default(PENDING)
+  submittedAt DateTime         @default(now()) @map("submitted_at")
+  evaluatedAt DateTime?        @map("evaluated_at")
+
+  challenge WeeklyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@map("challenge_submissions")
+}
+
+enum SubmissionStatus {
+  PENDING
+  REVIEWING
+  EVALUATED
+  REJECTED
+}
+
+// ============================================
+// MEETING SYSTEM (WebRTC + MediaSoup)
+// ============================================
+
+model MeetingRoom {
+  id              String        @id @default(uuid())
+  interviewId     String?       @unique @map("interview_id")
+  hostId          String        @map("host_id")
+  status          MeetingStatus @default(WAITING)
+  meetingToken    String        @unique @map("meeting_token")
+  maxParticipants Int           @default(10) @map("max_participants")
+  scheduledAt     DateTime?     @map("scheduled_at")
+  startedAt       DateTime?     @map("started_at")
+  endedAt         DateTime?     @map("ended_at")
+  recordingUrl    String?       @map("recording_url")
+  transcriptUrl   String?       @map("transcript_url")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  host         User                  @relation("HostedMeetings", fields: [hostId], references: [id])
+  interview    InterviewSession?     @relation(fields: [interviewId], references: [id])
+  participants MeetingParticipant[]
+  chatMessages MeetingChatMessage[]
+  transcriptEntries MeetingTranscriptEntry[]
+  aiAnalysis   MeetingAiAnalysis?
+
+  @@index([hostId])
+  @@map("meeting_rooms")
+}
+
+model MeetingParticipant {
+  id           String      @id @default(uuid())
+  meetingId    String      @map("meeting_id")
+  userId       String      @map("user_id")
+  role         MeetingRole @default(CANDIDATE)
+  joinedAt     DateTime?   @map("joined_at")
+  leftAt       DateTime?   @map("left_at")
+  consentGiven Boolean     @default(false) @map("consent_given")
+  consentAt    DateTime?   @map("consent_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  meeting MeetingRoom @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+  @@index([userId])
+  @@map("meeting_participants")
+}
+
+model MeetingChatMessage {
+  id        String   @id @default(uuid())
+  meetingId String   @map("meeting_id")
+  userId    String   @map("user_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  meeting MeetingRoom @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, createdAt])
+  @@map("meeting_chat_messages")
+}
+
+model MeetingTranscriptEntry {
+  id          String   @id @default(uuid())
+  meetingId   String   @map("meeting_id")
+  speakerId   String   @map("speaker_id")
+  speakerName String   @map("speaker_name")
+  text        String   @db.Text
+  startTime   Float    @map("start_time")
+  endTime     Float    @map("end_time")
+  wordCount   Int      @default(0) @map("word_count")
+  isFinal     Boolean  @default(true) @map("is_final")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  meeting MeetingRoom @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, startTime])
+  @@map("meeting_transcript_entries")
+}
+
+model MeetingAiAnalysis {
+  id                   String   @id @default(uuid())
+  meetingId            String   @unique @map("meeting_id")
+  summary              String   @db.Text
+  keyPoints            Json     @map("key_points")
+  actionItems          Json     @map("action_items")
+  candidateScores      Json     @map("candidate_scores")
+  sentimentTimeline    Json     @map("sentiment_timeline")
+  speakingRatio        Json     @map("speaking_ratio")
+  fillerWordAnalysis   Json     @map("filler_word_analysis")
+  recommendations      Json
+  hiringRecommendation String   @map("hiring_recommendation")
+  hiringJustification  String   @db.Text @map("hiring_justification")
+  processingStatus     String   @default("PENDING") @map("processing_status")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  meeting MeetingRoom @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@map("meeting_ai_analyses")
+}
+
+enum MeetingStatus {
+  WAITING
+  IN_PROGRESS
+  ENDED
+  CANCELLED
+}
+
+enum MeetingRole {
+  HOST
+  RECRUITER
+  CANDIDATE
+  OBSERVER
 }

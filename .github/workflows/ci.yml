@@ -67,7 +67,7 @@ jobs:
         continue-on-error: true
 
       - name: Run shared package tests
-        run: npm test -w @smartcareer/database -- --passWithNoTests --ci
+        run: npm test -w @placenxt/database -- --passWithNoTests --ci
         env:
           CI: true
         continue-on-error: true
@@ -96,7 +96,7 @@ jobs:
         run: npx prisma generate --schema=packages/database/prisma/schema.prisma
 
       - name: Build shared packages
-        run: npm run build -w @smartcareer/shared
+        run: npm run build -w @placenxt/shared
 
       - name: Build frontend
         run: cd frontend && npm run build
@@ -122,9 +122,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: smartcareer
-          POSTGRES_PASSWORD: smartcareer123
-          POSTGRES_DB: smartcareer_test
+          POSTGRES_USER: placenxt
+          POSTGRES_PASSWORD: placenxt123
+          POSTGRES_DB: placenxt_test
         ports:
           - 5432:5432
         options: >-
@@ -162,7 +162,7 @@ jobs:
       - name: Run database migrations
         run: npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma
         env:
-          DATABASE_URL: postgresql://smartcareer:smartcareer123@localhost:5432/smartcareer_test
+          DATABASE_URL: postgresql://placenxt:placenxt123@localhost:5432/placenxt_test
 
       - name: Install Playwright browsers
         run: cd frontend && npx playwright install --with-deps chromium
@@ -170,14 +170,14 @@ jobs:
       - name: Build frontend for E2E
         run: cd frontend && npm run build
         env:
-          DATABASE_URL: postgresql://smartcareer:smartcareer123@localhost:5432/smartcareer_test
+          DATABASE_URL: postgresql://placenxt:placenxt123@localhost:5432/placenxt_test
           NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
 
       - name: Run E2E tests
         run: cd frontend && npx playwright test
         env:
           CI: true
-          DATABASE_URL: postgresql://smartcareer:smartcareer123@localhost:5432/smartcareer_test
+          DATABASE_URL: postgresql://placenxt:placenxt123@localhost:5432/placenxt_test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-for-ci-only
           NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1

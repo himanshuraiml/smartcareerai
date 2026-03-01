@@ -1,28 +1,28 @@
+# PlaceNxt — Development stack (infra + all services via Docker)
+# For local dev with npm run dev, use docker-compose.infra.yml instead
+
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: smartcareer-postgres
+    container_name: placenxt-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-smartcareer}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-smartcareer123}
-      POSTGRES_DB: ${DB_NAME:-smartcareer_db}
+      POSTGRES_USER: ${DB_USER:-placenxt}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-placenxt123}
+      POSTGRES_DB: ${DB_NAME:-placenxt_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # - ./packages/database/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-smartcareer} -d ${DB_NAME:-smartcareer_db}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-placenxt} -d ${DB_NAME:-placenxt_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: smartcareer-redis
+    container_name: placenxt-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -30,15 +30,14 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # MinIO (S3-compatible storage)
   minio:
     image: minio/minio:latest
-    container_name: smartcareer-minio
+    container_name: placenxt-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
@@ -50,61 +49,58 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
 
-  # API Gateway
   api-gateway:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: api-gateway
-    container_name: smartcareer-gateway
+    container_name: placenxt-gateway
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3000
-      - JWT_SECRET=${JWT_SECRET:-4f8b2c9e7a1d3f5e0b6c4a8d2e9f1b3c5a7d8e2f0b4c6a9d1e3f5b7c9a2d4e6f}
-      # auth-service runs in Docker on the same network
+      - JWT_SECRET=${JWT_SECRET}
       - AUTH_SERVICE_URL=http://auth-service:3001
-      # All other services run locally — use host.docker.internal to reach the host machine
-      - RESUME_SERVICE_URL=http://host.docker.internal:3002
-      - SCORING_SERVICE_URL=http://host.docker.internal:3003
-      - SKILL_SERVICE_URL=http://host.docker.internal:3004
-      - JOB_SERVICE_URL=http://host.docker.internal:3005
-      - APPLICATION_SERVICE_URL=http://host.docker.internal:3006
-      - INTERVIEW_SERVICE_URL=http://host.docker.internal:3007
-      - RECRUITER_SERVICE_URL=http://host.docker.internal:3008
-      - BILLING_SERVICE_URL=http://host.docker.internal:3009
-      - VALIDATION_SERVICE_URL=http://host.docker.internal:3010
-      - ADMIN_SERVICE_URL=http://host.docker.internal:3011
-      - EMAIL_SERVICE_URL=http://host.docker.internal:3012
+      - RESUME_SERVICE_URL=http://resume-service:3002
+      - SCORING_SERVICE_URL=http://scoring-service:3003
+      - SKILL_SERVICE_URL=http://skill-service:3004
+      - JOB_SERVICE_URL=http://job-service:3005
+      - APPLICATION_SERVICE_URL=http://application-service:3006
+      - INTERVIEW_SERVICE_URL=http://interview-service:3007
+      - VALIDATION_SERVICE_URL=http://validation-service:3008
+      - BILLING_SERVICE_URL=http://billing-service:3010
+      - ADMIN_SERVICE_URL=http://admin-service:3011
+      - RECRUITER_SERVICE_URL=http://recruiter-service:3012
+      - EMAIL_SERVICE_URL=http://email-tracking-service:3013
+      - MEDIA_SERVICE_URL=http://media-service:3014
       - REDIS_URL=redis://redis:6379
     depends_on:
       redis:
         condition: service_healthy
 
-  # Auth Service
   auth-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: auth-service
-    container_name: smartcareer-auth
+    container_name: placenxt-auth
     restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3001
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
-      - JWT_SECRET=${JWT_SECRET:-4f8b2c9e7a1d3f5e0b6c4a8d2e9f1b3c5a7d8e2f0b4c6a9d1e3f5b7c9a2d4e6f}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=15m
       - REFRESH_TOKEN_EXPIRES_IN=7d
       - REDIS_URL=redis://redis:6379
@@ -116,21 +112,20 @@ services:
       redis:
         condition: service_healthy
 
-  # Resume Service
   resume-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: resume-service
-    container_name: smartcareer-resume
+    container_name: placenxt-resume
     restart: unless-stopped
     ports:
       - "3002:3002"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3002
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=${MINIO_USER:-minioadmin}
@@ -142,22 +137,22 @@ services:
       minio:
         condition: service_healthy
 
-  # Scoring Service
   scoring-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: scoring-service
-    container_name: smartcareer-scoring
+    container_name: placenxt-scoring
     restart: unless-stopped
     ports:
       - "3003:3003"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3003
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
@@ -165,80 +160,78 @@ services:
       redis:
         condition: service_healthy
 
-  # Skill Service
   skill-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: skill-service
-    container_name: smartcareer-skill
+    container_name: placenxt-skill
     restart: unless-stopped
     ports:
       - "3004:3004"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3004
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Job Service
   job-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: job-service
-    container_name: smartcareer-job
+    container_name: placenxt-job
     restart: unless-stopped
     ports:
       - "3005:3005"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3005
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - JSEARCH_API_KEY=${JSEARCH_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Application Service
   application-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: application-service
-    container_name: smartcareer-application
+    container_name: placenxt-application
     restart: unless-stopped
     ports:
       - "3006:3006"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3006
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Interview Service
   interview-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: interview-service
-    container_name: smartcareer-interview
+    container_name: placenxt-interview
     restart: unless-stopped
     ports:
       - "3007:3007"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3007
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
@@ -246,100 +239,101 @@ services:
       redis:
         condition: service_healthy
 
-  # Recruiter Service
-  recruiter-service:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.prod
-      args:
-        SERVICE_NAME: recruiter-service
-    container_name: smartcareer-recruiter
-    restart: unless-stopped
-    ports:
-      - "3008:3008"
-    environment:
-      - NODE_ENV=development
-      - PORT=3008
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Billing Service
-  billing-service:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.prod
-      args:
-        SERVICE_NAME: billing-service
-    container_name: smartcareer-billing
-    restart: unless-stopped
-    ports:
-      - "3009:3009"
-    environment:
-      - NODE_ENV=development
-      - PORT=3009
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
-      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
-      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Validation Service
   validation-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: validation-service
-    container_name: smartcareer-validation
+    container_name: placenxt-validation
     restart: unless-stopped
     ports:
-      - "3010:3010"
+      - "3008:3008"
     environment:
-      - NODE_ENV=development
-      - PORT=3010
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - NODE_ENV=production
+      - PORT=3008
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Admin Service
+  billing-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: billing-service
+    container_name: placenxt-billing
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   admin-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: admin-service
-    container_name: smartcareer-admin
+    container_name: placenxt-admin
     restart: unless-stopped
     ports:
       - "3011:3011"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3011
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - ADMIN_EMAILS=${ADMIN_EMAILS}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Email Tracking Service
+  recruiter-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: recruiter-service
+    container_name: placenxt-recruiter
+    restart: unless-stopped
+    ports:
+      - "3012:3012"
+    environment:
+      - NODE_ENV=production
+      - PORT=3012
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - MS_CLIENT_ID=${MS_CLIENT_ID}
+      - MS_CLIENT_SECRET=${MS_CLIENT_SECRET}
+      - MS_REDIRECT_URI=${MS_REDIRECT_URI}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   email-tracking-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: email-tracking-service
-    container_name: smartcareer-email
+    container_name: placenxt-email
     restart: unless-stopped
     ports:
-      - "3012:3012"
+      - "3013:3013"
     environment:
-      - NODE_ENV=development
-      - PORT=3012
-      - DATABASE_URL=postgresql://${DB_USER:-smartcareer}:${DB_PASSWORD:-smartcareer123}@postgres:5432/${DB_NAME:-smartcareer_db}
+      - NODE_ENV=production
+      - PORT=3013
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
@@ -348,12 +342,40 @@ services:
       postgres:
         condition: service_healthy
 
+  media-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: media-service
+    container_name: placenxt-media
+    restart: unless-stopped
+    ports:
+      - "3014:3014"
+      - "10000-10999:10000-10999/udp"
+    environment:
+      - NODE_ENV=production
+      - PORT=3014
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - REDIS_URL=redis://redis:6379
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP}
+      - MEDIASOUP_RTC_MIN_PORT=10000
+      - MEDIASOUP_RTC_MAX_PORT=10999
+      - TURN_URL=${TURN_URL}
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_CREDENTIAL=${TURN_CREDENTIAL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
 
-
 networks:
   default:
-    name: smartcareer-network
+    name: placenxt-network

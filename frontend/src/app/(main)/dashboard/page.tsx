@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     FileText, Target, Briefcase, TrendingUp, ArrowRight,
-    Zap, Award, Flame, Star, Sparkles, Brain
+    Zap, Award, Flame, Star, Sparkles, Brain, FlaskConical
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import CareerRoadmap, { RoadmapStage, DEFAULT_ROADMAP_STAGES } from '@/components/roadmap/CareerRoadmap';
 import Leaderboard from '@/components/gamification/Leaderboard';
 import PlacementReadyScore from '@/components/gamification/PlacementReadyScore';
 import SkillTestSuggestion from '@/components/dashboard/SkillTestSuggestion';
+import StreakBanner from '@/components/dashboard/StreakBanner';
 
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -324,6 +325,9 @@ export default function DashboardPage() {
                 </div>
             </motion.div>
 
+            {/* Daily Streak & Rewards Banner */}
+            <StreakBanner />
+
             {/* Placement-Ready Score */}
             <PlacementReadyScore
                 avgScore={stats.avgScore}
@@ -351,24 +355,33 @@ export default function DashboardPage() {
 
                 {/* Side Panel: Tips & Quick Actions */}
                 <div className="space-y-6">
-                    {/* Pro Tip Card */}
+                    {/* Future-Ready Lab Card */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="p-6 rounded-2xl glass-premium border-gradient animate-float"
+                        transition={{ delay: 0.15 }}
+                        className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 text-white shadow-lg"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                <TrendingUp className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Pro Tip</h3>
+                        <div className="pointer-events-none absolute inset-0">
+                            <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
                         </div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                            Complete each stage sequentially to maximize your career readiness score.
-                            Verified skill badges increase your profile visibility by <span className="text-green-400 font-bold">3x</span>!
-                        </p>
+                        <div className="relative">
+                            <div className="flex items-center gap-2 mb-2">
+                                <FlaskConical className="w-5 h-5 text-purple-200" />
+                                <span className="text-xs font-bold text-purple-200 uppercase tracking-widest">Future-Ready Lab</span>
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white uppercase tracking-wider">New</span>
+                            </div>
+                            <h3 className="font-bold text-base text-white mb-1">Practice Tomorrow's Skills Today</h3>
+                            <p className="text-purple-200 text-xs mb-3">AI Agents, Rust, RAG Pipelines — hands-on micro-labs in trending technologies.</p>
+                            <Link
+                                href="/dashboard/future-lab"
+                                className="inline-flex items-center gap-1.5 text-sm font-bold text-white bg-white/20 hover:bg-white/30 border border-white/30 px-4 py-2 rounded-xl transition-all"
+                            >
+                                Explore Lab <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
                     </motion.div>
+
 
                     {/* AI Recommended Action - Replaces Quick Actions */}
                     <div className="space-y-4">

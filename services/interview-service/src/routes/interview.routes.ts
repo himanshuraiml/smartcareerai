@@ -63,8 +63,9 @@ router.get('/analysis/status', controller.getAnalysisStatus);
 router.get('/sessions/:id/replay', controller.getReplayDetails);
 router.put('/sessions/:id/replay', controller.updateReplayLogs);
 
-// Copilot session data (POST is internal — called by meeting-bot-service without user context)
+// Copilot session data (POST is internal — called by gateway/meeting-bot without user context)
 router.post('/sessions/:id/copilot', controller.saveCopilotData);
 router.get('/sessions/:id/copilot', controller.getCopilotData);
+router.post('/sessions/:id/copilot/suggest', controller.generateCopilotSuggestions);
 
 export { router as interviewRouter };

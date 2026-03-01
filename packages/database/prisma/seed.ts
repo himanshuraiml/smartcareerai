@@ -9,13 +9,13 @@ async function main() {
     // Seed Admin User - hash password dynamically
     const adminPassword = await bcrypt.hash('Admin123!', 12);
     const admin = await prisma.user.upsert({
-        where: { email: 'admin@smartcareer.ai' },
+        where: { email: 'admin@placenxt.com' },
         update: {
             role: 'ADMIN',
             passwordHash: adminPassword,
         },
         create: {
-            email: 'admin@smartcareer.ai',
+            email: 'admin@placenxt.com',
             passwordHash: adminPassword,
             name: 'System Administrator',
             role: 'ADMIN',

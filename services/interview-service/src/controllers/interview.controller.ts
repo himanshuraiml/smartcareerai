@@ -468,5 +468,27 @@ export class InterviewController {
             next(error);
         }
     };
+
+    /**
+     * Generate real-time copilot suggestions from transcript text.
+     * Called by the API Gateway socket handler (internal, no user auth).
+     * POST /sessions/:id/copilot/suggest
+     */
+    generateCopilotSuggestions = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { transcriptText } = req.body;
+
+            if (!transcriptText || transcriptText.trim().length < 10) {
+                return res.json({ success: true, suggestions: [] });
+            }
+
+            const suggestions = await interviewService.generateCopilotSuggestions(id, transcriptText);
+            res.json({ success: true, suggestions });
+        } catch (error) {
+            logger.error('Generate copilot suggestions error:', error);
+            next(error);
+        }
+    };
 }
 

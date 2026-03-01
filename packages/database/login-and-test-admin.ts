@@ -13,7 +13,7 @@ async function main() {
     console.log('🔑 Logging in as Admin...');
 
     const user = await prisma.user.findUnique({
-        where: { email: 'admin@smartcareer.ai' }
+        where: { email: 'admin@placenxt.com' }
     });
 
     if (!user) {

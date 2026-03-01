@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { cacheGet, cacheSet } from '@smartcareer/shared';
+import { cacheGet, cacheSet } from '@placenxt/shared';
 
 const prisma = new PrismaClient();
 

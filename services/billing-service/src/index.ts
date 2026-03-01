@@ -8,6 +8,8 @@ import { subscriptionRouter } from './routes/subscription.routes';
 import { creditRouter } from './routes/credit.routes';
 import { webhookRouter } from './routes/webhook.routes';
 import { promotionRouter } from './routes/promotion.routes';
+import { engagementRouter } from './routes/engagement.routes';
+import { futureLabRouter } from './routes/futurelab.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { contextMiddleware } from './middleware/context.middleware';
 import { logger } from './utils/logger';
@@ -45,6 +47,8 @@ app.use('/subscriptions', subscriptionRouter);
 app.use('/credits', creditRouter);
 app.use('/promotions', promotionRouter);
 app.use('/webhook', webhookRouter);
+app.use('/engagement', engagementRouter);
+app.use('/future-lab', futureLabRouter);
 
 // Error handler
 app.use(errorHandler);

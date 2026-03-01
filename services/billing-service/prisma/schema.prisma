@@ -40,6 +40,7 @@ model User {
   interviews         InterviewSession[]
   testAttempts       TestAttempt[]
   skillBadges        SkillBadge[]
+  codingSubmissions  CodingSubmission[]
   // Phase 4 relations
   subscription       UserSubscription?
   credits            UserCredit[]
@@ -62,6 +63,16 @@ model User {
   recruiterApplications RecruiterJobApplicant[]
   campusPlacements      CampusPlacement[]
   couponUsages          CouponUsage[]
+  notifications         Notification[]
+
+  // Engagement / Gamification fields
+  lastLoginAt  DateTime? @map("last_login_at")
+  streakCount  Int       @default(0) @map("streak_count")
+  xp           Int       @default(0)
+
+  // Future-Ready Lab relations
+  labProgress          UserLabProgress[]
+  challengeSubmissions ChallengeSubmission[]
 
   @@map("users")
 }
@@ -326,20 +337,57 @@ model InterviewSession {
   startedAt    DateTime?       @map("started_at")
   completedAt  DateTime?       @map("completed_at")
   createdAt    DateTime        @default(now()) @map("created_at")
-  
+
   // Phase 5: Interview Replay
   replayUrl             String?         @map("replay_url")
   replayTranscriptUrl   String?         @map("replay_transcript_url")
   isReplayAvailable     Boolean         @default(false) @map("is_replay_available")
 
-  jobId        String?         @map("job_id")
+  jobId        String?              @map("job_id")
+  inviteType   InterviewInviteType? @map("invite_type") // null = self-practice
+
+  // Scheduled interview (copilot only)
+  scheduledAt     DateTime? @map("scheduled_at")
+  scheduledEndAt  DateTime? @map("scheduled_end_at")
+  meetLink        String?   @map("meet_link")
+  calendarEventId String?   @map("calendar_event_id")
 
   // Relations
-  job       RecruiterJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions InterviewQuestion[]
+  job                RecruiterJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions          InterviewQuestion[]
+  copilotSuggestions CopilotSuggestion[]
+  copilotSession     CopilotSession?
 
   @@map("interview_sessions")
+}
+
+// ============================================
+// COPILOT SESSION DATA (Live Interview AI)
+// ============================================
+
+model CopilotSession {
+  id          String   @id @default(uuid())
+  sessionId   String   @unique @map("session_id")
+  transcript  String   @db.Text
+  summary     String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("copilot_sessions")
+}
+
+model CopilotSuggestion {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  text      String   @db.Text
+  timestamp DateTime @default(now())
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("copilot_suggestions")
 }
 
 model InterviewQuestion {
@@ -397,6 +445,11 @@ enum InterviewStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum InterviewInviteType {
+  AI      // Full AI interview — candidate takes it alone
+  COPILOT // Human recruiter conducts interview, AI assists
 }
 
 enum Difficulty {
@@ -904,6 +957,10 @@ model RecruiterJobApplicant {
   appliedAt   DateTime          @default(now()) @map("applied_at")
   notes       String?           @db.Text
 
+  // Application details
+  resumeUrl   String? @db.Text @map("resume_url")
+  coverLetter String? @db.Text @map("cover_letter")
+
   // Candidate AI Evaluation
   overallScore Float?           @map("overall_score")
   aiEvaluation Json?            @map("ai_evaluation") // Resume + Interview Correlation insights
@@ -1129,4 +1186,190 @@ enum CouponType {
   SUBSCRIPTION
   CREDITS
   ALL
+}
+
+// ============================================
+// PHASE 4: TECHNICAL SIMULATIONS (Coding Challenges)
+// ============================================
+
+model CodingChallenge {
+  id          String     @id @default(uuid())
+  title       String
+  description String     @db.Text
+  difficulty  Difficulty @default(MEDIUM)
+  category    String     @default("algorithms") // arrays, strings, graphs, dynamic-programming, etc.
+  tags        String[]   // ["sorting", "two-pointers", "recursion"]
+  languages   String[]   @default(["python", "javascript", "java", "cpp"]) // supported languages
+  starterCode Json       // {"python": "def solution(...):\n    pass", "javascript": "function solution(...) {}"}
+  testCases   Json       // [{"input": "5\n1 2 3 4 5", "expectedOutput": "15", "isHidden": false}]
+  constraints String?    @db.Text
+  examples    Json?      // [{"input": "...", "output": "...", "explanation": "..."}]
+  timeLimit   Int        @default(5) @map("time_limit")   // seconds
+  memoryLimit Int        @default(128) @map("memory_limit") // MB
+  isActive    Boolean    @default(true) @map("is_active")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  submissions CodingSubmission[]
+
+  @@map("coding_challenges")
+}
+
+model CodingSubmission {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  challengeId   String   @map("challenge_id")
+  language      String   // "python", "javascript", "java", "cpp"
+  code          String   @db.Text
+  status        String   @default("PENDING") // PENDING | ACCEPTED | WRONG_ANSWER | TIME_LIMIT_EXCEEDED | RUNTIME_ERROR | COMPILATION_ERROR
+  score         Int?     // 0-100
+  testsPassed   Int      @default(0) @map("tests_passed")
+  totalTests    Int      @default(0) @map("total_tests")
+  executionTime Int?     @map("execution_time") // milliseconds
+  memoryUsed    Int?     @map("memory_used") // KB
+  aiAnalysis    Json?    @map("ai_analysis") // {feedback, timeComplexity, spaceComplexity, improvements, codeQuality}
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge CodingChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, challengeId])
+  @@map("coding_submissions")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   @default("job_alert")
+  title     String
+  message   String
+  metadata  Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// FUTURE-READY LAB
+// ============================================
+
+model LabTrack {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  title            String
+  description      String
+  icon             String   // Lucide icon name, e.g. "Bot"
+  gradient         String   // Tailwind gradient classes
+  cardBg           String   @map("card_bg") // Tailwind bg classes (light + dark)
+  border           String   // Tailwind border classes
+  tag              String   // e.g. "🔥 Hottest Skill"
+  tagColor         String   @map("tag_color") // Tailwind tag badge classes
+  totalMinutes     Int      @default(0) @map("total_minutes")
+  isActive         Boolean  @default(true) @map("is_active")
+  order            Int      @default(0)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  labs             Lab[]
+  userProgress     UserLabProgress[]
+
+  @@map("lab_tracks")
+}
+
+model Lab {
+  id          String   @id @default(uuid())
+  trackId     String   @map("track_id")
+  title       String
+  content     String?  // Markdown content shown in the lab
+  duration    String   // Display string e.g. "15 min"
+  durationMin Int      @default(0) @map("duration_min")
+  isFree      Boolean  @default(false) @map("is_free")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  track    LabTrack          @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  progress UserLabProgress[]
+
+  @@index([trackId])
+  @@map("labs")
+}
+
+model UserLabProgress {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  trackId     String    @map("track_id")
+  labId       String    @map("lab_id")
+  status      LabStatus @default(NOT_STARTED)
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track LabTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lab   Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, labId])
+  @@index([userId, trackId])
+  @@map("user_lab_progress")
+}
+
+enum LabStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model WeeklyChallenge {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  difficulty  String   @default("Intermediate")
+  reward      String   // Display string e.g. "+150 XP + Builder Badge"
+  xpReward    Int      @default(150) @map("xp_reward")
+  deadline    DateTime
+  weekNumber  Int      @map("week_number")
+  year        Int
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  submissions ChallengeSubmission[]
+
+  @@unique([weekNumber, year])
+  @@map("weekly_challenges")
+}
+
+model ChallengeSubmission {
+  id          String           @id @default(uuid())
+  challengeId String           @map("challenge_id")
+  userId      String           @map("user_id")
+  githubUrl   String?          @map("github_url")
+  writeup     String?
+  score       Int?
+  aiFeedback  String?          @map("ai_feedback")
+  status      SubmissionStatus @default(PENDING)
+  submittedAt DateTime         @default(now()) @map("submitted_at")
+  evaluatedAt DateTime?        @map("evaluated_at")
+
+  challenge WeeklyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@map("challenge_submissions")
+}
+
+enum SubmissionStatus {
+  PENDING
+  REVIEWING
+  EVALUATED
+  REJECTED
 }

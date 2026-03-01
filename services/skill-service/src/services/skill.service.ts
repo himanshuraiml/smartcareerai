@@ -2,7 +2,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini, analyzeWithLLM } from '../utils/gemini';
-import { cacheGet, cacheSet, cacheDelPattern, normalizeSkillName } from '@smartcareer/shared';
+import { cacheGet, cacheSet, cacheDelPattern, normalizeSkillName } from '@placenxt/shared';
 
 // Roadmap week structure for learning paths
 interface RoadmapWeek {

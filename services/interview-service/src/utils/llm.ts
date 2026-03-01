@@ -664,6 +664,41 @@ Evaluate the solution and return ONLY the JSON object.`;
     }
 }
 
+// Generate real-time copilot suggestions from a transcript segment
+export async function generateCopilotSuggestionsFromTranscript(transcriptText: string): Promise<string[]> {
+    const systemPrompt = `You are an expert AI Interview Copilot assisting a human recruiter during a live interview.
+Based on the transcript segment, provide 1-2 suggested follow-up questions to probe deeper or verify a technical claim.
+Keep them concise. Return JSON: {"suggestions": ["question1", "question2"]}`;
+
+    const userPrompt = `Transcript segment:\n"${transcriptText.substring(0, 2000)}"`;
+
+    try {
+        const client = getGroq();
+        if (!client) {
+            return [];
+        }
+
+        const response = await client.chat.completions.create({
+            model: 'llama-3.1-8b-instant', // Fast model for real-time suggestions
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.5,
+            max_tokens: 200,
+            response_format: { type: 'json_object' },
+        });
+
+        const text = response.choices[0]?.message?.content || '{}';
+        const result = JSON.parse(cleanJsonResponse(text));
+        const suggestions = Array.isArray(result.suggestions) ? result.suggestions : [];
+        return suggestions.filter((s: string) => s && s.length > 5);
+    } catch (error) {
+        logger.error('Failed to generate copilot suggestions:', error);
+        return [];
+    }
+}
+
 function getBasicFeedback(score: number): string {
     if (score >= 80) {
         return `Excellent performance! You demonstrated strong knowledge and communication skills. Continue practicing to maintain this level. Focus on polishing specific technical areas for even better results.`;

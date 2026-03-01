@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { logger } from './logger';
-import { cacheGet, cacheSet } from '@smartcareer/shared';
+import { cacheGet, cacheSet } from '@placenxt/shared';
 
 interface BankQuestion {
     id: string;
