@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { generateEmbedding, querySimilarVectors } from '@placenxt/shared';
+import { generateEmbedding, querySimilarVectors } from '../utils/vectorUtils';
 
 export class SourcingController {
     async rediscoverCandidates(req: Request, res: Response, next: NextFunction) {

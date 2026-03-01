@@ -6,7 +6,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { parseResumeContent } from '../utils/ai';
-import { generateEmbedding, upsertVector } from '@placenxt/shared';
+import { generateEmbedding, upsertVector } from '../utils/vectorUtils';
 
 interface UploadedFile {
     originalname: string;
