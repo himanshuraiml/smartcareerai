@@ -25,7 +25,7 @@ async function processCopilotBuffer(interviewId: string, io: Server) {
         });
 
         if (res.ok) {
-            const data = await res.json();
+            const data = await res.json() as { suggestions?: string[] };
             if (data.suggestions && data.suggestions.length > 0) {
                 io.to(`interview_${interviewId}`).emit('copilot:suggestions', {
                     interviewId,
