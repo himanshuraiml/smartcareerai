@@ -7,7 +7,7 @@ import { generateEmbedding, querySimilarVectors } from '@placenxt/shared';
 export class SourcingController {
     async rediscoverCandidates(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = (req as any).user.id;
+            const recruiterId = (req as any).recruiter!.id;
             const { id: jobId } = req.params;
 
             // 1. Verify job belongs to recruiter

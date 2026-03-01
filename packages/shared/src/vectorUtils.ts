@@ -1,10 +1,4 @@
 import { Pinecone } from '@pinecone-database/pinecone';
-import { pipeline, env } from '@xenova/transformers';
-
-// Configure transformers to not use local file system for models
-// This helps prevent issues in some environments. Models are downloaded and cached.
-env.allowLocalModels = false;
-env.useBrowserCache = false;
 
 // Initialize Pinecone client (singleton)
 let pineconeClient: Pinecone | null = null;
@@ -21,35 +15,85 @@ export const getPineconeClient = (): Pinecone => {
     return pineconeClient;
 };
 
-// Initialize Xenova Transformers pipeline for feature extraction (singleton)
-let extractionPipeline: any = null;
+/**
+ * Generates an embedding vector for the given text.
+ *
+ * Strategy (in priority order):
+ *  1. Hugging Face Inference API  — free, remote, no cold starts (recommended for production)
+ *  2. @xenova/transformers         — local, no API key needed (fallback for dev / offline)
+ *
+ * Set HF_API_KEY (or HUGGINGFACEHUB_API_TOKEN) in your .env to enable HF.
+ * If neither key is set, falls back to local Xenova (development only).
+ *
+ * Model: sentence-transformers/all-MiniLM-L6-v2  → 384 dimensions, cosine similarity
+ */
+export const generateEmbedding = async (text: string): Promise<number[]> => {
+    const hfToken = process.env.HF_API_KEY || process.env.HUGGINGFACEHUB_API_TOKEN;
 
-export const getEmbeddingPipeline = async () => {
-    if (!extractionPipeline) {
-        // Use all-MiniLM-L6-v2 which outputs 384-dimensional vectors
-        extractionPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-            quantized: true // Use quantized model for smaller size and faster inference
-        });
+    if (hfToken) {
+        return generateEmbeddingHF(text, hfToken);
     }
-    return extractionPipeline;
+
+    // Fallback: local Xenova (works in dev, NOT recommended for Railway production)
+    return generateEmbeddingLocal(text);
 };
 
 /**
- * Generates an embedding vector for the given text using Xenova Transformers.
- * Returns an array of numbers (dimension 384).
+ * Hugging Face Inference API embedding.
+ * Free tier: 30,000 req/month — plenty for most ATS workloads.
+ * Docs: https://huggingface.co/docs/api-inference/tasks/feature-extraction
  */
-export const generateEmbedding = async (text: string): Promise<number[]> => {
+const generateEmbeddingHF = async (text: string, token: string): Promise<number[]> => {
+    const MODEL = 'sentence-transformers/all-MiniLM-L6-v2';
+    const response = await fetch(
+        `https://api-inference.huggingface.co/pipeline/feature-extraction/${MODEL}`,
+        {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inputs: text,
+                options: { wait_for_model: true }, // avoid 503 on cold model
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`HuggingFace embedding API error (${response.status}): ${err}`);
+    }
+
+    const result = await response.json() as number[] | number[][];
+
+    // HF returns either a flat array [384] or a nested array [[384]] depending on input
+    if (Array.isArray(result[0])) {
+        return result[0] as number[];
+    }
+    return result as number[];
+};
+
+/**
+ * Local embedding via @xenova/transformers.
+ * Good for development / offline use. NOT recommended for Railway (model download on cold start).
+ */
+const generateEmbeddingLocal = async (text: string): Promise<number[]> => {
     try {
-        const extractor = await getEmbeddingPipeline();
+        // Dynamic import so this module is only loaded when actually needed
+        const { pipeline, env } = await import('@xenova/transformers');
+        env.allowLocalModels = false;
+        env.useBrowserCache = false;
 
-        // Generate embedding
+        const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+            quantized: true,
+        });
+
         const output = await extractor(text, { pooling: 'mean', normalize: true });
-
-        // Convert Float32Array to standard JS Array
-        return Array.from(output.data);
+        return Array.from(output.data as Float32Array);
     } catch (error) {
-        console.error('Error generating embedding:', error);
-        throw new Error('Failed to generate embedding vector');
+        console.error('Local embedding error:', error);
+        throw new Error('Failed to generate embedding vector (local fallback also failed — set HF_API_KEY)');
     }
 };
 
@@ -66,7 +110,6 @@ export const upsertVector = async (
     try {
         const pc = getPineconeClient();
         const index = pc.index(indexName);
-
         await index.namespace(namespace).upsert([{ id: vectorId, values: vector, metadata }] as any);
     } catch (error) {
         console.error('Error upserting vector to Pinecone:', error);

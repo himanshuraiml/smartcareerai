@@ -30,7 +30,7 @@ app.get('/health', (_req, res) => {
 app.use('/', recruiterRouter);
 app.use('/organization', organizationRouter);
 app.use('/messages', messageRouter);
-app.use('/sourcing', sourcingRouter);
+app.use('/', sourcingRouter);
 app.use('/api/v1/public', publicRouter);
 
 // Error handler

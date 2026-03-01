@@ -58,9 +58,9 @@ const MOCK_JOB = {
 const MOCK_VECTOR = new Array(384).fill(0.1);
 
 const MOCK_PINECONE_MATCHES = [
-    { id: 'user-1', score: 0.92, metadata: {} },
-    { id: 'user-2', score: 0.75, metadata: {} },
-    { id: 'user-3', score: 0.60, metadata: {} },
+    { id: 'user-1', score: 0.92, values: [], metadata: {} },
+    { id: 'user-2', score: 0.75, values: [], metadata: {} },
+    { id: 'user-3', score: 0.60, values: [], metadata: {} },
 ];
 
 const MOCK_USERS = [
