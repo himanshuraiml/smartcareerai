@@ -1186,51 +1186,72 @@ async function seed() {
 
     for (const trackData of TRACKS) {
         const { labs, ...track } = trackData;
-        const trackId = require('crypto').randomUUID();
 
-        // Upsert track via raw SQL (avoids camelCase Prisma mapping issues)
-        await prisma.$executeRaw`
-            INSERT INTO lab_tracks (id, slug, title, description, icon, gradient, card_bg, border, tag, tag_color, total_minutes, "order", is_active, created_at, updated_at)
-            VALUES (
-                ${trackId}, ${track.slug}, ${track.title}, ${track.description},
-                ${track.icon}, ${track.gradient}, ${track.cardBg}, ${track.border},
-                ${track.tag}, ${track.tagColor}, ${track.totalMinutes}, ${track.order},
-                true, NOW(), NOW()
-            )
-            ON CONFLICT (slug) DO UPDATE SET
-                title = EXCLUDED.title,
-                description = EXCLUDED.description,
-                gradient = EXCLUDED.gradient,
-                card_bg = EXCLUDED.card_bg,
-                border = EXCLUDED.border,
-                tag = EXCLUDED.tag,
-                tag_color = EXCLUDED.tag_color,
-                total_minutes = EXCLUDED.total_minutes,
-                "order" = EXCLUDED."order",
-                updated_at = NOW()
-        `;
+        // Upsert track using Prisma (slug is unique)
+        const savedTrack = await prisma.labTrack.upsert({
+            where: { slug: track.slug },
+            update: {
+                title: track.title,
+                description: track.description,
+                icon: track.icon,
+                gradient: track.gradient,
+                cardBg: track.cardBg,
+                border: track.border,
+                tag: track.tag,
+                tagColor: track.tagColor,
+                totalMinutes: track.totalMinutes,
+                order: track.order,
+                isActive: true,
+            },
+            create: {
+                slug: track.slug,
+                title: track.title,
+                description: track.description,
+                icon: track.icon,
+                gradient: track.gradient,
+                cardBg: track.cardBg,
+                border: track.border,
+                tag: track.tag,
+                tagColor: track.tagColor,
+                totalMinutes: track.totalMinutes,
+                order: track.order,
+                isActive: true,
+            },
+        });
+        console.log(`  ✅ Track: ${savedTrack.title} (${savedTrack.id})`);
 
-        // Get actual track id (may differ if the slug already existed)
-        const [existing] = await prisma.$queryRaw<{ id: string }[]>`
-            SELECT id FROM lab_tracks WHERE slug = ${track.slug}
-        `;
-        const dbTrackId = existing.id;
-        console.log(`  ✅ Track: ${track.title} (${dbTrackId})`);
-
+        // Upsert each lab (find by trackId + order, then update or create)
         for (const lab of labs) {
-            await prisma.$executeRaw`
-                INSERT INTO labs (id, track_id, title, content, duration, duration_min, is_free, "order", is_active, created_at)
-                VALUES (
-                    gen_random_uuid(), ${dbTrackId}, ${lab.title}, ${lab.content ?? ''},
-                    ${lab.duration}, ${lab.durationMin}, ${lab.isFree}, ${lab.order}, true, NOW()
-                )
-                ON CONFLICT (track_id, "order") DO UPDATE SET
-                    title = EXCLUDED.title,
-                    content = EXCLUDED.content,
-                    duration = EXCLUDED.duration,
-                    duration_min = EXCLUDED.duration_min,
-                    is_free = EXCLUDED.is_free
-            `;
+            const existing = await prisma.lab.findFirst({
+                where: { trackId: savedTrack.id, order: lab.order },
+            });
+
+            if (existing) {
+                await prisma.lab.update({
+                    where: { id: existing.id },
+                    data: {
+                        title: lab.title,
+                        content: lab.content ?? '',
+                        duration: lab.duration,
+                        durationMin: lab.durationMin,
+                        isFree: lab.isFree,
+                        isActive: true,
+                    },
+                });
+            } else {
+                await prisma.lab.create({
+                    data: {
+                        trackId: savedTrack.id,
+                        title: lab.title,
+                        content: lab.content ?? '',
+                        duration: lab.duration,
+                        durationMin: lab.durationMin,
+                        isFree: lab.isFree,
+                        order: lab.order,
+                        isActive: true,
+                    },
+                });
+            }
         }
         console.log(`     ↳ ${labs.length} labs seeded`);
     }
@@ -1241,24 +1262,24 @@ async function seed() {
     deadline.setDate(deadline.getDate() + (7 - deadline.getDay()));
     deadline.setHours(23, 59, 59, 0);
 
-    await prisma.$executeRaw`
-        INSERT INTO weekly_challenges (id, title, description, difficulty, reward, xp_reward, deadline, week_number, year, is_active, created_at, updated_at)
-        VALUES (
-            gen_random_uuid(),
-            'Build a Simple AI Chatbot with Memory',
-            'Create a chatbot using any LLM API that remembers conversation context across at least 5 turns. Document your approach with a short write-up or GitHub repo.',
-            'Intermediate',
-            '+150 XP + Builder Badge',
-            150,
-            ${deadline},
-            ${week},
-            ${year},
-            true,
-            NOW(),
-            NOW()
-        )
-        ON CONFLICT (week_number, year) DO NOTHING
-    `;
+    await prisma.weeklyChallenge.upsert({
+        where: {
+            weekNumber_year: { weekNumber: week, year },
+        },
+        update: {}, // do nothing if it already exists
+        create: {
+            title: 'Build a Simple AI Chatbot with Memory',
+            description:
+                'Create a chatbot using any LLM API that remembers conversation context across at least 5 turns. Document your approach with a short write-up or GitHub repo.',
+            difficulty: 'Intermediate',
+            reward: '+150 XP + Builder Badge',
+            xpReward: 150,
+            deadline,
+            weekNumber: week,
+            year,
+            isActive: true,
+        },
+    });
 
     console.log(`  ✅ Weekly Challenge (Week ${week}/${year}) seeded`);
     console.log('🎉 Seeding complete!');

@@ -52,3 +52,8 @@ env
 
 # markdown files
 *.md
+
+
+smartcareer_backup_*.dumps
+
+migrate_status.txt

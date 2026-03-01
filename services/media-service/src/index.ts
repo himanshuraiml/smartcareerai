@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
+
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config({ path: path.resolve(__dirname, '../.env') });
     dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -57,9 +58,63 @@ const io = new Server(server, {
 // Setup Socket.io signaling
 setupSignaling(io);
 
+/**
+ * Resolves the public IP for MediaSoup's announcedAddress.
+ *
+ * On Railway (and other PaaS platforms) there is no static IP, so we fetch
+ * the current outbound IP at startup. We try two providers as fallback.
+ *
+ * If MEDIASOUP_ANNOUNCED_IP is already set (e.g. a VPS with a known static IP),
+ * that value is used as-is and no network call is made.
+ */
+async function resolveAnnouncedIp(): Promise<string> {
+    // Already configured — use it (static VPS or manual override)
+    if (process.env.MEDIASOUP_ANNOUNCED_IP && process.env.MEDIASOUP_ANNOUNCED_IP !== '0.0.0.0') {
+        logger.info(`MEDIASOUP_ANNOUNCED_IP set explicitly: ${process.env.MEDIASOUP_ANNOUNCED_IP}`);
+        return process.env.MEDIASOUP_ANNOUNCED_IP;
+    }
+
+    const providers = [
+        'https://api.ipify.org?format=json',
+        'https://api4.my-ip.io/ip.json',
+    ];
+
+    for (const url of providers) {
+        try {
+            logger.info(`Fetching public IP from ${url}...`);
+            const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+            if (!res.ok) continue;
+            const data = await res.json() as { ip?: string; IPv4?: string };
+            const ip = data.ip ?? data.IPv4;
+            if (ip) {
+                logger.info(`Resolved public IP for MediaSoup: ${ip}`);
+                return ip;
+            }
+        } catch {
+            logger.warn(`IP lookup failed for ${url}, trying next...`);
+        }
+    }
+
+    logger.warn('Could not resolve public IP — falling back to 127.0.0.1 (local only).');
+    return '127.0.0.1';
+}
+
 // Start server
 async function start() {
     try {
+        // ── Step 1: Resolve public IP before any MediaSoup config is used ──
+        const announcedIp = await resolveAnnouncedIp();
+        process.env.MEDIASOUP_ANNOUNCED_IP = announcedIp;
+
+        // ── Step 2: Patch the already-imported config with the resolved IP ──
+        // mediasoup.config.ts is evaluated when worker-manager is first imported
+        // (before resolveAnnouncedIp runs), so we override the values directly.
+        const { mediasoupConfig } = await import('./config/mediasoup.config');
+        for (const info of mediasoupConfig.webRtcTransport.listenInfos) {
+            info.announcedAddress = announcedIp;
+        }
+
+        // ── Step 3: Start MediaSoup workers ──
         await workerManager.init();
         logger.info('MediaSoup workers initialized');
 
@@ -69,6 +124,7 @@ async function start() {
 
         server.listen(PORT, () => {
             logger.info(`Media Service running on port ${PORT}`);
+            logger.info(`MediaSoup announced IP: ${announcedIp}`);
         });
     } catch (err) {
         logger.error('Failed to start media service:', err);
