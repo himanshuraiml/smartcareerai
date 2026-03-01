@@ -22,9 +22,9 @@ RUN mkdir -p frontend && echo '{"name":"frontend","version":"1.0.0","private":tr
 
 # Create stub package.json for other services so "services/*" glob resolves
 # without needing to copy all service source code
-RUN for dir in api-gateway auth-service resume-service scoring-service skill-service job-service application-service interview-service validation-service billing-service admin-service recruiter-service email-tracking-service; do \
+RUN for dir in api-gateway auth-service resume-service scoring-service skill-service job-service application-service interview-service validation-service billing-service admin-service recruiter-service email-tracking-service media-service; do \
       if [ ! -d "services/$dir" ]; then \
-        mkdir -p "services/$dir" && echo "{\"name\":\"@smartcareer/$dir\",\"version\":\"1.0.0\",\"private\":true}" > "services/$dir/package.json"; \
+        mkdir -p "services/$dir" && echo "{\"name\":\"@placenxt/$dir\",\"version\":\"1.0.0\",\"private\":true}" > "services/$dir/package.json"; \
       fi; \
     done
 
