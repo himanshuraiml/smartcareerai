@@ -85,7 +85,7 @@ export class OutlookCalendarService {
         startTime: Date,
         endTime: Date,
         attendeeEmails: string[]
-    ) {
+    ): Promise<{ id: string; onlineMeeting?: { joinUrl?: string } }> {
         const event = {
             subject: summary,
             body: { contentType: 'HTML', content: description },
@@ -113,7 +113,7 @@ export class OutlookCalendarService {
             throw new Error(`Failed to create Outlook event: ${err}`);
         }
 
-        return res.json();
+        return res.json() as Promise<{ id: string; onlineMeeting?: { joinUrl?: string } }>;
     }
 
     /**
