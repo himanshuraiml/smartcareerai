@@ -38,7 +38,7 @@ export class BillingClient {
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json() as Record<string, any>;
 
             if (!response.ok) {
                 const error = new Error(data.message || 'Failed to consume credit') as CreditError;
@@ -89,7 +89,7 @@ export class BillingClient {
                 }
             );
 
-            const data = await response.json();
+            const data = await response.json() as Record<string, any>;
 
             if (!response.ok) {
                 return false;
@@ -114,7 +114,7 @@ export class BillingClient {
                 },
             });
 
-            const data = await response.json();
+            const data = await response.json() as Record<string, any>;
 
             if (!response.ok) {
                 return { RESUME_REVIEW: 0, AI_INTERVIEW: 0, SKILL_TEST: 0 };
