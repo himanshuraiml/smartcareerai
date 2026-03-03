@@ -194,22 +194,6 @@ export default function StreakBanner() {
                         })}
                     </div>
 
-                    {/* XP/Level */}
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/60 dark:bg-white/5 border border-orange-100 dark:border-orange-500/10 flex-shrink-0">
-                        <Zap className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                        <div>
-                            <p className="text-xs font-bold text-gray-700 dark:text-white">Lvl {stats.level}</p>
-                            <div className="flex items-center gap-1">
-                                <div className="w-16 h-1 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                                        style={{ width: `${(stats.xpInCurrentLevel / 500) * 100}%` }}
-                                    />
-                                </div>
-                                <span className="text-[10px] text-gray-400">{stats.xpToNextLevel} XP</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </>

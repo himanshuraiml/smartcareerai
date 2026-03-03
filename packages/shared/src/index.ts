@@ -11,6 +11,7 @@ export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedi
 // ============================================
 
 export { normalizeSkillName, normalizeSkillList } from './skill-normalization.js';
+export { generateEmbedding, upsertVector, querySimilarVectors, getPineconeClient } from './vectorUtils.js';
 
 // ============================================
 // AUTH SCHEMAS
