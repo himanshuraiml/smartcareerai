@@ -51,30 +51,44 @@ export class AtsService {
                     select: {
                         name: true,
                         email: true,
-                        avatarUrl: true
+                        avatarUrl: true,
+                        // Include the most recent interview session for this job
+                        interviews: {
+                            where: { jobId },
+                            select: { id: true, inviteType: true, meetLink: true },
+                            orderBy: { createdAt: 'desc' },
+                            take: 1,
+                        },
                     }
                 }
             }
         });
 
-        return applicants.map((a) => ({
-            applicationId: a.id,
-            candidateId: a.candidateId,
-            name: a.candidate?.name || 'Candidate',
-            email: a.candidate?.email || '',
-            avatarUrl: a.candidate?.avatarUrl || null,
-            status: a.status,
-            appliedAt: a.appliedAt,
-            resumeUrl: a.resumeUrl || null,
-            coverLetter: a.coverLetter || null,
-            overallScore: a.overallScore,
-            aiEvaluation: a.aiEvaluation,
-            notes: a.notes,
-            fitScore: a.fitScore,
-            dropoutRisk: a.dropoutRisk,
-            acceptanceLikelihood: a.acceptanceLikelihood,
-            biasFlags: a.biasFlags,
-        }));
+        return applicants.map((a) => {
+            const latestSession = a.candidate?.interviews?.[0];
+            return {
+                applicationId: a.id,
+                candidateId: a.candidateId,
+                name: a.candidate?.name || 'Candidate',
+                email: a.candidate?.email || '',
+                avatarUrl: a.candidate?.avatarUrl || null,
+                status: a.status,
+                appliedAt: a.appliedAt,
+                resumeUrl: a.resumeUrl || null,
+                coverLetter: a.coverLetter || null,
+                overallScore: a.overallScore,
+                aiEvaluation: a.aiEvaluation,
+                notes: a.notes,
+                fitScore: a.fitScore,
+                dropoutRisk: a.dropoutRisk,
+                acceptanceLikelihood: a.acceptanceLikelihood,
+                biasFlags: a.biasFlags,
+                // Interview session data for the recruiter to resume a COPILOT session
+                sessionId: latestSession?.id ?? null,
+                inviteType: latestSession?.inviteType ?? null,
+                meetLink: latestSession?.meetLink ?? null,
+            };
+        });
     }
 
     /**

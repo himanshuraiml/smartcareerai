@@ -1,0 +1,97 @@
+# ============================================================
+# ai-interviewer-service — Kubernetes Deployment
+#
+# Stateless service (session metadata in Redis); scales
+# horizontally via the HPA in hpa-interview.yaml.
+#
+# Requires FFmpeg in the container image for TTS → RTP pipeline.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-interviewer-service
+  namespace: placenxt
+  labels:
+    app: ai-interviewer-service
+    tier: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-interviewer-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: ai-interviewer-service
+        tier: ai
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: ai-interviewer-service
+          image: placenxt/ai-interviewer-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3016
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3016"
+            - name: MEDIA_SERVICE_URL
+              value: "http://media-service.placenxt.svc.cluster.local:3014"
+            - name: INTERVIEW_SERVICE_URL
+              value: "http://interview-service.placenxt.svc.cluster.local:3007"
+            - name: TTS_MODEL
+              value: "tts-1"
+            - name: TTS_VOICE
+              value: "nova"
+            - name: GROQ_MODEL
+              value: "llama-3.3-70b-versatile"
+            - name: SILENCE_THRESHOLD_SECONDS
+              value: "8"
+          envFrom:
+            - secretRef:
+                name: placenxt-secrets  # OPENAI_API_KEY, GROQ_API_KEY, REDIS_URL, DATABASE_URL, INTERNAL_SERVICE_SECRET
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3016
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3016
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-interviewer-service
+  namespace: placenxt
+  labels:
+    app: ai-interviewer-service
+spec:
+  selector:
+    app: ai-interviewer-service
+  ports:
+    - name: http
+      port: 3016
+      targetPort: 3016
+      protocol: TCP
+  type: ClusterIP

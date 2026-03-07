@@ -327,16 +327,74 @@ export class JobService {
         const interviewType: string = config?.interviewType || 'MIXED';
         const difficulty: string = config?.difficulty || 'MEDIUM';
 
-        // ── Google Calendar event (COPILOT only) ────────────────────
+        // ── Scheduling setup (COPILOT only) ─────────────────────────
         let meetLink: string | undefined;
         let calendarEventId: string | undefined;
         let startTime: Date | undefined;
         let endTime: Date | undefined;
+        let inHouseMeetingId: string | undefined;
 
         if (inviteType === 'COPILOT' && scheduledAt) {
             startTime = new Date(scheduledAt);
             endTime = new Date(startTime.getTime() + (durationMinutes || 60) * 60 * 1000);
+        }
 
+        // Create InterviewSession directly (credit check bypassed — recruiter invited)
+        const session = await prisma.interviewSession.create({
+            data: {
+                userId: applicant.candidateId,
+                type: interviewType as InterviewType,
+                targetRole: job.title,
+                difficulty: difficulty as Difficulty,
+                status: 'PENDING',
+                jobId: job.id,
+                inviteType,
+                ...(startTime ? { scheduledAt: startTime } : {}),
+                ...(endTime ? { scheduledEndAt: endTime } : {}),
+            },
+        });
+
+        // ── Create in-house MeetingRoom (COPILOT only) ───────────────
+        // Uses the platform's own WebRTC meeting system instead of Google Meet.
+        if (inviteType === 'COPILOT') {
+            try {
+                const mediaServiceUrl = process.env.MEDIA_SERVICE_URL || 'http://localhost:3014';
+                const meetRes = await fetch(`${mediaServiceUrl}/meetings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-id': recruiterId,
+                    },
+                    body: JSON.stringify({
+                        interviewId: session.id,
+                        maxParticipants: 5,
+                        ...(startTime ? { scheduledAt: startTime.toISOString() } : {}),
+                    }),
+                });
+
+                if (meetRes.ok) {
+                    const meetData = await meetRes.json() as { success: boolean; data: { id: string; meetingToken: string } };
+                    inHouseMeetingId = meetData.data?.id;
+                    meetLink = inHouseMeetingId ? `/dashboard/meetings/${inHouseMeetingId}` : undefined;
+
+                    if (meetLink) {
+                        await prisma.interviewSession.update({
+                            where: { id: session.id },
+                            data: { meetLink },
+                        });
+                    }
+                    logger.info(`Created in-house meeting ${inHouseMeetingId} for interview session ${session.id}`);
+                } else {
+                    logger.warn(`Failed to create in-house meeting (${meetRes.status}): ${await meetRes.text()}`);
+                }
+            } catch (meetErr: any) {
+                logger.warn(`In-house meeting room creation failed (non-fatal): ${meetErr.message}`);
+            }
+        }
+
+        // ── Google Calendar event (COPILOT + calendar integration) ───
+        // Sends a calendar invite with the PlaceNxt meeting link (no Google Meet auto-creation).
+        if (inviteType === 'COPILOT' && startTime && endTime) {
             try {
                 if (recruiter?.organizationId) {
                     const calIntegration = await prisma.calendarIntegration.findUnique({
@@ -353,13 +411,6 @@ export class JobService {
                         const attendees = [applicant.candidate.email];
                         if (recruiterUser?.email) attendees.push(recruiterUser.email);
 
-                        const scheduledDateStr = startTime.toLocaleDateString('en-US', {
-                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-                        });
-                        const scheduledTimeStr = startTime.toLocaleTimeString('en-US', {
-                            hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-                        });
-
                         const eventDescription = [
                             `Interview for: ${job.title}`,
                             `Candidate: ${applicant.candidate.name}`,
@@ -367,8 +418,11 @@ export class JobService {
                             '',
                             customMessage || '',
                             '',
-                            'This interview uses AI-assisted co-pilot technology for real-time question suggestions and evaluation.',
+                            'This interview uses the PlaceNxt AI-assisted co-pilot for real-time question suggestions and evaluation.',
                         ].join('\n');
+
+                        const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3100';
+                        const fullMeetingUrl = meetLink ? `${appBaseUrl}${meetLink}` : undefined;
 
                         const event = await googleCalendarService.createInterviewEvent(
                             `Interview: ${job.title} — ${applicant.candidate.name}`,
@@ -376,36 +430,23 @@ export class JobService {
                             startTime,
                             endTime,
                             attendees,
+                            fullMeetingUrl,
                         );
 
-                        meetLink = (event as any).hangoutLink || undefined;
                         calendarEventId = event.id || undefined;
-
-                        logger.info(`Created Google Calendar event ${calendarEventId} for interview session, meetLink: ${meetLink}`);
+                        if (calendarEventId) {
+                            await prisma.interviewSession.update({
+                                where: { id: session.id },
+                                data: { calendarEventId },
+                            });
+                        }
+                        logger.info(`Created Google Calendar event ${calendarEventId} for interview session ${session.id}`);
                     }
                 }
             } catch (calErr: any) {
-                // Calendar failure is non-fatal — interview still goes ahead
                 logger.warn(`Google Calendar event creation failed (non-fatal): ${calErr.message}`);
             }
         }
-
-        // Create InterviewSession directly (credit check bypassed — recruiter invited)
-        const session = await prisma.interviewSession.create({
-            data: {
-                userId: applicant.candidateId,
-                type: interviewType as InterviewType,
-                targetRole: job.title,
-                difficulty: difficulty as Difficulty,
-                status: 'PENDING',
-                jobId: job.id,
-                inviteType,
-                ...(startTime ? { scheduledAt: startTime } : {}),
-                ...(endTime ? { scheduledEndAt: endTime } : {}),
-                ...(meetLink ? { meetLink } : {}),
-                ...(calendarEventId ? { calendarEventId } : {}),
-            },
-        });
 
         // Pre-populate questions from aiInterviewConfig if present
         if (config?.questions && Array.isArray(config.questions) && config.questions.length > 0) {
@@ -430,7 +471,9 @@ export class JobService {
         } else if (startTime) {
             const dateStr = startTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
             const timeStr = startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            defaultMessage = `${companyName} has scheduled a live interview for the ${job.title} position on ${dateStr} at ${timeStr}. ${meetLink ? `Join link: ${meetLink}` : 'The interviewer will share a meeting link shortly.'}`;
+            const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3100';
+            const joinUrl = meetLink ? `${appBaseUrl}${meetLink}` : null;
+            defaultMessage = `${companyName} has scheduled a live interview for the ${job.title} position on ${dateStr} at ${timeStr}. ${joinUrl ? `Join: ${joinUrl}` : 'The interviewer will share a meeting link shortly.'}`;
         } else {
             defaultMessage = `${companyName} has invited you to a live interview for the ${job.title} position. The recruiter will share a meeting link shortly.`;
         }
@@ -468,6 +511,7 @@ export class JobService {
             inviteType,
             scheduledAt: startTime?.toISOString(),
             meetLink,
+            meetingId: inHouseMeetingId,
             candidateId: applicant.candidateId,
             candidateName: applicant.candidate.name,
             candidateEmail: applicant.candidate.email,

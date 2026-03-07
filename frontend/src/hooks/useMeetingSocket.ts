@@ -35,6 +35,18 @@ export interface NetworkQualityUpdate {
     quality: number; // 1-5
 }
 
+export interface TranscriptSegmentEvent {
+    id: string;
+    meetingId: string;
+    speakerId: string;
+    speakerName: string;
+    text: string;
+    startTime: number;
+    endTime: number;
+    wordCount: number;
+    isFinal: boolean;
+}
+
 interface NewProducerEvent {
     producerId: string;
     peerId: string;
@@ -62,6 +74,8 @@ interface UseMeetingSocketOptions {
     onKicked?: () => void;
     // Phase 2: network quality
     onNetworkQuality?: (update: NetworkQualityUpdate) => void;
+    // Phase 3: live transcript
+    onTranscriptSegment?: (segment: TranscriptSegmentEvent) => void;
 }
 
 export function useMeetingSocket(options: UseMeetingSocketOptions) {
@@ -105,6 +119,9 @@ export function useMeetingSocket(options: UseMeetingSocketOptions) {
 
         // Phase 2: network quality
         socket.on('network-quality', (update: NetworkQualityUpdate) => options.onNetworkQuality?.(update));
+
+        // Phase 3: live transcript
+        socket.on('transcript-segment', (seg: TranscriptSegmentEvent) => options.onTranscriptSegment?.(seg));
 
         return () => {
             socket.emit('leave-room');

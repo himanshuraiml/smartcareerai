@@ -1,61 +1,104 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { CopilotOverlay } from '@/components/copilot/CopilotOverlay';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Loader2, AlertTriangle, Video } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
-export default function LiveInterviewPage() {
+export default function LiveInterviewRedirect() {
     const params = useParams();
+    const router = useRouter();
     const interviewId = params?.id as string;
-    const [meetingUrl, setMeetingUrl] = useState<string>('');
+    const [error, setError] = useState('');
 
-    // In a real implementation, you would fetch the interview details from your backend API
-    // and verify the current user is a recruiter who owns this interview.
-    // We are mocking the meeting URL input for MVP testing:
-    const handleUrlSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const form = e.target as HTMLFormElement;
-        const input = form.elements.namedItem('meetingUrl') as HTMLInputElement;
-        setMeetingUrl(input.value);
-    };
+    useEffect(() => {
+        if (!interviewId) return;
 
-    if (!interviewId) return <div>Loading...</div>;
+        const initializeMeeting = async () => {
+            try {
+                // First check if a meeting link already exists
+                const sessionRes = await authFetch(`/interviews/sessions/${interviewId}`);
+                if (sessionRes.ok) {
+                    const { data } = await sessionRes.json();
+                    if (data?.meetLink) {
+                        return router.replace(data.meetLink);
+                    }
+                }
 
-    if (!meetingUrl) {
+                // If no meetLink is present, fetch/create a native meeting via media-service proxy
+                const meetRes = await authFetch(`/meetings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interviewId, maxParticipants: 5 })
+                });
+
+                if (meetRes.ok) {
+                    const { data } = await meetRes.json();
+                    if (data?.id) {
+                        // Successfully created or retrieved! Update the interview session in DB with this link?
+                        // The backend /meetings actually doesn't map it back automatically to interview session yet unless recruiter jobService did it.
+                        // However, routing there is enough to join the meeting room.
+                        router.replace(`/dashboard/meetings/${data.id}`);
+                        return;
+                    }
+                }
+
+                // Fallback attempt -- read response
+                const errText = await meetRes.text();
+                throw new Error(errText || 'Failed to create internal meeting room.');
+            } catch (err: any) {
+                console.error('Meeting init error:', err);
+                setError(err.message || 'Unable to connect to meeting server. Please try again.');
+            }
+        };
+
+        initializeMeeting();
+    }, [interviewId, router]);
+
+    if (error) {
         return (
-            <div className="container mx-auto p-6 max-w-xl">
-                <h1 className="text-2xl font-bold mb-6">Start Live Interview Copilot</h1>
-                <div className="bg-card shadow rounded-lg p-6 border border-border">
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Please enter the Google Meet URL for interview {interviewId}.
-                        Normally, this would be auto-fetched from the ATS integration and Google Calendar.
-                    </p>
-                    <form onSubmit={handleUrlSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Google Meet URL</label>
-                            <input
-                                type="url"
-                                name="meetingUrl"
-                                required
-                                placeholder="https://meet.google.com/abc-defg-hij"
-                                className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2"
-                        >
-                            Connect Copilot
-                        </button>
-                    </form>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8">
+                <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center border border-rose-100 dark:border-rose-500/20">
+                    <AlertTriangle className="w-8 h-8 text-rose-500" />
+                </div>
+                <h2 className="text-xl font-bold dark:text-white">Connection Error</h2>
+                <p className="text-gray-500 text-center max-w-sm">{error}</p>
+                <div className="flex gap-3 mt-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="px-5 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-sm font-semibold transition"
+                    >
+                        Go Back
+                    </button>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-bold transition"
+                    >
+                        Retry Connection
+                    </button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-6 h-[calc(100vh-100px)]">
-            <CopilotOverlay interviewId={interviewId} meetingUrl={meetingUrl} />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
+            <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-2 border-teal-500/20" />
+                <div className="absolute inset-0 rounded-full border-t-2 border-teal-500 animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center text-teal-500">
+                    <Video className="w-6 h-6 animate-pulse" />
+                </div>
+            </div>
+
+            <div className="text-center space-y-1">
+                <p className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wider">
+                    Securing Connection
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Initializing your built-in video meeting room...
+                </p>
+            </div>
         </div>
     );
 }

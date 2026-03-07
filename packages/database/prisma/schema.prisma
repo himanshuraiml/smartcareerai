@@ -1388,6 +1388,7 @@ model MeetingRoom {
   interviewId     String?       @unique @map("interview_id")
   hostId          String        @map("host_id")
   status          MeetingStatus @default(WAITING)
+  type            MeetingType   @default(STANDARD)
   meetingToken    String        @unique @map("meeting_token")
   maxParticipants Int           @default(10) @map("max_participants")
   scheduledAt     DateTime?     @map("scheduled_at")
@@ -1493,4 +1494,11 @@ enum MeetingRole {
   RECRUITER
   CANDIDATE
   OBSERVER
+  AI_INTERVIEWER
+}
+
+enum MeetingType {
+  STANDARD
+  AI_INTERVIEWER
+  PANEL
 }

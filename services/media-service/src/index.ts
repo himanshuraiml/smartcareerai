@@ -12,13 +12,18 @@ import cors from 'cors';
 import helmet from 'helmet';
 import http from 'http';
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { Redis } from 'ioredis';
 import { meetingRouter } from './routes/meeting.routes';
 import { mediaRouter } from './routes/media.routes';
+import { recordingRouter } from './routes/recording.routes';
+import { aiTransportRouter } from './routes/ai-transport.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { contextMiddleware } from './middleware/context.middleware';
 import { workerManager } from './services/worker-manager.service';
 import { setupSignaling } from './socket/signaling.socket';
 import { NetworkMonitorService } from './services/network-monitor.service';
+import { initMinioBucket } from './utils/minio-client';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -41,6 +46,22 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/meetings', meetingRouter);
 app.use('/meetings', mediaRouter);
+app.use('/meetings/:id/recording', recordingRouter);
+app.use('/meetings/:id/ai-transport', aiTransportRouter);
+
+// Internal callback: called by interview-service when meeting analysis completes
+const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
+app.post('/internal/meetings/:meetingId/analysis-ready', (req, res) => {
+    if (req.headers['x-internal-secret'] !== INTERNAL_SECRET) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { meetingId } = req.params;
+    // Import lazily to avoid circular initialization issues
+    import('./socket/signaling.socket').then(({ emitToRoom }) => {
+        emitToRoom(meetingId, 'meeting:analysis-ready', { meetingId });
+    });
+    res.json({ success: true });
+});
 
 // Error handler
 app.use(errorHandler);
@@ -54,9 +75,6 @@ const io = new Server(server, {
     },
     transports: ['websocket', 'polling'],
 });
-
-// Setup Socket.io signaling
-setupSignaling(io);
 
 /**
  * Resolves the public IP for MediaSoup's announcedAddress.
@@ -117,6 +135,24 @@ async function start() {
         // ── Step 3: Start MediaSoup workers ──
         await workerManager.init();
         logger.info('MediaSoup workers initialized');
+
+        // ── Step 4: Initialize MinIO bucket for recordings ──
+        await initMinioBucket();
+
+        // ── Step 5: Attach Redis adapter for Socket.io horizontal scaling ──
+        // Two separate connections required by @socket.io/redis-adapter.
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+        const pubClient = new Redis(redisUrl);
+        const subClient = pubClient.duplicate();
+
+        pubClient.on('error', (e) => logger.warn('Redis pub error:', e));
+        subClient.on('error', (e) => logger.warn('Redis sub error:', e));
+
+        io.adapter(createAdapter(pubClient, subClient));
+        logger.info('Socket.io Redis adapter attached (horizontal scaling enabled)');
+
+        // ── Step 6: Set up Socket.io signaling (after adapter is ready) ──
+        setupSignaling(io);
 
         // Start network quality monitor
         const networkMonitor = new NetworkMonitorService(io);

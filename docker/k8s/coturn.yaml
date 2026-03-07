@@ -1,0 +1,91 @@
+# ============================================================
+# coturn — TURN/STUN Server DaemonSet
+#
+# Deployed as a DaemonSet with hostNetwork so that TURN relay
+# traffic (UDP 3478 + the relay port range) uses the node's
+# public IP directly — essential for WebRTC NAT traversal.
+#
+# Each node runs one coturn pod; all pods share the same
+# static credentials (stored in placenxt-secrets).
+# ============================================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: coturn
+  namespace: placenxt
+  labels:
+    app: coturn
+    tier: realtime
+spec:
+  selector:
+    matchLabels:
+      app: coturn
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: coturn
+        tier: realtime
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: coturn
+          image: coturn/coturn:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--listening-port=3478"
+            - "--tls-listening-port=5349"
+            - "--min-port=49152"
+            - "--max-port=65535"
+            - "--realm=placenxt.com"
+            - "--lt-cred-mech"
+            - "--log-file=stdout"
+            - "--no-stdout-log"
+            - "--verbose"
+          env:
+            - name: DETECT_EXTERNAL_IP
+              value: "yes"
+          envFrom:
+            - secretRef:
+                # Must contain: TURN_USERNAME, TURN_CREDENTIAL
+                name: placenxt-coturn-secrets
+          ports:
+            - containerPort: 3478
+              hostPort: 3478
+              protocol: UDP
+              name: stun-udp
+            - containerPort: 3478
+              hostPort: 3478
+              protocol: TCP
+              name: stun-tcp
+            - containerPort: 5349
+              hostPort: 5349
+              protocol: TCP
+              name: stun-tls
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+# Secret template — fill in actual values via CI/CD or kubectl create secret
+# kubectl create secret generic placenxt-coturn-secrets \
+#   --from-literal=TURN_USERNAME=placenxt \
+#   --from-literal=TURN_CREDENTIAL=<strong-password> \
+#   -n placenxt
+apiVersion: v1
+kind: Secret
+metadata:
+  name: placenxt-coturn-secrets
+  namespace: placenxt
+type: Opaque
+stringData:
+  TURN_USERNAME: "placenxt"
+  TURN_CREDENTIAL: "REPLACE_WITH_STRONG_PASSWORD"

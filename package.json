@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "docker-compose -f docker-compose.infra.yml up -d && npm run dev:services",
     "dev:docker": "docker-compose up -d --build",
-    "dev:services": "concurrently \"npm run dev -w @placenxt/api-gateway\" \"npm run dev -w @placenxt/auth-service\" \"npm run dev -w @placenxt/resume-service\" \"npm run dev -w @placenxt/scoring-service\" \"npm run dev -w @placenxt/skill-service\" \"npm run dev -w @placenxt/job-service\" \"npm run dev -w @placenxt/application-service\" \"npm run dev -w @placenxt/interview-service\" \"npm run dev -w @placenxt/validation-service\" \"npm run dev -w @placenxt/billing-service\" \"npm run dev -w @placenxt/admin-service\" \"npm run dev -w @placenxt/recruiter-service\" \"npm run dev -w @placenxt/email-tracking-service\" \"npm run dev -w @placenxt/media-service\"",
+    "dev:services": "concurrently \"npm run dev -w @placenxt/api-gateway\" \"npm run dev -w @placenxt/auth-service\" \"npm run dev -w @placenxt/resume-service\" \"npm run dev -w @placenxt/scoring-service\" \"npm run dev -w @placenxt/skill-service\" \"npm run dev -w @placenxt/job-service\" \"npm run dev -w @placenxt/application-service\" \"npm run dev -w @placenxt/interview-service\" \"npm run dev -w @placenxt/validation-service\" \"npm run dev -w @placenxt/billing-service\" \"npm run dev -w @placenxt/admin-service\" \"npm run dev -w @placenxt/recruiter-service\" \"npm run dev -w @placenxt/email-tracking-service\" \"npm run dev -w @placenxt/media-service\" \"npm run dev -w @placenxt/ai-interviewer-service\"",
     "dev:local": "concurrently \"npm run dev -w @placenxt/auth-service\" \"npm run dev -w @placenxt/resume-service\" \"npm run dev -w @placenxt/scoring-service\" \"npm run dev -w @placenxt/skill-service\" \"npm run dev -w @placenxt/job-service\" \"npm run dev -w @placenxt/application-service\" \"npm run dev -w @placenxt/interview-service\" \"npm run dev -w @placenxt/validation-service\" \"npm run dev -w @placenxt/billing-service\" \"npm run dev -w @placenxt/admin-service\" \"npm run dev -w @placenxt/recruiter-service\" \"npm run dev -w @placenxt/email-tracking-service\"",
     "dev:frontend": "npm run dev -w frontend",
     "start": "npm run start -w @placenxt/database && concurrently --kill-others-on-fail \"npm run start:services\" \"npm run start:frontend\"",
@@ -33,6 +33,7 @@
     "build:recruiter-service": "npm run build:shared && npm run build -w @placenxt/recruiter-service",
     "build:email-tracking-service": "npm run build:shared && npm run build -w @placenxt/email-tracking-service",
     "build:media-service": "npm run build:shared && npm run build -w @placenxt/media-service",
+    "build:ai-interviewer-service": "npm run build:shared && npm run build -w @placenxt/ai-interviewer-service",
     "test": "npm run test --workspaces",
     "lint": "npm run lint -w frontend",
     "type-check": "cd frontend && npx tsc --noEmit",

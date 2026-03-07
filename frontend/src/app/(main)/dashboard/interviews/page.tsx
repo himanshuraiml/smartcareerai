@@ -6,7 +6,7 @@ import {
     Video, Plus, Clock, Target, TrendingUp, ChevronRight,
     Loader2, Play, CheckCircle, XCircle, MessageSquare, Mic,
     CreditCard, AlertTriangle, Building2, ArrowRight, Bell, Bot,
-    Calendar, ExternalLink, CalendarPlus
+    Calendar, CalendarPlus
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
@@ -581,30 +581,30 @@ function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
 
     const scheduledDate = inv.scheduledAt
         ? new Date(inv.scheduledAt).toLocaleDateString('en-US', {
-              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-          })
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+        })
         : null;
     const scheduledTime = inv.scheduledAt
         ? new Date(inv.scheduledAt).toLocaleTimeString('en-US', {
-              hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-          })
+            hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+        })
         : null;
     const durationMins =
         inv.scheduledAt && inv.scheduledEndAt
             ? Math.round(
-                  (new Date(inv.scheduledEndAt).getTime() - new Date(inv.scheduledAt).getTime()) / 60000,
-              )
+                (new Date(inv.scheduledEndAt).getTime() - new Date(inv.scheduledAt).getTime()) / 60000,
+            )
             : null;
 
     const gcalUrl =
         hasSchedule
             ? buildGCalUrl(
-                  `Interview: ${inv.jobTitle} at ${inv.companyName}`,
-                  inv.scheduledAt!,
-                  inv.scheduledEndAt || new Date(new Date(inv.scheduledAt!).getTime() + 60 * 60000).toISOString(),
-                  `Live interview for ${inv.jobTitle} at ${inv.companyName}.\n\nPowered by SmartCareerAI.`,
-                  inv.meetLink || undefined,
-              )
+                `Interview: ${inv.jobTitle} at ${inv.companyName}`,
+                inv.scheduledAt!,
+                inv.scheduledEndAt || new Date(new Date(inv.scheduledAt!).getTime() + 60 * 60000).toISOString(),
+                `Live interview for ${inv.jobTitle} at ${inv.companyName}.\n\nPowered by SmartCareerAI.`,
+                inv.meetLink || undefined,
+            )
             : null;
 
     return (
@@ -625,15 +625,24 @@ function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
                         </p>
                     </div>
                 </div>
-                <span className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex-shrink-0 ${
-                    isLiveNow
+                {isLiveNow ? (
+                    <Link
+                        href={inv.meetLink || `/dashboard/interviews/${inv.sessionId}`}
+                        target={inv.meetLink ? "_blank" : undefined}
+                        className="px-2.5 py-1 rounded-xl text-[11px] font-bold flex-shrink-0 bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 animate-pulse hover:bg-green-200 dark:hover:bg-green-500/30 transition-colors cursor-pointer block text-center"
+                    >
+                        Live Now — Join Meeting
+                    </Link>
+                ) : (
+                    <span className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex-shrink-0 ${isLiveNow
                         ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 animate-pulse'
                         : isUpcoming
-                        ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                }`}>
-                    {isLiveNow ? 'Live Now — Join Meeting' : isUpcoming ? 'Scheduled' : hasSchedule ? 'Completed' : 'Pending Schedule'}
-                </span>
+                            ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                        }`}>
+                        {isLiveNow ? 'Live Now' : isUpcoming ? 'Scheduled' : hasSchedule ? 'Completed' : 'Pending Schedule'}
+                    </span>
+                )}
             </div>
 
             {/* Schedule info block */}
@@ -651,17 +660,14 @@ function CopilotInvitationCard({ inv }: CopilotInvitationCardProps) {
 
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
-                {inv.meetLink && (
-                    <a
-                        href={inv.meetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                {(isLiveNow || inv.meetLink) && (
+                    <Link
+                        href={inv.meetLink || `/dashboard/interviews/${inv.sessionId}/live`}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500 text-white text-xs font-bold hover:bg-teal-600 transition-colors"
                     >
                         <Video className="w-3.5 h-3.5" />
                         Join Meeting
-                        <ExternalLink className="w-3 h-3 opacity-70" />
-                    </a>
+                    </Link>
                 )}
                 {gcalUrl && (
                     <a

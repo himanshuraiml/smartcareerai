@@ -52,6 +52,11 @@ export function emitToUser(userId: string, event: string, data: unknown): void {
     }
 }
 
+/** Emit an event to every participant in a meeting room */
+export function emitToRoom(meetingId: string, event: string, data: unknown): void {
+    meetingNs.to(meetingId).emit(event, data);
+}
+
 /**
  * Admit a waiting user into the room by:
  * 1. Adding them to the MediaSoup room

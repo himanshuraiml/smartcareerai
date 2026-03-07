@@ -39,6 +39,10 @@ interface Applicant {
     dropoutRisk?: string;
     acceptanceLikelihood?: number;
     biasFlags?: any[];
+    // Interview session data (populated from DB)
+    sessionId?: string | null;
+    inviteType?: 'AI' | 'COPILOT' | null;
+    meetLink?: string | null;
 }
 
 interface JobDetail {
@@ -91,7 +95,7 @@ export default function RecruiterJobATSPage() {
     const [evalTarget, setEvalTarget] = useState<{ applicationId: string; name: string } | null>(null);
     const [summaryTarget, setSummaryTarget] = useState<{ applicationId: string; name: string, type: 'summary' | 'justification' } | null>(null);
     const [inviteTarget, setInviteTarget] = useState<{ applicationId: string; name: string } | null>(null);
-    const [invitedMap, setInvitedMap] = useState<Record<string, { sessionId: string; type: 'AI' | 'COPILOT' }>>({});
+    const [invitedMap, setInvitedMap] = useState<Record<string, { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string }>>({});
     const [showBulkInvite, setShowBulkInvite] = useState(false);
     const [showRediscover, setShowRediscover] = useState(false);
 
@@ -115,7 +119,22 @@ export default function RecruiterJobATSPage() {
             const jobData = await jobRes.json();
             const appsData = await appsRes.json();
             setJob(jobData.data);
-            setApplicants(appsData.data || []);
+            const apps: Applicant[] = appsData.data || [];
+            setApplicants(apps);
+            // Seed invitedMap from persisted session data so previously-invited
+            // applicants show the correct button (Launch Copilot / AI Interview Sent)
+            // even after a page reload.
+            const seedMap: Record<string, { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string }> = {};
+            for (const app of apps) {
+                if (app.sessionId && app.inviteType) {
+                    seedMap[app.applicationId] = {
+                        sessionId: app.sessionId,
+                        type: app.inviteType,
+                        meetLink: app.meetLink ?? undefined,
+                    };
+                }
+            }
+            setInvitedMap(seedMap);
         } catch {
             setError("Failed to load job data");
         } finally {
@@ -307,8 +326,8 @@ export default function RecruiterJobATSPage() {
                         applicationId={inviteTarget.applicationId}
                         candidateName={inviteTarget.name}
                         onClose={() => setInviteTarget(null)}
-                        onSuccess={(sessionId: string, type: 'AI' | 'COPILOT') => {
-                            setInvitedMap(prev => ({ ...prev, [inviteTarget.applicationId]: { sessionId, type } }));
+                        onSuccess={(sessionId: string, type: 'AI' | 'COPILOT', meetLink?: string) => {
+                            setInvitedMap(prev => ({ ...prev, [inviteTarget.applicationId]: { sessionId, type, meetLink } }));
                             setInviteTarget(null);
                             const label = type === 'AI' ? 'AI interview' : 'co-pilot interview';
                             showToast(`${label} invitation sent to ${inviteTarget.name}`, "success");
@@ -499,7 +518,7 @@ function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onIn
     onSummary: () => void;
     onJustification: () => void;
     onInvite: () => void;
-    invitedInfo?: { sessionId: string; type: 'AI' | 'COPILOT' };
+    invitedInfo?: { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string };
 }) {
     const hasScore = applicant.overallScore != null && applicant.overallScore > 0;
     const recommendation = applicant.aiEvaluation?.recommendation;
@@ -631,18 +650,35 @@ function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onIn
                     </Link>
                 </div>
 
-                {/* Interview Invite Button — context-aware */}
-                {invitedInfo?.type === 'COPILOT' ? (
-                    <a
-                        href={`/dashboard/interviews/${invitedInfo.sessionId}/live`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-500/20 border-teal-100 dark:border-teal-500/20 transition-colors"
-                    >
-                        <Video className="w-2.5 h-2.5" /> Launch Copilot
-                    </a>
-                ) : invitedInfo?.type === 'AI' || applicant.status === 'INTERVIEWING' ? (
+                {/* Interview Invite Status */}
+                {invitedInfo ? (
+                    <div className="flex flex-col gap-1.5">
+                        {invitedInfo.type === 'COPILOT' ? (
+                            <Link
+                                href={invitedInfo.meetLink || `/dashboard/interviews/${invitedInfo.sessionId}/live`}
+                                onClick={e => e.stopPropagation()}
+                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-500/20 border-teal-100 dark:border-teal-500/20 transition-colors"
+                            >
+                                <Video className="w-2.5 h-2.5" /> Launch Copilot
+                            </Link>
+                        ) : (
+                            <button
+                                disabled
+                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20 opacity-70 cursor-default"
+                            >
+                                <Bot className="w-2.5 h-2.5" /> AI Interview Sent
+                            </button>
+                        )}
+                        {!hasScore && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onInvite(); }}
+                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border-gray-100 dark:border-white/10 transition-colors"
+                            >
+                                <Video className="w-2.5 h-2.5" /> Update Invitation
+                            </button>
+                        )}
+                    </div>
+                ) : applicant.status === 'INTERVIEWING' ? (
                     <button
                         disabled
                         className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20 opacity-70 cursor-default"
@@ -659,7 +695,7 @@ function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onIn
                 )}
 
                 {hasScore && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-2">
                         <button
                             onClick={(e) => { e.stopPropagation(); onSummary(); }}
                             className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 border border-violet-100 dark:border-violet-500/20 transition-colors"
@@ -685,7 +721,7 @@ function InviteInterviewModal({ jobId, applicationId, candidateName, onClose, on
     applicationId: string;
     candidateName: string;
     onClose: () => void;
-    onSuccess: (sessionId: string, type: 'AI' | 'COPILOT') => void;
+    onSuccess: (sessionId: string, type: 'AI' | 'COPILOT', meetLink?: string) => void;
 }) {
     const [step, setStep] = useState<1 | 2>(1);
     const [selectedType, setSelectedType] = useState<'AI' | 'COPILOT'>('AI');
@@ -724,7 +760,7 @@ function InviteInterviewModal({ jobId, applicationId, candidateName, onClose, on
                 throw new Error(data.error || 'Failed to send invitation');
             }
             const data = await res.json();
-            onSuccess(data.data?.sessionId, selectedType);
+            onSuccess(data.data?.sessionId, selectedType, data.data?.meetLink);
         } catch (err: any) {
             setError(err.message || 'Failed to send invitation');
         } finally {
@@ -823,11 +859,11 @@ function InviteInterviewModal({ jobId, applicationId, candidateName, onClose, on
                         <div className={`p-3 rounded-xl border text-xs leading-relaxed ${selectedType === 'AI'
                             ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300'
                             : 'bg-teal-50 dark:bg-teal-500/10 border-teal-100 dark:border-teal-500/20 text-teal-700 dark:text-teal-300'
-                        }`}>
+                            }`}>
                             {selectedType === 'AI' ? (
                                 <>An <strong>AI interview session</strong> will be created for <strong>{candidateName}</strong>. They'll receive a notification to start at their convenience. No credits deducted from candidate.</>
                             ) : (
-                                <>A <strong>co-pilot session</strong> will be created. A Google Calendar invite with a Meet link will be sent to <strong>{candidateName}</strong>. Reminders go out 24h and 2h before. AI will assist you during the live call.</>
+                                <>A <strong>co-pilot session</strong> and a <strong>PlaceNxt meeting room</strong> will be created. A calendar invite with the join link will be sent to <strong>{candidateName}</strong>. Reminders go out 24h and 2h before. AI will assist you during the live call.</>
                             )}
                         </div>
 
@@ -859,7 +895,7 @@ function InviteInterviewModal({ jobId, applicationId, candidateName, onClose, on
                                                 className={`py-2 rounded-xl text-xs font-bold border transition-colors ${durationMinutes === d
                                                     ? 'bg-teal-500 text-white border-teal-500'
                                                     : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:border-teal-400'
-                                                }`}
+                                                    }`}
                                             >
                                                 {d}m
                                             </button>
@@ -898,7 +934,7 @@ function InviteInterviewModal({ jobId, applicationId, candidateName, onClose, on
                                 className={`flex-1 py-2.5 rounded-xl text-white text-sm font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${selectedType === 'AI'
                                     ? 'bg-gradient-to-r from-indigo-500 to-violet-500'
                                     : 'bg-gradient-to-r from-teal-500 to-emerald-500'
-                                }`}
+                                    }`}
                             >
                                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 {sending ? 'Sending…' : selectedType === 'COPILOT' ? 'Schedule & Send Invite' : 'Send Invitation'}

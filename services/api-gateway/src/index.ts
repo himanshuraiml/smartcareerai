@@ -468,6 +468,17 @@ app.use(
     createProxyMiddleware(createProxyOptions(INTERVIEW_SERVICE_URL, { [`^${API_PREFIX}/meeting-analysis`]: '/meeting-analysis' }))
 );
 
+// ============================================
+// AI INTERVIEWER SERVICE (port 3016)
+// ============================================
+
+const AI_INTERVIEWER_SERVICE_URL = process.env.AI_INTERVIEWER_SERVICE_URL || 'http://localhost:3016';
+
+app.use(
+    `${API_PREFIX}/ai-interviews`,
+    createProxyMiddleware(createProxyOptions(AI_INTERVIEWER_SERVICE_URL, { [`^${API_PREFIX}/ai-interviews`]: '/ai-interviews' }))
+);
+
 // Note: JSON parsing already configured above with size limits
 
 // 404 handler

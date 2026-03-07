@@ -18,6 +18,12 @@ export interface ProducerInfo {
     kind: mediasoup.types.MediaKind;
 }
 
+export interface AudioProducerInfo {
+    producer: mediasoup.types.Producer;
+    participantId: string;
+    userId: string;
+}
+
 export class Room {
     readonly id: string;
     private router: mediasoup.types.Router;
@@ -234,6 +240,103 @@ export class Room {
 
         this.participants.delete(participantId);
         logger.info(`Participant ${participantId} removed from room ${this.id}`);
+    }
+
+    // ── PlainTransport support for AI participant ────────────────────────────
+
+    /**
+     * Creates a PlainTransport in the room's Router for use by the AI
+     * Interviewer service.  The AI service sends Opus RTP to the returned port;
+     * MediaSoup routes it to WebRTC consumers in the room.
+     *
+     * `comedia: true` — MediaSoup auto-discovers the remote endpoint from the
+     * first incoming RTP packet (FFmpeg), so no explicit transport.connect() needed.
+     */
+    async createAIPlainTransport(): Promise<{
+        transport: mediasoup.types.PlainTransport;
+        ip: string;
+        port: number;
+    }> {
+        const listenInfo = mediasoupConfig.webRtcTransport.listenInfos[0];
+        const transport = await this.router.createPlainTransport({
+            listenInfo: { protocol: 'udp', ip: listenInfo.ip, announcedAddress: listenInfo.announcedAddress },
+            rtcpMux: true,
+            comedia: true,  // remote address learned from first RTP packet
+        });
+
+        transport.on('tuple', (tuple) => {
+            logger.info(`AI PlainTransport tuple: ${tuple.remoteIp}:${tuple.remotePort}`);
+        });
+
+        logger.info(`AI PlainTransport created — local UDP ${transport.tuple.localIp}:${transport.tuple.localPort}`);
+
+        return {
+            transport,
+            ip: listenInfo.announcedAddress ?? listenInfo.ip,
+            port: transport.tuple.localPort,
+        };
+    }
+
+    /**
+     * Produce audio from a PlainTransport (AI participant).
+     * The producer is stored under `participantId` so it's visible to consumers.
+     */
+    async produceFromAIPlainTransport(
+        participantId: string,
+        transport: mediasoup.types.PlainTransport
+    ): Promise<mediasoup.types.Producer> {
+        // Ensure AI participant slot exists
+        if (!this.participants.has(participantId)) {
+            this.participants.set(participantId, {
+                userId: participantId,
+                role: 'AI_INTERVIEWER',
+                sendTransport: null,
+                recvTransport: null,
+                producers: new Map(),
+                consumers: new Map(),
+            });
+        }
+
+        const producer = await transport.produce({
+            kind: 'audio',
+            rtpParameters: {
+                codecs: [{
+                    mimeType: 'audio/opus',
+                    payloadType: 101,
+                    clockRate: 48000,
+                    channels: 2,
+                    parameters: { 'sprop-stereo': 1, minptime: 10, useinbandfec: 1 },
+                }],
+                encodings: [{ ssrc: 11111111 }],
+            },
+        });
+
+        producer.on('transportclose', () => {
+            producer.close();
+            this.participants.get(participantId)?.producers.delete(producer.id);
+        });
+
+        this.participants.get(participantId)!.producers.set(producer.id, producer);
+        logger.info(`AI Producer ${producer.id} created for participant ${participantId}`);
+        return producer;
+    }
+
+    /** Expose the mediasoup Router for recording PlainTransport creation. */
+    getRouter(): mediasoup.types.Router {
+        return this.router;
+    }
+
+    /** Return all active (non-closed) audio producers with participant context. */
+    getAllAudioProducers(): AudioProducerInfo[] {
+        const result: AudioProducerInfo[] = [];
+        for (const [participantId, media] of this.participants) {
+            for (const producer of media.producers.values()) {
+                if (producer.kind === 'audio' && !producer.closed) {
+                    result.push({ producer, participantId, userId: media.userId });
+                }
+            }
+        }
+        return result;
     }
 
     close(): void {

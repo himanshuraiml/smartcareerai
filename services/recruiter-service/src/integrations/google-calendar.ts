@@ -56,27 +56,31 @@ export class GoogleCalendarService {
     }
 
     /**
-     * Create a calendar event with Google Meet link.
+     * Create a calendar event for an interview.
+     *
+     * `meetingUrl` — the in-house PlaceNxt meeting URL to include in the
+     * event description.  Google Meet is NOT auto-created; the platform's own
+     * WebRTC meeting system is used instead.
      */
     async createInterviewEvent(
         summary: string,
         description: string,
         startTime: Date,
         endTime: Date,
-        attendeeEmails: string[]
+        attendeeEmails: string[],
+        meetingUrl?: string
     ) {
+        const joinLine = meetingUrl
+            ? `\n\nJoin the interview: ${meetingUrl}`
+            : '';
+
         const event: calendar_v3.Schema$Event = {
             summary,
-            description,
+            description: description + joinLine,
+            location: meetingUrl || undefined,
             start: { dateTime: startTime.toISOString() },
             end: { dateTime: endTime.toISOString() },
             attendees: attendeeEmails.map(email => ({ email })),
-            conferenceData: {
-                createRequest: {
-                    requestId: randomUUID(),
-                    conferenceSolutionKey: { type: 'hangoutsMeet' }
-                }
-            },
             // Automatic reminders for all attendees
             reminders: {
                 useDefault: false,
@@ -91,7 +95,6 @@ export class GoogleCalendarService {
         const response = await this.calendar.events.insert({
             calendarId: 'primary',
             requestBody: event,
-            conferenceDataVersion: 1,
             sendUpdates: 'all',
         });
 

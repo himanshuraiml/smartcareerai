@@ -1,0 +1,114 @@
+# ============================================================
+# media-service — Kubernetes DaemonSet
+#
+# Uses hostNetwork: true so MediaSoup RTP/RTCP UDP traffic
+# flows directly on the node's network stack.  One pod per
+# node guarantees that RTP port ranges (10000-10999 WebRTC,
+# 15000-15999 recording) are available on every node without
+# conflicts.
+#
+# Room state is scoped to the pod that owns the MediaSoup
+# Router; cross-instance Socket.io events are propagated via
+# the Redis adapter.
+# ============================================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: media-service
+  namespace: placenxt
+  labels:
+    app: media-service
+    tier: realtime
+spec:
+  selector:
+    matchLabels:
+      app: media-service
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: media-service
+        tier: realtime
+    spec:
+      # hostNetwork binds the pod directly to the node's NIC.
+      # Required so MediaSoup can announce the node IP to WebRTC clients
+      # and receive RTP on a stable UDP port range.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: media-service
+          image: placenxt/media-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3014
+              hostPort: 3014
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3014"
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            # MediaSoup announces the node's actual IP so browser ICE works
+            - name: MEDIASOUP_ANNOUNCED_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: MEDIASOUP_LISTEN_IP
+              value: "0.0.0.0"
+            - name: MEDIASOUP_RTC_MIN_PORT
+              value: "10000"
+            - name: MEDIASOUP_RTC_MAX_PORT
+              value: "10999"
+            - name: RECORDING_PORT_START
+              value: "15000"
+            - name: RECORDING_PORT_END
+              value: "15999"
+          envFrom:
+            - secretRef:
+                name: placenxt-secrets   # DATABASE_URL, REDIS_URL, JWT_SECRET, MINIO_*, TURN_*, INTERNAL_SERVICE_SECRET
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3014
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3014
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-service
+  namespace: placenxt
+  labels:
+    app: media-service
+spec:
+  # ClusterIP for internal service-to-service HTTP calls
+  selector:
+    app: media-service
+  ports:
+    - name: http
+      port: 3014
+      targetPort: 3014
+      protocol: TCP
+  type: ClusterIP

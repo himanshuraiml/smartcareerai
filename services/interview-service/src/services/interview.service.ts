@@ -87,11 +87,18 @@ export class InterviewService {
     // Get a specific session
     async getSession(sessionId: string, userId: string) {
         const session = await prisma.interviewSession.findFirst({
-            where: { id: sessionId, userId },
+            where: { id: sessionId },
             include: {
                 questions: {
                     orderBy: { orderIndex: 'asc' },
                 },
+                job: {
+                    select: {
+                        recruiter: {
+                            select: { userId: true }
+                        }
+                    }
+                }
             },
         });
 
@@ -99,7 +106,15 @@ export class InterviewService {
             throw new AppError('Interview session not found', 404);
         }
 
-        return session;
+        const isCandidate = session.userId === userId;
+        const isRecruiter = session.job?.recruiter?.userId === userId;
+
+        if (!isCandidate && !isRecruiter) {
+            throw new AppError('Interview session not found', 404);
+        }
+
+        const { job, ...sessionData } = session;
+        return sessionData;
     }
 
     // Get Interview Replay Details
@@ -453,7 +468,27 @@ export class InterviewService {
             },
         });
 
+        // Sync the interview score back to the job application if this was a recruiter invite
+        if (session.jobId) {
+            try {
+                await prisma.recruiterJobApplicant.updateMany({
+                    where: {
+                        jobId: session.jobId,
+                        candidateId: userId
+                    },
+                    data: {
+                        overallScore: overallScore,
+                        aiEvaluation: overallFeedback
+                    },
+                });
+                logger.info(`Synced interview score ${overallScore} to application for candidate ${userId} on job ${session.jobId}`);
+            } catch (err) {
+                logger.error(`Failed to sync interview score to application: ${err}`);
+            }
+        }
+
         logger.info(`Completed interview session ${sessionId} with score ${overallScore} `);
+
 
         return {
             session: updatedSession,

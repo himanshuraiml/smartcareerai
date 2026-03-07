@@ -22,6 +22,25 @@ export async function createMeeting(req: Request, res: Response, next: NextFunct
         if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
         const body = CreateMeetingSchema.parse(req.body);
+
+        if (body.interviewId) {
+            const existingMeeting = await prisma.meetingRoom.findUnique({
+                where: { interviewId: body.interviewId },
+            });
+            if (existingMeeting) {
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        id: existingMeeting.id,
+                        meetingToken: existingMeeting.meetingToken,
+                        status: existingMeeting.status,
+                        maxParticipants: existingMeeting.maxParticipants,
+                        scheduledAt: existingMeeting.scheduledAt,
+                    },
+                });
+            }
+        }
+
         const meetingToken = uuidv4();
 
         const meeting = await prisma.meetingRoom.create({
