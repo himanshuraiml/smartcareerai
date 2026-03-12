@@ -1,0 +1,1 @@
+frontend/src/app/(main)/dashboard/interviews/[id]/room/page.tsx(258,21): error TS2552: Cannot find name 'setCurrentQuestionIndex'. Did you mean 'currentQuestionIndex'?

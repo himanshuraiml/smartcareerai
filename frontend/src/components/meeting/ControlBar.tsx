@@ -32,6 +32,7 @@ interface ControlBarProps {
     participantListOpen?: boolean;
     onToggleParticipants?: () => void;
     waitingCount?: number;
+    onStartInterview?: () => void;
 }
 
 export function ControlBar({
@@ -51,6 +52,7 @@ export function ControlBar({
     participantListOpen = false,
     onToggleParticipants,
     waitingCount = 0,
+    onStartInterview,
 }: ControlBarProps) {
     return (
         <div className="flex items-center justify-center gap-3 p-4 bg-gray-900/90 backdrop-blur-sm border-t border-gray-700 shrink-0">
@@ -138,6 +140,16 @@ export function ControlBar({
                     <Users className="w-4 h-4" />
                     <span>{participantCount}</span>
                 </div>
+            )}
+
+            {/* Start Interview (Recruiter only) */}
+            {onStartInterview && (
+                <Button
+                    onClick={onStartInterview}
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6 font-bold ml-2 shadow-lg shadow-green-900/20"
+                >
+                    Start Interview
+                </Button>
             )}
 
             {/* End call */}

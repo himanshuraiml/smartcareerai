@@ -342,6 +342,11 @@ model InterviewSession {
   meetLink        String?   @map("meet_link")         // Google Meet / Teams URL
   calendarEventId String?   @map("calendar_event_id") // Recruiter's calendar event ID
 
+  // AI Behavior Metrics — aggregated from client-side MediaPipe + audio analysis
+  // Shape: { eyeContact: number, emotion: string, posture: number, speechRate: number,
+  //          fillerWords: number, avgPause: number, confidenceScore: number }
+  behaviorMetrics Json?   @map("behavior_metrics")
+
   // Relations
   job                RecruiterJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)

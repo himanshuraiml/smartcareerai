@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
-import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
+const formatTimeMs = (ms: number) => { const s = Math.floor(ms / 1000); const m = Math.floor(s / 60); return `${m.toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`; };
+import { useVideoRecorder } from "@/hooks/useVideoRecorder";
+import { useInterviewFlow } from "@/hooks/useInterviewFlow";
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useFaceAnalysis } from '@/hooks/use-face-analysis';
 import { useProctoring } from '@/hooks/useProctoring';
@@ -86,9 +88,6 @@ export default function HRInterviewRoomPage() {
 
     const [session, setSession] = useState<InterviewSession | null>(null);
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [transcript, setTranscript] = useState<string>('');
     const [detectedKeywords, setDetectedKeywords] = useState<Set<string>>(new Set());
     const [isMuted, setIsMuted] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -106,7 +105,6 @@ export default function HRInterviewRoomPage() {
 
     // Video recording hook
     const {
-        isRecording,
         recordingTime,
         videoBlob,
         previewStream,
@@ -118,6 +116,70 @@ export default function HRInterviewRoomPage() {
 
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const avatarRef = useRef<HTMLDivElement>(null);
+
+    const onAnswerSubmit = useCallback(async (index: number, currentTranscript: string) => {
+        if (!session) return false;
+        const question = session.questions[index];
+        if (!question) return false;
+
+        try {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questionId: question.id,
+                    answer: currentTranscript || '[Silence]'
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                setSession(prev => {
+                    if (!prev) return null;
+                    const updatedQs = [...prev.questions];
+                    updatedQs[index] = {
+                        ...updatedQs[index],
+                        userAnswer: currentTranscript,
+                        score: data.data.evaluation?.score || null,
+                        feedback: data.data.evaluation?.feedback || null
+                    };
+                    return { ...prev, questions: updatedQs };
+                });
+
+                setDetectedKeywords(new Set());
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Failed to submit answer:', err);
+            return false;
+        }
+    }, [session, sessionId]);
+
+    const handleInterviewComplete = useCallback(async () => {
+        // Will be called by effect on isFinished
+    }, []);
+
+    const {
+        currentQuestionIndex,
+        isSubmitting,
+        isFinished,
+        timeRemainingMs,
+        transcript,
+        wpm,
+        isListening: isRecording,
+        startInterview: startContinuousInterview,
+        advanceQuestion,
+        stopInterview,
+        setQuestionIndex
+    } = useInterviewFlow({
+        totalQuestions: session?.questions.length || 1,
+        onAnswerSubmit,
+        onInterviewComplete: handleInterviewComplete,
+        timeLimitMs: 180000,
+        silenceThresholdMs: 5000
+    });
 
     // Client-side Analysis
     const speech = useSpeechRecognition();
@@ -136,12 +198,10 @@ export default function HRInterviewRoomPage() {
 
     // Sync Metrics and detect keywords
     useEffect(() => {
-        if (isRecording && speech.transcript) {
-            setTranscript(speech.transcript);
-
+        if (isRecording && transcript) {
             // Detect HR keywords
             const detected = new Set<string>();
-            const lowerTranscript = speech.transcript.toLowerCase();
+            const lowerTranscript = transcript.toLowerCase();
             HR_KEYWORDS.forEach(keyword => {
                 if (lowerTranscript.includes(keyword)) {
                     detected.add(keyword);
@@ -149,7 +209,7 @@ export default function HRInterviewRoomPage() {
             });
             setDetectedKeywords(detected);
         }
-    }, [speech.transcript, isRecording]);
+    }, [transcript, isRecording]);
 
     // Handle video preview stream
     useEffect(() => {
@@ -192,7 +252,7 @@ export default function HRInterviewRoomPage() {
                 // Find first unanswered question
                 const unansweredIndex = data.data.questions.findIndex((q: Question) => !q.userAnswer);
                 if (unansweredIndex !== -1) {
-                    setCurrentQuestionIndex(unansweredIndex);
+                    setQuestionIndex(unansweredIndex);
                 }
             }
         } catch (err) {
@@ -211,69 +271,7 @@ export default function HRInterviewRoomPage() {
         }
     }, [user, sessionId, params.id, fetchSession]);
 
-    const submitVideoAnswer = async () => {
-        if (!session || !videoBlob) return;
 
-        const question = session.questions[currentQuestionIndex];
-        if (!question) return;
-
-        setSubmitting(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('video', videoBlob, 'answer.webm');
-            formData.append('questionId', question.id);
-            formData.append('transcript', speech.transcript);
-            formData.append('metrics', JSON.stringify({
-                wpm: speech.wpm,
-                eyeContactScore: faceAnalysis.metrics.eyeContactScore,
-                sentiment: faceAnalysis.metrics.sentiment,
-                detectedKeywords: Array.from(detectedKeywords)
-            }));
-
-            const response = await authFetch(`/interviews/sessions/${sessionId}/answer/video`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                // Update question with answer
-                setSession(prev => {
-                    if (!prev) return null;
-                    const updatedQuestions = [...prev.questions];
-                    updatedQuestions[currentQuestionIndex] = {
-                        ...updatedQuestions[currentQuestionIndex],
-                        userAnswer: data.data.audioAnalysis?.transcription || '[Video Answer]',
-                        score: data.data.evaluation?.score || null,
-                        feedback: data.data.evaluation?.feedback || null
-                    };
-                    return { ...prev, questions: updatedQuestions };
-                });
-
-                resetRecording();
-                speech.resetTranscript();
-                setTranscript('');
-                setDetectedKeywords(new Set());
-
-                // Move to next question
-                if (data.data.nextQuestion) {
-                    setTimeout(() => {
-                        setCurrentQuestionIndex(prev => prev + 1);
-                    }, 2000);
-                } else if (data.data.isComplete) {
-                    setTimeout(() => {
-                        router.push(`/dashboard/interviews/${sessionId}`);
-                    }, 2000);
-                }
-            }
-        } catch (err) {
-            console.error('Failed to submit video answer:', err);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     const endSession = async () => {
         if (!sessionId) return;
@@ -340,20 +338,30 @@ export default function HRInterviewRoomPage() {
     };
 
     // Start interview after all permissions granted
+    // Start interview after all permissions granted
     const handleStartInterview = async () => {
         if (allRequirementsMet && agreedToGuidelines) {
             await proctoringControls.enterFullscreen();
             setShowProctoringModal(false);
+            setTimeout(() => {
+                startContinuousInterview();
+            }, 1000);
         }
     };
-
+    // Handle interview end with fullscreen exit
     // Handle interview end with fullscreen exit
     const handleEndInterview = async () => {
+        stopInterview();
         await proctoringControls.exitFullscreen();
         proctoringControls.stopAllStreams();
         await endSession();
     };
 
+    useEffect(() => {
+        if (isFinished) {
+            handleEndInterview();
+        }
+    }, [isFinished]);
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] bg-[#0a0f14]">
@@ -656,7 +664,7 @@ export default function HRInterviewRoomPage() {
                                 <div className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1 rounded-full bg-red-500/90">
                                     <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                                     <span className="text-white text-xs font-medium">
-                                        REC {formatVideoTime(recordingTime)}
+                                        REC {formatTimeMs(180000 - timeRemainingMs)}
                                     </span>
                                 </div>
                             )}
@@ -665,51 +673,20 @@ export default function HRInterviewRoomPage() {
 
                     {/* Recording Controls */}
                     <div className="flex items-center justify-center gap-4 py-4">
-                        <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20'}`}
-                        >
+                        <button onClick={() => setIsMuted(!isMuted)} className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? "bg-red-500/20 text-red-400" : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20"}`}>
                             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
-
-                        <button
-                            className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition"
-                        >
+                        <button className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition">
                             <Video className="w-5 h-5" />
                         </button>
-
                         <div className="w-px h-8 bg-gray-300 dark:bg-white/10" />
-
-                        {!isRecording && !videoBlob && (
-                            <button
-                                onClick={startRecording}
-                                className="w-14 h-14 rounded-full bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition shadow-lg shadow-teal-500/25"
-                            >
-                                <div className="w-5 h-5 rounded-full bg-white" />
-                            </button>
-                        )}
-
                         {isRecording && (
-                            <button
-                                onClick={stopRecording}
-                                className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition shadow-lg shadow-red-500/25"
-                            >
-                                <Square className="w-5 h-5" />
-                            </button>
-                        )}
-
-                        {videoBlob && !isRecording && (
-                            <button
-                                onClick={submitVideoAnswer}
-                                disabled={submitting}
-                                className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                                Submit Answer
+                            <button onClick={advanceQuestion} disabled={isSubmitting} className="px-6 py-3 rounded-full bg-gradient-to-r from-teal-500 to-indigo-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2">
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+                                Next Question
                             </button>
                         )}
                     </div>
-
                     {/* Bottom Metrics */}
                     <div className="grid grid-cols-2 gap-4">
                         {/* Tone Analysis */}
@@ -765,7 +742,7 @@ export default function HRInterviewRoomPage() {
                             {/* Recording indicator */}
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatElapsedTime(elapsedTime)}</span>
+                                <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatTimeMs(180000 - timeRemainingMs)}</span>
                             </div>
 
                             {/* Mic toggle */}

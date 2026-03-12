@@ -1,0 +1,4 @@
+frontend/src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(108,9): error TS2451: Cannot redeclare block-scoped variable 'isRecording'.
+frontend/src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(149,9): error TS2448: Block-scoped variable 'transcript' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(149,9): error TS2454: Variable 'transcript' is used before being assigned.
+frontend/src/app/(main)/dashboard/interviews/[id]/hr-room/page.tsx(263,22): error TS2451: Cannot redeclare block-scoped variable 'isRecording'.

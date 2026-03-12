@@ -356,6 +356,10 @@ model InterviewSession {
   meetLink        String?   @map("meet_link")
   calendarEventId String?   @map("calendar_event_id")
 
+  // AI Behavior Metrics — aggregated from client-side MediaPipe + audio analysis
+  // Shape: { eyeContact, dominantEmotion, postureScore, speechRate, fillerWords, avgPause, clarityScore, confidenceScore, sampleCount }
+  behaviorMetrics Json?   @map("behavior_metrics")
+
   // Relations
   job                RecruiterJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -366,6 +370,7 @@ model InterviewSession {
 
   @@map("interview_sessions")
 }
+
 
 // ============================================
 // COPILOT SESSION DATA (Live Interview AI)

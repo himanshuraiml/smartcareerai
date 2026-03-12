@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-placenxt} -d ${DB_NAME:-placenxt_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-placenxt} -d ${DB_NAME:-placenxt_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,7 +50,7 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -62,22 +62,13 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      -n
-      --log-file=stdout
-      --min-port=49152
-      --max-port=49252
-      --realm=placenxt.com
-      --fingerprint
-      --lt-cred-mech
-      --user=${TURN_USERNAME:-turnuser}:${TURN_CREDENTIAL:-turnpassword}
-      --no-tls
-      --no-dtls
-      --listening-port=3478
+      -n --log-file=stdout --min-port=49152 --max-port=49252 --realm=placenxt.com --fingerprint --lt-cred-mech --user=${TURN_USERNAME:-turnuser}:${TURN_CREDENTIAL:-turnpassword} --no-tls --no-dtls --listening-port=3478
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+
 
 networks:
   default:
