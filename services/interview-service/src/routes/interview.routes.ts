@@ -67,5 +67,6 @@ router.put('/sessions/:id/replay', controller.updateReplayLogs);
 router.post('/sessions/:id/copilot', controller.saveCopilotData);
 router.get('/sessions/:id/copilot', controller.getCopilotData);
 router.post('/sessions/:id/copilot/suggest', controller.generateCopilotSuggestions);
+router.post('/sessions/:id/copilot/summarize', controller.generateSummary);
 
 export { router as interviewRouter };

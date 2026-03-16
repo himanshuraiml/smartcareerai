@@ -199,10 +199,13 @@ export default function InstitutionSettingsPage() {
 
             {/* Header */}
             <div className="relative z-10">
-                <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-                    Workspace Settings
-                </h1>
-                <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="p-2 rounded-xl bg-emerald-500/10">
+                        <SettingsIcon className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Workspace Settings</h2>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 ml-11">
                     Manage your institution's identity, security, and notification preferences.
                 </p>
             </div>
@@ -263,8 +266,12 @@ export default function InstitutionSettingsPage() {
                                 {activeTab === 'profile' && (
                                     <form onSubmit={handleSaveProfile} className="space-y-8">
                                         <div className="flex items-center gap-4 mb-8">
-                                            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
-                                                <Building2 className="w-6 h-6 text-emerald-500" />
+                                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-500/20 overflow-hidden p-1.5">
+                                                {logoUrl ? (
+                                                    <img src={logoUrl} alt="Institution Logo" className="max-w-full max-h-full object-contain" />
+                                                ) : (
+                                                    <Building2 className="w-6 h-6 text-emerald-500" />
+                                                )}
                                             </div>
                                             <div>
                                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Institution Profile</h2>
@@ -297,16 +304,31 @@ export default function InstitutionSettingsPage() {
 
                                             <div className="space-y-2">
                                                 <label className={labelClasses}>Logo URL</label>
-                                                <div className="relative">
-                                                    <Camera className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                    <input
-                                                        type="url"
-                                                        value={logoUrl}
-                                                        onChange={(e) => setLogoUrl(e.target.value)}
-                                                        className={`${inputClasses} pl-10`}
-                                                        placeholder="https://example.com/assets/logo.png"
-                                                    />
+                                                <div className="flex gap-4 items-start">
+                                                    <div className="relative flex-1">
+                                                        <Camera className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                        <input
+                                                            type="url"
+                                                            value={logoUrl}
+                                                            onChange={(e) => setLogoUrl(e.target.value)}
+                                                            className={`${inputClasses} pl-10`}
+                                                            placeholder="https://example.com/assets/logo.png"
+                                                        />
+                                                    </div>
+                                                    {logoUrl && (
+                                                        <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white shrink-0 shadow-sm flex items-center justify-center p-1">
+                                                            <img
+                                                                src={logoUrl}
+                                                                alt="Logo Preview"
+                                                                className="max-w-full max-h-full object-contain"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
+                                                <p className="text-[10px] text-gray-500 ml-1">Provide a direct link to your institution's logo SVG or PNG.</p>
                                             </div>
 
                                             <div className="space-y-2">

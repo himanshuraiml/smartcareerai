@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { recruiterService, RecruiterProfileInput, CandidateSearchFilters } from '../services/recruiter.service';
 import { jobService, CreateJobInput } from '../services/job.service';
 import { logger } from '../utils/logger';
+import { createError } from '../middleware/error.middleware';
 
 export class RecruiterController {
     // ============================================
@@ -84,7 +85,10 @@ export class RecruiterController {
 
     async saveCandidate(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const { candidateId, notes, tags } = req.body;
 
             const saved = await recruiterService.saveCandidate(recruiterId, candidateId, notes, tags);
@@ -101,7 +105,10 @@ export class RecruiterController {
 
     async getSavedCandidates(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const status = req.query.status as string;
 
             const saved = await recruiterService.getSavedCandidates(recruiterId, status);
@@ -117,7 +124,10 @@ export class RecruiterController {
 
     async removeSavedCandidate(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const { candidateId } = req.params;
 
             await recruiterService.removeSavedCandidate(recruiterId, candidateId);
@@ -133,7 +143,10 @@ export class RecruiterController {
 
     async updateCandidateStatus(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const { candidateId } = req.params;
             const { status, notes } = req.body;
 
@@ -159,7 +172,10 @@ export class RecruiterController {
 
     async getCandidateApplications(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const applications = await recruiterService.getCandidateApplications(req.params.candidateId, recruiterId);
             res.json({ success: true, data: applications });
         } catch (error) {
@@ -185,7 +201,10 @@ export class RecruiterController {
 
     async createJob(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const input: CreateJobInput = req.body;
 
             const job = await jobService.createJob(recruiterId, input);
@@ -202,7 +221,10 @@ export class RecruiterController {
 
     async getJobs(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const activeOnly = req.query.active === 'true';
 
             const jobs = await jobService.getJobs(recruiterId, activeOnly);
@@ -218,7 +240,10 @@ export class RecruiterController {
 
     async getJobById(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const job = await jobService.getJobById(req.params.id, recruiterId);
 
             res.json({
@@ -287,7 +312,10 @@ export class RecruiterController {
 
     async inviteToInterview(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const { id: jobId, applicationId } = req.params;
             const { customMessage, inviteType, scheduledAt, durationMinutes } = req.body;
 
@@ -313,7 +341,10 @@ export class RecruiterController {
 
     async updateJob(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const job = await jobService.updateJob(req.params.id, recruiterId, req.body);
 
             res.json({
@@ -328,7 +359,10 @@ export class RecruiterController {
 
     async toggleJobStatus(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             const job = await jobService.toggleJobStatus(req.params.id, recruiterId);
 
             res.json({
@@ -343,13 +377,52 @@ export class RecruiterController {
 
     async deleteJob(req: Request, res: Response, next: NextFunction) {
         try {
-            const recruiterId = req.recruiter!.id;
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
             await jobService.deleteJob(req.params.id, recruiterId);
 
             res.json({
                 success: true,
                 message: 'Job posting deleted successfully',
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // F14: List campus drives associated with this recruiter's jobs
+    async getCampusDrives(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.recruiter) {
+                throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            }
+            const recruiterId = req.recruiter.id;
+            const drives = await jobService.getCampusDrives(recruiterId);
+            res.json({ success: true, data: drives });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // F14: Post a job for a specific campus drive
+    async postJobForDrive(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.recruiter) throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            const job = await jobService.postJobForDrive(req.recruiter.id, req.params.driveId, req.body);
+            res.status(201).json({ success: true, data: job });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // F14: List jobs this recruiter posted for a specific drive
+    async getDriveJobs(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.recruiter) throw createError('Recruiter profile not found', 404, 'RECRUITER_NOT_FOUND');
+            const jobs = await jobService.getDriveJobs(req.recruiter.id, req.params.driveId);
+            res.json({ success: true, data: jobs });
         } catch (error) {
             next(error);
         }

@@ -1,254 +1,200 @@
-// src/app/(main)/university/skill-gaps/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Target, Search, BarChart2, Briefcase, Zap, TrendingUp, Filter, AlertTriangle, Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useAuthStore } from '@/store/auth.store';
-import { authFetch } from '@/lib/auth-fetch';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-    ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell
-} from 'recharts';
+    Activity, ArrowRight, Brain, Briefcase,
+    ExternalLink, Map, Sparkles, Target, Zap
+} from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
-interface SkillGapData {
-    department: string;
-    skills: { name: string; required: number; actual: number }[];
-    topMissingSkills: { name: string; count: number }[];
-    marketDemand: { skill: string; demandTrend: 'up' | 'down' | 'flat'; jobs: number }[];
-}
-
-const COLORS = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B'];
-
-export default function SkillGapsPage() {
-    const { user } = useAuthStore();
+export default function SkillGapPage() {
+    const [heatmap, setHeatmap] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<SkillGapData | null>(null);
-    const [selectedDept, setSelectedDept] = useState('All Departments');
 
     useEffect(() => {
-        if (user) {
-            loadSkillGaps();
-        }
-    }, [user, selectedDept]);
+        fetchSkillGaps();
+    }, []);
 
-    const loadSkillGaps = async () => {
-        setLoading(true);
+    const fetchSkillGaps = async () => {
         try {
-            const res = await authFetch(`/university/analytics/skill-gaps?dept=${selectedDept}`);
+            const res = await authFetch("/university/analytics/skill-gap");
             if (res.ok) {
-                const resData = await res.json();
-                setData(resData.data);
-            } else {
-                // Mock Data
-                setData({
-                    department: selectedDept,
-                    skills: [
-                        { name: 'System Design', required: 85, actual: 60 },
-                        { name: 'Data Structures', required: 90, actual: 75 },
-                        { name: 'Algorithms', required: 88, actual: 65 },
-                        { name: 'Cloud Architecture', required: 75, actual: 40 },
-                        { name: 'React/Frontend', required: 80, actual: 85 },
-                        { name: 'Databases', required: 85, actual: 70 },
-                    ],
-                    topMissingSkills: [
-                        { name: 'AWS/Cloud Providers', count: 145 },
-                        { name: 'System Design Patterns', count: 120 },
-                        { name: 'Redis/Caching', count: 95 },
-                        { name: 'Docker/Kubernetes', count: 88 },
-                        { name: 'Agile Methodologies', count: 65 }
-                    ],
-                    marketDemand: [
-                        { skill: 'Cloud Architecture', demandTrend: 'up', jobs: 12500 },
-                        { skill: 'System Design', demandTrend: 'up', jobs: 18200 },
-                        { skill: 'React/Next.js', demandTrend: 'flat', jobs: 24000 },
-                        { skill: 'Python/AI', demandTrend: 'up', jobs: 28500 },
-                        { skill: 'Basic HTML/CSS', demandTrend: 'down', jobs: 4500 }
-                    ]
-                });
+                const json = await res.json();
+                setHeatmap(json.data || []);
             }
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Failed to fetch heatmap", error);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-12 h-12">
-                        <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin" />
-                        <div className="absolute inset-2 rounded-full border-r-2 border-fuchsia-500 animate-spin" />
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium text-sm animate-pulse">Analyzing skill gaps...</p>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
+        </div>
+    );
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-12 pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-                        Skill Gap Analysis
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3 tracking-tight">
+                        <Zap className="w-6 h-6 text-amber-500 fill-amber-500" />
+                        Skill Matrix Explorer
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Identify discrepancies between student readiness and market demand.</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-violet-500 transition">
-                        <Filter className="w-4 h-4 text-gray-400" />
-                        <select
-                            value={selectedDept}
-                            onChange={e => setSelectedDept(e.target.value)}
-                            className="bg-transparent text-sm font-bold text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
-                        >
-                            <option>All Departments</option>
-                            <option>Computer Science</option>
-                            <option>Data Science</option>
-                            <option>Mechanical</option>
-                            <option>Electrical</option>
-                        </select>
-                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">AI-powered skill gap analysis. Identifying student readiness for their target career paths.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Radar Chart for Overall Readiness */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-6 rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-gray-800/30 flex flex-col"
-                >
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Target className="w-5 h-5 text-indigo-500" />
-                            Core Competency Radar
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Actual student proficiency vs Market Requirement</p>
-                    </div>
+            {heatmap.length === 0 && (
+                <div className="glass border border-gray-200 dark:border-white/10 p-12 rounded-[40px] text-center">
+                    <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="font-black text-gray-900 dark:text-white">Mapping Your Talent Landscape</h3>
+                    <p className="text-sm text-gray-500 mt-2">Students need to set their target job roles and complete skills for mapping. Please wait or encourage students.</p>
+                </div>
+            )}
 
-                    <div className="h-[350px] w-full mt-auto">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data?.skills}>
-                                <PolarGrid stroke="#e5e7eb" className="dark:opacity-10" />
-                                <PolarAngleAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-                                <Radar name="Market Requirement" dataKey="required" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.1} />
-                                <Radar name="Student Actual" dataKey="actual" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.4} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(17, 24, 39, 0.9)' }}
-                                    itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}
-                                />
-                            </RadarChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-gray-100 dark:border-white/5">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-violet-500 bg-violet-500/10" />
-                            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Market Required</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full border border-amber-500 bg-amber-500/40" />
-                            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Student Average</span>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Top Missing Skills */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="p-6 rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-gray-800/30 flex flex-col"
-                >
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-rose-500" />
-                            Critical Skill Deficits
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Skills most frequently missing from student resumes & tests</p>
-                    </div>
-
-                    <div className="flex-1">
-                        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-                            <BarChart data={data?.topMissingSkills} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" className="dark:opacity-10" />
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 500 }} width={120} />
-                                <Tooltip
-                                    cursor={{ fill: 'transparent' }}
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 rounded-xl px-3 py-2 shadow-xl">
-                                                    <p className="font-bold text-rose-500">{payload[0].value} students missing</p>
-                                                </div>
-                                            )
-                                        }
-                                        return null;
-                                    }}
-                                />
-                                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={24}>
-                                    {data?.topMissingSkills.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill="url(#colorDeficit)" />
-                                    ))}
-                                </Bar>
-                                <defs>
-                                    <linearGradient id="colorDeficit" x1="0" y1="0" x2="1" y2="0">
-                                        <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#FB923C" stopOpacity={0.8} />
-                                    </linearGradient>
-                                </defs>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </motion.div>
-
-                {/* Market Trends */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="lg:col-span-2 p-6 rounded-2xl border border-gray-200 dark:border-white/5 bg-gradient-to-br from-indigo-900/5 to-purple-900/5 dark:from-indigo-500/5 dark:to-purple-500/5"
-                >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pt-2">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-indigo-500" />
-                                Live Market Demand
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Based on global ATS parsing and active recruiter job posts</p>
-                        </div>
-                        <button className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm">
-                            Curriculum Recommendations
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        {data?.marketDemand.map((trend, i) => (
-                            <div key={trend.skill} className="bg-white dark:bg-gray-900/60 p-4 rounded-xl border border-gray-100 dark:border-white/5 flex flex-col items-center text-center group hover:border-indigo-500/30 transition-colors">
-                                <h4 className="font-bold text-xs text-gray-800 dark:text-gray-200 mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{trend.skill}</h4>
-                                <div className="mt-auto flex flex-col items-center">
-                                    <div className={`p-2 rounded-full mb-2 ${trend.demandTrend === 'up' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                                        trend.demandTrend === 'down' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400' :
-                                            'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                        }`}>
-                                        {trend.demandTrend === 'up' ? <TrendingUp className="w-5 h-5" /> :
-                                            trend.demandTrend === 'down' ? <TrendingUp className="w-5 h-5 rotate-180" /> :
-                                                <TrendingUp className="w-5 h-5 opacity-50" />}
-                                    </div>
-                                    <span className="text-lg font-black text-gray-900 dark:text-white">{(trend.jobs / 1000).toFixed(1)}k</span>
-                                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Active Jobs</span>
+            <div className="grid grid-cols-1 gap-12">
+                {heatmap.map((role, idx) => (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        key={idx}
+                        className="glass border border-gray-200 dark:border-white/10 overflow-hidden rounded-[40px] shadow-2xl shadow-violet-500/5"
+                    >
+                        <div className="p-10 border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                                    <Target className="w-6 h-6 text-violet-500" />
+                                    Target Role: {role.targetRole}
+                                </h3>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-violet-600 bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 rounded-full">
+                                        {role.studentCount} STUDENTS TRACKING
+                                    </span>
                                 </div>
                             </div>
-                        ))}
+                            <button className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-bold text-xs flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-violet-500/25">
+                                <Sparkles className="w-4 h-4" />
+                                Generate Training Plan
+                            </button>
+                        </div>
+
+                        <div className="p-10">
+                            <h4 className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase mb-8">Skill Readiness Map</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {role.skillGaps.map((skill: any, sIdx: number) => (
+                                    <div key={sIdx} className="relative group">
+                                        <div className={`absolute -inset-0.5 rounded-[32px] blur opacity-25 group-hover:opacity-100 transition duration-500 ${skill.gapLevel === 'LOW' ? 'bg-emerald-500' :
+                                            skill.gapLevel === 'MEDIUM' ? 'bg-amber-500' : 'bg-rose-500'
+                                            }`}></div>
+                                        <div className="relative glass border border-gray-200 dark:border-white/10 p-6 rounded-[32px] bg-white dark:bg-black/40 h-full flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">{skill.skill}</p>
+                                                    <div className={`p-1.5 rounded-lg ${skill.gapLevel === 'LOW' ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600' :
+                                                        skill.gapLevel === 'MEDIUM' ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-600' :
+                                                            'bg-rose-100 dark:bg-rose-900/20 text-rose-600'
+                                                        }`}>
+                                                        <Activity className="w-4 h-4" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-tighter mb-2">
+                                                            <span>Global Coverage</span>
+                                                            <span className="text-gray-900 dark:text-white">{skill.acquiredPercentage}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${skill.acquiredPercentage}%` }}
+                                                                className={`h-full rounded-full ${skill.gapLevel === 'LOW' ? 'bg-emerald-500' :
+                                                                    skill.gapLevel === 'MEDIUM' ? 'bg-amber-500' : 'bg-rose-500'
+                                                                    }`}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-between items-center bg-gray-50 dark:bg-white/[0.03] p-3 rounded-2xl">
+                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Avg Mastery</span>
+                                                        <div className="flex gap-1">
+                                                            {[1, 2, 3, 4].map(star => (
+                                                                <div
+                                                                    key={star}
+                                                                    className={`w-3 h-1.5 rounded-full ${star <= Math.round(skill.averageProficiency)
+                                                                        ? 'bg-violet-500'
+                                                                        : 'bg-gray-200 dark:bg-white/10'
+                                                                        }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6">
+                                                <button className="w-full py-3 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 transition-colors flex items-center justify-center gap-2">
+                                                    Assign Training
+                                                    <ArrowRight className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* AI Recommendations */}
+                            <div className="mt-12 p-8 bg-violet-600/5 dark:bg-violet-500/5 border border-violet-100 dark:border-violet-500/20 rounded-[32px] flex flex-col md:flex-row gap-8 items-center">
+                                <div className="p-4 bg-violet-600 rounded-3xl shrink-0">
+                                    <Sparkles className="w-8 h-8 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <h5 className="text-lg font-black text-violet-900 dark:text-violet-400">Strategic Intervention Required</h5>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                                        For the **{role.targetRole}** path, critical gaps detected in specialized domains.
+                                        Suggested intervention: **Intensive Bootcamps** and **External Certifications** for core skills below 40% coverage.
+                                    </p>
+                                </div>
+                                <button className="shrink-0 text-violet-600 dark:text-violet-400 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">
+                                    View Full Blueprint
+                                    <ArrowRight className="w-4 h-4 cursor-pointer" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Platform Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="glass border border-gray-200 dark:border-white/10 p-8 rounded-[40px] relative overflow-hidden">
+                    <Map className="absolute -right-4 -bottom-4 w-32 h-32 text-violet-500/10 -rotate-12" />
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white">Curriculum Alignment Map</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">Cross-referencing campus syllabus with real-world JDs reveals an 18% misalignment in Tech Stack relevance for Year 4 students.</p>
+                        <button className="mt-6 flex items-center gap-2 text-violet-600 font-bold text-xs uppercase tracking-wider group">
+                            Sync with LinkedIn Trends
+                            <ExternalLink className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
                     </div>
-                </motion.div>
+                </div>
+
+                <div className="glass border border-gray-200 dark:border-white/10 p-8 rounded-[40px] relative overflow-hidden bg-black dark:bg-white/[0.02]">
+                    <Brain className="absolute -right-4 -bottom-4 w-32 h-32 text-emerald-500/10 rotate-12" />
+                    <div className="relative z-10 text-white dark:text-white">
+                        <h3 className="text-xl font-black">Next-Gen Talent Prediction</h3>
+                        <p className="text-sm text-gray-400 mt-2 leading-relaxed">AI predicts a potential 12% increase in Cloud Engineering placements if AWS Certification is introduced this semester.</p>
+                        <button className="mt-6 flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                            Run Simulations
+                            <Activity className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { generateEmbedding, querySimilarVectors } from '@placenxt/shared';
+import { evaluateCandidateFit, compareCandidates } from '../utils/llm';
 
 export class SourcingController {
     async rediscoverCandidates(req: Request, res: Response, next: NextFunction) {
@@ -105,6 +106,117 @@ export class SourcingController {
             res.json({
                 success: true,
                 data: recommendedCandidates
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async evaluateCandidate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const recruiterId = (req as any).recruiter!.id;
+            const { id: jobId, candidateId } = req.params;
+
+            // 1. Verify job belongs to recruiter
+            const job = await prisma.recruiterJob.findFirst({
+                where: { id: jobId, recruiterId }
+            });
+
+            if (!job) {
+                res.status(404).json({ success: false, error: { message: 'Job not found' } });
+                return;
+            }
+
+            // 2. Fetch candidate details
+            const candidate = await prisma.user.findUnique({
+                where: { id: candidateId },
+                include: { userSkills: { include: { skill: true } } }
+            });
+
+            if (!candidate) {
+                res.status(404).json({ success: false, error: { message: 'Candidate not found' } });
+                return;
+            }
+
+            // 3. Evaluate fit using LLM
+            const jobDetails = {
+                title: job.title,
+                description: job.description,
+                requirements: job.requirements,
+                requiredSkills: job.requiredSkills,
+                location: job.location,
+            };
+
+            const candidateDetails = {
+                name: candidate.name || 'Candidate',
+                skills: candidate.userSkills.map(us => us.skill.name)
+            };
+
+            const evaluation = await evaluateCandidateFit(jobDetails, candidateDetails);
+
+            res.json({
+                success: true,
+                data: evaluation
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async compareCandidates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const recruiterId = (req as any).recruiter!.id;
+            const { id: jobId } = req.params;
+            const { candidateIds } = req.body;
+
+            if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+                res.status(400).json({ success: false, error: { message: 'candidateIds array is required' } });
+                return;
+            }
+
+            // 1. Verify job belongs to recruiter
+            const job = await prisma.recruiterJob.findFirst({
+                where: { id: jobId, recruiterId }
+            });
+
+            if (!job) {
+                res.status(404).json({ success: false, error: { message: 'Job not found' } });
+                return;
+            }
+
+            // 2. Fetch candidates details
+            const candidates = await prisma.user.findMany({
+                where: { id: { in: candidateIds } },
+                include: { userSkills: { include: { skill: true } } }
+            });
+
+            if (candidates.length === 0) {
+                res.status(404).json({ success: false, error: { message: 'No valid candidates found' } });
+                return;
+            }
+
+            // 3. Compare candidates using LLM
+            const jobDetails = {
+                title: job.title,
+                description: job.description,
+                requirements: job.requirements,
+                requiredSkills: job.requiredSkills,
+                location: job.location,
+            };
+
+            const candidatesList = candidates.map(c => ({
+                id: c.id,
+                name: c.name || 'Candidate',
+                skills: c.userSkills.map(us => us.skill.name)
+            }));
+
+            const comparison = await compareCandidates(jobDetails, candidatesList);
+
+            res.json({
+                success: true,
+                data: comparison
             });
 
         } catch (error) {

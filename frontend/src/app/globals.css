@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* ============================== */
 /* CSS VARIABLES - LIGHT DEFAULT  */
@@ -13,20 +13,20 @@
   --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  --primary: 239 84% 67%;
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
   --secondary: 210 40% 96%;
   --secondary-foreground: 222 47% 11%;
   --muted: 210 40% 96%;
   --muted-foreground: 215 16% 47%;
-  --accent: 239 84% 67%;
+  --accent: 221 83% 53%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --ring: 239 84% 67%;
-  --radius: 0.75rem;
+  --ring: 221 83% 53%;
+  --radius: 0.875rem;
 
   /* Modal Theme Variables - Light Mode */
   --modal-bg: #FFFFFF;
@@ -36,29 +36,38 @@
   --modal-title: #0F172A;
   --modal-border: #E2E8F0;
   --modal-divider: #E2E8F0;
-  --modal-accent: #6366f1;
+  --modal-accent: #2563EB;
   --modal-overlay: rgba(0, 0, 0, 0.4);
 
-  /* PlaceNxt Branding - Primary Colors */
-  --color-primary: #6366F1;
-  --color-primary-hover: #818CF8;
-  --color-primary-muted: rgba(99, 102, 241, 0.15);
+  /* PlaceNxt Branding - Primary Colors (Cobalt Blue) */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-light: #3B82F6;
+  --color-primary-muted: rgba(37, 99, 235, 0.12);
+
+  /* PlaceNxt Branding - Brand Accents */
+  --color-teal: #0D9488;
+  --color-teal-light: #14B8A6;
+  --color-orange: #F97316;
+  --color-orange-muted: rgba(249, 115, 22, 0.12);
 
   /* PlaceNxt Branding - Semantic Colors */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #F43F5E;
-  --color-info: #06B6D4;
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
+  --color-info: #0284C7;
 
   /* PlaceNxt Branding - Gradients */
-  --gradient-primary: linear-gradient(135deg, #6366F1, #8B5CF6);
-  --gradient-success: linear-gradient(135deg, #10B981, #06B6D4);
-  --gradient-premium: linear-gradient(135deg, #6366F1, #EC4899);
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #0D9488 100%);
+  --gradient-hero: linear-gradient(135deg, #1E3BD4 0%, #2563EB 50%, #0D9488 100%);
+  --gradient-success: linear-gradient(135deg, #059669 0%, #0D9488 100%);
+  --gradient-achievement: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
+  --gradient-premium: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
 
   /* PlaceNxt Branding - Glows (Softer for Light) */
-  --glow-primary: 0 0 15px rgba(99, 102, 241, 0.2);
-  --glow-primary-hover: 0 0 25px rgba(99, 102, 241, 0.3);
-  --glow-success: 0 0 15px rgba(16, 185, 129, 0.2);
+  --glow-primary: 0 0 15px rgba(37, 99, 235, 0.2);
+  --glow-primary-hover: 0 0 25px rgba(37, 99, 235, 0.3);
+  --glow-success: 0 0 15px rgba(13, 148, 136, 0.2);
 
   /* PlaceNxt Branding - Radius */
   --radius-sm: 8px;
@@ -68,12 +77,13 @@
 
   /* PlaceNxt Branding - Font */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* PlaceNxt Branding - Light Mode Colors */
-  --color-bg: #F8FAFC;
+  --color-bg: #F8FAFF;
   --color-surface-1: #FFFFFF;
-  --color-surface-2: #F1F5F9;
+  --color-surface-2: #F1F5FB;
   --color-text-primary: #0F172A;
   --color-text-secondary: #475569;
   --color-text-tertiary: #94A3B8;
@@ -90,19 +100,19 @@
   --card-foreground: 0 0% 98%;
   --popover: 0 0% 7%;
   --popover-foreground: 0 0% 98%;
-  --primary: 239 84% 67%;
+  --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 14.9%;
   --secondary-foreground: 0 0% 98%;
   --muted: 0 0% 14.9%;
   --muted-foreground: 0 0% 63.9%;
-  --accent: 239 84% 67%;
+  --accent: 217 91% 60%;
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
   --border: 0 0% 14.9%;
   --input: 0 0% 14.9%;
-  --ring: 239 84% 67%;
+  --ring: 217 91% 60%;
 
   /* Modal Theme Variables - Dark Mode */
   --modal-bg: #0f172a;
@@ -112,22 +122,22 @@
   --modal-title: #ffffff;
   --modal-border: rgba(255, 255, 255, 0.1);
   --modal-divider: rgba(255, 255, 255, 0.08);
-  --modal-accent: #6366f1;
+  --modal-accent: #2563EB;
   --modal-overlay: rgba(0, 0, 0, 0.5);
 
   /* PlaceNxt Branding - Dark Glows */
-  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
-  --glow-primary-hover: 0 0 30px rgba(99, 102, 241, 0.4);
-  --glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
+  --glow-primary: 0 0 20px rgba(37, 99, 235, 0.35);
+  --glow-primary-hover: 0 0 30px rgba(37, 99, 235, 0.5);
+  --glow-success: 0 0 20px rgba(13, 148, 136, 0.35);
 
   /* PlaceNxt Branding - Dark Mode Colors */
-  --color-bg: #0F172A;
-  --color-surface-1: #1E293B;
-  --color-surface-2: #334155;
-  --color-text-primary: #F1F5F9;
+  --color-bg: #070B14;
+  --color-surface-1: #0F172A;
+  --color-surface-2: #1E293B;
+  --color-text-primary: #F8FAFC;
   --color-text-secondary: #94A3B8;
   --color-text-tertiary: #64748B;
-  --color-border: rgba(71, 85, 105, 0.3);
+  --color-border: rgba(71, 85, 105, 0.35);
 }
 
 /* ============================== */
@@ -188,10 +198,10 @@ body {
 }
 
 .glass-premium {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 255, 0.98) 100%);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.08);
 }
 
 .dark .glass-premium {
@@ -216,28 +226,28 @@ body {
 }
 
 .dark .glass-card {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.8) 0%, rgba(11, 15, 25, 0.9) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(7, 11, 20, 0.9) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .dark .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(37, 99, 235, 0.3);
   box-shadow:
-    0 8px 40px rgba(99, 102, 241, 0.15),
+    0 8px 40px rgba(37, 99, 235, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #0D9488 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .dark .gradient-text {
-  background: linear-gradient(135deg, hsl(262, 83%, 70%) 0%, hsl(290, 70%, 60%) 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #14B8A6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -247,31 +257,43 @@ body {
 /* GLOW & NEON EFFECTS            */
 /* ============================== */
 .glow {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
 }
 
 .dark .glow {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
 }
 
 .glow-hover:hover {
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 30px rgba(37, 99, 235, 0.3);
 }
 
 .dark .glow-hover:hover {
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 30px rgba(37, 99, 235, 0.45);
 }
 
 /* Neon Glow Effects - softer in light, stronger in dark */
+.neon-blue {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+}
+
+.dark .neon-blue {
+  box-shadow:
+    0 0 5px rgba(37, 99, 235, 0.5),
+    0 0 20px rgba(37, 99, 235, 0.3),
+    0 0 40px rgba(37, 99, 235, 0.1);
+}
+
+/* Keep neon-purple for backward compat (used in some components) */
 .neon-purple {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
 }
 
 .dark .neon-purple {
   box-shadow:
-    0 0 5px rgba(99, 102, 241, 0.5),
-    0 0 20px rgba(99, 102, 241, 0.3),
-    0 0 40px rgba(99, 102, 241, 0.1);
+    0 0 5px rgba(124, 58, 237, 0.5),
+    0 0 20px rgba(124, 58, 237, 0.3),
+    0 0 40px rgba(124, 58, 237, 0.1);
 }
 
 .neon-cyan {
@@ -366,11 +388,11 @@ select option {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
   }
 
   50% {
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 40px rgba(37, 99, 235, 0.55);
   }
 }
 
@@ -394,7 +416,7 @@ select option {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(236, 72, 153, 0.5));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.5), rgba(13, 148, 136, 0.5));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -413,7 +435,7 @@ select option {
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(236, 72, 153, 0.3));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(13, 148, 136, 0.3));
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: -1;
@@ -439,7 +461,7 @@ select option {
 
 /* Path/Connector Lines */
 .roadmap-path {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.3) 0%, rgba(37, 99, 235, 0.1) 100%);
   position: relative;
 }
 
@@ -450,15 +472,15 @@ select option {
 /* Animated Background Grid */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 
 .dark .bg-grid {
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
 }
 
 /* Level/XP Badge */
@@ -496,7 +518,7 @@ select option {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.05) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.05) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -638,10 +660,10 @@ select option {
 
 .bg-gradient-animated {
   background: linear-gradient(-45deg,
-      rgba(99, 102, 241, 0.1),
-      rgba(236, 72, 153, 0.1),
-      rgba(34, 211, 238, 0.1),
-      rgba(99, 102, 241, 0.1));
+      rgba(37, 99, 235, 0.1),
+      rgba(13, 148, 136, 0.1),
+      rgba(249, 115, 22, 0.08),
+      rgba(37, 99, 235, 0.1));
   background-size: 400% 400%;
   animation: gradient-shift 15s ease infinite;
 }
@@ -658,7 +680,7 @@ select option {
 
 .card-premium:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
 }
 
 .dark .card-premium {
@@ -670,11 +692,11 @@ select option {
 }
 
 .dark .card-premium:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(37, 99, 235, 0.3);
   box-shadow:
-    0 20px 40px rgba(99, 102, 241, 0.15),
+    0 20px 40px rgba(37, 99, 235, 0.12),
     0 8px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Skeleton Loader */
@@ -766,8 +788,8 @@ select option {
 
 .focus-ring:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 /* Staggered Animation Delays */
@@ -831,13 +853,13 @@ select option {
 
   0%,
   100% {
-    border-color: rgba(99, 102, 241, 0.3);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+    border-color: rgba(37, 99, 235, 0.3);
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.1);
   }
 
   50% {
-    border-color: rgba(99, 102, 241, 0.6);
-    box-shadow: 0 0 25px rgba(99, 102, 241, 0.2);
+    border-color: rgba(37, 99, 235, 0.6);
+    box-shadow: 0 0 25px rgba(37, 99, 235, 0.2);
   }
 }
 
@@ -861,7 +883,7 @@ select option {
 }
 
 .text-gradient-animated {
-  background: linear-gradient(90deg, #6366f1, #ec4899, #22d3ee, #6366f1);
+  background: linear-gradient(90deg, #2563EB, #0D9488, #F97316, #2563EB);
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -871,19 +893,19 @@ select option {
 
 /* Premium Button Styles */
 .btn-premium {
-  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #0D9488 100%);
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
 .btn-premium:hover {
-  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
   transform: translateY(-2px);
 }
 
@@ -918,8 +940,8 @@ select option {
 
 .input-glass:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 /* Progress Bar Animation */

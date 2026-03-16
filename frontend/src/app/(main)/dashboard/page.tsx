@@ -296,32 +296,6 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* XP Badge */}
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex items-center gap-4 p-4 rounded-2xl glass-premium"
-                    >
-                        <div className="xp-badge w-14 h-14 rounded-xl flex items-center justify-center">
-                            <Flame className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-gray-900 dark:text-white">Level {level}</span>
-                                <Star className="w-5 h-5 text-yellow-400" />
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
-                                        style={{ width: `${((500 - xpToNextLevel) / 500) * 100}%` }}
-                                    />
-                                </div>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{xpToNextLevel} XP to next</span>
-                            </div>
-                        </div>
-                    </motion.div>
                 </div>
             </motion.div>
 

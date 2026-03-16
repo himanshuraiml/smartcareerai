@@ -79,7 +79,7 @@ export default function StudentDetailPage() {
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const response = await authFetch(`/admin/institution/students/${params.id}`);
+                const response = await authFetch(`/institution-admin/students/${params.id}`);
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch student");
@@ -202,7 +202,16 @@ export default function StudentDetailPage() {
                         <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 p-1 shadow-lg group-hover:shadow-xl transition-all duration-300">
                             <div className="w-full h-full rounded-2xl bg-white dark:bg-gray-900 overflow-hidden flex items-center justify-center relative">
                                 {student.avatarUrl ? (
-                                    <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
+                                    <img
+                                        src={student.avatarUrl}
+                                        alt={student.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            const parent = (e.target as HTMLImageElement).parentElement;
+                                            if (parent) parent.innerHTML = `<div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center"><span class="text-4xl font-black text-gray-300 dark:text-gray-700">${student.name ? student.name.charAt(0).toUpperCase() : "U"}</span></div>`;
+                                        }}
+                                    />
                                 ) : (
                                     <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
                                         <span className="text-4xl font-black text-gray-300 dark:text-gray-700">

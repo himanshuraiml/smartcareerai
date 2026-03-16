@@ -22,13 +22,17 @@ import {
     User,
     Send,
     MessageSquare,
-    FlaskConical
+    FlaskConical,
+    QrCode,
+    GitBranch,
+    GraduationCap,
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
 import ThemeToggle from '@/components/theme/ThemeToggle';
+import Logo from '@/components/layout/Logo';
 
 interface NavItem {
     href: string;
@@ -36,6 +40,7 @@ interface NavItem {
     label: string;
     iconColor: string;
     badge?: string;
+    institutionOnly?: boolean;
 }
 
 // Career workflow — shown under "Your Career Journey"
@@ -43,19 +48,23 @@ const journeyItems: NavItem[] = [
     { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', iconColor: 'text-blue-400' },
     { href: '/dashboard/skills', icon: Target, label: 'Skills', iconColor: 'text-cyan-400' },
     { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', iconColor: 'text-amber-400' },
+    { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'AI Practice', iconColor: 'text-emerald-400', badge: 'Free' },
     { href: '/dashboard/interviews', icon: Video, label: 'Mock Interviews', iconColor: 'text-rose-400' },
     { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', iconColor: 'text-emerald-400' },
     { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', iconColor: 'text-violet-400' },
+    { href: '/dashboard/assessments', icon: GitBranch, label: 'Pipeline & Stages', iconColor: 'text-orange-400' },
 ];
 
-// General / standalone features
+// General / standalone features (most moved to header dropdown)
 const otherItems: NavItem[] = [
     { href: '/dashboard/future-lab', icon: FlaskConical, label: 'Future-Ready Lab', iconColor: 'text-violet-400', badge: 'New' },
-    { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'Practice Interview', iconColor: 'text-emerald-400', badge: 'Free' },
-    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Credits', iconColor: 'text-orange-400' },
+    { href: '/dashboard/qr-pass', icon: QrCode, label: 'My QR Pass', iconColor: 'text-emerald-500', institutionOnly: true },
+    { href: '/dashboard/drives', icon: GraduationCap, label: 'Campus Drives', iconColor: 'text-blue-400', institutionOnly: true },
 ];
 
-const dashboardItem: NavItem = { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconColor: 'text-indigo-400' };
+
+
+const dashboardItem: NavItem = { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconColor: 'text-blue-400' };
 const allNavItems = [dashboardItem, ...journeyItems, ...otherItems];
 
 // Helper function to get proper page title from pathname
@@ -170,7 +179,7 @@ export default function DashboardLayout({
         // Show nothing or a loading spinner while hydrating or redirecting
         return (
             <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
     }
@@ -206,22 +215,7 @@ export default function DashboardLayout({
                             {/* Logo */}
                             <div className="px-5 py-5 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
                                 <Link href="/dashboard" className="flex items-center gap-3 group">
-                                    <Image
-                                        src="/logo-new-light.png"
-                                        alt="PlaceNxt Logo"
-                                        width={200}
-                                        height={50}
-                                        className="h-14 w-auto block dark:hidden"
-                                        priority
-                                    />
-                                    <Image
-                                        src="/logo-new-dark.png"
-                                        alt="PlaceNxt Logo"
-                                        width={200}
-                                        height={50}
-                                        className="h-14 w-auto hidden dark:block"
-                                        priority
-                                    />
+                                    <Logo width={140} height={46} />
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
@@ -245,15 +239,15 @@ export default function DashboardLayout({
                                                 className={`
                                                     relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                                                     ${isActive
-                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
                                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
                                                 `}
                                             >
                                                 {isActive && (
-                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
                                                 )}
-                                                <LayoutDashboard className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-400'}`} style={{ width: '18px', height: '18px' }} />
-                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>Dashboard</span>
+                                                <LayoutDashboard className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-blue-400'}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>Dashboard</span>
                                             </Link>
                                         );
                                     })()}
@@ -274,15 +268,20 @@ export default function DashboardLayout({
                                                 className={`
                                                     relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                                                     ${isActive
-                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
                                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
                                                 `}
                                             >
                                                 {isActive && (
-                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
                                                 )}
-                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
-                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                {item.badge && (
+                                                    <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
+                                                        {item.badge}
+                                                    </span>
+                                                )}
                                             </Link>
                                         );
                                     })}
@@ -293,8 +292,11 @@ export default function DashboardLayout({
 
                                 {/* Other */}
                                 <div className="space-y-1">
-                                    {otherItems.map((item) => {
-                                        const isActive = item.href === '/dashboard'
+                                    {otherItems
+                                        .filter(item => !item.institutionOnly || (user?.institutionId && user.institutionId !== "null"))
+                                        .map((item) => {
+                                            const isActive = item.href === '/dashboard'
+
                                             ? pathname === item.href
                                             : pathname === item.href || pathname?.startsWith(`${item.href}/`);
                                         return (
@@ -305,15 +307,15 @@ export default function DashboardLayout({
                                                 className={`
                                                     relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                                                     ${isActive
-                                                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/15 dark:to-purple-500/15 text-indigo-700 dark:text-white shadow-sm'
+                                                        ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
                                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
                                                 `}
                                             >
                                                 {isActive && (
-                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600" />
+                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
                                                 )}
-                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
-                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-indigo-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>{item.label}</span>
                                                 {item.badge && (
                                                     <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
                                                         {item.badge}
@@ -326,55 +328,7 @@ export default function DashboardLayout({
                             </nav>
 
                             {/* User Profile Dropdown Trigger */}
-                            <div className="p-3 border-t border-gray-100 dark:border-white/5 relative">
-                                <button
-                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-all duration-200 border border-gray-100 dark:border-white/5 text-left group"
-                                >
-                                    <div className="relative flex-shrink-0">
-                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 opacity-70" />
-                                        <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                                            <span className="text-white text-sm font-semibold">
-                                                {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{user?.name || 'User'}</p>
-                                        <p className="text-xs text-gray-400 dark:text-gray-400 truncate">{user?.email}</p>
-                                    </div>
-                                    <Settings className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <AnimatePresence>
-                                    {userMenuOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            className="absolute bottom-full left-4 right-4 mb-2 p-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 shadow-xl backdrop-blur-xl z-50"
-                                        >
-                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                                <User className="w-4 h-4" />
-                                                <span className="text-sm">Profile</span>
-                                            </Link>
-                                            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                                <Settings className="w-4 h-4" />
-                                                <span className="text-sm">Settings</span>
-                                            </Link>
-                                            <div className="h-px bg-gray-100 dark:bg-white/10 my-1" />
-                                            <button
-                                                onClick={handleLogout}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors text-left"
-                                            >
-                                                <LogOut className="w-4 h-4" />
-                                                <span className="text-sm">Logout</span>
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                            {/* User Profile moved to Header */}
                         </div>
                     </aside>
                 </>
@@ -391,7 +345,64 @@ export default function DashboardLayout({
                                 {getPageTitle(pathname)}
                             </h1>
                             <div className="flex items-center gap-4">
+                                {/* Messages Link */}
+                                <Link
+                                    href="/dashboard/messages"
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 border ${pathname?.startsWith('/dashboard/messages')
+                                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                        : 'bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                        }`}
+                                    title="Messages"
+                                >
+                                    <MessageSquare className="w-4 h-4" />
+                                </Link>
+
                                 <ThemeToggle />
+
+                                {/* User Dropdown */}
+                                <div className="relative group">
+                                    <button className="flex items-center gap-2 p-1 pl-3 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 transition-all hover:border-blue-500/30">
+                                        <div className="flex flex-col items-end mr-1">
+                                            <span className="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-none">
+                                                {user?.name?.split(' ')[0] || "User"}
+                                            </span>
+                                            <span className="text-[9px] text-gray-500 dark:text-gray-500 font-medium mt-0.5">
+                                                Candidate
+                                            </span>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-teal-600 flex items-center justify-center shrink-0 shadow-md">
+                                            <span className="text-white text-[10px] font-black">
+                                                {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    </button>
+
+                                    {/* Dropdown Menu - Added padding-top to bridge the gap and prevent instant closing */}
+                                    <div className="absolute right-0 top-full pt-2 w-48 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 z-[100]">
+                                        <div className="py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+                                            <div className="px-4 py-2 border-b border-gray-100 dark:border-white/5 mb-1">
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{user?.name}</p>
+                                                <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                                            </div>
+                                            <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                                <User className="w-4 h-4" />
+                                                Profile
+                                            </Link>
+                                            <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                                <CreditCard className="w-3.5 h-3.5" />
+                                                Billing & Credits
+                                            </Link>
+                                            <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                                <Settings className="w-3.5 h-3.5" />
+                                                Settings
+                                            </Link>
+                                            <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left">
+                                                <LogOut className="w-3.5 h-3.5" />
+                                                Logout
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </header>
 
@@ -405,22 +416,7 @@ export default function DashboardLayout({
                                     <Menu className="w-6 h-6" />
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <Image
-                                        src="/logo-new-light.png"
-                                        alt="PlaceNxt Logo"
-                                        width={160}
-                                        height={40}
-                                        className="h-10 w-auto block dark:hidden"
-                                        priority
-                                    />
-                                    <Image
-                                        src="/logo-new-dark.png"
-                                        alt="PlaceNxt Logo"
-                                        width={160}
-                                        height={40}
-                                        className="h-10 w-auto hidden dark:block"
-                                        priority
-                                    />
+                                    <Logo width={100} height={33} />
                                 </div>
                                 <ThemeToggle />
                             </div>
@@ -463,7 +459,7 @@ export default function DashboardLayout({
                     {children}
                 </div>
             </main>
-        </div>
+        </div >
     );
 }
 

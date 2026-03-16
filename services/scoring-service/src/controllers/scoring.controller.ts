@@ -90,4 +90,18 @@ export class ScoringController {
             next(error);
         }
     }
+
+    async scoreAssessment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { attemptId } = req.params;
+            const result = await scoringService.scoreAssessmentBatch(attemptId);
+
+            res.status(200).json({
+                success: true,
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

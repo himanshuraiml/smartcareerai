@@ -2,10 +2,26 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
 import Groq from 'groq-sdk';
+import Redis from 'ioredis';
+import { generateJDForVertical, VERTICAL_PROMPTS } from '../utils/llm';
 
 const prisma = new PrismaClient();
 
 const AI_MODEL = process.env.AI_MODEL_NAME || 'llama-3.3-70b-versatile';
+
+let redis: Redis | null = null;
+function getRedis(): Redis | null {
+    if (!redis) {
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+        try {
+            redis = new Redis(redisUrl, { lazyConnect: true, enableOfflineQueue: false });
+            redis.on('error', () => { /* ignore */ });
+        } catch {
+            redis = null;
+        }
+    }
+    return redis;
+}
 
 let groq: Groq | null = null;
 function getGroq(): Groq | null {
@@ -26,8 +42,18 @@ function cleanJson(text: string): string {
 
 export class AIAssistantService {
 
-    // Auto Job Description Generation API
-    async generateJobDescription(title: string, keywords: string[], recruiterId: string) {
+    // Auto Job Description Generation API (F12: supports vertical)
+    async generateJobDescription(title: string, keywords: string[], recruiterId: string, vertical?: string) {
+        // F12: If a valid vertical is provided, use vertical-specific generation
+        if (vertical && VERTICAL_PROMPTS[vertical]) {
+            try {
+                const result = await generateJDForVertical(title, keywords, vertical);
+                return { title, ...result, vertical };
+            } catch (error) {
+                logger.error('Failed to generate vertical JD, falling back to generic:', error);
+            }
+        }
+
         const client = getGroq();
         if (!client) {
             return {
@@ -66,23 +92,43 @@ Return a JSON object containing:
         }
     }
 
-    // Salary Band Recommendation API
+    // Salary Band Recommendation API (F9: enhanced with P25/P50/P75 percentiles + Redis cache)
     async suggestSalaryBand(title: string, location: string, experienceLevel: string) {
-        const client = getGroq();
-        if (!client) {
-            return { min: 50000, max: 90000, currency: 'USD', reasoning: 'Fallback recommendation.' };
+        const cacheKey = `salary:${(title || '').toLowerCase()}:${(location || '').toLowerCase()}`;
+        const CACHE_TTL = 604800; // 7 days in seconds
+
+        // Try cache first
+        const r = getRedis();
+        if (r) {
+            try {
+                const cached = await r.get(cacheKey);
+                if (cached) {
+                    logger.info(`Salary band cache hit: ${cacheKey}`);
+                    return JSON.parse(cached);
+                }
+            } catch { /* cache miss — continue */ }
         }
 
-        const prompt = `You are an expert compensation analyst. Suggest a competitive salary band for a "${title}" role.
+        const client = getGroq();
+        if (!client) {
+            return { min: 50000, max: 90000, p25: 45000, p50: 65000, p75: 90000, currency: 'USD', reasoning: 'Fallback recommendation.', source: 'fallback', lastUpdated: new Date().toISOString() };
+        }
+
+        const prompt = `You are an expert compensation analyst. Provide a comprehensive salary analysis for a "${title}" role.
 Location: ${location || 'Remote/Global'}
 Experience Level: ${experienceLevel || 'Mid-Level'}
 Return a JSON object containing:
 {
-  "salaryBandMin": numeric min value,
-  "salaryBandMax": numeric max value,
-  "currency": "USD" or relevant currency,
-  "reasoning": "Brief explanation of the recommendation based on market trends"
-}`;
+  "salaryBandMin": numeric overall min value,
+  "salaryBandMax": numeric overall max value,
+  "p25": numeric 25th percentile (entry/below average for this role),
+  "p50": numeric 50th percentile (median market rate),
+  "p75": numeric 75th percentile (top-of-market for this role),
+  "currency": "USD", "INR", or relevant currency code,
+  "reasoning": "Brief explanation of the recommendation based on market trends",
+  "source": "market data estimate"
+}
+Use realistic current market data. For Indian roles use INR values.`;
 
         try {
             const response = await client.chat.completions.create({
@@ -94,12 +140,24 @@ Return a JSON object containing:
 
             const text = response.choices[0]?.message?.content || '{}';
             const parsed = JSON.parse(cleanJson(text));
-            return {
+            const result = {
                 min: parsed.salaryBandMin || 0,
                 max: parsed.salaryBandMax || 0,
+                p25: parsed.p25 || Math.round((parsed.salaryBandMin || 0) * 0.85),
+                p50: parsed.p50 || Math.round(((parsed.salaryBandMin || 0) + (parsed.salaryBandMax || 0)) / 2),
+                p75: parsed.p75 || parsed.salaryBandMax || 0,
                 currency: parsed.currency || 'USD',
-                reasoning: parsed.reasoning || ''
+                reasoning: parsed.reasoning || '',
+                source: parsed.source || 'AI market estimate',
+                lastUpdated: new Date().toISOString(),
             };
+
+            // Cache the result
+            if (r) {
+                try { await r.setex(cacheKey, CACHE_TTL, JSON.stringify(result)); } catch { /* ignore */ }
+            }
+
+            return result;
         } catch (error) {
             logger.error('Failed to suggest salary band:', error);
             throw createError('Failed to suggest salary band', 500);
@@ -273,6 +331,73 @@ Return a JSON object:
         } catch (error) {
             logger.error('Failed to generate shortlist justification:', error);
             throw createError('Failed to generate justification', 500);
+        }
+    }
+
+    // F4: JD Bias & SEO Scoring
+    async analyzeJobDescription(jdText: string) {
+        // Compute a rough Flesch-Kincaid reading ease estimate
+        const words = jdText.split(/\s+/).filter(Boolean).length;
+        const sentences = (jdText.match(/[.!?]+/g) || []).length || 1;
+        const syllables = jdText.split(/[aeiouAEIOU]/).length - 1;
+        const fkGrade = Math.max(0, Math.round(0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59));
+
+        const client = getGroq();
+        if (!client) {
+            return {
+                biasScore: 50,
+                readabilityScore: fkGrade,
+                genderCoding: 'neutral',
+                flaggedWords: [],
+                seoKeywords: [],
+                suggestions: ['AI analysis unavailable — please configure GROQ_API_KEY.'],
+            };
+        }
+
+        const prompt = `You are an expert job description analyst specialising in bias detection and SEO optimisation.
+Analyse the following job description and return a JSON object ONLY:
+{
+  "biasScore": number (0-100, higher = more biased language present),
+  "genderCoding": "masculine" | "feminine" | "neutral",
+  "flaggedWords": [
+    { "word": "exact word or phrase found", "type": "bias" | "complex", "suggestion": "neutral alternative" }
+  ],
+  "seoKeywords": ["keyword1", "keyword2"],
+  "suggestions": ["Actionable improvement tip 1", "Actionable improvement tip 2"]
+}
+
+Masculine-coded bias words: aggressive, competitive, ninja, rockstar, dominant, dominate, driven, ambitious, strong, decisive, independent, analytical, rational, stubborn, fearless, assertive, hierarchical.
+Feminine-coded bias words: collaborative, support, nurturing, interpersonal, inclusive, empathetic, compassionate, community, trust, share.
+Complex words that reduce readability should go in flaggedWords with type "complex".
+SEO keywords are the top role-specific skills and job titles that help this post rank in search.
+Keep flaggedWords to the top 6 most important. Keep seoKeywords to the top 8. Keep suggestions to 3-5.
+
+Job Description:
+${jdText.substring(0, 3000)}`;
+
+        try {
+            const response = await client.chat.completions.create({
+                model: AI_MODEL,
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.2,
+                max_tokens: 1500,
+                response_format: { type: 'json_object' },
+            });
+
+            const text = response.choices[0]?.message?.content || '{}';
+            const parsed = JSON.parse(cleanJson(text));
+
+            return {
+                biasScore: Math.min(100, Math.max(0, parsed.biasScore ?? 50)),
+                readabilityScore: fkGrade,
+                genderCoding: ['masculine', 'feminine', 'neutral'].includes(parsed.genderCoding) ? parsed.genderCoding : 'neutral',
+                flaggedWords: Array.isArray(parsed.flaggedWords) ? parsed.flaggedWords.slice(0, 10) : [],
+                seoKeywords: Array.isArray(parsed.seoKeywords) ? parsed.seoKeywords.slice(0, 10) : [],
+                suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 5) : [],
+            };
+        } catch (error) {
+            logger.error('Failed to analyze job description:', error);
+            throw createError('Failed to analyze job description', 500);
         }
     }
 }

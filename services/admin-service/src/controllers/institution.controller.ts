@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { institutionService, InstitutionStudentFilters } from '../services/institution.service';
+import { placementAIService } from '../services/placement-ai.service';
 import { logger } from '../utils/logger';
 
 export class InstitutionController {
@@ -43,6 +44,7 @@ export class InstitutionController {
                 minAtsScore: req.query.minAtsScore ? parseInt(req.query.minAtsScore as string) : undefined,
                 minSkillScore: req.query.minSkillScore ? parseInt(req.query.minSkillScore as string) : undefined,
                 minInterviewScore: req.query.minInterviewScore ? parseInt(req.query.minInterviewScore as string) : undefined,
+                atRiskLevel: req.query.atRiskLevel as any,
                 scoreType: req.query.scoreType as 'all' | 'ats' | 'skill' | 'interview' | undefined,
                 isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
                 page: parseInt(req.query.page as string) || 1,
@@ -131,6 +133,7 @@ export class InstitutionController {
             next(error);
         }
     }
+
     /**
      * GET /institution/placements
      */
@@ -180,7 +183,198 @@ export class InstitutionController {
     }
 
     /**
-     * GET /institution/recruiter-marketplace
+     * GET /institution/analytics/placement
+     */
+    async getPlacementAnalytics(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+
+            const analytics = await institutionService.getPlacementAnalytics(institutionId);
+
+            res.json({
+                success: true,
+                data: analytics
+            });
+        } catch (error) {
+            logger.error('Error fetching placement analytics', error);
+            next(error);
+        }
+    }
+
+    /**
+     * AI Intelligence (Phase 4)
+     */
+    async calculateReadiness(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { studentId } = req.params;
+            const result = await placementAIService.calculateReadinessScore(studentId);
+            res.json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async calculateReadinessInternal(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { userId } = req.params;
+            const result = await placementAIService.calculateReadinessByUserId(userId);
+            res.json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getRiskAssessments(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const data = await placementAIService.getRiskAssessments(institutionId);
+            res.json({ success: true, data });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async resolveAlert(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await placementAIService.resolveAlert(id);
+            res.json({ success: true, message: 'Alert resolved' });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/analytics/department-readiness
+     */
+    async getDepartmentReadiness(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const data = await institutionService.getDepartmentReadiness(institutionId);
+            res.json({ success: true, data });
+        } catch (error) {
+            logger.error('Error fetching department readiness', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/analytics/activity
+     */
+    async getActivityLog(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 30;
+            const data = await institutionService.getActivityLog(institutionId, page, limit);
+            res.json({ success: true, data });
+        } catch (error) {
+            logger.error('Error fetching activity log', error);
+            next(error);
+        }
+    }
+
+    /**
+     * POST /institution/training-plan/generate
+     */
+    async generateTrainingPlan(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const { targetRole, skillGaps } = req.body;
+            if (!targetRole || !skillGaps) {
+                return res.status(400).json({ success: false, message: 'targetRole and skillGaps are required' });
+            }
+            const plan = await institutionService.generateTrainingPlan(targetRole, skillGaps);
+            res.json({ success: true, data: plan });
+        } catch (error) {
+            logger.error('Error generating training plan', error);
+            next(error);
+        }
+    }
+
+    /**
+     * POST /institution/training/assign
+     */
+    async assignTraining(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const result = await institutionService.assignTraining(institutionId, req.body);
+            res.json({ success: true, data: result, message: 'Training assigned successfully' });
+        } catch (error) {
+            logger.error('Error assigning training', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/training/assignments
+     */
+    async getTrainingAssignments(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const assignments = await institutionService.getTrainingAssignments(institutionId);
+            res.json({ success: true, data: assignments });
+        } catch (error) {
+            logger.error('Error fetching training assignments', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/analytics/linkedin-trends
+     */
+    async getLinkedInTrends(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const trends = await institutionService.getLinkedInTrends(institutionId);
+            res.json({ success: true, data: trends });
+        } catch (error) {
+            logger.error('Error fetching LinkedIn trends', error);
+            next(error);
+        }
+    }
+
+    /**
+     * GET /institution/analytics/placement-simulation
+     */
+    async getPlacementSimulation(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+            const simulation = await institutionService.getPlacementSimulation(institutionId);
+            res.json({ success: true, data: simulation });
+        } catch (error) {
+            logger.error('Error running placement simulation', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Recruiters & Marketplace
      */
     async getRecruiterMarketplace(req: Request, res: Response, next: NextFunction) {
         try {
@@ -197,6 +391,114 @@ export class InstitutionController {
             });
         } catch (error) {
             logger.error('Error fetching recruiter marketplace', error);
+            next(error);
+        }
+    }
+
+    async updateStudentProfile(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) {
+                return res.status(403).json({ success: false, message: 'No institution assigned' });
+            }
+
+            const studentId = req.params.id;
+            const profileData = req.body;
+
+            const result = await institutionService.updateStudentProfile(institutionId, studentId, profileData);
+
+            res.json({
+                success: true,
+                data: result,
+                message: 'Student profile updated successfully'
+            });
+        } catch (error) {
+            logger.error('Error updating student profile', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Placement Policy Engine (Phase 2)
+     */
+    async getPlacementPolicy(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const policy = await institutionService.getPlacementPolicy(institutionId);
+            res.json({ success: true, data: policy });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updatePlacementPolicy(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const policy = await institutionService.updatePlacementPolicy(institutionId, req.body);
+            res.json({ success: true, data: policy });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Corporate Relations Management (Phase 2)
+     */
+    async getPartnerships(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const partnerships = await institutionService.getPartnerships(institutionId);
+            res.json({ success: true, data: partnerships });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async createPartnership(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const partnership = await institutionService.createPartnership(institutionId, req.body);
+            res.json({ success: true, data: partnership });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updatePartnership(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const partnership = await institutionService.updatePartnership(id, req.body);
+            res.json({ success: true, data: partnership });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async deletePartnership(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await institutionService.deletePartnership(id);
+            res.json({ success: true, message: 'Partnership deleted' });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Institutional Role Management (Phase 2)
+     */
+    async updateInstitutionalRole(req: Request, res: Response, next: NextFunction) {
+        try {
+            const institutionId = req.user?.adminForInstitutionId;
+            if (!institutionId) throw new Error('Unauthorized');
+            const { userId, role } = req.body;
+            const updated = await institutionService.updateInstitutionalRole(institutionId, userId, role);
+            res.json({ success: true, data: updated });
+        } catch (error) {
             next(error);
         }
     }

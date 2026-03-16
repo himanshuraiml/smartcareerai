@@ -25,6 +25,7 @@ interface RecruiterProfile {
     industry: string;
     website: string;
     location: string;
+    description: string;
 }
 
 export default function CompanyProfilePage() {
@@ -40,6 +41,7 @@ export default function CompanyProfilePage() {
         industry: "",
         website: "",
         location: "",
+        description: "",
     });
 
     useEffect(() => {
@@ -56,6 +58,7 @@ export default function CompanyProfilePage() {
                         industry: r.industry || "",
                         website: r.website || "",
                         location: r.location || "",
+                        description: r.description || "",
                     });
                 }
             } catch {
@@ -81,6 +84,7 @@ export default function CompanyProfilePage() {
                     industry: profile.industry,
                     website: profile.website,
                     location: profile.location,
+                    description: profile.description,
                 }),
             });
             const data = await res.json();
@@ -285,13 +289,13 @@ export default function CompanyProfilePage() {
                     <div className="space-y-2">
                         <label className={labelClasses}>Description</label>
                         <textarea
-                            value={""}
-                            readOnly
-                            className={`${inputClasses} pl-4 h-40 resize-none custom-scrollbar focus:ring-purple-500/20 focus:border-purple-500 opacity-50 cursor-not-allowed`}
-                            placeholder="Company description is managed via your Organization settings."
+                            value={profile.description}
+                            onChange={e => setProfile({ ...profile, description: e.target.value })}
+                            className={`${inputClasses} pl-4 h-40 resize-none custom-scrollbar focus:ring-purple-500/20 focus:border-purple-500`}
+                            placeholder="Tell candidates about your company culture, mission, and what makes you unique..."
                         />
                         <p className="text-xs font-medium text-gray-400 mt-1">
-                            Manage full company description in <span className="text-indigo-500 font-bold">Settings → Organization</span>.
+                            This description will be visible to candidates on your job postings and company page.
                         </p>
                     </div>
                 </motion.div>

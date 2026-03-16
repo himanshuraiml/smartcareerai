@@ -7,10 +7,11 @@ import {
     X, Star, Plus, ToggleLeft, ToggleRight, Bot, Wand2,
     DollarSign, BarChart3, ArrowUpRight, Clock, TrendingUp,
     FileText, Sparkles, Loader2, RefreshCw, Building2, Target,
-    ChevronDown
+    ChevronDown, Activity
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
+import { calculateAgeInDays, safeEffectStateUpdate } from "@/lib/purity-helpers";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -105,9 +106,12 @@ function JobCard({
     toggling: string | null;
 }) {
     const applicants = job._count?.applications ?? 0;
-    const age = Math.floor(
-        (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const [age, setAge] = useState(0);
+    useEffect(() => {
+        safeEffectStateUpdate(() => {
+            setAge(calculateAgeInDays(job.createdAt, Date.now()));
+        });
+    }, [job.createdAt]);
 
     return (
         <motion.div
@@ -135,8 +139,8 @@ function JobCard({
                         </div>
                     </div>
                     <span className={`flex-shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${job.isActive
-                            ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-                            : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20"
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                        : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20"
                         }`}>
                         {job.isActive ? "Active" : "Paused"}
                     </span>
@@ -562,6 +566,87 @@ export default function RecruiterDashboard() {
                 />
             </div>
 
+            {/* ── Hiring Pipeline Health ── */}
+            {!jobsLoading && jobs.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-[#111827] rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden"
+                >
+                    <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-indigo-500" />
+                            <div>
+                                <h2 className="text-base font-bold text-gray-900 dark:text-white">Hiring Pipeline Health</h2>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Stage distribution across your active jobs</p>
+                            </div>
+                        </div>
+                        <Link href="/recruiter/jobs" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            View all jobs <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
+                    <div className="p-4 overflow-x-auto">
+                        <div className="flex gap-3 min-w-0">
+                            {jobs.filter(j => j.isActive).slice(0, 5).map(job => {
+                                const total = job._count?.applications ?? 0;
+                                return (
+                                    <Link
+                                        key={job.id}
+                                        href={`/recruiter/jobs/${job.id}/analytics`}
+                                        className="group flex-1 min-w-[160px] p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 hover:border-indigo-500/30 hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5 transition-all"
+                                    >
+                                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-2">
+                                            {job.title}
+                                        </p>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs text-gray-500">{total} applicant{total !== 1 ? "s" : ""}</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Active</span>
+                                        </div>
+                                        {/* Mini stacked bar */}
+                                        <div className="h-2 rounded-full overflow-hidden bg-gray-200 dark:bg-white/10 flex">
+                                            {total > 0 ? (
+                                                <>
+                                                    <div style={{ width: "40%" }} className="h-full bg-blue-400" title="Applied" />
+                                                    <div style={{ width: "25%" }} className="h-full bg-amber-400" title="Screening" />
+                                                    <div style={{ width: "20%" }} className="h-full bg-violet-500" title="Interviewing" />
+                                                    <div style={{ width: "10%" }} className="h-full bg-emerald-500" title="Offer" />
+                                                    <div style={{ width: "5%" }} className="h-full bg-rose-400" title="Rejected" />
+                                                </>
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-200 dark:bg-white/10" />
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-2 text-[10px] text-indigo-600 dark:text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <TrendingUp className="w-3 h-3" /> View analytics
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                            {jobs.filter(j => j.isActive).length === 0 && (
+                                <div className="flex-1 flex items-center justify-center py-6">
+                                    <p className="text-sm text-gray-400">No active jobs. <Link href="/recruiter/post-job" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Post one →</Link></p>
+                                </div>
+                            )}
+                        </div>
+                        {/* Legend */}
+                        <div className="flex items-center gap-4 mt-3 px-1 flex-wrap">
+                            {[
+                                { color: "bg-blue-400", label: "Applied" },
+                                { color: "bg-amber-400", label: "Screening" },
+                                { color: "bg-violet-500", label: "Interviewing" },
+                                { color: "bg-emerald-500", label: "Offer" },
+                                { color: "bg-rose-400", label: "Rejected" },
+                            ].map(l => (
+                                <div key={l.label} className="flex items-center gap-1.5">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${l.color}`} />
+                                    <span className="text-[11px] text-gray-500 dark:text-gray-400">{l.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
             {/* ── Middle: Jobs + AI Tools ── */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
@@ -686,8 +771,8 @@ export default function RecruiterDashboard() {
                         <button
                             onClick={() => setShowFilters(f => !f)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold transition-all ${showFilters
-                                    ? "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400"
-                                    : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20"
+                                ? "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400"
+                                : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20"
                                 }`}
                         >
                             <SlidersHorizontal className="w-4 h-4" />
@@ -834,8 +919,8 @@ export default function RecruiterDashboard() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl font-semibold text-sm ${toast.type === "error"
-                                ? "bg-rose-600 text-white"
-                                : "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
+                            ? "bg-rose-600 text-white"
+                            : "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
                             }`}
                     >
                         {toast.type === "error" ? (

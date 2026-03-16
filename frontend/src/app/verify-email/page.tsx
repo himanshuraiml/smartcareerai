@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 import { authFetch } from "@/lib/auth-fetch";
 import Image from 'next/image';
+import Logo from '@/components/layout/Logo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -53,22 +54,7 @@ function VerifyEmailContent() {
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-block">
-                        <Image
-                            src="/logo-new-light.png"
-                            alt="PlaceNxt Logo"
-                            width={240}
-                            height={60}
-                            className="h-14 w-auto mx-auto block dark:hidden"
-                            priority
-                        />
-                        <Image
-                            src="/logo-new-dark.png"
-                            alt="PlaceNxt Logo"
-                            width={240}
-                            height={60}
-                            className="h-14 w-auto mx-auto hidden dark:block"
-                            priority
-                        />
+                        <Logo width={200} height={60} className="mx-auto" />
                     </Link>
                 </div>
 

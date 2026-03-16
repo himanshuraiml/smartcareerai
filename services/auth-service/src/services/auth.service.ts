@@ -522,6 +522,7 @@ export class AuthService {
             targetJobRole: user.targetJobRole || null,
             institutionId: user.institutionId,
             institution: user.institution || null,
+            adminForInstitutionId: user.adminForInstitutionId || null,
             createdAt: user.createdAt.toISOString(),
         };
     }
@@ -540,6 +541,15 @@ export class AuthService {
         return institutions;
     }
 
+    async getDepartmentsByInstitution(institutionId: string) {
+        const departments = await prisma.department.findMany({
+            where: { institutionId, isActive: true },
+            select: { id: true, name: true, code: true },
+            orderBy: { name: 'asc' },
+        });
+        return departments;
+    }
+
     /**
      * Verify an admin invite token is valid
      */
@@ -547,12 +557,19 @@ export class AuthService {
         const user = await prisma.user.findFirst({
             where: {
                 verifyToken: token,
-                role: 'INSTITUTION_ADMIN',
+                role: { in: ['INSTITUTION_ADMIN', 'RECRUITER'] as any },
                 isVerified: false,
             },
             include: {
                 adminForInstitution: {
                     select: { name: true }
+                },
+                recruiterProfile: {
+                    include: {
+                        organization: {
+                            select: { name: true }
+                        }
+                    }
                 }
             }
         });
@@ -566,9 +583,13 @@ export class AuthService {
             throw new AppError('Invitation has expired', 400);
         }
 
+        const orgName = user.role === 'INSTITUTION_ADMIN' 
+            ? user.adminForInstitution?.name 
+            : (user.recruiterProfile?.organization?.name || user.recruiterProfile?.companyName);
+
         return {
             email: user.email,
-            institutionName: user.adminForInstitution?.name || 'Unknown Institution',
+            institutionName: orgName || 'Unknown Organization',
         };
     }
 
@@ -581,7 +602,7 @@ export class AuthService {
         const user = await prisma.user.findFirst({
             where: {
                 verifyToken: token,
-                role: 'INSTITUTION_ADMIN',
+                role: { in: ['INSTITUTION_ADMIN', 'RECRUITER'] as any },
                 isVerified: false,
             },
         });

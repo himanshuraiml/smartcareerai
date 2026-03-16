@@ -30,6 +30,7 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   googleId     String?   @unique @map("google_id")
+  phone        String?
 
   // Relations
   resumes            Resume[]
@@ -39,6 +40,7 @@ model User {
   applications       Application[]
   interviews         InterviewSession[]
   testAttempts       TestAttempt[]
+  assessmentAttempts AssessmentAttempt[]
   skillBadges        SkillBadge[]
   codingSubmissions  CodingSubmission[]
   // Phase 4 relations
@@ -62,7 +64,31 @@ model User {
 
   recruiterApplications RecruiterJobApplicant[]
   campusPlacements      CampusPlacement[]
+  studentProfile        StudentProfile?
   couponUsages          CouponUsage[]
+  notifications         Notification[]
+
+  // Engagement / Gamification fields
+  lastLoginAt DateTime? @map("last_login_at")
+  streakCount Int       @default(0) @map("streak_count")
+  xp          Int       @default(0)
+
+  // Future-Ready Lab relations
+  labProgress          UserLabProgress[]
+  challengeSubmissions ChallengeSubmission[]
+
+  // Meeting relations
+  hostedMeetings      MeetingRoom[]        @relation("HostedMeetings")
+  meetingParticipants MeetingParticipant[]
+  jobApplications     JobApplication[]
+
+  // Phase 6 Relations
+  driveAttendances   DriveAttendance[]
+  panelMemberships   InterviewPanelMember[]
+  interviewSchedules InterviewScheduleStudent[]
+
+  // RBAC Relations
+  placementUserRoles PlacementUserRole[]
 
   @@map("users")
 }
@@ -757,6 +783,7 @@ model Organization {
   atsIntegrations AtsIntegration[]
   calendarIntegrations CalendarIntegration[]
   scoringTemplates ScoringTemplate[]
+  codingChallenges CodingChallenge[]
 
   @@map("organizations")
 }
@@ -872,6 +899,7 @@ model Recruiter {
   organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   savedCandidates SavedCandidate[]
   jobPostings     RecruiterJob[]
+  codingChallenges CodingChallenge[]
 
   @@map("recruiters")
 }
@@ -1193,9 +1221,14 @@ model CodingChallenge {
   timeLimit   Int        @default(5) @map("time_limit")
   memoryLimit Int        @default(128) @map("memory_limit")
   isActive    Boolean    @default(true) @map("is_active")
+  recruiterId    String?    @map("recruiter_id")
+  organizationId String?    @map("organization_id")
+  isCustom       Boolean    @default(false) @map("is_custom")
   createdAt   DateTime   @default(now()) @map("created_at")
 
   submissions CodingSubmission[]
+  recruiter      Recruiter?    @relation(fields: [recruiterId], references: [id], onDelete: SetNull)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@map("coding_challenges")
 }

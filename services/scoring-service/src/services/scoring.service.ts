@@ -3,6 +3,8 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { analyzeWithGemini } from '../utils/gemini';
 import { ATS_SCORING_PROMPT } from '../prompts/ats.prompts';
+import { BEHAVIORAL_SCORING_PROMPT } from '../prompts/behavioral.prompts';
+import { ANALYTICAL_SCORING_PROMPT } from '../prompts/analytical.prompts';
 import { cacheGet, cacheSet, normalizeSkillList } from '@placenxt/shared';
 
 interface ScoreDeduction {
@@ -97,6 +99,12 @@ export class ScoringService {
 
         // Extract matched keywords as user skills
         await this.saveExtractedSkills(userId, analysis.matchedKeywords);
+
+        // Trigger AI Readiness Recalculation (Phase 4)
+        const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
+        fetch(`${ADMIN_SERVICE_URL}/institution/ai/internal/calculate-readiness/${userId}`, {
+            method: 'POST'
+        }).catch(err => logger.error(`AI Readiness trigger failed for user ${userId}: ${err.message}`));
 
         return this.formatScore(score);
     }
@@ -429,6 +437,179 @@ export class ScoringService {
         }
 
         logger.info(`Saved ${normalizedKeywords.length} normalized skills (from ${keywords.length} raw) for user ${userId}`);
+    }
+
+    async analyzeBehavioralResponse(
+        questionText: string,
+        category: string,
+        rubric: string,
+        response: string
+    ) {
+        const prompt = BEHAVIORAL_SCORING_PROMPT
+            .replace('{{QUESTION_TEXT}}', questionText)
+            .replace('{{CATEGORY}}', category)
+            .replace('{{RUBRIC}}', rubric)
+            .replace('{{RESPONSE}}', response);
+
+        try {
+            const systemPrompt = 'You are an expert behavioral assessor. Analyze student responses and provide structured feedback. Return JSON only.';
+            const result = await analyzeWithGemini(systemPrompt, prompt);
+
+            if (!result) {
+                return {
+                    score: 5,
+                    feedback: 'Automated evaluation unavailable. Manual review required.',
+                    competencyLevel: 'Medium',
+                    starMethodUsed: false,
+                    suggestions: ['Structure your response using the STAR method (Situation, Task, Action, Result)'],
+                };
+            }
+
+            return result;
+        } catch (error) {
+            logger.error('Behavioral analysis failed', error);
+            return {
+                score: 5,
+                feedback: 'Evaluation error occurred.',
+                competencyLevel: 'Medium',
+                starMethodUsed: false,
+                suggestions: [],
+            };
+        }
+    }
+
+    async analyzeAnalyticalResponse(
+        questionText: string,
+        rubric: string,
+        response: string
+    ) {
+        const prompt = ANALYTICAL_SCORING_PROMPT
+            .replace('{{QUESTION_TEXT}}', questionText)
+            .replace('{{RUBRIC}}', rubric)
+            .replace('{{RESPONSE}}', response);
+
+        try {
+            const systemPrompt = 'You are an expert analytical and logical reasoning assessor. Evaluate multi-part and multi-step solutions thoroughly. Return JSON only.';
+            const result = await analyzeWithGemini(systemPrompt, prompt);
+
+            if (!result) {
+                return {
+                    score: 5,
+                    feedback: 'Automated evaluation unavailable. Manual review required.',
+                    methodologyScore: 5,
+                    accuracyScore: 5,
+                    stepsBreakdown: [],
+                    overallAnalysis: 'Evaluation system encountered an issue.',
+                };
+            }
+
+            return result;
+        } catch (error) {
+            logger.error('Analytical analysis failed', error);
+            return {
+                score: 5,
+                feedback: 'Evaluation error occurred.',
+                methodologyScore: 5,
+                accuracyScore: 5,
+                stepsBreakdown: [],
+                overallAnalysis: 'Failed to evaluate response.',
+            };
+        }
+    }
+
+    async scoreAssessmentBatch(attemptId: string) {
+        // Fetch attempt with template and questions
+        const attempt = await prisma.assessmentAttempt.findUnique({
+            where: { id: attemptId },
+            include: {
+                template: true,
+                answers: {
+                    include: { question: true }
+                }
+            }
+        });
+
+        if (!attempt) throw new Error('Attempt not found');
+
+        let totalAnalyticalScore = 0;
+        let analyticalCount = 0;
+        let totalBehavioralScore = 0;
+        let behavioralCount = 0;
+
+        for (const answer of attempt.answers) {
+            const question = answer.question;
+            let result;
+
+            if (question.category === 'Behavioral' || question.category === 'Communication') {
+                result = await this.analyzeBehavioralResponse(
+                    question.text,
+                    question.category,
+                    JSON.stringify(question.evaluationRubric),
+                    answer.response
+                );
+                totalBehavioralScore += result.score;
+                behavioralCount++;
+            } else {
+                result = await this.analyzeAnalyticalResponse(
+                    question.text,
+                    JSON.stringify(question.evaluationRubric || question.correctAnswer),
+                    answer.response
+                );
+                totalAnalyticalScore += result.score;
+                analyticalCount++;
+            }
+
+            // Update individual answer
+            await prisma.assessmentAnswer.update({
+                where: { id: answer.id },
+                data: {
+                    score: result.score,
+                    feedback: JSON.stringify(result),
+                    isCorrect: result.score >= 7, // threshold
+                }
+            });
+        }
+
+        const avgAnalytical = analyticalCount > 0 ? Math.round((totalAnalyticalScore / analyticalCount) * 10) : 0;
+        const avgBehavioral = behavioralCount > 0 ? Math.round((totalBehavioralScore / behavioralCount) * 10) : 0;
+        const overall = Math.round((avgAnalytical + avgBehavioral) / 2);
+
+        // Update overall attempt
+        const updatedAttempt = await prisma.assessmentAttempt.update({
+            where: { id: attemptId },
+            data: {
+                analyticalScore: avgAnalytical,
+                behavioralScore: avgBehavioral,
+                overallScore: overall,
+                status: 'COMPLETED'
+            }
+        });
+
+        // Trigger AI Readiness Recalculation (Phase 4)
+        const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
+        fetch(`${ADMIN_SERVICE_URL}/institution/ai/internal/calculate-readiness/${updatedAttempt.studentId}`, {
+            method: 'POST'
+        }).catch(err => logger.error(`AI Readiness trigger failed for user ${updatedAttempt.studentId}: ${err.message}`));
+
+        // Trigger Automated Pipeline Progression (Phase 5)
+        try {
+            const activeApps = await prisma.recruiterJobApplicant.findMany({
+                where: { candidateId: updatedAttempt.studentId, status: { in: ['SCREENING', 'INTERVIEWING'] } },
+                select: { id: true }
+            });
+            const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3012';
+            for (const app of activeApps) {
+                fetch(`${RECRUITER_SERVICE_URL}/api/recruiter/internal/pipeline/advance/${app.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passed: overall >= 50 }) // Configurable threshold; assume 50%
+                }).catch(err => logger.error(`Pipeline progression trigger failed for app ${app.id}: ${err.message}`));
+            }
+        } catch (err) {
+            logger.error(`Error querying active apps for pipeline progression: ${err}`);
+        }
+
+        return updatedAttempt;
     }
 }
 

@@ -24,7 +24,7 @@ import cookieParser from 'cookie-parser';
 // ...
 
 // Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com'], // Allow Gateway and Prod
     credentials: true,

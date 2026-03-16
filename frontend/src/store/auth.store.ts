@@ -18,6 +18,7 @@ interface User {
     targetJobRole?: { id: string; title: string; category: string } | null;
     institutionId?: string | null;
     institution?: { id: string; name: string } | null;
+    adminForInstitutionId?: string | null;
 }
 
 interface AuthState {
@@ -34,6 +35,7 @@ interface AuthState {
     clearError: () => void;
     updateTargetJobRole: (jobRoleId: string) => Promise<boolean>;
     fetchUser: () => Promise<void>;
+    setAvatarUrl: (avatarUrl: string) => void;
     _hasHydrated: boolean;
     setHasHydrated: (state: boolean) => void;
 }
@@ -217,6 +219,11 @@ export const useAuthStore = create<AuthState>()(
             },
 
             clearError: () => set({ error: null }),
+
+            setAvatarUrl: (avatarUrl: string) => {
+                const { user } = get();
+                if (user) set({ user: { ...user, avatarUrl } });
+            },
 
             updateTargetJobRole: async (jobRoleId: string) => {
                 const { user, accessToken } = get();

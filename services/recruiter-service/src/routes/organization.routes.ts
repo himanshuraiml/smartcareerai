@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { organizationController } from '../controllers/organization.controller';
 import { integrationController } from '../controllers/integration.controller';
+import { atsIntegrationController } from '../controllers/ats-integration.controller';
 import { authMiddleware, recruiterMiddleware, recruiterRoleMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -44,6 +45,12 @@ router.post('/:orgId/integrations/outlook/callback', authMiddleware, recruiterMi
 // Microsoft 365 scheduling
 router.post('/:orgId/integrations/outlook/schedule', authMiddleware, recruiterMiddleware, integrationController.scheduleInterviewOutlook);
 router.post('/:orgId/integrations/outlook/availability', authMiddleware, recruiterMiddleware, integrationController.getAvailabilityOutlook);
+
+// F15: External ATS Integration (bidirectional webhooks)
+router.post('/:orgId/integrations/ats', authMiddleware, recruiterMiddleware, atsIntegrationController.createOrUpdate.bind(atsIntegrationController));
+router.get('/:orgId/integrations/ats', authMiddleware, recruiterMiddleware, atsIntegrationController.getConfigs.bind(atsIntegrationController));
+router.delete('/:orgId/integrations/ats/:configId', authMiddleware, recruiterMiddleware, atsIntegrationController.deleteConfig.bind(atsIntegrationController));
+router.post('/:orgId/integrations/ats/:configId/test', authMiddleware, recruiterMiddleware, atsIntegrationController.testWebhook.bind(atsIntegrationController));
 
 // Branding
 router.put('/branding', authMiddleware, recruiterRoleMiddleware, organizationController.updateBranding);

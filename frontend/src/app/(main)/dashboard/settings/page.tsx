@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -20,7 +20,7 @@ interface JobRole {
 
 export default function SettingsPage() {
     const router = useRouter();
-    const { user, updateTargetJobRole, logout } = useAuthStore();
+    const { user, updateTargetJobRole, logout, setAvatarUrl, fetchUser } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -59,6 +59,10 @@ export default function SettingsPage() {
         'interview-reminders': true,
         'marketing': false
     });
+
+    // Avatar upload state
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
 
     // GDPR Export state
     const [exportLoading, setExportLoading] = useState(false);
@@ -105,6 +109,25 @@ export default function SettingsPage() {
         }
     }, [user]);
 
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAvatarUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const res = await authFetch('/resumes/avatar', { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            setAvatarUrl(data.data.avatarUrl);
+        } catch {
+            alert('Failed to upload profile picture. Please try again.');
+        } finally {
+            setAvatarUploading(false);
+            if (avatarInputRef.current) avatarInputRef.current.value = '';
+        }
+    };
+
     const handleSaveProfile = async () => {
         if (!user) return;
 
@@ -134,6 +157,7 @@ export default function SettingsPage() {
             }
 
             setSuccess(true);
+            await fetchUser();
             setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error('Failed to save:', error);
@@ -320,18 +344,40 @@ export default function SettingsPage() {
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile Photo</h2>
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
-                                    {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
-                                </div>
-                                <button className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white hover:bg-indigo-600 transition-colors">
-                                    <Camera className="w-4 h-4" />
+                                {user?.avatarUrl ? (
+                                    <img
+                                        src={user.avatarUrl}
+                                        alt="Profile"
+                                        className="w-24 h-24 rounded-2xl object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
+                                        {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => avatarInputRef.current?.click()}
+                                    disabled={avatarUploading}
+                                    title="Upload profile picture"
+                                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white hover:bg-indigo-600 transition-colors disabled:opacity-60"
+                                >
+                                    {avatarUploading
+                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                        : <Camera className="w-4 h-4" />}
                                 </button>
+                                <input
+                                    ref={avatarInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
+                                />
                             </div>
                             <div>
                                 <p className="text-gray-900 dark:text-white font-medium">{user?.name || 'User'}</p>
                                 <p className="text-gray-500 dark:text-gray-400 text-sm">{user?.email}</p>
                                 <p className="text-xs text-gray-500 mt-2">
-                                    Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                    Click the camera icon to upload a photo (jpg, png, webp · max 5 MB)
                                 </p>
                             </div>
                         </div>

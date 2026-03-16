@@ -870,6 +870,14 @@ model RecruiterJob {
   targetInstitutionId String?   @map("target_institution_id")
   targetInstitution   Institution? @relation(fields: [targetInstitutionId], references: [id])
   
+  // Institutional Eligibility
+  minCgpa         Float?   @map("min_cgpa")
+  maxBacklogs     Int?     @map("max_backlogs")
+  allowedBranches String[] @map("allowed_branches")
+  allowedBatches  Int[]    @map("allowed_batches")
+  jobType         String?  @map("job_type")
+  salaryPackage   String?  @map("salary_package")
+  
   // Recruiter Workflow Configurations
   aiInterviewConfig Json?       @map("ai_interview_config") // Structure defining generated questions, duration
 

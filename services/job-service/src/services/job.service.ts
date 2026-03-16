@@ -39,7 +39,7 @@ function normalizePlatformJob(rj: any): any {
         requiredSkills: rj.requiredSkills,
         salaryMin: rj.salaryMin,
         salaryMax: rj.salaryMax,
-        salaryCurrency: 'INR',
+        salaryCurrency: rj.salaryCurrency || 'INR',
         experienceMin: rj.experienceMin,
         experienceMax: rj.experienceMax,
         source: 'platform',
@@ -240,7 +240,7 @@ export class JobService {
         const skillNames = userSkills.map(us => us.skill.name);
 
         const [platformJobs, regularJobs] = await Promise.all([
-            fetchActivePlatformJobs(skillNames.length > 0 ? { requiredSkills: { hasSome: skillNames } } : {}),
+            fetchActivePlatformJobs({}), // always show all platform jobs
             skillNames.length === 0
                 ? prisma.jobListing.findMany({ where: { isActive: true }, take: limit, orderBy: { createdAt: 'desc' } })
                 : prisma.jobListing.findMany({
@@ -304,17 +304,10 @@ export class JobService {
             ],
         };
 
-        const platformWhere: any = {
-            OR: [
-                { title: { contains: titleWord, mode: 'insensitive' } },
-                ...(roleRequiredSkills.length > 0 ? [{ requiredSkills: { hasSome: roleRequiredSkills } }] : []),
-            ],
-        };
-
         const [regularJobs, userSkills, platformJobs] = await Promise.all([
             prisma.jobListing.findMany({ where: jobListingWhere, take: limit * 2, orderBy: { createdAt: 'desc' } }),
             prisma.userSkill.findMany({ where: { userId }, include: { skill: true } }),
-            fetchActivePlatformJobs(platformWhere),
+            fetchActivePlatformJobs({}), // always show all platform jobs regardless of role match
         ]);
 
         const userSkillNames = userSkills.map(us => us.skill.name.toLowerCase().replace(/[-\s]/g, ''));

@@ -11,6 +11,7 @@ export interface RecruiterProfileInput {
     industry?: string;
     website?: string;
     location?: string;
+    description?: string;
 }
 
 export interface CandidateSearchFilters {
@@ -87,9 +88,28 @@ export class RecruiterService {
      * Update recruiter profile
      */
     async updateProfile(userId: string, input: Partial<RecruiterProfileInput>) {
-        return prisma.recruiter.update({
-            where: { userId },
-            data: input,
+        return prisma.$transaction(async (tx) => {
+            const recruiter = await tx.recruiter.update({
+                where: { userId },
+                data: input,
+            });
+
+            if (recruiter.organizationId && (recruiter.orgRole === 'OWNER' || recruiter.orgRole === 'ADMIN')) {
+                // Sync with organization
+                await tx.organization.update({
+                    where: { id: recruiter.organizationId },
+                    data: {
+                        name: input.companyName,
+                        logoUrl: input.companyLogo,
+                        companySize: input.companySize,
+                        industry: input.industry,
+                        website: input.website,
+                        description: input.description,
+                    },
+                });
+            }
+
+            return recruiter;
         });
     }
 
@@ -294,16 +314,47 @@ export class RecruiterService {
                     take: 1,
                     select: { id: true, fileName: true, fileUrl: true },
                 },
+                assessmentAttempts: {
+                    orderBy: { startedAt: 'desc' },
+                    take: 1,
+                    select: {
+                        analyticalScore: true,
+                        behavioralScore: true,
+                        overallScore: true,
+                        status: true,
+                    },
+                },
+                codingSubmissions: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 5,
+                    select: {
+                        score: true,
+                        status: true,
+                    },
+                },
             },
         });
 
         if (!user) throw createError('Candidate not found', 404, 'CANDIDATE_NOT_FOUND');
 
-        const { resumes, ...rest } = user;
+        const { resumes, assessmentAttempts, codingSubmissions, ...rest } = user as any;
+
+        const latestAttempt = assessmentAttempts?.[0];
+        const avgCodingScore = codingSubmissions?.length > 0
+            ? Math.round(codingSubmissions.reduce((acc: number, s: any) => acc + (s.score || 0), 0) / codingSubmissions.length)
+            : null;
+
         return {
             ...rest,
             resumeId: resumes[0]?.id || null,
+            resumeFileName: resumes[0]?.fileName || null,
             resumeUrl: resumes[0]?.fileUrl || null,
+            latestScores: {
+                analytical: latestAttempt?.analyticalScore ?? null,
+                behavioral: latestAttempt?.behavioralScore ?? null,
+                coding: avgCodingScore,
+                assessmentStatus: latestAttempt?.status ?? null,
+            },
         };
     }
 
@@ -320,22 +371,83 @@ export class RecruiterService {
                 job: { recruiterId },
             },
             include: {
-                job: { select: { id: true, title: true } },
+                job: {
+                    select: {
+                        id: true,
+                        title: true,
+                        pipelineSteps: true,
+                        applicationDeadline: true,
+                        assessmentTemplate: {
+                            include: {
+                                attempts: {
+                                    where: { studentId: candidateId },
+                                    orderBy: { startedAt: 'desc' },
+                                    take: 1,
+                                },
+                            },
+                        },
+                    },
+                },
             },
             orderBy: { appliedAt: 'desc' },
         });
 
-        return applications.map(a => ({
-            id: a.id,
-            jobId: a.job.id,
-            jobTitle: a.job.title,
-            status: a.status,
-            appliedAt: a.appliedAt,
-            overallScore: a.overallScore,
-            fitScore: a.fitScore,
-            dropoutRisk: a.dropoutRisk,
-            acceptanceLikelihood: a.acceptanceLikelihood,
-        }));
+        // Collect all challenge IDs from pipeline steps to fetch coding submissions in bulk
+        const challengeIds = new Set<string>();
+        applications.forEach(a => {
+            const steps = (a.job.pipelineSteps as any[]) || [];
+            steps.forEach(s => {
+                if (s.type === 'CODING' && s.challengeIds) {
+                    s.challengeIds.forEach((id: string) => challengeIds.add(id));
+                }
+            });
+        });
+
+        const codingSubmissions = challengeIds.size > 0
+            ? await prisma.codingSubmission.findMany({
+                where: {
+                    userId: candidateId,
+                    challengeId: { in: Array.from(challengeIds) },
+                },
+                orderBy: { createdAt: 'desc' },
+            })
+            : [];
+
+        return applications.map(a => {
+            const attempt = a.job.assessmentTemplate?.attempts[0];
+
+            // For coding, we might have multiple challenges. We take the average or the latest?
+            // Usually, recruiters want to see if they passed the challenges.
+            const jobChallengeIds = new Set<string>();
+            ((a.job.pipelineSteps as any[]) || []).forEach(s => {
+                if (s.type === 'CODING' && s.challengeIds) {
+                    s.challengeIds.forEach((id: string) => jobChallengeIds.add(id));
+                }
+            });
+
+            const relevantSubmissions = codingSubmissions.filter(s => jobChallengeIds.has(s.challengeId));
+            const codingScore = relevantSubmissions.length > 0
+                ? Math.round(relevantSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / relevantSubmissions.length)
+                : null;
+
+            return {
+                id: a.id,
+                jobId: a.job.id,
+                jobTitle: a.job.title,
+                status: a.status,
+                appliedAt: a.appliedAt,
+                overallScore: a.overallScore,
+                fitScore: a.fitScore,
+                dropoutRisk: a.dropoutRisk,
+                acceptanceLikelihood: a.acceptanceLikelihood,
+                analyticalScore: attempt?.analyticalScore ?? null,
+                behavioralScore: attempt?.behavioralScore ?? null,
+                codingScore: codingScore,
+                assessmentStatus: attempt?.status ?? null,
+                applicationDeadline: a.job.applicationDeadline ?? null,
+                assessmentDeadline: a.job.assessmentTemplate?.assessmentDeadline ?? null,
+            };
+        });
     }
 }
 

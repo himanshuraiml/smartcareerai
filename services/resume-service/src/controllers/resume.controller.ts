@@ -105,6 +105,42 @@ export class ResumeController {
         }
     }
 
+    /**
+     * Serves the actual decrypted file binary
+     */
+    async downloadFile(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { buffer, mimeType, fileName } = await resumeService.getDecryptedFile(id);
+
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Length', buffer.length.toString());
+
+            res.send(buffer);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async uploadAvatar(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.id;
+            const file = req.file;
+
+            if (!file) {
+                res.status(400).json({ success: false, error: { message: 'No image uploaded' } });
+                return;
+            }
+
+            const avatarUrl = await resumeService.uploadAvatar(userId, file);
+
+            res.json({ success: true, data: { avatarUrl } });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async parse(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = (req as any).user.id;

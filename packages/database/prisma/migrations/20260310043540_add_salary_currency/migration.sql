@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "recruiter_jobs" ADD COLUMN     "salary_currency" TEXT DEFAULT 'INR',
+ALTER COLUMN "salary_min" SET DATA TYPE DOUBLE PRECISION,
+ALTER COLUMN "salary_max" SET DATA TYPE DOUBLE PRECISION;

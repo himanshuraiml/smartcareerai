@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 export default function ContactPage() {
     const router = useRouter();
@@ -50,18 +52,10 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-900 dark:text-white py-20 px-4">
-            <div className="max-w-7xl mx-auto mb-8">
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back</span>
-                </button>
-            </div>
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-900 dark:text-white pricing-page">
+            <Navbar />
 
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-5xl mx-auto pt-48 pb-24 px-4">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-500">
                         Get in Touch
@@ -233,6 +227,7 @@ export default function ContactPage() {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

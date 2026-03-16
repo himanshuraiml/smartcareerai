@@ -1,21 +1,52 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { classifyMessage, MessageClassification } from '../utils/llm';
 
 const prisma = new PrismaClient();
 
 export class MessageService {
     async sendMessage(senderId: string, receiverId: string, content: string) {
+        // 1. Get sender role to decide if classification is needed
+        const sender = await prisma.user.findUnique({
+            where: { id: senderId },
+            select: { role: true, name: true }
+        });
+
+        const isCandidate = sender?.role === 'USER';
+
+        // 2. If sender is a candidate (USER), perform AI triage
+        let triageResult: MessageClassification | null = null;
+        if (isCandidate) {
+            triageResult = await classifyMessage(content);
+            if (triageResult) {
+                logger.info(`Message triage: Category=${triageResult.category}, HighValue=${triageResult.isHighValue}`);
+            }
+        }
+
+        // 3. Create the actual message
         const message = await prisma.message.create({
             data: {
                 senderId,
                 receiverId,
-                content
+                content,
+                isRead: triageResult ? !triageResult.isHighValue : false // Low value messages marked read for recruiter
             },
             include: {
                 sender: { select: { id: true, name: true, email: true } },
                 receiver: { select: { id: true, name: true, email: true } }
             }
         });
+
+        // 4. Handle auto-response if AI triage generated one
+        if (triageResult?.autoResponse) {
+            await prisma.message.create({
+                data: {
+                    senderId: receiverId, // Bot replies on behalf of the recruiter
+                    receiverId: senderId,
+                    content: `[AI Assistant]: ${triageResult.autoResponse}`
+                }
+            });
+        }
 
         logger.info(`Message sent: ${senderId} -> ${receiverId}`);
         return message;
@@ -65,9 +96,6 @@ export class MessageService {
 
     async getConversations(userId: string) {
         // Get all unique contacts the user has messaged with
-        // Prisma doesn't support distinct on specific fields for complex queries easily, 
-        // so we fetch recent messages and process in memory for MVP
-
         const messages = await prisma.message.findMany({
             where: {
                 OR: [

@@ -62,13 +62,25 @@ const SKILL_ALIASES: Record<string, string> = {
     'postgresql': 'PostgreSQL',
     'mongo': 'MongoDB',
     'mongodb': 'MongoDB',
-    // Cloud
+    // Cloud & Infrastructure
     'aws': 'AWS',
     'amazon web services': 'AWS',
     'gcp': 'Google Cloud',
     'google cloud': 'Google Cloud',
     'azure': 'Azure',
     'microsoft azure': 'Azure',
+    'cloud': 'Cloud Computing',
+    'cloud computing': 'Cloud Computing',
+    'cloud infrastructure': 'Cloud Computing',
+    'devops': 'DevOps',
+    'cicd': 'CI/CD',
+    'ci/cd': 'CI/CD',
+    'ci cd': 'CI/CD',
+    'linux': 'Linux',
+    'unix': 'Unix',
+    'bash': 'Bash Scripting',
+    'shell scripting': 'Shell Scripting',
+    'shell': 'Shell Scripting',
     // Security
     'cyber': 'Cybersecurity',
     'cyber security': 'Cybersecurity',
@@ -80,6 +92,52 @@ const SKILL_ALIASES: Record<string, string> = {
     'data analytics': 'Data Analytics',
     'data analysis': 'Data Analytics',
     'data science': 'Data Science',
+    // Common raw names that come in lowercase from LLMs
+    'excel': 'Excel',
+    'git': 'Git',
+    'go': 'Go',
+    'rust': 'Rust',
+    'java': 'Java',
+    'python': 'Python',
+    'sql': 'SQL',
+    'html': 'HTML',
+    'css': 'CSS',
+    'api': 'REST APIs',
+    'rest api': 'REST APIs',
+    'rest apis': 'REST APIs',
+    'graphql': 'GraphQL',
+    'figma': 'Figma',
+    'tableau': 'Tableau',
+    'docker': 'Docker',
+    'react': 'React',
+    'vue': 'Vue.js',
+    'vue.js': 'Vue.js',
+    'angular': 'Angular',
+    'flask': 'Flask',
+    'django': 'Django',
+    'fastapi': 'FastAPI',
+    'agile': 'Agile',
+    'scrum': 'Scrum',
+    'statistics': 'Statistics',
+    'pandas': 'Pandas',
+    'r': 'R',
+    'spark': 'Apache Spark',
+    'apache spark': 'Apache Spark',
+    'hadoop': 'Hadoop',
+    'kafka': 'Apache Kafka',
+    'apache kafka': 'Apache Kafka',
+    'redis': 'Redis',
+    'elasticsearch': 'Elasticsearch',
+    'terraform': 'Terraform',
+    'ansible': 'Ansible',
+    'jenkins': 'Jenkins',
+    'jira': 'Jira',
+    'swift': 'Swift',
+    'kotlin': 'Kotlin',
+    'flutter': 'Flutter',
+    'unity': 'Unity',
+    'opencv': 'OpenCV',
+    'langchain': 'LangChain',
 };
 
 // Generic terms that should never be saved as skills
@@ -113,14 +171,38 @@ const SKILL_BLOCKLIST = new Set([
     'optimization',
     'architecture',
     'deployment',
+    'infrastructure',
+    'it infrastructure',
 ]);
+
+/**
+ * Apply Title Case to a skill name that has no canonical alias.
+ * Preserves all-uppercase acronyms (SQL, HTML, AWS) and existing mixed-case
+ * words (Node.js, PostgreSQL) while capitalising the first letter of each
+ * all-lowercase word.
+ */
+function applyTitleCase(str: string): string {
+    return str
+        .trim()
+        .split(/\s+/)
+        .map(word => {
+            // Already has internal uppercase (e.g. Node.js, TypeScript, PostgreSQL) → leave
+            if (/[A-Z]/.test(word.slice(1))) return word;
+            // All uppercase and length > 1 (acronyms: SQL, HTML, AWS) → leave
+            if (word === word.toUpperCase() && word.length > 1) return word;
+            // Purely lowercase → capitalise first letter
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join(' ');
+}
 
 /**
  * Normalize a skill name: apply alias mapping and blocklist filtering.
  * Returns the canonical skill name, or null if the skill should be blocked.
  */
 export function normalizeSkillName(name: string): string | null {
-    const lowerName = name.toLowerCase().trim();
+    const trimmed = name.trim();
+    const lowerName = trimmed.toLowerCase();
 
     if (!lowerName || lowerName.length < 2) {
         return null;
@@ -136,7 +218,9 @@ export function normalizeSkillName(name: string): string | null {
         return SKILL_ALIASES[lowerName];
     }
 
-    return name.trim();
+    // No alias — apply Title Case so raw LLM output like "infrastructure"
+    // becomes "Infrastructure" rather than being stored as-is.
+    return applyTitleCase(trimmed);
 }
 
 /**

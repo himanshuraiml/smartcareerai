@@ -81,10 +81,10 @@ export const institutionAdminMiddleware = async (
     res: Response,
     next: NextFunction
 ) => {
-    if (req.user?.role !== 'INSTITUTION_ADMIN') {
+    if (req.user?.role !== 'INSTITUTION_ADMIN' && req.user?.role !== 'ADMIN') {
         return next(createError('Institution admin access required', 403, 'FORBIDDEN'));
     }
-    if (!req.user?.adminForInstitutionId) {
+    if (!req.user?.adminForInstitutionId && req.user?.role !== 'ADMIN') {
         return next(createError('No institution assigned to this admin', 403, 'NO_INSTITUTION'));
     }
     next();

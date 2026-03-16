@@ -28,6 +28,7 @@ interface AIInterviewConfigData {
     interviewType: "TECHNICAL" | "BEHAVIORAL" | "MIXED" | "HR";
     difficulty: "EASY" | "MEDIUM" | "HARD";
     timeLimitMinutes: number;
+    cutoffScore?: number;
     customInstructions?: string;
     hasCodingQuestions?: boolean;
     questions?: GeneratedQuestion[];
@@ -50,6 +51,7 @@ export interface DraftInterviewConfig {
     totalDurationMinutes: number;
     customInstructions: string;
     hasCodingQuestions: boolean;
+    cutoffScore?: number;
     scoringWeights: ScoringWeights;
 }
 
@@ -396,6 +398,7 @@ export default function AIInterviewConfig({ jobId, jobTitle, embedded = false, o
         totalDurationMinutes: 30,
         customInstructions: "",
         hasCodingQuestions: false,
+        cutoffScore: 60,
     });
 
 
@@ -433,6 +436,7 @@ export default function AIInterviewConfig({ jobId, jobTitle, embedded = false, o
                         totalDurationMinutes: c.timeLimitMinutes * c.questionCount || 30,
                         customInstructions: c.customInstructions || "",
                         hasCodingQuestions: !!c.hasCodingQuestions,
+                        cutoffScore: c.cutoffScore || 60,
                     });
                     if (c.scoringWeights) setWeights(c.scoringWeights);
                     if (c.questions?.length) setActiveTab("questions");
@@ -454,6 +458,7 @@ export default function AIInterviewConfig({ jobId, jobTitle, embedded = false, o
                 totalDurationMinutes: form.totalDurationMinutes,
                 customInstructions: form.customInstructions,
                 hasCodingQuestions: form.hasCodingQuestions,
+                cutoffScore: form.cutoffScore,
                 scoringWeights: weights,
             });
             onClose?.();
@@ -703,6 +708,34 @@ export default function AIInterviewConfig({ jobId, jobTitle, embedded = false, o
                                             placeholder="e.g. Focus on distributed systems and scalability. Avoid repetitive questions."
                                             className="w-full bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 rounded-xl px-5 py-4 text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder-gray-400 resize-none"
                                         />
+                                    </FormSection>
+
+                                    <FormSection title="Passing Cutoff Score" subtitle="(Target score for candidate to pass this interview)">
+                                        <div className="flex items-center gap-6">
+                                            <div className="flex-1 relative">
+                                                <div className="absolute inset-y-0 left-0 right-0 py-2">
+                                                    <div className="h-2 bg-gray-100 dark:bg-white/5 rounded-full" />
+                                                </div>
+                                                <input
+                                                    type="range" min={0} max={100} step={5}
+                                                    value={form.cutoffScore}
+                                                    onChange={e => setForm(f => ({ ...f, cutoffScore: Number(e.target.value) }))}
+                                                    className="absolute inset-0 w-full opacity-0 cursor-pointer h-full z-10"
+                                                />
+                                                <div
+                                                    className="absolute h-2 bg-amber-500 rounded-full pointer-events-none top-2"
+                                                    style={{ width: `${form.cutoffScore}%` }}
+                                                />
+                                                <div
+                                                    className="absolute w-5 h-5 bg-white border-4 border-amber-500 rounded-full pointer-events-none top-0.5 shadow-md -ml-2.5"
+                                                    style={{ left: `${form.cutoffScore}%` }}
+                                                />
+                                            </div>
+                                            <div className="w-16 text-center text-3xl font-black text-amber-600 dark:text-amber-400">
+                                                {form.cutoffScore}%
+                                            </div>
+                                        </div>
+                                        <p className="text-[11px] text-[#475569]">This score will be visible to candidates as their goal.</p>
                                     </FormSection>
                                 </div>
                             )}

@@ -7,6 +7,7 @@ import type { CodeEvaluationResult } from '../utils/llm';
 export interface ChallengeListItem {
     id: string;
     title: string;
+    description: string;
     difficulty: string;
     category: string;
     tags: string[];
@@ -22,10 +23,21 @@ export class CodingService {
      */
     async listChallenges(
         userId?: string,
-        filters?: { difficulty?: string; category?: string }
+        filters?: { difficulty?: string; category?: string; recruiterId?: string; organizationId?: string }
     ): Promise<ChallengeListItem[]> {
         const where: any = { isActive: true };
-        if (filters?.difficulty) where.difficulty = filters.difficulty.toUpperCase();
+
+        // Ownership logic: global challenges OR specific recruiter/org challenges
+        const ownerConditions: any[] = [
+            { recruiterId: null, organizationId: null }
+        ];
+        if (filters?.recruiterId) ownerConditions.push({ recruiterId: filters.recruiterId });
+        if (filters?.organizationId) ownerConditions.push({ organizationId: filters.organizationId });
+
+        where.OR = ownerConditions;
+        if (filters?.difficulty && filters.difficulty !== 'ALL') {
+            where.difficulty = filters.difficulty.toUpperCase();
+        }
         if (filters?.category) where.category = filters.category.toLowerCase();
 
         const challenges = await prisma.codingChallenge.findMany({
@@ -33,17 +45,18 @@ export class CodingService {
             select: {
                 id: true,
                 title: true,
+                description: true,
                 difficulty: true,
                 category: true,
                 tags: true,
                 languages: true,
                 submissions: userId
                     ? {
-                          where: { userId },
-                          orderBy: { createdAt: 'desc' },
-                          take: 1,
-                          select: { status: true, score: true },
-                      }
+                        where: { userId },
+                        orderBy: { createdAt: 'desc' },
+                        take: 1,
+                        select: { status: true, score: true },
+                    }
                     : false,
             },
             orderBy: [{ difficulty: 'asc' }, { createdAt: 'asc' }],
@@ -52,6 +65,7 @@ export class CodingService {
         return challenges.map((c: any) => ({
             id: c.id,
             title: c.title,
+            description: c.description,
             difficulty: c.difficulty,
             category: c.category,
             tags: c.tags,
@@ -93,6 +107,44 @@ export class CodingService {
             timeLimit: challenge.timeLimit,
             memoryLimit: challenge.memoryLimit,
         };
+    }
+
+    /**
+     * Create a recruiter-defined custom coding challenge.
+     */
+    async createCustomChallenge(data: {
+        title: string;
+        description: string;
+        difficulty: string;
+        category: string;
+        tags: string[];
+        languages: string[];
+        starterCode: any;
+        testCases: any;
+        constraints?: string;
+        examples?: any;
+        recruiterId: string;
+        organizationId?: string;
+    }) {
+        logger.info(`Creating custom coding challenge: ${data.title} for recruiter ${data.recruiterId}`);
+
+        return prisma.codingChallenge.create({
+            data: {
+                title: data.title,
+                description: data.description,
+                difficulty: data.difficulty.toUpperCase() as any,
+                category: data.category.toLowerCase(),
+                tags: data.tags,
+                languages: data.languages,
+                starterCode: data.starterCode,
+                testCases: data.testCases,
+                constraints: data.constraints,
+                examples: data.examples,
+                recruiterId: data.recruiterId,
+                organizationId: data.organizationId,
+                isCustom: true,
+            },
+        });
     }
 
     /**

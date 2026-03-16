@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { authFetch } from '@/lib/auth-fetch';
+import Logo from '@/components/layout/Logo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -47,22 +48,7 @@ export default function ForgotPasswordPage() {
                     {/* Logo */}
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-block">
-                            <Image
-                                src="/logo-new-light.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-20 w-auto mx-auto block dark:hidden"
-                                priority
-                            />
-                            <Image
-                                src="/logo-new-dark.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-20 w-auto mx-auto hidden dark:block"
-                                priority
-                            />
+                            <Logo width={240} height={80} className="mx-auto" />
                         </Link>
                     </div>
 
@@ -95,15 +81,8 @@ export default function ForgotPasswordPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2">
-                        <Image
-                            src="/logo.svg"
-                            alt="PlaceNxt Logo"
-                            width={40}
-                            height={40}
-                            className="w-10 h-10 rounded-xl"
-                        />
-                        <span className="text-2xl font-bold gradient-text">PlaceNxt</span>
+                    <Link href="/" className="inline-block">
+                        <Logo width={240} height={80} className="mx-auto" />
                     </Link>
                 </div>
 

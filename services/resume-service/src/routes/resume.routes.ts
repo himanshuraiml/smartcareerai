@@ -29,6 +29,23 @@ const upload = multer({
     },
 });
 
+// Multer configuration for avatar image uploads
+const avatarUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (_req, file, cb) => {
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (allowedMimes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed (jpg, png, webp, gif)'));
+        }
+    },
+});
+
+// Avatar upload
+router.post('/avatar', authMiddleware, avatarUpload.single('avatar'), resumeController.uploadAvatar.bind(resumeController));
+
 // Builder Routes (must be before :id routes)
 router.get('/templates', authMiddleware, builderController.getTemplates);
 router.post('/builder/optimize', authMiddleware, builderController.optimize);
@@ -41,6 +58,7 @@ router.get('/', authMiddleware, resumeController.getAll);
 router.get('/:id', authMiddleware, resumeController.getById);
 router.get('/candidate/:candidateId/download', authMiddleware, resumeController.downloadByCandidate);
 router.get('/:id/download', authMiddleware, resumeController.download);
+router.get('/:id/download-file', authMiddleware, resumeController.downloadFile);
 router.delete('/:id', authMiddleware, resumeController.delete);
 router.post('/:id/parse', authMiddleware, resumeController.parse);
 

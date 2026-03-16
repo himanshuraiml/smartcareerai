@@ -31,6 +31,7 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/resend-verification', authController.resendVerification);
 router.get('/verify-email/:token', authController.verifyEmail);
 router.get('/institutions', authController.getInstitutions);
+router.get('/institutions/:institutionId/departments', authController.getDepartmentsByInstitution.bind(authController));
 
 // Admin invite routes
 router.get('/verify-invite', authController.verifyInvite);

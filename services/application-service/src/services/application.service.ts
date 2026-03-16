@@ -118,7 +118,7 @@ export class ApplicationService {
             throw new AppError('Already applied to this job', 400);
         }
 
-        return prisma.application.create({
+        const application = await prisma.application.create({
             data: {
                 userId,
                 jobId,
@@ -131,6 +131,47 @@ export class ApplicationService {
             },
             include: { job: true },
         });
+
+        // Trigger Assessment Assignment if job is a platform job and has a template
+        if (application.status === 'APPLIED') {
+            try {
+                const template = await (prisma as any).assessmentTemplate.findUnique({
+                    where: { jobId },
+                });
+
+                if (template) {
+                    await (prisma as any).assessmentAttempt.create({
+                        data: {
+                            studentId: userId,
+                            templateId: template.id,
+                            status: 'IN_PROGRESS',
+                        },
+                    });
+
+                    // Create Notification
+                    await (prisma as any).notification.create({
+                        data: {
+                            userId: userId,
+                            type: 'assessment_assigned',
+                            title: 'New Assessment Assigned',
+                            message: `You have been assigned a technical/behavioral assessment for the role: ${application.job.title}. Please complete it to proceed with your application.`,
+                            metadata: {
+                                jobId: jobId,
+                                assessmentTemplateId: template.id,
+                                jobTitle: application.job.title,
+                                link: `/candidate/assessments`
+                            },
+                        },
+                    });
+
+                    console.log(`Assessment assigned and notification sent to user ${userId} for job ${jobId}`);
+                }
+            } catch (err) {
+                console.error('Failed to auto-assign assessment:', err);
+            }
+        }
+
+        return application;
     }
 
     // Update application details

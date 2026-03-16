@@ -283,10 +283,15 @@ services:
       dockerfile: docker/Dockerfile.prod
       args:
         SERVICE_NAME: admin-service
-    container_name: placenxt-admin
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     restart: unless-stopped
-    ports:
-      - "3011:3011"
+    expose:
+      - "3011"
     environment:
       - NODE_ENV=production
       - PORT=3011

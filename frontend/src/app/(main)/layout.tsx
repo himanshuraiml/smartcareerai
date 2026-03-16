@@ -1,9 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { GoogleAuthProviderWrapper } from '@/providers/GoogleAuthProvider';
 import KeyboardShortcuts from '@/components/keyboard/KeyboardShortcuts';
+
+export const viewport: Viewport = {
+    themeColor: '#2563EB',
+};
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://placenxt.com'), // Replace with actual domain
@@ -50,6 +54,12 @@ export const metadata: Metadata = {
             'max-snippet': -1,
         },
     },
+    manifest: '/manifest.json',
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: 'default',
+        title: 'PlaceNxt',
+    },
 };
 
 export default function RootLayout({
@@ -60,12 +70,14 @@ export default function RootLayout({
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
             <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
                     rel="stylesheet"
                 />
             </head>
-            <body style={{ fontFamily: "'Inter', sans-serif" }}>
+            <body style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
                 <GoogleAuthProviderWrapper>
                     <ThemeProvider>
                         {children}
@@ -77,5 +89,3 @@ export default function RootLayout({
         </html>
     );
 }
-
-

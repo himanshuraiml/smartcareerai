@@ -708,3 +708,46 @@ function getBasicFeedback(score: number): string {
         return `There's room for improvement. Focus on: 1) Reviewing fundamental concepts, 2) Practicing structured answers (STAR method), 3) Building more project experience. Consider mock interviews to build confidence.`;
     }
 }
+
+// Generate an automated summary of a live interview based on its transcript
+export async function generateInterviewSummary(
+    transcriptChunks: string[],
+    targetRole?: string
+): Promise<string> {
+    const systemPrompt = `You are an expert technical recruiter summarizing an interview.
+Provide a concise, professional executive summary of the interview based on the raw transcript.
+Focus on the candidate's communication skills, technical confidence, and overall performance.
+Keep the summary to 3-5 sentences. Do not use conversational filler.`;
+
+    const transcriptText = transcriptChunks.join('\n\n').substring(0, 8000); // cap to avoid token limits
+
+    const userPrompt = `Target Role: ${targetRole || 'Unknown'}
+Transcript:
+"""
+${transcriptText}
+"""
+
+Provide the executive summary.`;
+
+    try {
+        const client = getGroq();
+        if (!client) {
+            return 'Summary generation unavailable (AI not configured).';
+        }
+
+        const response = await client.chat.completions.create({
+            model: AI_MODEL_NAME,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 300,
+        });
+
+        return response.choices[0]?.message?.content || 'Unable to generate summary.';
+    } catch (error) {
+        logger.error('Failed to generate interview summary:', error);
+        return 'An error occurred while generating the summary.';
+    }
+}

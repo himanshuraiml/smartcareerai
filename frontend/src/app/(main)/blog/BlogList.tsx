@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { BlogPost } from '@/lib/blog';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 interface BlogListProps {
     initialPosts: BlogPost[];
@@ -35,93 +37,10 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#080C16] text-gray-900 dark:text-white overflow-x-hidden landing-page">
-
-            {/* ── Navigation ── */}
-            <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#080C16]/80 backdrop-blur-xl border-b border-gray-200/80 dark:border-white/[0.06] shadow-sm dark:shadow-none">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        {/* Brand */}
-                        <div onClick={() => router.push('/')} role="button" tabIndex={0}
-                            className="flex items-center gap-2.5 cursor-pointer">
-                            <Image
-                                src="/logo-new-light.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-16 w-auto md:h-20 block dark:hidden"
-                                priority
-                            />
-                            <Image
-                                src="/logo-new-dark.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-16 w-auto md:h-20 hidden dark:block"
-                                priority
-                            />
-                        </div>
-
-                        {/* Desktop nav */}
-                        <div className="hidden md:flex items-center gap-1">
-                            {[
-                                { label: 'Blog', href: '/blog', active: true },
-                                { label: 'Pricing', href: '/pricing', active: false },
-                            ].map(item => (
-                                <Link key={item.href} href={item.href}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${item.active
-                                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'}`}>
-                                    {item.label}
-                                </Link>
-                            ))}
-                            <div className="mx-3 h-5 w-px bg-gray-200 dark:bg-white/10" />
-                            <Link href="/login"
-                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                                Login
-                            </Link>
-                            <Link href="/register"
-                                className="ml-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/25 flex items-center gap-1.5">
-                                Start Free <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </div>
-
-                        {/* Mobile */}
-                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors">
-                            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Mobile menu */}
-                <AnimatePresence>
-                    {mobileMenuOpen && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
-                            className="md:hidden border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#0B0F19]">
-                            <div className="px-4 py-4 space-y-1">
-                                {[
-                                    { label: 'Blog', href: '/blog' },
-                                    { label: 'Pricing', href: '/pricing' },
-                                    { label: 'Login', href: '/login' },
-                                ].map(item => (
-                                    <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
-                                        className="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white transition-colors">
-                                        {item.label}
-                                    </Link>
-                                ))}
-                                <Link href="/register" onClick={() => setMobileMenuOpen(false)}
-                                    className="block px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold text-center mt-2">
-                                    Start Free
-                                </Link>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </nav>
+            <Navbar />
 
             {/* ── Hero / Header ── */}
-            <section className="relative pt-32 pb-16 px-4 overflow-hidden">
+            <section className="relative pt-48 pb-16 px-4 overflow-hidden">
                 {/* Background orbs */}
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full blur-[130px] bg-indigo-500/15 dark:bg-indigo-500/15" />
@@ -315,27 +234,7 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                 </AnimatePresence>
             </main>
 
-            {/* ── Footer ── */}
-            <footer className="py-8 px-4 border-t border-gray-200 dark:border-white/[0.06]">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                            <Sparkles className="w-3 h-3 text-white" />
-                        </div>
-                        <span>© 2026 PlaceNxt. All rights reserved.</span>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        {[
-                            { label: 'Home', href: '/' },
-                            { label: 'Pricing', href: '/pricing' },
-                            { label: 'Privacy', href: '/privacy' },
-                        ].map(link => (
-                            <Link key={link.href} href={link.href}
-                                className="hover:text-gray-900 dark:hover:text-white transition-colors">{link.label}</Link>
-                        ))}
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 }

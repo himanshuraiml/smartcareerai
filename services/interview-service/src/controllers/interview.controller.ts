@@ -490,5 +490,23 @@ export class InterviewController {
             next(error);
         }
     };
+
+    /**
+     * Generate an automated executive summary for a live interview
+     * POST /sessions/:id/copilot/summarize
+     */
+    generateSummary = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+
+            // In a real scenario, you probably want to verify the user or recruiter.
+            // For now, it simply generates the summary based on the session ID.
+            const result = await interviewService.generateSessionSummary(id);
+            res.json({ success: true, ...result });
+        } catch (error) {
+            logger.error('Generate summary error:', error);
+            next(error);
+        }
+    };
 }
 

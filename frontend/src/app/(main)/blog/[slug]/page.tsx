@@ -3,7 +3,8 @@ import { ArrowLeft, Clock, Calendar, Tag, Share2, Menu, X, ArrowRight, BookOpen 
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getPostBySlug, getAllPosts } from '@/lib/blog';
-import { MDXRemote } from 'next-mdx-remote/rsc'; // Use RSC version if available, or just render children
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import Logo from '@/components/layout/Logo';
 // Since we are using App Router, we should use a Server Component.
 // Regular 'next-mdx-remote' works for Client Components, 'next-mdx-remote/rsc' for Server Components.
 // I will use 'next-mdx-remote/rsc' as it is standard for App Router.
@@ -37,14 +38,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2">
-                            <Image
-                                src="/logo.svg"
-                                alt="PlaceNxt Logo"
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 rounded-lg neon-purple"
-                            />
-                            <span className="text-xl font-bold gradient-text">PlaceNxt</span>
+                            <Logo width={160} height={40} />
                         </Link>
 
                         {/* Desktop Navigation */}
