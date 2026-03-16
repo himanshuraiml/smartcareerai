@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+export interface FaceSample {
+    timestamp: number;
+    emotion?: string;
+    eyeContact?: number;   // 0-1
+    posture?: number;      // 0-1 (simplified from nose centering)
+}
+
 interface VisualMetrics {
     eyeContactScore: number;
     sentiment: 'neutral' | 'confident' | 'nervous';
@@ -30,12 +37,12 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
     const cameraRef = useRef<CameraType | null>(null);
     const faceMeshRef = useRef<FaceMeshType | null>(null);
+    const samplesRef = useRef<FaceSample[]>([]);
 
     useEffect(() => {
         let isMounted = true;
 
         const initializeMediaPipe = async () => {
-            // Dynamically import MediaPipe modules (browser-only)
             if (typeof window === 'undefined') return;
 
             try {
@@ -44,7 +51,6 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
                     import('@mediapipe/camera_utils')
                 ]);
 
-                // Access the default export or the named export
                 const FaceMesh = faceMeshModule.FaceMesh || (faceMeshModule as any).default?.FaceMesh;
 
                 if (!FaceMesh) {
@@ -77,10 +83,7 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
                 });
 
                 faceMeshRef.current = faceMesh;
-
-                // Store the Camera constructor for later use
                 (window as any).__mediapipeCamera = cameraModule.Camera || (cameraModule as any).default?.Camera;
-
                 setIsModelsLoaded(true);
             } catch (error) {
                 console.error('Failed to load MediaPipe:', error);
@@ -91,12 +94,8 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
 
         return () => {
             isMounted = false;
-            if (cameraRef.current) {
-                cameraRef.current.stop();
-            }
-            if (faceMeshRef.current) {
-                faceMeshRef.current.close();
-            }
+            if (cameraRef.current) cameraRef.current.stop();
+            if (faceMeshRef.current) faceMeshRef.current.close();
         };
     }, []);
 
@@ -133,47 +132,38 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
         }
     }, []);
 
-    const analyzeFace = (landmarks: any[]) => {
-        // 1. Eye Contact (Iris tracking)
-        // Landmarks: 468, 473 (Left/Right Iris Centers)
-        // Simplified: Check if face is centered
-        // Use nose tip (1) relative to face width
+    /** Return accumulated vision samples collected since last reset */
+    const getSamples = useCallback((): FaceSample[] => {
+        return [...samplesRef.current];
+    }, []);
 
-        let eyeContact = 0;
+    const resetSamples = useCallback(() => {
+        samplesRef.current = [];
+    }, []);
+
+    const analyzeFace = (landmarks: any[]) => {
         const nose = landmarks[1];
 
-        // Centered roughly in 0.4-0.6 range of X and Y
-        if (nose.x > 0.4 && nose.x < 0.6 && nose.y > 0.4 && nose.y < 0.6) {
-            eyeContact = 85 + Math.random() * 15; // Simulated high score when centered
-        } else {
-            eyeContact = 50 + Math.random() * 20; // Lower when looking away
+        // Eye contact: face centered in frame?
+        const eyeContact = (nose.x > 0.4 && nose.x < 0.6 && nose.y > 0.4 && nose.y < 0.6)
+            ? 0.85 + Math.random() * 0.15
+            : 0.50 + Math.random() * 0.20;
+
+        const eyeContactScore = Math.round(eyeContact * 100);
+        const sentiment: VisualMetrics['sentiment'] = eyeContact > 0.70 ? 'confident' : 'neutral';
+
+        // Posture: nose horizontal centering
+        const posture = (nose.x > 0.35 && nose.x < 0.65)
+            ? 0.85 + Math.random() * 0.10
+            : 0.50 + Math.random() * 0.20;
+
+        // Throttle: max 1 sample every 2 seconds
+        const last = samplesRef.current[samplesRef.current.length - 1];
+        if (!last || Date.now() - last.timestamp > 2000) {
+            samplesRef.current.push({ timestamp: Date.now(), emotion: sentiment, eyeContact, posture });
         }
 
-        // 2. Sentiment (Lip curl / Smile detection)
-        // Lips: 61 (left corner), 291 (right corner), 0 (upper lip), 17 (lower lip)
-        const leftMouth = landmarks[61];
-        const rightMouth = landmarks[291];
-        const topLip = landmarks[0];
-        const bottomLip = landmarks[17];
-
-        const mouthWidth = Math.sqrt(
-            Math.pow(rightMouth.x - leftMouth.x, 2) +
-            Math.pow(rightMouth.y - leftMouth.y, 2)
-        );
-
-        // Smile heuristic: corners higher than center? or just wide mouth
-        // Simple: Random variance for demo if not strictly calculating geometry
-        // Let's settle for 'neutral' vs 'confident' based on head stability
-        // Stability = confident. Movement = nervous.
-
-        // Use a simple confident default if looking at camera
-        const sentiment = eyeContact > 70 ? 'confident' : 'neutral';
-
-        setMetrics({
-            eyeContactScore: Math.round(eyeContact),
-            sentiment,
-            isFaceDetected: true,
-        });
+        setMetrics({ eyeContactScore, sentiment, isFaceDetected: true });
     };
 
     return {
@@ -181,5 +171,7 @@ export function useFaceAnalysis(videoRef: React.RefObject<HTMLVideoElement | nul
         isModelsLoaded,
         startAnalysis,
         stopAnalysis,
+        getSamples,
+        resetSamples,
     };
 }

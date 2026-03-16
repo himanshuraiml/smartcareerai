@@ -11,22 +11,24 @@ interface VideoTileProps {
     handRaised?: boolean;
     isLocal?: boolean;
     isLarge?: boolean;
+    videoRef?: React.RefObject<HTMLVideoElement | null>;
 }
 
-export function VideoTile({ stream, name, role, isMuted, handRaised, isLocal, isLarge }: VideoTileProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
+export function VideoTile({ stream, name, role, isMuted, handRaised, isLocal, isLarge, videoRef }: VideoTileProps) {
+    const internalRef = useRef<HTMLVideoElement>(null);
+    const resolvedRef = videoRef || internalRef;
 
     useEffect(() => {
-        if (videoRef.current && stream) {
-            videoRef.current.srcObject = stream;
+        if (resolvedRef.current && stream) {
+            resolvedRef.current.srcObject = stream;
         }
-    }, [stream]);
+    }, [stream, resolvedRef]);
 
     return (
         <div className={`relative rounded-xl overflow-hidden bg-gray-900 border border-gray-700 ${isLarge ? 'aspect-video' : 'aspect-video'}`}>
             {stream ? (
                 <video
-                    ref={videoRef}
+                    ref={resolvedRef}
                     autoPlay
                     playsInline
                     muted={isLocal}

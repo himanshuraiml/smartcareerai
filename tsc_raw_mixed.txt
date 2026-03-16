@@ -1,0 +1,10 @@
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(151,9): error TS2448: Block-scoped variable 'isRecording' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(151,9): error TS2454: Variable 'isRecording' is used before being assigned.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,9): error TS2448: Block-scoped variable 'transcript' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,9): error TS2454: Variable 'transcript' is used before being assigned.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,21): error TS2448: Block-scoped variable 'wpm' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,21): error TS2454: Variable 'wpm' is used before being assigned.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,95): error TS2448: Block-scoped variable 'isRecording' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(177,95): error TS2454: Variable 'isRecording' is used before being assigned.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(273,9): error TS2448: Block-scoped variable 'currentQuestionIndex' used before its declaration.
+frontend/src/app/(main)/dashboard/interviews/[id]/mixed-room/page.tsx(273,9): error TS2454: Variable 'currentQuestionIndex' is used before being assigned.

@@ -1,61 +1,37 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { CopilotOverlay } from '@/components/copilot/CopilotOverlay';
+import { MeetingRoom } from '@/components/meeting/MeetingRoom';
 
 export default function LiveInterviewPage() {
     const params = useParams();
     const interviewId = params?.id as string;
-    const [meetingUrl, setMeetingUrl] = useState<string>('');
+    const [interviewStarted, setInterviewStarted] = useState(false);
 
-    // In a real implementation, you would fetch the interview details from your backend API
-    // and verify the current user is a recruiter who owns this interview.
-    // We are mocking the meeting URL input for MVP testing:
-    const handleUrlSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const form = e.target as HTMLFormElement;
-        const input = form.elements.namedItem('meetingUrl') as HTMLInputElement;
-        setMeetingUrl(input.value);
-    };
+    // Using the SmartCareerAI native MeetingRoom instead of Google Meet
+    // We assume the meeting string ID is the same as the interview ID for Live sessions.
 
     if (!interviewId) return <div>Loading...</div>;
 
-    if (!meetingUrl) {
-        return (
-            <div className="container mx-auto p-6 max-w-xl">
-                <h1 className="text-2xl font-bold mb-6">Start Live Interview Copilot</h1>
-                <div className="bg-card shadow rounded-lg p-6 border border-border">
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Please enter the Google Meet URL for interview {interviewId}.
-                        Normally, this would be auto-fetched from the ATS integration and Google Calendar.
-                    </p>
-                    <form onSubmit={handleUrlSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Google Meet URL</label>
-                            <input
-                                type="url"
-                                name="meetingUrl"
-                                required
-                                placeholder="https://meet.google.com/abc-defg-hij"
-                                className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2"
-                        >
-                            Connect Copilot
-                        </button>
-                    </form>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="container mx-auto p-6 h-[calc(100vh-100px)]">
-            <CopilotOverlay interviewId={interviewId} meetingUrl={meetingUrl} />
+        <div className="flex h-screen w-full relative overflow-hidden bg-background">
+            <div className="flex-1 w-full h-full relative z-0">
+                <MeetingRoom
+                    meetingId={interviewId}
+                    onInterviewStarted={() => setInterviewStarted(true)}
+                />
+            </div>
+
+            {/* The Copilot overlay sits on top of the meeting room for the recruiter */}
+            <div className="absolute right-0 top-0 bottom-0 w-96 max-w-[30vw] z-10 bg-background/95 backdrop-blur shadow-2xl border-l border-border pointer-events-auto h-full overflow-hidden flex flex-col pt-16 mt-4 pb-4">
+                <CopilotOverlay
+                    interviewId={interviewId}
+                    meetingUrl={`/meeting/${interviewId}`}
+                    triggerStart={interviewStarted}
+                />
+            </div>
         </div>
     );
 }

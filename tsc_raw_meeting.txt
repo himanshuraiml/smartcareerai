@@ -1,0 +1,6 @@
+frontend/src/components/meeting/MeetingRoom.tsx(411,33): error TS2322: Type 'RefObject<HTMLVideoElement | null>' is not assignable to type 'RefObject<HTMLVideoElement>'.
+  Type 'HTMLVideoElement | null' is not assignable to type 'HTMLVideoElement'.
+    Type 'null' is not assignable to type 'HTMLVideoElement'.
+frontend/src/components/meeting/MeetingRoom.tsx(428,33): error TS2322: Type 'RefObject<HTMLVideoElement | null>' is not assignable to type 'RefObject<HTMLVideoElement>'.
+  Type 'HTMLVideoElement | null' is not assignable to type 'HTMLVideoElement'.
+    Type 'null' is not assignable to type 'HTMLVideoElement'.

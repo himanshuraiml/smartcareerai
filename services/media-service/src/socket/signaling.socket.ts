@@ -274,6 +274,24 @@ export function setupSignaling(io: Server): void {
         socket.on('disconnect', () => {
             handleDisconnect(socket);
         });
+
+        /**
+         * behavior-metric: Client sends per-frame MediaPipe AI analysis data.
+         * Payload: { sessionId, metric: { timestamp, emotion, eyeContact, posture } }
+         * The media-service relays it to everyone in the room so the interviewer can see
+         * real-time signal overlays.
+         */
+        socket.on('behavior-metric', (payload: { sessionId: string; meetingId: string; metric: Record<string, unknown> }) => {
+            const userInfo = socketUserMap.get(socket.id);
+            if (!userInfo || userInfo.waiting) return;
+
+            // Relay to all other participants in the same meeting room (e.g., the interviewer / AI monitor)
+            socket.to(payload.meetingId ?? userInfo.meetingId).emit('behavior-metric', {
+                peerId: userInfo.userId,
+                sessionId: payload.sessionId,
+                metric: payload.metric,
+            });
+        });
     });
 }
 
