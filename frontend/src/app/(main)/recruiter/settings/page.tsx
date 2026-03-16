@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
     Save,
     Bell,
@@ -25,7 +26,10 @@ import {
     XCircle,
     Calendar,
     Link2,
-    Lock
+    Lock,
+    Trash2,
+    Copy,
+    Check
 } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
 import { useAuthStore } from "@/store/auth.store";
@@ -51,6 +55,15 @@ interface Organization {
     theme?: any;
     logoUrl?: string;
 }
+interface AtsConfig {
+    id: string;
+    provider: string;
+    outboundUrl: string | null;
+    isActive: boolean;
+    lastSyncAt: string | null;
+    logs: Array<{ direction: string; status: string; createdAt: string }>;
+}
+const ATS_PROVIDERS = ["WORKDAY", "SAP", "ZOHO", "KEKA", "GENERIC"];
 
 const ROLE_COLORS: Record<string, string> = {
     OWNER: "text-amber-500 bg-amber-50 dark:bg-amber-500/10 border-amber-200",
@@ -203,6 +216,16 @@ export default function RecruiterSettingsPage() {
     const [enteredToken, setEnteredToken] = useState("");
     const [domainActionLoading, setDomainActionLoading] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
+    // ATS tab state
+    const [atsConfigs, setAtsConfigs] = useState<AtsConfig[]>([]);
+    const [atsLoading, setAtsLoading] = useState(true);
+    const [showAtsForm, setShowAtsForm] = useState(false);
+    const [atsForm, setAtsForm] = useState({ provider: "GENERIC", outboundUrl: "", apiKey: "" });
+    const [atsSaving, setAtsSaving] = useState(false);
+    const [atsTesting, setAtsTesting] = useState<string | null>(null);
+    const [atsTestResult, setAtsTestResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
+    const [urlCopied, setUrlCopied] = useState(false);
+    const [activeIntegrationTab, setActiveIntegrationTab] = useState<"calendar" | "ats">("calendar");
 
     const handleInitiateVerification = async () => {
         setDomainActionLoading(true);
@@ -258,9 +281,72 @@ export default function RecruiterSettingsPage() {
         finally { setOrgLoading(false); }
     }, []);
 
+    // Fetch organization data when relevant tabs are active
     useEffect(() => {
-        if (activeTab === "organization" || activeTab === "integrations" || activeTab === "branding") fetchOrg();
+        if (activeTab === "organization" || activeTab === "integrations" || activeTab === "branding") {
+            fetchOrg();
+        }
     }, [activeTab, fetchOrg]);
+
+    // Fetch ATS configs separately when integrations tab is active and org is loaded
+    useEffect(() => {
+        if (activeTab === "integrations" && org?.id) {
+            setAtsLoading(true);
+            authFetch(`/organization/${org.id}/integrations/ats`)
+                .then(r => r.ok ? r.json() : null)
+                .then(d => { if (d?.data) setAtsConfigs(d.data); })
+                .catch(err => console.error("Failed to load ATS configs:", err))
+                .finally(() => setAtsLoading(false));
+        }
+    }, [activeTab, org?.id]);
+
+    const handleAtsSave = async () => {
+        if (!org) return;
+        setAtsSaving(true);
+        try {
+            const res = await authFetch(`/organization/${org.id}/integrations/ats`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(atsForm),
+            });
+            if (res.ok) {
+                const d = await res.json();
+                setAtsConfigs(prev => {
+                    const idx = prev.findIndex(c => c.id === d.data.id);
+                    return idx >= 0 ? prev.map((c, i) => i === idx ? d.data : c) : [...prev, d.data];
+                });
+                setShowAtsForm(false);
+            }
+        } finally {
+            setAtsSaving(false);
+        }
+    };
+
+    const handleAtsDelete = async (configId: string) => {
+        if (!org || !confirm("Remove this ATS integration?")) return;
+        await authFetch(`/organization/${org.id}/integrations/ats/${configId}`, { method: "DELETE" });
+        setAtsConfigs(prev => prev.filter(c => c.id !== configId));
+    };
+
+    const handleAtsTest = async (configId: string) => {
+        if (!org) return;
+        setAtsTesting(configId);
+        try {
+            const res = await authFetch(`/organization/${org.id}/integrations/ats/${configId}/test`, { method: "POST" });
+            const d = await res.json();
+            setAtsTestResult(prev => ({ ...prev, [configId]: { ok: res.ok, msg: d.data?.message || d.message || (res.ok ? "Webhook sent" : "Failed") } }));
+        } finally {
+            setAtsTesting(null);
+        }
+    };
+
+    const handleCopyWebhookUrl = (provider: string) => {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const url = `${origin}/api/v1/recruiter/webhooks/ats/${provider.toLowerCase()}`;
+        navigator.clipboard.writeText(url);
+        setUrlCopied(true);
+        setTimeout(() => setUrlCopied(false), 2000);
+    };
 
     const handleCreateOrg = async (e: { preventDefault(): void }) => {
         e.preventDefault();
@@ -648,27 +734,14 @@ export default function RecruiterSettingsPage() {
                                                         <label className={labelClasses}>Organization Name *</label>
                                                         <input type="text" value={newOrgData.name} onChange={e => setNewOrgData({ ...newOrgData, name: e.target.value })} placeholder="Acme Corp" className={inputClasses} required />
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-4">
+                                                    <div className="grid grid-cols-1 gap-4">
                                                         <div className="space-y-2">
-                                                            <label className={labelClasses}>Domain</label>
-                                                            <input type="text" value={newOrgData.domain} onChange={e => setNewOrgData({ ...newOrgData, domain: e.target.value })} placeholder="acme.com" className={inputClasses} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className={labelClasses}>Website</label>
-                                                            <input type="url" value={newOrgData.website} onChange={e => setNewOrgData({ ...newOrgData, website: e.target.value })} placeholder="https://acme.com" className={inputClasses} />
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className={labelClasses}>Industry</label>
-                                                            <input type="text" value={newOrgData.industry} onChange={e => setNewOrgData({ ...newOrgData, industry: e.target.value })} placeholder="Technology" className={inputClasses} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className={labelClasses}>Company Size</label>
-                                                            <select value={newOrgData.companySize} onChange={e => setNewOrgData({ ...newOrgData, companySize: e.target.value })} className={inputClasses}>
-                                                                <option value="">Select size</option>
-                                                                {["1–10", "11–50", "51–200", "201–1000", "1000+"].map(s => <option key={s} value={s}>{s}</option>)}
-                                                            </select>
+                                                            <label className={labelClasses}>Primary Domain</label>
+                                                            <div className="relative">
+                                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                                <input type="text" value={newOrgData.domain} onChange={e => setNewOrgData({ ...newOrgData, domain: e.target.value })} placeholder="acme.com" className={`${inputClasses} pl-10`} />
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-500">Other details (Industry, Size, Website) will be pulled from your Company Profile.</p>
                                                         </div>
                                                     </div>
                                                     {createOrgError && (
@@ -729,9 +802,23 @@ export default function RecruiterSettingsPage() {
                                                         <label className={labelClasses}>Custom Domain <span className="text-xs text-gray-500 font-normal">(Enterprise Only)</span></label>
                                                         <input type="text" value={brandingData.customDomain} onChange={(e) => setBrandingData({ ...brandingData, customDomain: e.target.value })} className={inputClasses} placeholder="careers.yourcompany.com" disabled={!brandingData.isWhiteLabel} />
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <label className={labelClasses}>Company Logo URL</label>
-                                                        <input type="url" value={brandingData.logoUrl} onChange={(e) => setBrandingData({ ...brandingData, logoUrl: e.target.value })} className={inputClasses} placeholder="https://yourcompany.com/logo.png" disabled={!brandingData.isWhiteLabel} />
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className={labelClasses}>Company Logo</label>
+                                                        <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-gray-800 rounded-xl">
+                                                            <div className="w-12 h-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden p-1 shadow-sm">
+                                                                {org.logoUrl ? (
+                                                                    <img src={org.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                                                ) : (
+                                                                    <Building2 className="w-6 h-6 text-gray-400" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="text-xs font-bold text-gray-900 dark:text-gray-100">Profile Logo</p>
+                                                                <Link href="/recruiter/profile" className="text-[10px] text-indigo-500 hover:text-indigo-600 font-bold underline transition-colors">
+                                                                    Update in Company Profile
+                                                                </Link>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div className="space-y-2 md:col-span-2">
                                                         <label className={labelClasses}>Primary Theme Color</label>
@@ -795,74 +882,258 @@ export default function RecruiterSettingsPage() {
                                 {/* ── INTEGRATIONS TAB ── */}
                                 {activeTab === "integrations" && (
                                     <div className="space-y-8">
-                                        <div className="flex items-center gap-4 mb-8">
+                                        <div className="flex items-center gap-4 mb-4">
                                             <div className="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center">
                                                 <Plug className="w-6 h-6 text-teal-500" />
                                             </div>
                                             <div>
-                                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Calendar Integrations</h2>
-                                                <p className="text-gray-500 dark:text-gray-400 text-sm">Connect your calendar to auto-schedule interviews and generate meeting links.</p>
+                                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Integrations</h2>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm">Connect external tools to streamline your recruitment workflow.</p>
                                             </div>
                                         </div>
 
-                                        {!org && (
-                                            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm flex items-center gap-2">
-                                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                                                You need to create an Organization first before connecting calendars.
+                                        {/* Sub-tabs Navigation */}
+                                        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-white/5 rounded-2xl w-fit mb-8">
+                                            {[
+                                                { id: "calendar" as const, label: "Calendar", icon: Calendar },
+                                                { id: "ats" as const, label: "ATS Integration", icon: Link2 },
+                                            ].map((tab) => (
+                                                <button
+                                                    key={tab.id}
+                                                    onClick={() => setActiveIntegrationTab(tab.id)}
+                                                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+                                                        activeIntegrationTab === tab.id
+                                                            ? "bg-white dark:bg-gray-800 text-teal-600 dark:text-teal-400 shadow-sm"
+                                                            : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                                    }`}
+                                                >
+                                                    <tab.icon className="w-4 h-4" />
+                                                    {tab.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {activeIntegrationTab === "calendar" && (
+                                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className="space-y-1">
+                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Calendar Services</h3>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Auto-schedule interviews and generate meeting links.</p>
+                                                </div>
+
+                                                {!org && (
+                                                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm flex items-center gap-2">
+                                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                                        You need to create an Organization first before connecting calendars.
+                                                    </div>
+                                                )}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                    <div className="p-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02] space-y-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                                                                <Calendar className="w-5 h-5 text-[#4285F4]" />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 dark:text-white">Google Calendar</h3>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">Schedule with auto-generated Google Meet links</p>
+                                                            </div>
+                                                        </div>
+                                                        {calendarStatusLoading ? (
+                                                            <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Checking status...</div>
+                                                        ) : calendarStatus?.connected && calendarStatus.platform === "google" ? (
+                                                            <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium"><CheckCircle className="w-4 h-4" /> Connected</div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-sm text-gray-400"><XCircle className="w-4 h-4" /> Not connected</div>
+                                                        )}
+                                                        <button onClick={handleConnectGoogle} disabled={!org || connectingGoogle || (calendarStatus?.connected && calendarStatus.platform === "google")} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#4285F4] hover:bg-[#3367d6] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                            {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                                                            {calendarStatus?.connected && calendarStatus.platform === "google" ? "Reconnect Google Calendar" : "Connect Google Calendar"}
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="p-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02] space-y-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                                                                <Calendar className="w-5 h-5 text-[#0078D4]" />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 dark:text-white">Microsoft 365</h3>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">Schedule with auto-generated Teams links</p>
+                                                            </div>
+                                                        </div>
+                                                        {calendarStatusLoading ? (
+                                                            <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Checking status...</div>
+                                                        ) : calendarStatus?.connected && calendarStatus.platform === "outlook" ? (
+                                                            <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium"><CheckCircle className="w-4 h-4" /> Connected</div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-sm text-gray-400"><XCircle className="w-4 h-4" /> Not connected</div>
+                                                        )}
+                                                        <button onClick={handleConnectOutlook} disabled={!org || connectingOutlook || (calendarStatus?.connected && calendarStatus.platform === "outlook")} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0078D4] hover:bg-[#006ab8] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                            {connectingOutlook ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                                                            {calendarStatus?.connected && calendarStatus.platform === "outlook" ? "Reconnect Microsoft 365" : "Connect Microsoft 365"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                    After connecting, you can schedule interviews directly from the candidate pipeline with auto-generated meeting links.
+                                                </p>
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="p-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02] space-y-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-                                                        <Calendar className="w-5 h-5 text-[#4285F4]" />
+                                        {activeIntegrationTab === "ats" && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="space-y-1">
+                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">External ATS Platforms</h3>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">Sync candidates bidirectionally with your existing ATS.</p>
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-gray-900 dark:text-white">Google Calendar</h3>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">Schedule with auto-generated Google Meet links</p>
-                                                    </div>
+                                                    <button
+                                                        onClick={() => setShowAtsForm(!showAtsForm)}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                        Add Integration
+                                                    </button>
                                                 </div>
-                                                {calendarStatusLoading ? (
-                                                    <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Checking status...</div>
-                                                ) : calendarStatus?.connected && calendarStatus.platform === "google" ? (
-                                                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium"><CheckCircle className="w-4 h-4" /> Connected</div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 text-sm text-gray-400"><XCircle className="w-4 h-4" /> Not connected</div>
-                                                )}
-                                                <button onClick={handleConnectGoogle} disabled={!org || connectingGoogle || (calendarStatus?.connected && calendarStatus.platform === "google")} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#4285F4] hover:bg-[#3367d6] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-                                                    {calendarStatus?.connected && calendarStatus.platform === "google" ? "Reconnect Google Calendar" : "Connect Google Calendar"}
-                                                </button>
-                                            </div>
 
-                                            <div className="p-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02] space-y-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-                                                        <Calendar className="w-5 h-5 text-[#0078D4]" />
+                                                {showAtsForm && (
+                                                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-gray-800 rounded-2xl gap-4 flex flex-col">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            <div className="space-y-2">
+                                                                <label className={labelClasses}>Provider</label>
+                                                                <select
+                                                                    value={atsForm.provider}
+                                                                    onChange={e => setAtsForm({ ...atsForm, provider: e.target.value })}
+                                                                    className={inputClasses}
+                                                                >
+                                                                    {ATS_PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <label className={labelClasses}>Outbound Webhook URL</label>
+                                                                <input
+                                                                    type="url"
+                                                                    value={atsForm.outboundUrl}
+                                                                    onChange={e => setAtsForm({ ...atsForm, outboundUrl: e.target.value })}
+                                                                    placeholder="https://your-ats.com/webhook"
+                                                                    className={inputClasses}
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <label className={labelClasses}>API Key (Optional)</label>
+                                                                <input
+                                                                    type="password"
+                                                                    value={atsForm.apiKey}
+                                                                    onChange={e => setAtsForm({ ...atsForm, apiKey: e.target.value })}
+                                                                    placeholder="Bearer token or API key"
+                                                                    className={inputClasses}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={handleAtsSave}
+                                                                disabled={atsSaving}
+                                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
+                                                            >
+                                                                {atsSaving ? "Saving..." : "Save Integration"}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setShowAtsForm(false)}
+                                                                className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+
+                                                {/* Inbound URL helper */}
+                                                <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Inbound Webhook URL</span>
+                                                        <button
+                                                            onClick={() => handleCopyWebhookUrl("generic")}
+                                                            className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-600 transition-colors font-bold"
+                                                        >
+                                                            {urlCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                                            {urlCopied ? "Copied!" : "Copy URL"}
+                                                        </button>
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-gray-900 dark:text-white">Microsoft 365</h3>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">Schedule with auto-generated Teams links</p>
-                                                    </div>
+                                                    <code className="block text-[11px] text-gray-500 dark:text-gray-400 break-all bg-white dark:bg-black/20 p-2 rounded-lg border border-indigo-500/10">
+                                                        {typeof window !== "undefined" ? window.location.origin : ""}/api/v1/recruiter/webhooks/ats/{"{provider}"}
+                                                    </code>
+                                                    <p className="text-[10px] text-gray-400">Replace {"{provider}"} with: workday, sap, zoho, keka, generic</p>
                                                 </div>
-                                                {calendarStatusLoading ? (
-                                                    <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Checking status...</div>
-                                                ) : calendarStatus?.connected && calendarStatus.platform === "outlook" ? (
-                                                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium"><CheckCircle className="w-4 h-4" /> Connected</div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 text-sm text-gray-400"><XCircle className="w-4 h-4" /> Not connected</div>
-                                                )}
-                                                <button onClick={handleConnectOutlook} disabled={!org || connectingOutlook || (calendarStatus?.connected && calendarStatus.platform === "outlook")} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0078D4] hover:bg-[#006ab8] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    {connectingOutlook ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-                                                    {calendarStatus?.connected && calendarStatus.platform === "outlook" ? "Reconnect Microsoft 365" : "Connect Microsoft 365"}
-                                                </button>
-                                            </div>
-                                        </div>
 
-                                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                                            After connecting, you can schedule interviews directly from the candidate pipeline with auto-generated meeting links.
-                                        </p>
+                                                {/* ATS Configs List */}
+                                                {atsLoading ? (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Loading configurations...</div>
+                                                ) : atsConfigs.length === 0 ? (
+                                                    <div className="p-10 text-center rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                                                        <Link2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                                        <p className="text-gray-500 text-sm font-medium">No ATS integrations configured yet.</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        {atsConfigs.map(cfg => (
+                                                            <div key={cfg.id} className="p-5 bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 rounded-2xl shadow-sm space-y-4">
+                                                                <div className="flex items-start justify-between gap-4">
+                                                                    <div className="space-y-1">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className="text-lg font-bold text-gray-900 dark:text-white capitalize">{cfg.provider.toLowerCase()}</span>
+                                                                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${cfg.isActive ? "bg-emerald-500/10 text-emerald-500" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
+                                                                                {cfg.isActive ? "Active" : "Inactive"}
+                                                                            </span>
+                                                                        </div>
+                                                                        {cfg.outboundUrl && (
+                                                                            <p className="text-xs text-gray-400 break-all">{cfg.outboundUrl}</p>
+                                                                        )}
+                                                                        {atsTestResult[cfg.id] && (
+                                                                            <div className={`text-[10px] font-bold mt-1 flex items-center gap-1 ${atsTestResult[cfg.id].ok ? "text-emerald-500" : "text-rose-500"}`}>
+                                                                                {atsTestResult[cfg.id].ok ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                                                                                {atsTestResult[cfg.id].msg}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => handleAtsTest(cfg.id)}
+                                                                            disabled={atsTesting === cfg.id}
+                                                                            className="px-3 py-1.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 rounded-lg text-xs font-bold transition-colors"
+                                                                        >
+                                                                            {atsTesting === cfg.id ? "Testing..." : "Test Webhook"}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleAtsDelete(cfg.id)}
+                                                                            className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Logs summary */}
+                                                                {cfg.logs?.length > 0 && (
+                                                                    <div className="pt-4 border-t border-gray-100 dark:border-white/5 grid grid-cols-1 gap-2">
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Logs</span>
+                                                                        {cfg.logs.slice(0, 3).map((log, i) => (
+                                                                            <div key={i} className="flex items-center justify-between text-[10px] font-medium">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className={log.status === "SUCCESS" ? "text-emerald-500" : "text-rose-500"}>{log.status}</span>
+                                                                                    <span className="text-gray-500">{log.direction}</span>
+                                                                                </div>
+                                                                                <span className="text-gray-400">{new Date(log.createdAt).toLocaleDateString()}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

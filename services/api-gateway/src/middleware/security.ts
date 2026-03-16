@@ -14,7 +14,7 @@ import { logger } from '../utils/logger';
 // Strict rate limit for authentication endpoints
 export const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // 50 attempts per window (covers login, register, refresh, leaderboard)
+    max: process.env.NODE_ENV === 'production' ? 50 : 500, // 50 in prod, 500 in dev
     message: {
         error: 'Too many authentication attempts. Please try again later.',
         retryAfter: 15 * 60
@@ -103,7 +103,7 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; " +
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; " +
-        "img-src 'self' data: https:; " +
+        "img-src 'self' data: https: blob: http://localhost:*; " +
         "font-src 'self' data: https://fonts.gstatic.com; " +
         "connect-src 'self' http://localhost:* https:; " +
         "frame-src https://accounts.google.com; " +

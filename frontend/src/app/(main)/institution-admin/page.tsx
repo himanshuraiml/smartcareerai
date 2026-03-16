@@ -1,669 +1,663 @@
+// src/app/(main)/institution-admin/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    Users,
-    Award,
-    Activity,
-    FileText,
-    Target,
-    RefreshCw,
-    ChevronRight,
-    Clock,
-    Briefcase,
-    Code,
-    Trophy,
-    Zap,
-    TrendingUp
+    Users, Briefcase, TrendingUp, Activity, ArrowUpRight, Award, Zap, Building2,
+    CheckCircle2, AlertCircle, X, Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+    ResponsiveContainer, BarChart, Bar, Cell, Legend,
 } from "recharts";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
-import { motion } from "framer-motion";
+import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+const COLORS = ["#8B5CF6", "#EC4899", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#06B6D4", "#84CC16"];
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
 interface DashboardData {
     totalStudents: number;
-    activeStudents: number;
-    studentsWithResumes: number;
-    studentsWithBadges: number;
-    averageScore: number;
-    totalInterviews: number;
-    recentInterviewCount: number;
     placedStudents: number;
-    profileCompletion: {
-        hasResume: number;
-        hasSkills: number;
-        hasTargetRole: number;
-        averageCompletion: number;
-    };
-    scoreDistribution: {
-        excellent: number;
-        good: number;
-        average: number;
-        needsWork: number;
-    };
-    roleDistribution: { roleName: string; count: number }[];
-    topSkills: { name: string; category: string; count: number }[];
-    topPerformers: {
-        id: string;
-        name: string;
-        email: string;
-        avatarUrl?: string;
-        targetRole: string | null;
-        averageScore: number;
-        interviewCount: number;
-        badgeCount: number;
-    }[];
-    recentActivity: {
-        id: string;
-        targetRole: string;
-        type: string;
-        score: number | null;
-        completedAt: string;
-        student: { id: string; name: string; avatarUrl?: string };
-    }[];
+    recentInterviewCount: number;
+    averageScore: number;
+    recentActivity: ActivityItem[];
     activityTrend: { date: string; interviews: number; signups: number }[];
+    topSkills: { name: string; category: string; count: number }[];
+    placementIntelligence: {
+        totalRiskyStudents: number;
+        averageReadiness: number;
+        activeAlerts: number;
+    };
 }
 
-export default function InstitutionDashboard() {
-    const { user } = useAuthStore();
-    const [data, setData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+interface ActivityItem {
+    id: string;
+    message?: string;
+    time?: string;
+    success?: boolean | null;
+    student?: { id: string; name: string | null; avatarUrl: string | null };
+    targetRole?: string | null;
+    score?: number | null;
+    status?: string;
+    // legacy fields from /dashboard endpoint
+    type?: string;
+    completedAt?: string;
+    createdAt?: string;
+}
 
-    const fetchDashboard = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await authFetch(`/admin/institution/dashboard`);
-            if (!res.ok) throw new Error("Failed to fetch dashboard");
-            const result = await res.json();
-            setData(result.data);
-        } catch (err) {
-            console.error("Dashboard error:", err);
-            setError("Failed to load dashboard data");
-        } finally {
-            setLoading(false);
-        }
-    };
+interface DeptReadiness {
+    name: string;
+    students: number;
+    avgAtsScore: number;
+    avgInterviewScore?: number;
+    skillScore?: number;
+    readiness: number;
+}
 
-    useEffect(() => {
-        if (user) fetchDashboard();
-    }, [user]);
+// ─── Stat Card ─────────────────────────────────────────────────────────────────
+interface StatCardProps {
+    label: string;
+    value: string | number;
+    sub: string;
+    icon: React.ReactNode;
+    gradient: string;
+    iconBg: string;
+    delay: number;
+    trend?: "up" | "down" | "neutral";
+}
 
-    const getScoreColor = (score: number | null) => {
-        if (score === null) return "text-gray-500 dark:text-gray-400";
-        if (score >= 80) return "text-emerald-500 dark:text-emerald-400";
-        if (score >= 60) return "text-amber-500 dark:text-amber-400";
-        return "text-rose-500 dark:text-rose-400";
-    };
-
-    const getScoreBg = (score: number | null) => {
-        if (score === null) return "bg-gray-100 dark:bg-gray-800";
-        if (score >= 80) return "bg-emerald-50 dark:bg-emerald-500/10";
-        if (score >= 60) return "bg-amber-50 dark:bg-amber-500/10";
-        return "bg-rose-50 dark:bg-rose-500/10";
-    };
-
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffHours < 1) return "Just now";
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
-        return date.toLocaleDateString();
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-t-2 border-emerald-500 animate-spin"></div>
-                    <div className="absolute inset-2 rounded-full border-r-2 border-teal-500 animate-spin flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-emerald-500" />
-                    </div>
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Loading dashboard elements...</p>
-            </div>
-        );
-    }
-
-    if (error || !data) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
-                <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-2">
-                    <Zap className="w-8 h-8 text-red-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Oops! Something went wrong</h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-sm">{error || "We couldn't load your dashboard data right now."}</p>
-                <button
-                    onClick={fetchDashboard}
-                    className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 transition shadow-lg shadow-gray-900/20 dark:shadow-white/10 font-medium"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Try Again
-                </button>
-            </div>
-        );
-    }
-
-    const activeRate = data.totalStudents > 0 ? Math.round((data.activeStudents / data.totalStudents) * 100) : 0;
-
-    const scoreChartData = [
-        { name: "Excellent", value: data.scoreDistribution.excellent, color: "#10b981" },
-        { name: "Good", value: data.scoreDistribution.good, color: "#f59e0b" },
-        { name: "Average", value: data.scoreDistribution.average, color: "#6366f1" },
-        { name: "Needs Work", value: data.scoreDistribution.needsWork, color: "#f43f5e" },
-    ].filter(d => d.value > 0);
-
-    const totalScored = scoreChartData.reduce((acc, d) => acc + d.value, 0);
-
+function StatCard({ label, value, sub, icon, gradient, iconBg, delay, trend = "neutral" }: StatCardProps) {
     return (
         <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.4, ease: "easeOut" }}
+            className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-white/8 bg-white dark:bg-gray-800/50 p-6 hover:shadow-lg dark:hover:shadow-violet-500/5 transition-shadow duration-300 group flex flex-col h-full"
         >
-            {/* Header */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">
-                        Institution Overview
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-500" />
-                        Live metrics and performance insights
-                    </p>
-                </div>
-                <button
-                    onClick={fetchDashboard}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all shadow-sm"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    <span className="text-sm font-medium">Sync Data</span>
-                </button>
-            </motion.div>
-
-            {/* Stats Grid */}
-            <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                <StatCard
-                    icon={Users}
-                    label="Total Students"
-                    value={data.totalStudents}
-                    color="emerald"
-                />
-                <StatCard
-                    icon={Target}
-                    label="Placed Students"
-                    value={data.placedStudents}
-                    subtitle="Successfully hired"
-                    color="blue"
-                />
-                <StatCard
-                    icon={Activity}
-                    label="Active (30d)"
-                    value={data.activeStudents}
-                    subtitle={`${activeRate}% engagement`}
-                    color="indigo"
-                />
-                <StatCard
-                    icon={Trophy}
-                    label="Avg. Score"
-                    value={`${data.averageScore}%`}
-                    subtitle="Platform wide"
-                    color="amber"
-                />
-            </motion.div>
-
-            {/* Intermediate Stats row */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                <MiniStatCard
-                    icon={FileText}
-                    label="Profile Completion"
-                    value={`${data.profileCompletion.averageCompletion}%`}
-                    color="purple"
-                />
-                <MiniStatCard
-                    icon={Award}
-                    label="Students With Badges"
-                    value={data.studentsWithBadges}
-                    color="teal"
-                />
-                <MiniStatCard
-                    icon={Briefcase}
-                    label="Total Interviews"
-                    value={data.totalInterviews}
-                    subtitle={`+${data.recentInterviewCount} this week`}
-                    color="rose"
-                />
-            </motion.div>
-
-            {/* Charts Row */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Activity Trend - Takes 2 columns */}
-                <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Activity Pulse</h2>
-                            <p className="text-sm text-gray-500">14-day engagement metrics</p>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs font-medium">
-                            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-2 py-1 rounded-md">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                Interviews
-                            </span>
-                            <span className="flex items-center gap-1.5 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 px-2 py-1 rounded-md">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                Signups
-                            </span>
-                        </div>
-                    </div>
-                    <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data.activityTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="gradInterview" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="gradSignup" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis
-                                    dataKey="date"
-                                    stroke="#9ca3af"
-                                    tickFormatter={(v) => new Date(v).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    fontSize={12}
-                                    dy={10}
-                                />
-                                <YAxis stroke="#9ca3af" axisLine={false} tickLine={false} fontSize={12} />
-                                <Tooltip
-                                    cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
-                                    contentStyle={{
-                                        backgroundColor: "rgba(17, 24, 39, 0.9)",
-                                        backdropFilter: "blur(8px)",
-                                        borderColor: "rgba(255, 255, 255, 0.1)",
-                                        borderRadius: "12px",
-                                        color: "#fff",
-                                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
-                                    }}
-                                    itemStyle={{ color: "#fff", fontSize: "13px", fontWeight: 500 }}
-                                    labelStyle={{ color: "#9ca3af", marginBottom: "4px", fontSize: "12px" }}
-                                    labelFormatter={(v) => new Date(v).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                                />
-                                <Area type="monotone" dataKey="interviews" stroke="#10b981" strokeWidth={3} fill="url(#gradInterview)" name="Interviews" activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981' }} />
-                                <Area type="monotone" dataKey="signups" stroke="#3b82f6" strokeWidth={3} fill="url(#gradSignup)" name="Signups" activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Score Distribution */}
-                <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm flex flex-col">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Score Distribution</h2>
-                    <p className="text-sm text-gray-500 mb-6">Overall breakdown of interview attempts</p>
-
-                    {totalScored > 0 ? (
-                        <div className="flex-1 flex flex-col justify-between">
-                            <div className="h-44 flex items-center justify-center">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={scoreChartData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={55}
-                                            outerRadius={80}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                            stroke="none"
-                                        >
-                                            {scoreChartData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: "rgba(17, 24, 39, 0.9)",
-                                                border: "none",
-                                                borderRadius: "12px",
-                                                color: "#fff",
-                                            }}
-                                            itemStyle={{ color: "#fff", fontWeight: 600 }}
-                                            formatter={(value: number) => [`${value} Interviews`, ""]}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="pt-4 grid grid-cols-2 gap-y-3 gap-x-2">
-                                {scoreChartData.map((item) => (
-                                    <div key={item.name} className="flex items-center gap-2">
-                                        <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></span>
-                                        <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">{item.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center p-6 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-xl">
-                                <PieChart className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-gray-500">Not enough data to calculate distribution</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </motion.div>
-
-            {/* Three Column Info */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                {/* Target Roles */}
-                <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                                <Briefcase className="w-5 h-5 text-blue-500" />
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Target Roles</h2>
-                        </div>
-                    </div>
-                    {data.roleDistribution.length > 0 ? (
-                        <div className="space-y-4">
-                            {data.roleDistribution.slice(0, 5).map((role, idx) => {
-                                const maxCount = data.roleDistribution[0]?.count || 1;
-                                const percentage = Math.round((role.count / maxCount) * 100);
-                                const colors = ["bg-blue-500", "bg-indigo-500", "bg-purple-500", "bg-emerald-500", "bg-amber-500"];
-                                return (
-                                    <div key={idx} className="group">
-                                        <div className="flex items-center justify-between mb-1.5">
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors truncate pr-4">{role.roleName}</span>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 rounded-md">{role.count}</span>
-                                        </div>
-                                        <div className="h-2 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percentage}%` }}
-                                                transition={{ duration: 1, delay: idx * 0.1 }}
-                                                className={`h-full rounded-full ${colors[idx % colors.length]}`}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <EmptyState icon={Briefcase} message="No role targets set by students yet" />
-                    )}
-                </div>
-
-                {/* Top Performers */}
-                <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-                                <Trophy className="w-5 h-5 text-amber-500" />
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Top Performers</h2>
-                        </div>
-                        <Link href="/institution-admin/students?sortBy=score&sortOrder=desc" className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 group">
-                            View all <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
-                    {data.topPerformers.length > 0 ? (
-                        <div className="space-y-4">
-                            {data.topPerformers.slice(0, 5).map((student, idx) => (
-                                <Link
-                                    key={student.id}
-                                    href={`/institution-admin/students/${student.id}`}
-                                    className="flex items-center gap-3 group"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold relative border border-gray-200 dark:border-white/10 overflow-hidden group-hover:border-emerald-500 transition-colors">
-                                        {student.avatarUrl ? (
-                                            <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                        ) : (
-                                            student.name.charAt(0).toUpperCase()
-                                        )}
-                                        {idx < 3 && (
-                                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white dark:border-[#111827] ${idx === 0 ? "bg-amber-400 text-amber-900"
-                                                    : idx === 1 ? "bg-slate-300 text-slate-800"
-                                                        : "bg-[#cd7f32] text-white"
-                                                }`}>
-                                                {idx + 1}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{student.name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{student.targetRole || "No specific role"}</p>
-                                    </div>
-                                    <div className={`px-2.5 py-1 rounded-md text-sm font-bold shadow-sm ${getScoreBg(student.averageScore)} ${getScoreColor(student.averageScore)}`}>
-                                        {student.averageScore}%
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <EmptyState icon={Trophy} message="No performance data available" />
-                    )}
-                </div>
-
-                {/* Top Skills */}
-                <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center">
-                                <Code className="w-5 h-5 text-purple-500" />
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Popular Skills</h2>
-                        </div>
-                    </div>
-                    {data.topSkills.length > 0 ? (
-                        <div className="flex flex-wrap gap-2.5">
-                            {data.topSkills.map((skill, idx) => (
-                                <div
-                                    key={idx}
-                                    className="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/10 text-sm hover:border-purple-500/30 dark:hover:border-purple-500/30 transition-colors cursor-default"
-                                >
-                                    <span className="font-medium text-gray-700 dark:text-gray-200">{skill.name}</span>
-                                    <span className="ml-2 font-semibold text-gray-400 dark:text-gray-500 bg-gray-200/50 dark:bg-white/10 px-1.5 rounded text-xs">{skill.count}</span>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <EmptyState icon={Code} message="No skills logged by students yet" />
-                    )}
-                </div>
-            </motion.div>
-
-            {/* Recent Activity */}
-            <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Interview Activity</h2>
-                    </div>
-                    <Link href="/institution-admin/students" className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 group">
-                        Student database <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                </div>
-                {data.recentActivity.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        {data.recentActivity.map((activity) => (
-                            <Link
-                                key={activity.id}
-                                href={`/institution-admin/students/${activity.student.id}`}
-                                className="group relative p-5 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5 transition-all shadow-sm hover:shadow-md"
-                            >
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold shadow-inner">
-                                        {activity.student.avatarUrl ? (
-                                            <img src={activity.student.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
-                                        ) : (
-                                            activity.student.name?.charAt(0).toUpperCase() || "?"
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-base font-bold text-gray-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{activity.student.name || "Unknown"}</p>
-                                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                            <Clock className="w-3.5 h-3.5 text-gray-400" />
-                                            {formatDate(activity.completedAt)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="pt-3 border-t border-gray-200/60 dark:border-white/10 flex items-center justify-between">
-                                    <div className="pr-3">
-                                        <div className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-                                            {activity.type}
-                                        </div>
-                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{activity.targetRole}</p>
-                                    </div>
-                                    {activity.score !== null && (
-                                        <div className={`shrink-0 flex items-center justify-center px-3 py-1.5 rounded-lg text-lg font-black shadow-sm ${getScoreBg(activity.score)} ${getScoreColor(activity.score)}`}>
-                                            {activity.score}%
-                                        </div>
-                                    )}
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <EmptyState icon={Zap} message="No recent interview activity found" />
-                )}
-            </motion.div>
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${gradient} pointer-events-none`} />
+            <div className="relative flex items-start justify-between mb-4">
+                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</p>
+                <div className={`p-2.5 rounded-xl ${iconBg}`}>{icon}</div>
+            </div>
+            <div className="mt-auto">
+                <p className="relative text-3xl font-black text-gray-900 dark:text-white tracking-tight">{value}</p>
+                <p className="relative text-xs font-medium text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1.5">
+                    {trend === "up" && <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />}
+                    {trend === "down" && <ArrowUpRight className="w-3.5 h-3.5 text-rose-500 rotate-90" />}
+                    {trend === "neutral" && <Activity className="w-3.5 h-3.5 text-blue-500" />}
+                    {sub}
+                </p>
+            </div>
         </motion.div>
     );
 }
 
-// Reusable Components
+// ─── Custom Tooltip ────────────────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload?.length) {
+        return (
+            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 shadow-xl text-sm">
+                <p className="text-gray-500 dark:text-gray-400 mb-1 font-medium">{label}</p>
+                {payload.map((p: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 mt-1.5">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                        <p className="text-gray-900 dark:text-white font-bold">{p.name}: <span className="font-normal">{p.value}</span></p>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
 
-function StatCard({
-    icon: Icon,
-    label,
-    value,
-    subtitle,
-    color
-}: {
-    icon: React.ElementType;
-    label: string;
-    value: string | number;
-    subtitle?: string;
-    color: "emerald" | "blue" | "indigo" | "amber" | "teal" | "rose" | "purple";
-}) {
-    const colorConfigs = {
-        emerald: { bg: "bg-emerald-500", text: "text-emerald-500", lightBg: "bg-emerald-50 dark:bg-emerald-500/10" },
-        blue: { bg: "bg-blue-500", text: "text-blue-500", lightBg: "bg-blue-50 dark:bg-blue-500/10" },
-        indigo: { bg: "bg-indigo-500", text: "text-indigo-500", lightBg: "bg-indigo-50 dark:bg-indigo-500/10" },
-        amber: { bg: "bg-amber-500", text: "text-amber-500", lightBg: "bg-amber-50 dark:bg-amber-500/10" },
-        teal: { bg: "bg-teal-500", text: "text-teal-500", lightBg: "bg-teal-50 dark:bg-teal-500/10" },
-        rose: { bg: "bg-rose-500", text: "text-rose-500", lightBg: "bg-rose-50 dark:bg-rose-500/10" },
-        purple: { bg: "bg-purple-500", text: "text-purple-500", lightBg: "bg-purple-50 dark:bg-purple-500/10" }
-    };
-
-    const conf = colorConfigs[color];
+// ─── Activity Feed Item ────────────────────────────────────────────────────────
+function ActivityFeedItem({ item, isLast }: { item: ActivityItem; isLast: boolean }) {
+    const success = item.success;
+    const time = item.time || item.completedAt || item.createdAt;
+    const message = item.message || (() => {
+        const name = item.student?.name || "Student";
+        const role = item.targetRole || item.type || "interview";
+        const score = item.score;
+        const isCompleted = item.status === "COMPLETED";
+        return isCompleted
+            ? `${name} completed a ${role} interview${score != null ? ` (score: ${score}/100)` : ""}`
+            : `${name} started a ${role} interview`;
+    })();
 
     return (
-        <div className="relative overflow-hidden p-6 rounded-2xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm group hover:shadow-md transition-shadow">
-            <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-[0.03] dark:opacity-[0.02] ${conf.bg} group-hover:scale-150 transition-transform duration-500`} />
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-                    <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{value}</p>
-                    {subtitle && <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-2">{subtitle}</p>}
-                </div>
-                <div className={`p-3 rounded-xl ${conf.lightBg}`}>
-                    <Icon className={`w-6 h-6 ${conf.text}`} />
-                </div>
+        <div className="relative flex gap-4 group">
+            {!isLast && (
+                <div className="absolute left-[15px] top-8 bottom-[-20px] w-px bg-gray-200 dark:bg-gray-700" />
+            )}
+            <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 border-2 border-white dark:border-gray-900 overflow-hidden
+                ${!item.student?.avatarUrl ? (
+                    success === true ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400" :
+                        success === false ? "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400" :
+                            "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
+                ) : ""}`}
+            >
+                {item.student?.avatarUrl ? (
+                    <img
+                        src={item.student.avatarUrl}
+                        alt={item.student.name || ""}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                                parent.classList.add(
+                                    success === true ? "bg-emerald-100" :
+                                        success === false ? "bg-rose-100" : "bg-indigo-100"
+                                );
+                                // Re-insert the icon logic if necessary, but keep it simple
+                            }
+                        }}
+                    />
+                ) : (
+                    success === true ? <CheckCircle2 className="w-4 h-4" /> :
+                        success === false ? <AlertCircle className="w-4 h-4" /> :
+                            <Zap className="w-4 h-4" />
+                )}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors leading-snug">
+                    {message}
+                </p>
+                {time && (
+                    <span className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 block">
+                        {new Date(time).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                )}
             </div>
         </div>
     );
 }
 
-function MiniStatCard({
-    icon: Icon,
-    label,
-    value,
-    subtitle,
-    color
-}: {
-    icon: React.ElementType;
-    label: string;
-    value: string | number;
-    subtitle?: string;
-    color: "emerald" | "blue" | "indigo" | "amber" | "teal" | "rose" | "purple";
-}) {
-    const colorConfigs = {
-        emerald: { text: "text-emerald-500", border: "border-emerald-500/20" },
-        blue: { text: "text-blue-500", border: "border-blue-500/20" },
-        indigo: { text: "text-indigo-500", border: "border-indigo-500/20" },
-        amber: { text: "text-amber-500", border: "border-amber-500/20" },
-        teal: { text: "text-teal-500", border: "border-teal-500/20" },
-        rose: { text: "text-rose-500", border: "border-rose-500/20" },
-        purple: { text: "text-purple-500", border: "border-purple-500/20" }
-    };
+// ─── View All Activity Modal ───────────────────────────────────────────────────
+function ActivityModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const [items, setItems] = useState<ActivityItem[]>([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
 
-    const conf = colorConfigs[color];
+    const fetchPage = useCallback(async (p: number) => {
+        setLoading(true);
+        try {
+            const res = await authFetch(`/university/analytics/activity?page=${p}&limit=20`);
+            if (res.ok) {
+                const json = await res.json();
+                setItems(json.data.items || []);
+                setTotalPages(json.data.pagination?.pages || 1);
+                setPage(p);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (open) fetchPage(1);
+    }, [open, fetchPage]);
+
+    useEffect(() => {
+        if (open) document.body.style.overflow = "hidden";
+        else document.body.style.overflow = "";
+        return () => { document.body.style.overflow = ""; };
+    }, [open]);
 
     return (
-        <div className={`flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 shadow-sm border-l-4 ${conf.border}`}>
-            <div className={`p-2.5 rounded-lg bg-gray-50 dark:bg-white/[0.03]`}>
-                <Icon className={`w-5 h-5 ${conf.text}`} />
-            </div>
-            <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</p>
-                <div className="flex items-baseline gap-2">
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{value}</p>
-                    {subtitle && <span className="text-xs font-medium text-gray-400">{subtitle}</span>}
+        <AnimatePresence>
+            {open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="relative bg-white dark:bg-[#0E1320] border border-gray-200 dark:border-white/10 rounded-[28px] shadow-2xl flex flex-col w-full max-w-xl max-h-[85vh]"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-white/[0.06] shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-fuchsia-100 dark:bg-fuchsia-500/10">
+                                    <Activity className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
+                                </div>
+                                <h2 className="text-base font-black text-gray-900 dark:text-white">All Activity</h2>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
+                            {loading ? (
+                                <div className="flex items-center justify-center py-16">
+                                    <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+                                </div>
+                            ) : items.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+                                    <Activity className="w-10 h-10 opacity-30" />
+                                    <p className="text-sm">No activity yet</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-5 py-2">
+                                    {items.map((item, i) => (
+                                        <ActivityFeedItem key={item.id} item={item} isLast={i === items.length - 1} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-white/[0.06] shrink-0">
+                                <button
+                                    onClick={() => fetchPage(page - 1)}
+                                    disabled={page <= 1 || loading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/[0.08] text-sm font-bold text-gray-600 dark:text-gray-400 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all"
+                                >
+                                    <ChevronLeft className="w-4 h-4" /> Prev
+                                </button>
+                                <span className="text-xs text-gray-500 font-medium">Page {page} of {totalPages}</span>
+                                <button
+                                    onClick={() => fetchPage(page + 1)}
+                                    disabled={page >= totalPages || loading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-white/[0.08] text-sm font-bold text-gray-600 dark:text-gray-400 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all"
+                                >
+                                    Next <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 }
 
-function EmptyState({ icon: Icon, message }: { icon: React.ElementType, message: string }) {
-    return (
-        <div className="flex flex-col items-center justify-center py-10 px-4 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center mb-3">
-                <Icon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+export default function InstitutionAdminDashboard() {
+    const { user } = useAuthStore();
+    const [stats, setStats] = useState<DashboardData | null>(null);
+    const [placementTrend, setPlacementTrend] = useState<any[]>([]);
+    const [deptReadiness, setDeptReadiness] = useState<DeptReadiness[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAllActivity, setShowAllActivity] = useState(false);
+
+    useEffect(() => {
+        if (!user) return;
+        (async () => {
+            try {
+                const [dashRes, deptRes] = await Promise.all([
+                    authFetch("/university/analytics/overview"),
+                    authFetch("/university/analytics/department-readiness"),
+                ]);
+
+                if (dashRes.ok) {
+                    const data = (await dashRes.json()).data;
+                    setStats(data);
+
+                    if (data.activityTrend) {
+                        setPlacementTrend(
+                            data.activityTrend.map((t: any) => ({
+                                month: new Date(t.date).toLocaleDateString("default", { month: "short", day: "numeric" }),
+                                interviews: t.interviews,
+                                signups: t.signups,
+                            }))
+                        );
+                    }
+                }
+
+                if (deptRes.ok) {
+                    const deptData = (await deptRes.json()).data;
+                    setDeptReadiness(deptData || []);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [user]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative w-12 h-12">
+                        <div className="absolute inset-0 rounded-full border-t-2 border-violet-500 animate-spin" />
+                        <div className="absolute inset-2 rounded-full border-r-2 border-fuchsia-500 animate-spin" />
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium text-sm animate-pulse">Loading analytics…</p>
+                </div>
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{message}</p>
-        </div>
+        );
+    }
+
+    const placementRate = stats
+        ? Math.round(((stats.placedStudents || 0) / Math.max(stats.totalStudents || 1, 1)) * 100)
+        : 0;
+
+    const statCards: StatCardProps[] = [
+        {
+            label: "Total Registered Students",
+            value: stats?.totalStudents?.toLocaleString() ?? "0",
+            sub: `${stats?.recentInterviewCount ?? 0} active this week`,
+            icon: <Users className="w-5 h-5 text-violet-500 dark:text-violet-400" />,
+            gradient: "bg-gradient-to-br from-violet-500/5 to-transparent",
+            iconBg: "bg-violet-50 dark:bg-violet-500/20",
+            delay: 0,
+            trend: "up",
+        },
+        {
+            label: "Total Placed",
+            value: stats?.placedStudents?.toLocaleString() ?? "0",
+            sub: `${placementRate}% placement rate`,
+            icon: <Award className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" />,
+            gradient: "bg-gradient-to-br from-fuchsia-500/5 to-transparent",
+            iconBg: "bg-fuchsia-50 dark:bg-fuchsia-500/20",
+            delay: 0.1,
+            trend: "up",
+        },
+        {
+            label: "Interviews This Week",
+            value: stats?.recentInterviewCount?.toLocaleString() ?? "0",
+            sub: "Practice sessions in last 7 days",
+            icon: <Briefcase className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />,
+            gradient: "bg-gradient-to-br from-indigo-500/5 to-transparent",
+            iconBg: "bg-indigo-50 dark:bg-indigo-500/20",
+            delay: 0.2,
+            trend: "neutral",
+        },
+        {
+            label: "Avg. AI Readiness Score",
+            value: `${stats?.placementIntelligence?.averageReadiness ?? 0}/100`,
+            sub: "Overall campus employability index",
+            icon: <Zap className="w-5 h-5 text-amber-500 dark:text-amber-400" />,
+            gradient: "bg-gradient-to-br from-amber-500/5 to-transparent",
+            iconBg: "bg-amber-50 dark:bg-amber-500/20",
+            delay: 0.3,
+            trend: "up",
+        },
+        {
+            label: "At-Risk Students",
+            value: stats?.placementIntelligence?.totalRiskyStudents?.toLocaleString() ?? "0",
+            sub: `${stats?.placementIntelligence?.activeAlerts ?? 0} active AI alerts`,
+            icon: <AlertCircle className="w-5 h-5 text-rose-500 dark:text-rose-400" />,
+            gradient: "bg-gradient-to-br from-rose-500/5 to-transparent",
+            iconBg: "bg-rose-50 dark:bg-rose-500/20",
+            delay: 0.4,
+            trend: "down",
+        },
+    ];
+
+    const recentActivity = stats?.recentActivity || [];
+
+    return (
+        <>
+            <div className="space-y-6 max-w-7xl mx-auto pb-12">
+                {/* Header */}
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end flex-wrap gap-4">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="p-2 rounded-xl bg-emerald-500/10">
+                                <Activity className="w-5 h-5 text-emerald-500" />
+                            </div>
+                            <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                                Institutional Performance
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                                    Live
+                                </span>
+                            </h2>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 ml-11">Overview of student engagement and placement metrics.</p>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <Link
+                            href="/institution-admin/students"
+                            className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                        >
+                            View Students
+                        </Link>
+                        <Link
+                            href="/institution-admin/reports"
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-bold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition inline-flex items-center justify-center"
+                        >
+                            Export Report
+                        </Link>
+                    </div>
+                </motion.div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {statCards.map((card) => (
+                        <StatCard key={card.label} {...card} />
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Activity Trend Chart */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="lg:col-span-2 rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-gray-800/30 p-6 flex flex-col"
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-violet-500" />
+                                    Activity Trend
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">New signups vs. interview sessions — last 14 days</p>
+                            </div>
+                        </div>
+
+                        {placementTrend.length === 0 ? (
+                            <div className="flex-1 flex items-center justify-center text-gray-400 text-sm py-16">
+                                No activity data yet
+                            </div>
+                        ) : (
+                            <div className="h-[300px] w-full mt-auto">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={placementTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:opacity-10" />
+                                        <XAxis
+                                            dataKey="month"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                                            dx={-10}
+                                            allowDecimals={false}
+                                        />
+                                        <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: "#8B5CF6", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                                        <Legend wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} />
+                                        <Line
+                                            type="monotone"
+                                            name="New Signups"
+                                            dataKey="signups"
+                                            stroke="#CBD5E1"
+                                            strokeWidth={3}
+                                            dot={false}
+                                            activeDot={{ r: 6, fill: "#CBD5E1", stroke: "#fff", strokeWidth: 2 }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            name="Interviews"
+                                            dataKey="interviews"
+                                            stroke="#8B5CF6"
+                                            strokeWidth={3}
+                                            dot={{ r: 4, fill: "#8B5CF6", strokeWidth: 0 }}
+                                            activeDot={{ r: 7, fill: "#8B5CF6", stroke: "#fff", strokeWidth: 2 }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </motion.div>
+
+                    {/* Recent Activity */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-gray-800/30 p-6 flex flex-col"
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-fuchsia-500" />
+                                Recent Activity
+                            </h3>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto pr-1 space-y-5 min-h-0">
+                            {recentActivity.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+                                    <Activity className="w-8 h-8 opacity-30" />
+                                    <p className="text-sm">No recent activity</p>
+                                </div>
+                            ) : (
+                                recentActivity.slice(0, 6).map((act, index) => (
+                                    <ActivityFeedItem
+                                        key={act.id}
+                                        item={{
+                                            ...act,
+                                            message: (() => {
+                                                const name = act.student?.name || "Student";
+                                                const role = act.targetRole || act.type || "interview";
+                                                const score = act.score;
+                                                const isCompleted = act.status === "COMPLETED";
+                                                return isCompleted
+                                                    ? `${name} completed a ${role} interview${score != null ? ` (score: ${score}/100)` : ""}`
+                                                    : `${name} started a ${role} interview`;
+                                            })(),
+                                            time: (act as any).completedAt || (act as any).createdAt,
+                                            success: act.status === "COMPLETED"
+                                                ? (act.score != null ? act.score >= 60 : null)
+                                                : null,
+                                        }}
+                                        isLast={index === Math.min(recentActivity.length - 1, 5)}
+                                    />
+                                ))
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setShowAllActivity(true)}
+                            className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        >
+                            View All Activity
+                        </button>
+                    </motion.div>
+
+                    {/* Departmental Skill Readiness */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        className="lg:col-span-3 rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-gray-800/30 p-6 flex flex-col"
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Building2 className="w-5 h-5 text-indigo-500" />
+                                    Departmental Skill Readiness
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Composite readiness score per department — ATS (40%) + Interview (40%) + Skill coverage (20%)
+                                </p>
+                            </div>
+                            <Link
+                                href="/institution-admin/skill-gaps"
+                                className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1"
+                            >
+                                Full skill matrix <ArrowUpRight className="w-3 h-3" />
+                            </Link>
+                        </div>
+
+                        {deptReadiness.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+                                <Building2 className="w-10 h-10 opacity-30" />
+                                <p className="text-sm">No department data yet — students need to complete their profiles</p>
+                            </div>
+                        ) : (
+                            <div className="h-[260px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={deptReadiness}
+                                        margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
+                                        barSize={32}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:opacity-10" />
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: "#9CA3AF", fontSize: 12, fontWeight: 500 }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                                            domain={[0, 100]}
+                                        />
+                                        <RechartsTooltip
+                                            cursor={{ fill: "rgba(139, 92, 246, 0.05)" }}
+                                            content={({ active, payload, label }) => {
+                                                if (active && payload && payload.length) {
+                                                    const d = payload[0].payload as DeptReadiness;
+                                                    return (
+                                                        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 shadow-xl text-sm space-y-1">
+                                                            <p className="font-bold text-gray-900 dark:text-white">{label}</p>
+                                                            <p className="text-gray-600 dark:text-gray-300">Readiness: <span className="font-bold text-indigo-500">{d.readiness}/100</span></p>
+                                                            <p className="text-gray-600 dark:text-gray-300">Avg ATS Score: <span className="font-bold">{d.avgAtsScore}/100</span></p>
+                                                            {d.avgInterviewScore != null && (
+                                                                <p className="text-gray-600 dark:text-gray-300">Avg Interview: <span className="font-bold">{d.avgInterviewScore}/100</span></p>
+                                                            )}
+                                                            <p className="text-gray-600 dark:text-gray-300">Students: <span className="font-bold">{d.students}</span></p>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Bar dataKey="readiness" radius={[6, 6, 0, 0]} name="Readiness Score">
+                                            {deptReadiness.map((_, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* View All Activity Modal */}
+            <ActivityModal open={showAllActivity} onClose={() => setShowAllActivity(false)} />
+        </>
     );
 }

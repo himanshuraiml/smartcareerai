@@ -1,6 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, OrgRole } from '@prisma/client';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { logger } from '../utils/logger';
 import { createError } from '../middleware/error.middleware';
+import { sendRecruiterInvite } from '../utils/email';
 
 const prisma = new PrismaClient();
 
@@ -109,9 +112,37 @@ export class OrganizationService {
         }
 
         // Find invitee user
-        const invitee = await prisma.user.findUnique({ where: { email: inviteeEmail } });
+        let invitee = await prisma.user.findUnique({ where: { email: inviteeEmail } });
+        
         if (!invitee) {
-            throw createError('Invitee user not found. They must sign up first.', 404, 'USER_NOT_FOUND');
+            // Generate temp credentials and invite token
+            const tempPassword = crypto.randomBytes(8).toString('hex'); // Simple temp password
+            const inviteToken = crypto.randomBytes(32).toString('hex');
+            const passwordHash = await bcrypt.hash(tempPassword, 12);
+
+            // Token expires in 7 days
+            const tokenExpires = new Date();
+            tokenExpires.setDate(tokenExpires.getDate() + 7);
+
+            // Create new user as placeholder
+            invitee = await prisma.user.create({
+                data: {
+                    email: inviteeEmail,
+                    passwordHash,
+                    role: 'RECRUITER',
+                    isVerified: false,
+                    verifyToken: inviteToken,
+                    resetExpires: tokenExpires
+                }
+            });
+            logger.info(`Created placeholder user for invitation: ${inviteeEmail}`);
+
+            // Fetch org name for email
+            const org = await prisma.organization.findUnique({ where: { id: owner.organizationId } });
+            const orgName = org?.name || 'your organization';
+
+            // Send invitation email
+            await sendRecruiterInvite(inviteeEmail, orgName, inviteToken, tempPassword);
         }
 
         let inviteeRecruiter = await prisma.recruiter.findUnique({ where: { userId: invitee.id } });

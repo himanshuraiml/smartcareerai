@@ -130,7 +130,7 @@ async function main() {
             update: trackDetails,
             create: trackDetails,
         });
-        console.log(\`  🟢 Upserted Track: \${track.title}\`);
+        console.log(`  🟢 Upserted Track: ${track.title}`);
 
         // Upsert Labs for Track
         for (const labData of labs) {
@@ -206,7 +206,7 @@ async function main() {
             update: challengeData,
             create: challengeData,
         });
-        console.log(\`  🟢 Upserted Weekly Challenge: \${challengeData.title} (Week \${challengeData.weekNumber}, \${challengeData.year})\`);
+        console.log(`  🟢 Upserted Weekly Challenge: ${challengeData.title} (Week ${challengeData.weekNumber}, ${challengeData.year})`);
     }
 
     console.log('✅ Future-Ready Lab content seeded successfully.');

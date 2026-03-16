@@ -11,6 +11,9 @@
         "seed": "ts-node prisma/seed.ts",
         "seed:interviews": "ts-node prisma/seed-interview-questions.ts",
         "seed:coding": "ts-node prisma/seed-coding-challenges.ts",
+        "seed:analytical": "ts-node prisma/seed-analytical-questions.ts",
+        "seed:behavioral": "ts-node prisma/seed-behavioral-questions.ts",
+        "seed:psychometric": "ts-node prisma/seed-psychometric-questions.ts",
         "start": "prisma migrate deploy",
         "studio": "prisma studio",
         "test": "jest"

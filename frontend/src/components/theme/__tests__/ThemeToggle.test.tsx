@@ -1,4 +1,5 @@
 import React from 'react';
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ThemeToggle from '../ThemeToggle';
 
@@ -8,6 +9,7 @@ const mockSetTheme = jest.fn();
 
 jest.mock('@/providers/ThemeProvider', () => ({
     useTheme: () => ({
+        resolvedTheme: 'dark',
         theme: 'dark',
         toggleTheme: mockToggleTheme,
         setTheme: mockSetTheme,
@@ -56,7 +58,7 @@ describe('ThemeToggle', () => {
     it('has hover styles', () => {
         render(<ThemeToggle />);
         const button = screen.getByRole('button');
-        expect(button).toHaveClass('hover:bg-white/10');
+        expect(button).toHaveClass('hover:bg-gray-200');
     });
 });
 
@@ -67,6 +69,7 @@ describe('ThemeToggle in light mode', () => {
         // Re-mock with light theme
         jest.doMock('@/providers/ThemeProvider', () => ({
             useTheme: () => ({
+                resolvedTheme: 'light',
                 theme: 'light',
                 toggleTheme: mockToggleTheme,
                 setTheme: mockSetTheme,

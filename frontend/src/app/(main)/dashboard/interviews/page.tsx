@@ -38,6 +38,8 @@ interface Invitation {
     scheduledEndAt: string | null;
     meetLink: string | null;
     createdAt: string;
+    inviteExpiresAt?: string | null;
+    isExpired?: boolean;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -200,7 +202,7 @@ export default function InterviewsPage() {
                         </h2>
                     </div>
                     {invitations.filter(i => i.inviteType === 'AI').map(inv => (
-                        <div key={inv.sessionId} className="flex items-center justify-between p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-500/5 border border-indigo-200 dark:border-indigo-500/20">
+                        <div key={inv.sessionId} className={`flex items-center justify-between p-4 rounded-xl border ${inv.isExpired ? 'bg-gray-50/60 dark:bg-gray-800/20 border-gray-200 dark:border-gray-700 opacity-70' : 'bg-indigo-50/60 dark:bg-indigo-500/5 border-indigo-200 dark:border-indigo-500/20'}`}>
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
                                     <Bot className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -209,14 +211,26 @@ export default function InterviewsPage() {
                                     <p className="text-sm font-bold text-gray-900 dark:text-white">{inv.jobTitle}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">{inv.companyName}{inv.location ? ` · ${inv.location}` : ''}</p>
                                     <p className="text-[11px] text-gray-400 mt-0.5">{inv.type} · {inv.difficulty} · Invited {new Date(inv.createdAt).toLocaleDateString()}</p>
+                                    {inv.inviteExpiresAt && (
+                                        <p className={`text-[11px] flex items-center gap-1 mt-0.5 font-medium ${inv.isExpired ? 'text-red-500' : (new Date(inv.inviteExpiresAt).getTime() - Date.now() < 2 * 86400000 ? 'text-amber-500' : 'text-gray-400')}`}>
+                                            <Clock className="w-3 h-3" />
+                                            {inv.isExpired ? 'Invite expired' : `Expires ${new Date(inv.inviteExpiresAt).toLocaleDateString()}`}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
-                            <Link
-                                href={`/dashboard/interviews/${inv.sessionId}`}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500 text-white text-xs font-bold hover:bg-indigo-600 transition-colors flex-shrink-0"
-                            >
-                                Start <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
+                            {inv.isExpired ? (
+                                <span className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-500 text-xs font-bold flex-shrink-0">
+                                    Expired
+                                </span>
+                            ) : (
+                                <Link
+                                    href={`/dashboard/interviews/${inv.sessionId}`}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500 text-white text-xs font-bold hover:bg-indigo-600 transition-colors flex-shrink-0"
+                                >
+                                    Start <ArrowRight className="w-3.5 h-3.5" />
+                                </Link>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -509,7 +523,7 @@ export default function InterviewsPage() {
 // ── Google Calendar quick-add URL ────────────────────────────────────
 function buildGCalUrl(title: string, start: string, end: string, details: string, location?: string) {
     const fmt = (iso: string) =>
-        new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        new Date(iso).toISOString().replace(/-/g, '').replace(/:/g, '').split('.')[0] + 'Z';
     const params = new URLSearchParams({
         action: 'TEMPLATE',
         text: title,

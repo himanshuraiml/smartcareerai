@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Send, Search, MoreVertical, Phone, Video, Loader2, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
@@ -22,8 +23,11 @@ interface Conversation {
     unreadCount: number;
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
     const { user } = useAuthStore();
+    const searchParams = useSearchParams();
+    const candidateIdFromQuery = searchParams.get("candidateId");
+
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeChat, setActiveChat] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -54,6 +58,41 @@ export default function MessagesPage() {
             fetchConversations();
         }
     }, [user, fetchConversations]);
+
+    // Auto-select or initialize conversation from query param
+    useEffect(() => {
+        const initializeChat = async () => {
+            if (!candidateIdFromQuery) return;
+
+            const existingChat = conversations.find(c => c.id === candidateIdFromQuery);
+            if (existingChat) {
+                setActiveChat(existingChat);
+            } else if (!activeChat || activeChat.id !== candidateIdFromQuery) {
+                // Fetch candidate details for new conversation
+                try {
+                    const res = await authFetch(`/recruiter/candidates/${candidateIdFromQuery}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        const candidate = json.data;
+                        setActiveChat({
+                            id: candidate.id,
+                            name: candidate.name || candidate.user?.name || "New Candidate",
+                            avatarUrl: candidate.avatarUrl || candidate.user?.avatarUrl,
+                            lastMessage: "Start a new conversation",
+                            lastMessageTime: new Date().toISOString(),
+                            unreadCount: 0
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch candidate for new chat:", err);
+                }
+            }
+        };
+
+        if (!loadingConversations) {
+            initializeChat();
+        }
+    }, [candidateIdFromQuery, conversations, activeChat, loadingConversations]);
 
     // Fetch messages when chat is selected
     const fetchMessages = useCallback(async (contactId: string) => {
@@ -112,6 +151,8 @@ export default function MessagesPage() {
                 setMessages(prev =>
                     prev.map(m => m.id === optimisticMsg.id ? json.data : m)
                 );
+                // Refresh conversations list to include the new one
+                fetchConversations();
             } else {
                 // Remove optimistic message on failure
                 setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
@@ -273,5 +314,13 @@ export default function MessagesPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function MessagesPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="animate-spin" /></div>}>
+            <MessagesContent />
+        </Suspense>
     );
 }

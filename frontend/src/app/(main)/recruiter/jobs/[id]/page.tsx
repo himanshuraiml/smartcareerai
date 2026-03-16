@@ -7,7 +7,8 @@ import {
     ArrowLeft, User, GripVertical, ExternalLink, RefreshCw,
     Briefcase, Mail, FileText, Award, AlertCircle, Zap,
     Brain, BarChart3, Settings2, X, TrendingUp, Users, Sparkles,
-    Video, Send, Loader2, Bot, Check, ChevronLeft, Calendar, Clock
+    Video, Send, Loader2, Bot, Check, ChevronLeft, ChevronDown, Calendar, Clock,
+    MessageSquare
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
@@ -16,11 +17,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import AIInterviewConfig from "@/components/recruiter/AIInterviewConfig";
 import CandidateEvalModal from "@/components/recruiter/CandidateEvalModal";
 import BulkInviteModal from "@/components/recruiter/BulkInviteModal";
+import BulkMessageModal from "@/components/recruiter/BulkMessageModal";
 import AISummaryModal from "@/components/recruiter/AISummaryModal";
 import RediscoveryModal from "@/components/recruiter/RediscoveryModal";
+import AssignInterviewerModal from "@/components/recruiter/AssignInterviewerModal";
+import SequenceBuilder from "@/components/recruiter/SequenceBuilder";
+import OfferLetterModal from "@/components/recruiter/OfferLetterModal";
+import PanelSchedulerModal from "@/components/recruiter/PanelSchedulerModal";
 
 type AppStatus = "APPLIED" | "SCREENING" | "INTERVIEWING" | "OFFER" | "REJECTED";
-type SidePanel = "interview" | "analytics" | null;
+type SidePanel = "interview" | "analytics" | "automation" | null;
 
 interface Applicant {
     applicationId: string;
@@ -43,6 +49,9 @@ interface Applicant {
     sessionId?: string | null;
     inviteType?: 'AI' | 'COPILOT' | null;
     meetLink?: string | null;
+    nextSequenceStep?: string | null;
+    bgvStatus?: string | null;
+    awaitingSchedule?: boolean;
 }
 
 interface JobDetail {
@@ -96,8 +105,14 @@ export default function RecruiterJobATSPage() {
     const [summaryTarget, setSummaryTarget] = useState<{ applicationId: string; name: string, type: 'summary' | 'justification' } | null>(null);
     const [inviteTarget, setInviteTarget] = useState<{ applicationId: string; name: string } | null>(null);
     const [invitedMap, setInvitedMap] = useState<Record<string, { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string }>>({});
+    const [assignTarget, setAssignTarget] = useState<{ applicationId: string; name: string; status: string } | null>(null);
+    const [offerTarget, setOfferTarget] = useState<{ applicationId: string; name: string; jobTitle: string } | null>(null);
+    const [panelTarget, setPanelTarget] = useState<{ applicationId: string; name: string } | null>(null);
+    const [bgvLoading, setBgvLoading] = useState<string | null>(null); // applicationId currently initiating BGV
     const [showBulkInvite, setShowBulkInvite] = useState(false);
+    const [showBulkMessage, setShowBulkMessage] = useState(false);
     const [showRediscover, setShowRediscover] = useState(false);
+    const [expandedStages, setExpandedStages] = useState<Set<AppStatus>>(new Set<AppStatus>(['APPLIED']));
 
     useEffect(() => { setIsBrowser(true); }, []);
 
@@ -262,6 +277,20 @@ export default function RecruiterJobATSPage() {
                 )}
             </AnimatePresence>
 
+            {/* Bulk Message Modal */}
+            <AnimatePresence>
+                {showBulkMessage && job && (
+                    <BulkMessageModal
+                        jobTitle={job.title}
+                        applicants={applicants}
+                        onClose={() => setShowBulkMessage(false)}
+                        onSuccess={(sent) => {
+                            showToast(`Sent ${sent} message${sent !== 1 ? "s" : ""}`, "success");
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Bulk Invite Modal */}
             <AnimatePresence>
                 {showBulkInvite && (
@@ -337,69 +366,198 @@ export default function RecruiterJobATSPage() {
                 )}
             </AnimatePresence>
 
+            {/* Assign Interviewer Modal */}
+            <AnimatePresence>
+                {assignTarget && (
+                    <AssignInterviewerModal
+                        applicationId={assignTarget.applicationId}
+                        applicantName={assignTarget.name}
+                        stageName="Interviewing"
+                        onClose={() => setAssignTarget(null)}
+                        onSuccess={() => {
+                            setAssignTarget(null);
+                            showToast(`Interviewers assigned to ${assignTarget.name}`, "success");
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Offer Letter Modal */}
+            <AnimatePresence>
+                {offerTarget && (
+                    <OfferLetterModal
+                        applicationId={offerTarget.applicationId}
+                        candidateName={offerTarget.name}
+                        jobTitle={offerTarget.jobTitle}
+                        onClose={() => setOfferTarget(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Panel Scheduler Modal */}
+            <AnimatePresence>
+                {panelTarget && (
+                    <PanelSchedulerModal
+                        applicationId={panelTarget.applicationId}
+                        candidateName={panelTarget.name}
+                        onClose={() => setPanelTarget(null)}
+                        onCreated={() => {
+                            setPanelTarget(null);
+                            showToast(`Panel interview scheduled for ${panelTarget.name}`, "success");
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-white dark:bg-[#111827] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm mb-6">
-                <div className="flex items-start gap-4">
-                    <Link href="/recruiter/jobs" className="p-2.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 hover:text-indigo-600 transition group">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    </Link>
-                    <div>
-                        <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">{job.title}</h1>
-                        <div className="flex items-center flex-wrap gap-2 mt-1 text-xs font-medium text-gray-500">
-                            <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.location}</span>
-                            <span className="text-gray-300 dark:text-gray-700">·</span>
-                            <span className="capitalize">{job.locationType}</span>
-                            <span className="text-gray-300 dark:text-gray-700">·</span>
-                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{applicants.length} Candidates</span>
-                            {evaluatedCount > 0 && (
-                                <>
-                                    <span className="text-gray-300 dark:text-gray-700">·</span>
-                                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                                        <Zap className="w-3 h-3" /> {evaluatedCount} AI-Scored
+            <div className="sticky top-0 z-30 mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-white/70 dark:bg-[#111827]/70 backdrop-blur-xl border border-gray-100 dark:border-white/5 rounded-[2rem] shadow-xl shadow-indigo-500/5">
+                    <div className="flex items-center gap-5">
+                        <Link href="/recruiter/jobs" className="p-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-400 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/30 transition-all duration-300 group shadow-sm">
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        </Link>
+                        <div>
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-2xl font-[1000] text-gray-900 dark:text-white tracking-tight leading-none">{job.title}</h1>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${job.isActive ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-gray-500/10 text-gray-500 border border-gray-500/20"}`}>
+                                    {job.isActive ? "Active" : "Inactive"}
+                                </span>
+                            </div>
+                            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-gray-500/80">
+                                <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-indigo-500" /> {job.location}</span>
+                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-purple-500" /> {applicants.length} Candidates</span>
+                                {evaluatedCount > 0 && (
+                                    <span className="text-emerald-500 flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5" /> {evaluatedCount} AI-Scored
                                     </span>
-                                </>
-                            )}
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center flex-wrap gap-2.5">
+                        <div className="flex items-center p-1 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
+                            <button
+                                onClick={() => setShowRediscover(true)}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 transition-all active:scale-95"
+                            >
+                                <Sparkles className="w-4 h-4" /> AI Sourcing
+                            </button>
+                            <button
+                                onClick={() => setShowBulkInvite(true)}
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/5 transition-all"
+                            >
+                                <Users className="w-4 h-4" /> Invite
+                            </button>
+                        </div>
+
+                        <div className="h-8 w-[1px] bg-gray-200 dark:bg-white/10 mx-1 hidden md:block" />
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowBulkMessage(true)}
+                                title="Broadcast Message"
+                                className="p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/30 transition-all shadow-sm"
+                            >
+                                <Send className="w-4.5 h-4.5" />
+                            </button>
+                            <Link
+                                href={`/recruiter/jobs/${id}/analytics`}
+                                title="Analytics"
+                                className="p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/30 transition-all shadow-sm"
+                            >
+                                <BarChart3 className="w-4.5 h-4.5" />
+                            </Link>
+                            <button
+                                onClick={() => togglePanel("automation")}
+                                title="Automation"
+                                className={`p-2.5 rounded-xl border transition-all shadow-sm ${sidePanel === "automation" ? "bg-amber-500 text-white border-amber-500 shadow-amber-500/20" : "border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 hover:text-amber-500 hover:border-amber-100 dark:hover:border-amber-500/30"}`}
+                            >
+                                <Zap className="w-4.5 h-4.5" />
+                            </button>
+                            <button
+                                onClick={() => togglePanel("interview")}
+                                title="AI Interview Config"
+                                className={`p-2.5 rounded-xl border transition-all shadow-sm ${sidePanel === "interview" ? "bg-indigo-600 text-white border-indigo-600 shadow-indigo-600/20" : "border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/30"}`}
+                            >
+                                <Brain className="w-4.5 h-4.5" />
+                            </button>
+                            <button
+                                onClick={fetchData}
+                                title="Refresh Data"
+                                className="p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/30 transition-all shadow-sm"
+                            >
+                                <RefreshCw className="w-4.5 h-4.5" />
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setShowRediscover(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-sm transition-all"
-                    >
-                        <Sparkles className="w-4 h-4" /> AI Sourcing
-                    </button>
-                    <button
-                        onClick={() => setShowBulkInvite(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/20 transition-all"
-                    >
-                        <Users className="w-4 h-4" /> Bulk Invite
-                    </button>
-                    <Link
-                        href={`/recruiter/jobs/${id}/analytics`}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-300"
-                    >
-                        <BarChart3 className="w-4 h-4" /> Analytics
-                    </Link>
-                    <button
-                        onClick={() => togglePanel("interview")}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${sidePanel === "interview" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-300"}`}
-                    >
-                        <Brain className="w-4 h-4" /> AI Interview
-                    </button>
-                    <button
-                        onClick={fetchData}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 hover:border-gray-300 shadow-sm transition"
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                    </button>
-                </div>
             </div>
 
-            {/* Side panel + Kanban layout */}
-            <div className="flex gap-6 items-start">
+            {/* Mobile Kanban Accordion — visible only on < md */}
+            <div className="block md:hidden space-y-3">
+                {COLUMNS.map(col => {
+                    const cards = columnApplicants(col.id);
+                    const isOpen = expandedStages.has(col.id);
+                    return (
+                        <div key={col.id} className={`rounded-2xl border overflow-hidden ${col.borderColor} bg-white dark:bg-[#111827]`}>
+                            <button
+                                className={`w-full flex items-center justify-between px-4 py-3 ${col.bg} ${col.darkBg}`}
+                                onClick={() => setExpandedStages(prev => {
+                                    const next = new Set(prev);
+                                    next.has(col.id) ? next.delete(col.id) : next.add(col.id);
+                                    return next;
+                                })}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full border-2 ${col.borderColor}`} />
+                                    <span className={`text-xs font-black uppercase tracking-widest ${col.color}`}>{col.label}</span>
+                                    <span className="ml-1 px-2 py-0.5 rounded-full bg-white/70 dark:bg-black/30 text-[10px] font-black text-gray-700 dark:text-gray-300">{cards.length}</span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isOpen && (
+                                <div className="divide-y divide-gray-100 dark:divide-white/5">
+                                    {cards.length === 0 ? (
+                                        <p className="py-4 text-center text-xs text-gray-400 font-medium">No candidates</p>
+                                    ) : cards.map(app => (
+                                        <div key={app.applicationId} className="flex items-center gap-3 px-4 py-3">
+                                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-black flex-shrink-0">
+                                                {app.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{app.name}</p>
+                                                {app.overallScore != null && app.overallScore > 0 && (
+                                                    <p className="text-[10px] font-bold text-indigo-500">Score: {app.overallScore}/100</p>
+                                                )}
+                                            </div>
+                                            <select
+                                                value={app.status}
+                                                className="text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                                                onChange={async e => {
+                                                    const newStatus = e.target.value as AppStatus;
+                                                    setApplicants(prev => prev.map(a => a.applicationId === app.applicationId ? { ...a, status: newStatus } : a));
+                                                    await authFetch(`/recruiter/applications/${app.applicationId}/status`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ status: newStatus }),
+                                                    }).catch(() => setApplicants(prev => prev.map(a => a.applicationId === app.applicationId ? { ...a, status: app.status } : a)));
+                                                }}
+                                            >
+                                                {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Side panel + Kanban layout — desktop only */}
+            <div className="hidden md:flex gap-6 items-start">
                 {/* Kanban Board */}
                 <div className="flex-1 overflow-x-auto pb-8 custom-scrollbar min-w-0">
                     <DragDropContext onDragEnd={handleDragEnd}>
@@ -407,14 +565,16 @@ export default function RecruiterJobATSPage() {
                             {COLUMNS.map((col) => {
                                 const cards = columnApplicants(col.id);
                                 return (
-                                    <div key={col.id} className="w-[290px] flex flex-col">
+                                    <div key={col.id} className="w-[310px] flex flex-col group/col">
                                         {/* Column Header */}
-                                        <div className={`flex items-center justify-between p-3.5 mb-3 rounded-2xl border ${col.bg} ${col.darkBg} ${col.borderColor}`}>
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${col.bg} border ${col.borderColor}`} />
-                                                <h3 className={`font-bold ${col.color} text-xs uppercase tracking-wider`}>{col.label}</h3>
+                                        <div className={`flex items-center justify-between px-4 py-3 mb-4 rounded-2xl border ${col.bg} ${col.darkBg} ${col.borderColor} shadow-sm transition-all duration-300 group-hover/col:shadow-md`}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-2.5 h-2.5 rounded-full ${col.bg} border-2 ${col.borderColor} shadow-[0_0_10px_rgba(0,0,0,0.05)]`} />
+                                                <h3 className={`font-black ${col.color} text-[11px] uppercase tracking-[0.1em]`}>{col.label}</h3>
                                             </div>
-                                            <div className="px-2 py-0.5 bg-white/60 dark:bg-black/20 rounded-lg text-xs font-black text-gray-700 dark:text-gray-200">{cards.length}</div>
+                                            <div className="px-2.5 py-0.5 bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-black text-gray-700 dark:text-gray-200 border border-white dark:border-white/5">
+                                                {cards.length}
+                                            </div>
                                         </div>
 
                                         <Droppable droppableId={col.id}>
@@ -422,7 +582,7 @@ export default function RecruiterJobATSPage() {
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.droppableProps}
-                                                    className={`flex-1 min-h-[420px] p-1.5 rounded-2xl transition-all duration-200 ${snapshot.isDraggingOver ? "bg-indigo-50/60 dark:bg-indigo-500/10 border-2 border-dashed border-indigo-300 dark:border-indigo-500/40" : "bg-transparent"}`}
+                                                    className={`flex-1 min-h-[500px] px-2 py-1 rounded-[1.5rem] transition-all duration-300 ${snapshot.isDraggingOver ? "bg-indigo-500/5 dark:bg-indigo-500/10 ring-2 ring-indigo-500/20 ring-inset border-2 border-dashed border-indigo-500/30" : "bg-gray-50/30 dark:bg-white/[0.02]"}`}
                                                 >
                                                     {cards.map((app, index) => (
                                                         <Draggable key={app.applicationId} draggableId={app.applicationId} index={index}>
@@ -431,7 +591,7 @@ export default function RecruiterJobATSPage() {
                                                                     ref={provided.innerRef}
                                                                     {...provided.draggableProps}
                                                                     {...provided.dragHandleProps}
-                                                                    className={`mb-3 transition-transform ${snapshot.isDragging ? "rotate-1 scale-105 z-50" : ""}`}
+                                                                    className={`mb-4 transition-all duration-200 ${snapshot.isDragging ? "rotate-[2deg] scale-105 z-50 shadow-2xl shadow-indigo-500/20" : ""}`}
                                                                     style={{ ...provided.draggableProps.style }}
                                                                 >
                                                                     <ApplicantCard
@@ -440,7 +600,26 @@ export default function RecruiterJobATSPage() {
                                                                         onSummary={() => setSummaryTarget({ applicationId: app.applicationId, name: app.name, type: 'summary' })}
                                                                         onJustification={() => setSummaryTarget({ applicationId: app.applicationId, name: app.name, type: 'justification' })}
                                                                         onInvite={() => setInviteTarget({ applicationId: app.applicationId, name: app.name })}
+                                                                        onAssign={() => setAssignTarget({ applicationId: app.applicationId, name: app.name, status: app.status })}
+                                                                        onOffer={() => setOfferTarget({ applicationId: app.applicationId, name: app.name, jobTitle: job?.title || '' })}
+                                                                        onPanel={() => setPanelTarget({ applicationId: app.applicationId, name: app.name })}
+                                                                        onBgv={async () => {
+                                                                            setBgvLoading(app.applicationId);
+                                                                            try {
+                                                                                const res = await authFetch(`/api/v1/applications/${app.applicationId}/bgv/initiate`, { method: 'POST' });
+                                                                                const data = await res.json();
+                                                                                if (!data.success) throw new Error(data.message);
+                                                                                showToast(`BGV initiated for ${app.name}`, "success");
+                                                                                setApplicants(prev => prev.map(a => a.applicationId === app.applicationId ? { ...a, bgvStatus: 'IN_PROGRESS' } : a));
+                                                                            } catch (e: any) {
+                                                                                showToast(e.message || 'BGV initiation failed', "error");
+                                                                            } finally {
+                                                                                setBgvLoading(null);
+                                                                            }
+                                                                        }}
+                                                                        bgvLoading={bgvLoading === app.applicationId}
                                                                         invitedInfo={invitedMap[app.applicationId]}
+                                                                        showToast={showToast}
                                                                     />
                                                                 </div>
                                                             )}
@@ -449,8 +628,11 @@ export default function RecruiterJobATSPage() {
                                                     {provided.placeholder}
 
                                                     {cards.length === 0 && !snapshot.isDraggingOver && (
-                                                        <div className="h-24 flex items-center justify-center text-gray-300 dark:text-gray-700 text-xs font-semibold border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-xl">
-                                                            Drop here
+                                                        <div className="h-32 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-600 border-2 border-dashed border-gray-200/60 dark:border-white/5 rounded-2xl transition-colors hover:bg-gray-50/50 dark:hover:bg-white/[0.05]">
+                                                            <div className="p-2 rounded-full bg-gray-100 dark:bg-white/5">
+                                                                <Users className="w-4 h-4 opacity-40" />
+                                                            </div>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Drop Station</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -488,6 +670,31 @@ export default function RecruiterJobATSPage() {
                     )}
                 </AnimatePresence>
 
+                {/* Automation Side Panel */}
+                <AnimatePresence>
+                    {sidePanel === "automation" && (
+                        <motion.div
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 400, opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="flex-shrink-0 overflow-hidden"
+                        >
+                            <div className="w-[400px] bg-white dark:bg-[#111827] rounded-3xl border border-gray-100 dark:border-white/5 shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Zap className="w-4 h-4 text-amber-500" /> Drip Automation
+                                    </h3>
+                                    <button onClick={() => setSidePanel(null)} className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <SequenceBuilder jobId={id} />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* AI Interview Config — full-screen modal */}
                 <AnimatePresence>
                     {sidePanel === "interview" && (
@@ -512,204 +719,190 @@ export default function RecruiterJobATSPage() {
 }
 
 // ── Applicant Card ──────────────────────────────────────────────────
-function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onInvite, invitedInfo }: {
+function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onInvite, onAssign, onOffer, onPanel, onBgv, bgvLoading, invitedInfo, showToast }: {
     applicant: Applicant;
     onEvaluate: () => void;
     onSummary: () => void;
     onJustification: () => void;
     onInvite: () => void;
+    onAssign: () => void;
+    onOffer: () => void;
+    onPanel: () => void;
+    onBgv: () => void;
+    bgvLoading?: boolean;
     invitedInfo?: { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string };
+    showToast: (message: string, type: "success" | "error") => void;
 }) {
     const hasScore = applicant.overallScore != null && applicant.overallScore > 0;
-    const recommendation = applicant.aiEvaluation?.recommendation;
-
-    // Determine dropout risk color
-    const getRiskColor = (risk?: string) => {
-        if (!risk) return "bg-gray-100 dark:bg-gray-800 text-gray-500";
+    
+    const getRiskStyles = (risk?: string) => {
+        if (!risk) return "bg-gray-50 dark:bg-white/5 text-gray-400 border-transparent";
         switch (risk.toUpperCase()) {
-            case "HIGH": return "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/30";
-            case "MEDIUM": return "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30";
-            case "LOW": return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30";
-            default: return "bg-gray-100 dark:bg-gray-800 text-gray-500";
+            case "HIGH": return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+            case "MEDIUM": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+            case "LOW": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+            default: return "bg-gray-50 dark:bg-white/5 text-gray-400 border-transparent";
         }
     };
 
     return (
-        <div className="group bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 shadow-sm hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all cursor-grab active:cursor-grabbing relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-2.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                {applicant.biasFlags && applicant.biasFlags.length > 0 && (
-                    <div className="text-rose-500" title={`Bias Warning: ${applicant.biasFlags[0]}`}>
-                        <AlertCircle className="w-3.5 h-3.5" />
-                    </div>
-                )}
-                <GripVertical className="w-3.5 h-3.5 text-gray-300" />
-            </div>
-
-            {/* Avatar + Info */}
-            <div className="flex items-start gap-3 mb-3 pr-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                    {applicant.avatarUrl
-                        ? <img src={applicant.avatarUrl} alt="" className="w-full h-full rounded-xl object-cover" />
-                        : applicant.name.charAt(0).toUpperCase()}
+        <div className="group relative bg-white dark:bg-[#111827] rounded-[1.75rem] border border-gray-100 dark:border-white/5 p-4 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="flex items-center justify-between mb-4">
+                <div className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getRiskStyles(applicant.dropoutRisk)}`}>
+                    {applicant.dropoutRisk ? `${applicant.dropoutRisk} Risk` : "N/A Risk"}
                 </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{applicant.name}</p>
-                    <p className="text-[11px] text-gray-400 truncate flex items-center gap-1"><Mail className="w-2.5 h-2.5" />{applicant.email}</p>
+                <div className="flex items-center gap-1.5 translate-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    {applicant.biasFlags && applicant.biasFlags.length > 0 && (
+                        <div className="text-rose-500" title={`Bias Warning: ${applicant.biasFlags[0]}`}>
+                            <AlertCircle className="w-3.5 h-3.5" />
+                        </div>
+                    )}
+                    <GripVertical className="w-3.5 h-3.5 text-gray-300" />
                 </div>
             </div>
 
-            {/* Score / Fit / Risk Grid */}
-            <div className="mb-3 grid grid-cols-2 gap-2">
-                {/* AI Score (Interviews) */}
-                {hasScore ? (
-                    <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
-                        <div className="flex flex-col">
-                            <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider mb-0.5 flex items-center gap-1"><Zap className="w-2.5 h-2.5" /> AI Score</span>
-                            <div className="flex items-baseline gap-0.5">
-                                <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm leading-none">{applicant.overallScore}</span>
-                                <span className="text-[10px] text-emerald-400 font-bold">/100</span>
-                            </div>
+            <div className="flex items-center gap-4 mb-5">
+                <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-indigo-500/20">
+                        {applicant.avatarUrl
+                            ? <img src={applicant.avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
+                            : applicant.name.charAt(0).toUpperCase()}
+                    </div>
+                    {invitedInfo && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-[#111827] rounded-full border-2 border-white dark:border-[#111827] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-indigo-500" />
                         </div>
-                    </div>
-                ) : (
-                    <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
-                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><FileText className="w-2.5 h-2.5" /> AI Score</span>
-                        <span className="text-xs text-gray-400 font-medium">Pending Data</span>
-                    </div>
-                )}
-
-                {/* Fit Score */}
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
-                    <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-indigo-600/70 dark:text-indigo-400/70 uppercase tracking-wider mb-0.5 flex items-center gap-1"><Brain className="w-2.5 h-2.5" /> Fit Score</span>
-                        <div className="flex items-baseline gap-0.5">
-                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-sm leading-none">{applicant.fitScore || 0}</span>
-                            <span className="text-[10px] text-indigo-400 font-bold">%</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Risk and Acc Lk */}
-                <div className={`col-span-2 p-1.5 flex items-center justify-between rounded-lg border ${getRiskColor(applicant.dropoutRisk)}`}>
-                    <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Risk: {applicant.dropoutRisk || 'N/A'}</span>
-                    </div>
-                    {applicant.acceptanceLikelihood != null && (
-                        <span className="text-[10px] font-bold bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded">
-                            {applicant.acceptanceLikelihood}% Accept Lk.
-                        </span>
                     )}
                 </div>
+                <div className="flex-1 min-w-0">
+                    <h4 className="text-[15px] font-[1000] text-gray-900 dark:text-white truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {applicant.name}
+                    </h4>
+                    <p className="text-[11px] font-bold text-gray-400/80 truncate flex items-center gap-1.5 mt-0.5">
+                        <Mail className="w-3 h-3 opacity-60" /> {applicant.email}
+                    </p>
+                </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-gray-800 pt-2.5 mt-2">
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-gray-400 flex-1">
+            <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="p-3 bg-gray-50/50 dark:bg-white/[0.03] rounded-2xl border border-gray-100 dark:border-white/5 flex flex-col justify-between h-[64px]">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-indigo-500" /> AI Rank
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                        <span className={`text-xl font-black leading-none ${hasScore ? "text-gray-900 dark:text-white" : "text-gray-300 dark:text-gray-700"}`}>
+                            {hasScore ? applicant.overallScore : "—"}
+                        </span>
+                        {hasScore && <span className="text-[10px] font-bold text-gray-400">/100</span>}
+                    </div>
+                </div>
+                <div className="p-3 bg-gray-50/50 dark:bg-white/[0.03] rounded-2xl border border-gray-100 dark:border-white/5 flex flex-col justify-between h-[64px]">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Zap className="w-3 h-3 text-amber-500" /> Match
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-gray-900 dark:text-white leading-none">
+                            {applicant.fitScore || 0}
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-400">%</span>
+                    </div>
+                </div>
+            </div>
+
+            {applicant.nextSequenceStep && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-xl border border-indigo-500/20 mb-5 animate-pulse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                        Sequence Active
+                    </span>
+                </div>
+            )}
+
+            <div className="flex flex-col gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                         {new Date(applicant.appliedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </span>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onEvaluate(); }}
-                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/20 transition-colors"
-                    >
-                        <Brain className="w-2.5 h-2.5" /> {hasScore ? "Re-eval" : "Evaluate"}
-                    </button>
-                    {applicant.resumeUrl ? (
-                        <button
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                    const res = await authFetch(`/resumes/candidate/${applicant.candidateId}/download`);
-                                    if (!res.ok) throw new Error();
-                                    const data = await res.json();
-                                    window.open(data.data.url, "_blank");
-                                } catch {
-                                    alert("Could not open resume. Please try again.");
-                                }
-                            }}
-                            title="View Resume"
-                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-100 dark:border-emerald-500/20 transition-colors cursor-pointer"
+                    <div className="flex items-center gap-1.5">
+                        {applicant.resumeUrl && (
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                        const res = await authFetch(`/resumes/candidate/${applicant.candidateId}/download`);
+                                        const data = await res.json();
+                                        window.open(data.data.url, "_blank");
+                                    } catch { showToast("Error opening CV", "error"); }
+                                }}
+                                className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/30"
+                                title="Download CV"
+                            >
+                                <FileText className="w-4 h-4" />
+                            </button>
+                        )}
+                        <Link
+                            href={`/recruiter/candidates/${applicant.candidateId}`}
+                            onClick={e => e.stopPropagation()}
+                            className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/30"
+                            title="Full Profile"
                         >
-                            <FileText className="w-2.5 h-2.5" /> Resume
-                        </button>
-                    ) : (
-                        <span
-                            title="No resume submitted"
-                            className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-400 border border-gray-100 dark:border-gray-800 cursor-not-allowed"
-                        >
-                            <FileText className="w-2.5 h-2.5" /> No CV
-                        </span>
-                    )}
-                    <Link
-                        href={`/recruiter/candidates/${applicant.candidateId}`}
-                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-gray-800 transition-colors"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <ExternalLink className="w-2.5 h-2.5" /> View
-                    </Link>
+                            <User className="w-4 h-4" />
+                        </Link>
+                    </div>
                 </div>
 
-                {/* Interview Invite Status */}
-                {invitedInfo ? (
-                    <div className="flex flex-col gap-1.5">
-                        {invitedInfo.type === 'COPILOT' ? (
-                            <Link
-                                href={invitedInfo.meetLink || `/dashboard/interviews/${invitedInfo.sessionId}/live`}
-                                onClick={e => e.stopPropagation()}
-                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-500/20 border-teal-100 dark:border-teal-500/20 transition-colors"
-                            >
-                                <Video className="w-2.5 h-2.5" /> Launch Copilot
-                            </Link>
-                        ) : (
-                            <button
-                                disabled
-                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20 opacity-70 cursor-default"
-                            >
-                                <Bot className="w-2.5 h-2.5" /> AI Interview Sent
-                            </button>
-                        )}
-                        {!hasScore && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onInvite(); }}
-                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border-gray-100 dark:border-white/10 transition-colors"
-                            >
-                                <Video className="w-2.5 h-2.5" /> Update Invitation
-                            </button>
-                        )}
-                    </div>
-                ) : applicant.status === 'INTERVIEWING' ? (
-                    <button
-                        disabled
-                        className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20 opacity-70 cursor-default"
-                    >
-                        <Bot className="w-2.5 h-2.5" /> AI Interview Sent
-                    </button>
-                ) : (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onInvite(); }}
-                        className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold px-2 py-1.5 rounded-lg border bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border-emerald-100 dark:border-emerald-500/20 transition-colors"
-                    >
-                        <Video className="w-2.5 h-2.5" /> Invite to Interview
-                    </button>
-                )}
+                {/* Stage Dependent Actions */}
+                <div className="space-y-2">
+                    {invitedInfo?.type === 'COPILOT' ? (
+                        <a
+                            href={invitedInfo.meetLink || `/dashboard/interviews/${invitedInfo.sessionId}/live`}
+                            target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-teal-500 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:bg-teal-600 active:scale-95 transition-all"
+                        >
+                            <Video className="w-3.5 h-3.5" /> Launch Copilot
+                        </a>
+                    ) : (applicant.status === 'INTERVIEWING' || invitedInfo?.type === 'AI') ? (
+                        <div className="flex flex-col gap-2">
+                            <div className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-500/20">
+                                <Bot className="w-3 h-3" /> AI Interview Sent
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={(e) => { e.stopPropagation(); onAssign(); }} className="flex-1 py-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 text-[10px] font-black uppercase tracking-widest border border-purple-100 dark:border-purple-500/20 hover:bg-purple-100 transition-all">Assign</button>
+                                <button onClick={(e) => { e.stopPropagation(); onPanel(); }} className="flex-1 py-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 dark:border-blue-500/20 hover:bg-blue-100 transition-all">Panel</button>
+                            </div>
+                        </div>
+                    ) : applicant.status === 'OFFER' ? (
+                        <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); onOffer(); }} className="flex-1 py-2 rounded-xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">Offer</button>
+                            <button onClick={(e) => { e.stopPropagation(); onBgv(); }} disabled={bgvLoading || !!applicant.bgvStatus} className="flex-1 py-2 rounded-xl bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all disabled:opacity-50">{bgvLoading ? '...' : applicant.bgvStatus ? 'BGV' : 'BGV'}</button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onEvaluate(); }}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
+                        >
+                            <Sparkles className="w-3.5 h-3.5" /> {hasScore ? "Re-Rank AI" : "AI Assessment"}
+                        </button>
+                    )}
 
-                {hasScore && (
-                    <div className="flex items-center gap-2 mt-2">
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onSummary(); }}
-                            className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 border border-violet-100 dark:border-violet-500/20 transition-colors"
-                        >
-                            <FileText className="w-2.5 h-2.5" /> 5-Line Summary
-                        </button>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onJustification(); }}
-                            className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-100 dark:border-blue-500/20 transition-colors"
-                        >
-                            <Award className="w-2.5 h-2.5" /> Justification
-                        </button>
-                    </div>
-                )}
+                    {/* AI Insights (Summary/Justification) */}
+                    {hasScore && (
+                        <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); onSummary(); }} className="flex-1 py-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-500 text-[9px] font-black uppercase tracking-widest border border-gray-100 dark:border-white/5 hover:border-indigo-300 transition-all">Summary</button>
+                            <button onClick={(e) => { e.stopPropagation(); onJustification(); }} className="flex-1 py-1.5 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-500 text-[9px] font-black uppercase tracking-widest border border-gray-100 dark:border-white/5 hover:border-indigo-300 transition-all">Reason</button>
+                        </div>
+                    )}
+
+                    {/* Scheduling Status */}
+                    {invitedInfo?.type === 'COPILOT' && applicant.awaitingSchedule && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20">
+                            <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Awaiting Scheduling</span>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

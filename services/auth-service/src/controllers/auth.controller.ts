@@ -282,6 +282,20 @@ export class AuthController {
         }
     }
 
+    async getDepartmentsByInstitution(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { institutionId } = req.params;
+            if (!institutionId) {
+                res.status(400).json({ success: false, message: 'institutionId is required' });
+                return;
+            }
+            const departments = await authService.getDepartmentsByInstitution(institutionId);
+            res.json({ success: true, data: departments });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async verifyInvite(req: Request, res: Response, _next: NextFunction): Promise<void> {
         try {
             const { token } = req.query;

@@ -10,6 +10,7 @@ import { Loader2, Mic, MicOff, Wifi, WifiOff } from 'lucide-react';
 interface CopilotOverlayProps {
     interviewId: string;
     meetingUrl: string;
+    triggerStart?: boolean;
 }
 
 // Declare SpeechRecognition types for browser compatibility
@@ -23,7 +24,7 @@ interface SpeechRecognitionErrorEvent {
     message: string;
 }
 
-export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps) {
+export function CopilotOverlay({ interviewId, meetingUrl, triggerStart }: CopilotOverlayProps) {
     const [transcript, setTranscript] = useState<{ text: string; isFinal: boolean; timestamp: string }[]>([]);
     const [suggestions, setSuggestions] = useState<{ text: string; timestamp: string }[]>([]);
     const [isListening, setIsListening] = useState(false);
@@ -148,6 +149,13 @@ export function CopilotOverlay({ interviewId, meetingUrl }: CopilotOverlayProps)
         // Tell gateway to generate the post-mortem summary
         socketRef.current?.emit('copilot:stop', { interviewId });
     }, [interviewId]);
+
+    // Handle external start trigger
+    useEffect(() => {
+        if (triggerStart && isConnected && !isListening) {
+            startListening();
+        }
+    }, [triggerStart, isConnected, isListening, startListening]);
 
     // Cleanup on unmount
     useEffect(() => {

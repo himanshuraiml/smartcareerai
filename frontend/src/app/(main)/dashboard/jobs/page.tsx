@@ -5,11 +5,12 @@ import {
     Search, MapPin, Briefcase, Building2, DollarSign, Clock,
     Bookmark, BookmarkCheck, ExternalLink, Filter, X, Loader2, RefreshCw,
     ChevronLeft, ArrowRight, Bell, BellDot, BadgeCheck, Sparkles,
-    CheckCircle2, Send, FileText, AlertTriangle
+    CheckCircle2, Send, FileText, AlertTriangle, IndianRupee
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 interface Job {
     id: string;
@@ -19,6 +20,7 @@ interface Job {
     locationType: string;
     sourceUrl?: string;
     description: string;
+    requirements?: string[];
     requiredSkills: string[];
     salaryMin?: number;
     salaryMax?: number;
@@ -165,7 +167,7 @@ export default function JobsPage() {
                 const data = await countRes.json();
                 setUnreadCount(data.data?.count || 0);
             }
-        } catch (_) {}
+        } catch (_) { }
     }, [user]);
 
     useEffect(() => {
@@ -205,7 +207,7 @@ export default function JobsPage() {
                 });
                 setUnreadCount(0);
                 setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            } catch (_) {}
+            } catch (_) { }
         }
     };
 
@@ -297,7 +299,7 @@ export default function JobsPage() {
                     dateApplied: new Date().toISOString(),
                 }),
             });
-        } catch (_) {}
+        } catch (_) { }
         if (job.sourceUrl) {
             window.open(job.sourceUrl, '_blank', 'noopener,noreferrer');
         }
@@ -305,8 +307,19 @@ export default function JobsPage() {
 
     const formatSalary = (job: Job) => {
         if (!job.salaryMin && !job.salaryMax) return null;
-        const currency = job.salaryCurrency || 'USD';
-        const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 });
+        const currency = job.salaryCurrency || 'INR';
+
+        if (currency === 'INR') {
+            if (job.salaryMin && job.salaryMax) return `${job.salaryMin} - ${job.salaryMax} LPA`;
+            return `${job.salaryMin || job.salaryMax} LPA`;
+        }
+
+        const formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency,
+            maximumFractionDigits: 0
+        });
+
         if (job.salaryMin && job.salaryMax) return `${formatter.format(job.salaryMin)} - ${formatter.format(job.salaryMax)}`;
         return formatter.format(job.salaryMin || job.salaryMax || 0);
     };
@@ -548,11 +561,24 @@ export default function JobsPage() {
                     </div>
 
                     <div className="mb-6">
-                        <h3 className="text-gray-900 dark:text-white font-medium mb-2">Description</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line break-words">
-                            {job.description || 'No description available.'}
-                        </p>
+                        <h3 className="text-gray-900 dark:text-white font-medium mb-2 border-b border-gray-100 dark:border-white/5 pb-1">Description</h3>
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed break-words">
+                            <ReactMarkdown>
+                                {job.description || 'No description available.'}
+                            </ReactMarkdown>
+                        </div>
                     </div>
+
+                    {job.requirements && job.requirements.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-gray-900 dark:text-white font-medium mb-2 border-b border-gray-100 dark:border-white/5 pb-1">Requirements</h3>
+                            <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed break-words">
+                                <ReactMarkdown>
+                                    {job.requirements.join('\n')}
+                                </ReactMarkdown>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Action buttons */}
                     <div className="flex gap-3 sticky bottom-4 lg:static bg-[var(--background)] lg:bg-transparent pt-4 lg:pt-0">
@@ -782,11 +808,10 @@ export default function JobsPage() {
                                 <div
                                     key={job.id}
                                     onClick={() => setSelectedJob(job)}
-                                    className={`p-4 rounded-xl cursor-pointer transition-all active:scale-[0.98] ${
-                                        job.isPlatformJob
-                                            ? `border ${selectedJob?.id === job.id ? 'border-indigo-500 bg-indigo-500/15' : 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/60'}`
-                                            : `glass ${selectedJob?.id === job.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-transparent hover:border-indigo-500/50'}`
-                                    }`}
+                                    className={`p-4 rounded-xl cursor-pointer transition-all active:scale-[0.98] ${job.isPlatformJob
+                                        ? `border ${selectedJob?.id === job.id ? 'border-indigo-500 bg-indigo-500/15' : 'border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/60'}`
+                                        : `glass ${selectedJob?.id === job.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-transparent hover:border-indigo-500/50'}`
+                                        }`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
@@ -830,7 +855,8 @@ export default function JobsPage() {
                                         <span className={`px-2 py-0.5 rounded text-xs ${getLocationBadge(job.locationType)}`}>{job.locationType}</span>
                                         {formatSalary(job) && (
                                             <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs">
-                                                <DollarSign className="w-3 h-3" /><span className="truncate max-w-[100px] lg:max-w-none">{formatSalary(job)}</span>
+                                                {job.salaryCurrency === 'INR' ? <IndianRupee className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
+                                                <span className="truncate max-w-[100px] lg:max-w-none">{formatSalary(job)}</span>
                                             </span>
                                         )}
                                         {job.experienceMin !== undefined && (

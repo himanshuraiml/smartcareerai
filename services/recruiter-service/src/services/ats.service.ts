@@ -4,6 +4,9 @@ import { createError } from '../middleware/error.middleware';
 import { logger } from '../utils/logger';
 import { webhookService } from './webhook.service';
 import { predictiveService } from './predictive.service';
+import { pipelineTriggerService } from './pipeline-trigger.service';
+import { sequenceService } from './sequence.service';
+import { pushNotificationService } from './push-notification.service';
 
 const prisma = new PrismaClient();
 
@@ -60,6 +63,12 @@ export class AtsService {
                             take: 1,
                         },
                     }
+                },
+                sequenceExecutions: {
+                    where: { status: 'PENDING' },
+                    orderBy: { scheduledAt: 'asc' },
+                    take: 1,
+                    select: { scheduledAt: true }
                 }
             }
         });
@@ -87,6 +96,7 @@ export class AtsService {
                 sessionId: latestSession?.id ?? null,
                 inviteType: latestSession?.inviteType ?? null,
                 meetLink: latestSession?.meetLink ?? null,
+                nextSequenceStep: (a as any).sequenceExecutions?.[0]?.scheduledAt || null,
             };
         });
     }
@@ -121,7 +131,7 @@ export class AtsService {
         const updated = await prisma.recruiterJobApplicant.update({
             where: { id: applicationId },
             data: { status: newStatus },
-            include: { job: true }
+            include: { job: true, candidate: { select: { name: true } } }
         });
 
         const recruiter = await prisma.recruiter.findUnique({
@@ -152,6 +162,31 @@ export class AtsService {
         // Update predictive metrics async
         predictiveService.computeMetricsForApplicant(applicationId).catch(err =>
             logger.error(`Failed to compute predictive metrics for applicant ${applicationId}: ${err.message}`)
+        );
+
+        // Trigger dynamic pipeline actions
+        pipelineTriggerService.handleStatusChange(applicationId, recruiterId, newStatus).catch(err =>
+            logger.error(`Failed to trigger pipeline actions for application ${applicationId}: ${err.message}`)
+        );
+
+        // F19: Push notification to recruiter on status change
+        if (recruiter) {
+            pushNotificationService.sendPushToUser(recruiter.userId, {
+                title: 'Candidate Status Updated',
+                body: `${(updated as any).candidate?.name ?? 'A candidate'} moved to ${newStatus}`,
+                url: `/recruiter/jobs/${updated.jobId}`,
+            }).catch(() => {});
+        }
+
+        // F2: Trigger drip message sequences for the new stage
+        sequenceService.triggerSequences(
+            updated.jobId,
+            applicationId,
+            updated.candidateId,
+            recruiterId,
+            newStatus,
+        ).catch(err =>
+            logger.error(`Failed to trigger sequences for application ${applicationId}: ${err.message}`)
         );
 
         return { applicationId: updated.id, candidateId: updated.candidateId, status: updated.status };

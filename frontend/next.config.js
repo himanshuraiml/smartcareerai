@@ -1,6 +1,14 @@
+const withPWA = require('next-pwa')({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    turbopack: {},
     // Use 'standalone' only for Docker deployments, Vercel handles this automatically
     output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
     images: {
@@ -20,6 +28,10 @@ const nextConfig = {
             {
                 protocol: 'https',
                 hostname: '**.placenxt.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'i.pravatar.cc',
             },
         ],
     },
@@ -83,7 +95,8 @@ const nextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' http://localhost:* ws: wss: https: blob:; frame-src https://accounts.google.com; frame-ancestors 'none';",
+                        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: http://localhost:*; connect-src 'self' http://localhost:* ws: wss: https:; frame-src https://accounts.google.com; frame-ancestors 'none';",
+
                     },
                 ],
             },
@@ -91,4 +104,4 @@ const nextConfig = {
     },
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);

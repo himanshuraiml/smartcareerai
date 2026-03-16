@@ -29,7 +29,7 @@ const app = express();
 const PORT = process.env.PORT || 3009;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors());
 
 // Webhook route needs raw body for signature verification

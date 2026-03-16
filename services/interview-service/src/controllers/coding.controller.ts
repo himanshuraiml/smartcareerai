@@ -16,6 +16,23 @@ const submitCodeSchema = z.object({
     code: z.string().min(1),
 });
 
+const createCustomChallengeSchema = z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+    category: z.string().min(1),
+    tags: z.array(z.string()).default([]),
+    languages: z.array(z.string()).min(1),
+    starterCode: z.record(z.string()).default({}),
+    testCases: z.array(z.object({
+        input: z.string(),
+        expectedOutput: z.string(),
+        isHidden: z.boolean().default(false),
+    })).min(1),
+    constraints: z.string().optional(),
+    examples: z.array(z.any()).optional(),
+});
+
 export class CodingController {
     /**
      * GET /coding/challenges
@@ -24,12 +41,49 @@ export class CodingController {
     listChallenges = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = req.headers['x-user-id'] as string | undefined;
+            const recruiterId = req.headers['x-recruiter-id'] as string | undefined;
+            const organizationId = req.headers['x-organization-id'] as string | undefined;
             const { difficulty, category } = req.query as { difficulty?: string; category?: string };
 
-            const challenges = await codingService.listChallenges(userId, { difficulty, category });
+            const challenges = await codingService.listChallenges(userId, {
+                difficulty,
+                category,
+                recruiterId,
+                organizationId
+            });
             res.json({ success: true, data: challenges });
         } catch (error) {
             logger.error('List challenges error:', error);
+            next(error);
+        }
+    };
+
+    /**
+     * POST /coding/challenges/custom
+     * Create a recruiter-defined custom coding challenge.
+     */
+    createCustomChallenge = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const recruiterId = req.headers['x-recruiter-id'] as string;
+            const organizationId = req.headers['x-organization-id'] as string | undefined;
+
+            if (!recruiterId) {
+                return res.status(401).json({ success: false, error: 'Recruiter identity required' });
+            }
+
+            const data = createCustomChallengeSchema.parse(req.body);
+            const challenge = await codingService.createCustomChallenge({
+                ...data,
+                recruiterId,
+                organizationId,
+            });
+
+            res.status(201).json({ success: true, data: challenge });
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({ success: false, error: error.errors });
+            }
+            logger.error('Create custom challenge error:', error);
             next(error);
         }
     };

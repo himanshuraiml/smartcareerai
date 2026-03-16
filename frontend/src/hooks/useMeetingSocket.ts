@@ -76,6 +76,7 @@ interface UseMeetingSocketOptions {
     onNetworkQuality?: (update: NetworkQualityUpdate) => void;
     // Phase 3: live transcript
     onTranscriptSegment?: (segment: TranscriptSegmentEvent) => void;
+    onInterviewStarted?: () => void;
 }
 
 export function useMeetingSocket(options: UseMeetingSocketOptions) {
@@ -123,12 +124,16 @@ export function useMeetingSocket(options: UseMeetingSocketOptions) {
         // Phase 3: live transcript
         socket.on('transcript-segment', (seg: TranscriptSegmentEvent) => options.onTranscriptSegment?.(seg));
 
+        socket.on('interview-started', () => {
+            options.onInterviewStarted?.();
+        });
+
         return () => {
             socket.emit('leave-room');
             socket.disconnect();
             socketRef.current = null;
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [options.meetingId, user?.id]);
 
     const notifyNewProducer = useCallback((
@@ -165,12 +170,19 @@ export function useMeetingSocket(options: UseMeetingSocketOptions) {
         });
     }, [options.meetingId]);
 
+    const startInterview = useCallback(() => {
+        socketRef.current?.emit('start-interview', {
+            meetingId: options.meetingId,
+        });
+    }, [options.meetingId]);
+
     return {
         connected,
         notifyNewProducer,
         notifyProducerClosed,
         raiseHand,
         sendChatMessage,
+        startInterview,
         socket: socketRef,
     };
 }

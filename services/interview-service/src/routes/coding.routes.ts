@@ -10,6 +10,7 @@ router.use(authMiddleware);
 
 // Challenge catalogue
 router.get('/challenges', controller.listChallenges);
+router.post('/challenges/custom', controller.createCustomChallenge);
 router.get('/challenges/:id', controller.getChallenge);
 
 // Code execution (no credit cost — used for the "Run" button)

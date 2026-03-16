@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
-import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion, generateCopilotSuggestionsFromTranscript } from '../utils/llm';
+import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion, generateCopilotSuggestionsFromTranscript, generateInterviewSummary } from '../utils/llm';
 import { selectQuestionsFromBank } from '../utils/question-bank';
 import { AppError } from '../utils/errors';
 
@@ -68,20 +68,26 @@ export class InterviewService {
             },
         });
 
-        return sessions.map(s => ({
-            sessionId: s.id,
-            jobId: s.jobId,
-            jobTitle: s.job?.title ?? s.targetRole,
-            companyName: (s.job as any)?.recruiter?.companyName ?? 'Unknown Company',
-            location: (s.job as any)?.location ?? '',
-            difficulty: s.difficulty,
-            type: s.type,
-            inviteType: (s as any).inviteType ?? 'AI', // default AI for older records
-            scheduledAt: (s as any).scheduledAt ?? null,
-            scheduledEndAt: (s as any).scheduledEndAt ?? null,
-            meetLink: (s as any).meetLink ?? null,
-            createdAt: s.createdAt,
-        }));
+        const now = new Date();
+        return sessions.map(s => {
+            const inviteExpiresAt: Date | null = (s as any).inviteExpiresAt ?? null;
+            return {
+                sessionId: s.id,
+                jobId: s.jobId,
+                jobTitle: s.job?.title ?? s.targetRole,
+                companyName: (s.job as any)?.recruiter?.companyName ?? 'Unknown Company',
+                location: (s.job as any)?.location ?? '',
+                difficulty: s.difficulty,
+                type: s.type,
+                inviteType: (s as any).inviteType ?? 'AI',
+                scheduledAt: (s as any).scheduledAt ?? null,
+                scheduledEndAt: (s as any).scheduledEndAt ?? null,
+                meetLink: (s as any).meetLink ?? null,
+                createdAt: s.createdAt,
+                inviteExpiresAt,
+                isExpired: inviteExpiresAt ? now > inviteExpiresAt : false,
+            };
+        });
     }
 
     // Get a specific session
@@ -203,6 +209,42 @@ export class InterviewService {
         };
     }
 
+    // Generate an automated summary of a live interview based on its transcript
+    async generateSessionSummary(sessionId: string) {
+        const session = await prisma.interviewSession.findUnique({
+            where: { id: sessionId },
+            select: { id: true, targetRole: true }
+        });
+
+        if (!session) {
+            throw new AppError('Interview session not found', 404);
+        }
+
+        const copilotSession = await prisma.copilotSession.findUnique({
+            where: { sessionId }
+        });
+
+        if (!copilotSession || !copilotSession.transcript) {
+            throw new AppError('No transcript found for generating summary', 400);
+        }
+
+        const transcriptChunks: string[] = JSON.parse(copilotSession.transcript);
+
+        if (transcriptChunks.length === 0) {
+            throw new AppError('Transcript is empty', 400);
+        }
+
+        const summary = await generateInterviewSummary(transcriptChunks, session.targetRole);
+
+        // Save the summary
+        await prisma.copilotSession.update({
+            where: { sessionId },
+            data: { summary }
+        });
+
+        return { summary };
+    }
+
     // Generate real-time copilot suggestions from transcript (called by gateway socket)
     async generateCopilotSuggestions(sessionId: string, transcriptText: string): Promise<string[]> {
         return generateCopilotSuggestionsFromTranscript(transcriptText);
@@ -242,6 +284,11 @@ export class InterviewService {
 
         if (session.status !== 'PENDING') {
             throw new AppError('Interview has already started', 400);
+        }
+
+        // Enforce invite expiry for AI async invites
+        if (session.inviteExpiresAt && new Date() > session.inviteExpiresAt) {
+            throw new AppError('This interview invitation has expired', 410);
         }
 
         const questionCount = session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10;
@@ -488,6 +535,31 @@ export class InterviewService {
         }
 
         logger.info(`Completed interview session ${sessionId} with score ${overallScore} `);
+
+
+        // Trigger AI Readiness Recalculation (Phase 4)
+        const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
+        fetch(`${ADMIN_SERVICE_URL}/institution/ai/internal/calculate-readiness/${userId}`, {
+            method: 'POST'
+        }).catch(err => logger.error(`AI Readiness trigger failed for user ${userId}: ${err.message}`));
+
+        // Trigger Automated Pipeline Progression (Phase 5)
+        try {
+            const activeApps = await prisma.recruiterJobApplicant.findMany({
+                where: { candidateId: userId, status: { in: ['SCREENING', 'INTERVIEWING'] } },
+                select: { id: true }
+            });
+            const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3012';
+            for (const app of activeApps) {
+                fetch(`${RECRUITER_SERVICE_URL}/api/recruiter/internal/pipeline/advance/${app.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passed: overallScore !== null && overallScore >= 50 }) // Configurable threshold
+                }).catch(err => logger.error(`Pipeline progression trigger failed for app ${app.id}: ${err.message}`));
+            }
+        } catch (err) {
+            logger.error(`Error querying active apps for pipeline progression: ${err}`);
+        }
 
 
         return {

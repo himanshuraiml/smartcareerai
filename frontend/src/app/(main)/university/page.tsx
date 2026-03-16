@@ -216,9 +216,12 @@ export default function UniversityDashboard() {
                     >
                         View Students
                     </Link>
-                    <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-bold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition">
+                    <Link
+                        href="/university/reports"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-bold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition inline-flex items-center justify-center"
+                    >
                         Export Report
-                    </button>
+                    </Link>
                 </div>
             </motion.div>
 

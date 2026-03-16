@@ -2,9 +2,11 @@ import { Router } from 'express';
 import multer from 'multer';
 import { InterviewController } from '../controllers/interview.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { BehaviorMetricsController } from '../controllers/behavior-metrics.controller';
 
 const router = Router();
 const controller = new InterviewController();
+const behaviorController = new BehaviorMetricsController();
 
 // Apply auth middleware to all routes
 router.use(authMiddleware);
@@ -67,5 +69,10 @@ router.put('/sessions/:id/replay', controller.updateReplayLogs);
 router.post('/sessions/:id/copilot', controller.saveCopilotData);
 router.get('/sessions/:id/copilot', controller.getCopilotData);
 router.post('/sessions/:id/copilot/suggest', controller.generateCopilotSuggestions);
+router.post('/sessions/:id/copilot/summarize', controller.generateSummary);
+
+// AI Behavior Metrics (client-side MediaPipe + audio aggregation)
+router.post('/sessions/:id/behavior-metrics', behaviorController.save);
+router.get('/sessions/:id/behavior-metrics', behaviorController.get);
 
 export { router as interviewRouter };

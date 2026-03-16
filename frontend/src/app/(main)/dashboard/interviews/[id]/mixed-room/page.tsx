@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
-import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
+const formatTimeMs = (ms: number) => { const s = Math.floor(ms/1000); const m = Math.floor(s/60); return `${m.toString().padStart(2, "0")}:${(s%60).toString().padStart(2, "0")}`; };
+import { useVideoRecorder } from "@/hooks/useVideoRecorder";
+import { useInterviewFlow } from "@/hooks/useInterviewFlow";
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useFaceAnalysis } from '@/hooks/use-face-analysis';
 import { useProctoring } from '@/hooks/useProctoring';
@@ -99,12 +101,9 @@ export default function MixedInterviewRoomPage() {
 
     const [session, setSession] = useState<InterviewSession | null>(null);
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [aiHint, setAiHint] = useState<AIHint | null>(null);
     const [loadingHint, setLoadingHint] = useState(false);
     const [analytics, setAnalytics] = useState<LiveAnalytics | null>(null);
-    const [transcript, setTranscript] = useState<string>('');
     const [sentiment, setSentiment] = useState<{ type: string; label: string }>({ type: 'neutral', label: 'Neutral' });
     const [speechPacing, setSpeechPacing] = useState<{ wpm: number; label: string }>({ wpm: 0, label: 'Ready' });
     const [detectedKeywords, setDetectedKeywords] = useState<Set<string>>(new Set());
@@ -124,7 +123,6 @@ export default function MixedInterviewRoomPage() {
 
     // Video recording hook
     const {
-        isRecording,
         recordingTime,
         videoBlob,
         previewStream,
@@ -136,6 +134,86 @@ export default function MixedInterviewRoomPage() {
 
     const videoPreviewRef = useRef<HTMLVideoElement>(null);
     const avatarRef = useRef<HTMLDivElement>(null);
+
+    const fetchAnalytics = useCallback(async () => {
+        if (!sessionId) return;
+        try {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/analytics`);
+            if (response.ok) {
+                const data = await response.json();
+                setAnalytics(data.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch analytics:', err);
+        }
+    }, [sessionId, user]);
+
+    const onAnswerSubmit = useCallback(async (index: number, currentTranscript: string) => {
+        if (!session) return false;
+        const question = session.questions[index];
+        if (!question) return false;
+        
+        try {
+            const response = await authFetch(`/interviews/sessions/${sessionId}/answer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questionId: question.id,
+                    answer: currentTranscript || '[Silence]'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Refresh analytics
+                fetchAnalytics();
+
+                setSession(prev => {
+                    if (!prev) return null;
+                    const updatedQs = [...prev.questions];
+                    updatedQs[index] = {
+                        ...updatedQs[index],
+                        userAnswer: currentTranscript,
+                        score: data.data.evaluation?.score || null,
+                        feedback: data.data.evaluation?.feedback || null
+                    };
+                    return { ...prev, questions: updatedQs };
+                });
+                
+                setDetectedKeywords(new Set());
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Failed to submit answer:', err);
+            return false;
+        }
+    }, [session, sessionId, fetchAnalytics]);
+
+    const handleInterviewComplete = useCallback(async () => {
+        // Will be called by effect on isFinished
+    }, []);
+
+    const {
+        currentQuestionIndex,
+        isSubmitting,
+        isFinished,
+        timeRemainingMs,
+        transcript,
+        wpm,
+        isListening: isRecording,
+        startInterview: startContinuousInterview,
+        advanceQuestion,
+        stopInterview,
+        setQuestionIndex
+    } = useInterviewFlow({
+        totalQuestions: session?.questions?.length || 1,
+        onAnswerSubmit,
+        onInterviewComplete: handleInterviewComplete,
+        timeLimitMs: 180000,
+        silenceThresholdMs: 5000
+    });
 
     // Client-side Analysis
     const speech = useSpeechRecognition();
@@ -154,28 +232,21 @@ export default function MixedInterviewRoomPage() {
 
     // Sync Metrics to UI and detect keywords
     useEffect(() => {
-        if (isRecording) {
-            if (speech.transcript) {
-                setTranscript(speech.transcript);
-
-                // Detect mixed keywords
-                const detected = new Set<string>();
-                const lowerTranscript = speech.transcript.toLowerCase();
-                MIXED_KEYWORDS.forEach(keyword => {
-                    if (lowerTranscript.includes(keyword)) {
-                        detected.add(keyword);
-                    }
-                });
-                setDetectedKeywords(detected);
+        if (isRecording && transcript) {
+            // Detect mixed keywords
+            const detected = new Set<string>();
+            const lowerTranscript = transcript.toLowerCase();
+            MIXED_KEYWORDS.forEach(keyword => {
+                if (lowerTranscript.includes(keyword)) {
+                    detected.add(keyword);
+                }
+            });
+            setDetectedKeywords(detected);
+            
+            if (wpm > 0) {
+                setSpeechPacing({ wpm, label: wpm < 110 ? "Slow" : wpm > 160 ? "Fast" : "Good" });
             }
-
-            if (speech.wpm > 0) {
-                setSpeechPacing({
-                    wpm: speech.wpm,
-                    label: speech.wpm < 110 ? 'Slow' : speech.wpm > 160 ? 'Fast' : 'Good'
-                });
-            }
-
+            
             if (faceAnalysis.metrics.isFaceDetected) {
                 setSentiment({
                     type: faceAnalysis.metrics.sentiment,
@@ -183,7 +254,7 @@ export default function MixedInterviewRoomPage() {
                 });
             }
         }
-    }, [speech.transcript, speech.wpm, faceAnalysis.metrics.sentiment, faceAnalysis.metrics.isFaceDetected, isRecording]);
+    }, [transcript, wpm, faceAnalysis.metrics.sentiment, faceAnalysis.metrics.isFaceDetected, isRecording]);
 
     // Handle video preview stream
     useEffect(() => {
@@ -226,7 +297,7 @@ export default function MixedInterviewRoomPage() {
                 // Find first unanswered question
                 const unansweredIndex = data.data.questions.findIndex((q: Question) => !q.userAnswer);
                 if (unansweredIndex !== -1) {
-                    setCurrentQuestionIndex(unansweredIndex);
+                    setQuestionIndex(unansweredIndex);
                 }
             }
         } catch (err) {
@@ -252,18 +323,6 @@ export default function MixedInterviewRoomPage() {
         }
     }, [sessionId, user]);
 
-    const fetchAnalytics = useCallback(async () => {
-        if (!sessionId) return;
-        try {
-            const response = await authFetch(`/interviews/sessions/${sessionId}/analytics`);
-            if (response.ok) {
-                const data = await response.json();
-                setAnalytics(data.data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch analytics:', err);
-        }
-    }, [sessionId, user]);
 
     useEffect(() => {
         if (user && sessionId) {
@@ -289,97 +348,6 @@ export default function MixedInterviewRoomPage() {
             return () => clearInterval(interval);
         }
     }, [session?.status, fetchAnalytics]);
-
-    const submitVideoAnswer = async () => {
-        if (!session || !videoBlob) return;
-
-        const question = session.questions[currentQuestionIndex];
-        if (!question) return;
-
-        setSubmitting(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('video', videoBlob, 'answer.webm');
-            formData.append('questionId', question.id);
-            formData.append('transcript', speech.transcript);
-            formData.append('metrics', JSON.stringify({
-                wpm: speech.wpm,
-                eyeContactScore: faceAnalysis.metrics.eyeContactScore,
-                sentiment: faceAnalysis.metrics.sentiment,
-                detectedKeywords: Array.from(detectedKeywords)
-            }));
-
-            const response = await authFetch(`/interviews/sessions/${sessionId}/answer/video`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                // Update transcript from audio analysis
-                if (data.data.audioAnalysis?.transcription) {
-                    setTranscript(data.data.audioAnalysis.transcription);
-                }
-
-                // Update speech pacing
-                if (data.data.audioAnalysis?.wordsPerMinute) {
-                    const wpm = data.data.audioAnalysis.wordsPerMinute;
-                    setSpeechPacing({
-                        wpm,
-                        label: wpm >= 120 && wpm <= 160 ? 'Optimal' : wpm < 120 ? 'Slow' : 'Fast'
-                    });
-                }
-
-                // Update sentiment based on response
-                if (data.data.sentiment) {
-                    setSentiment({
-                        type: data.data.sentiment.sentiment,
-                        label: data.data.sentiment.sentiment.charAt(0).toUpperCase() + data.data.sentiment.sentiment.slice(1)
-                    });
-                }
-
-                // Update question with answer and score
-                setSession(prev => {
-                    if (!prev) return null;
-                    const updatedQuestions = [...prev.questions];
-                    updatedQuestions[currentQuestionIndex] = {
-                        ...updatedQuestions[currentQuestionIndex],
-                        userAnswer: data.data.audioAnalysis?.transcription || '[Video Answer]',
-                        score: data.data.evaluation?.score || null,
-                        feedback: data.data.evaluation?.feedback || null
-                    };
-                    return { ...prev, questions: updatedQuestions };
-                });
-
-                resetRecording();
-                speech.resetTranscript();
-                setTranscript('');
-                setDetectedKeywords(new Set());
-
-                // Refresh analytics
-                fetchAnalytics();
-
-                // Move to next question after a delay
-                if (data.data.nextQuestion) {
-                    setTimeout(() => {
-                        setCurrentQuestionIndex(prev => prev + 1);
-                        setAiHint(null);
-                    }, 2000);
-                } else if (data.data.isComplete) {
-                    // All questions answered, show completion message
-                    setTimeout(() => {
-                        router.push(`/dashboard/interviews/${sessionId}`);
-                    }, 2000);
-                }
-            }
-        } catch (err) {
-            console.error('Failed to submit video answer:', err);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     const endSession = async () => {
         if (!sessionId) return;
@@ -441,20 +409,30 @@ export default function MixedInterviewRoomPage() {
     };
 
     // Start interview after all permissions granted
+    // Start interview after all permissions granted
     const handleStartInterview = async () => {
         if (allRequirementsMet && agreedToGuidelines) {
             await proctoringControls.enterFullscreen();
             setShowProctoringModal(false);
+            setTimeout(() => {
+                startContinuousInterview();
+            }, 1000);
         }
     };
-
+    // Handle interview end with fullscreen exit
     // Handle interview end with fullscreen exit
     const handleEndInterview = async () => {
+        stopInterview();
         await proctoringControls.exitFullscreen();
         proctoringControls.stopAllStreams();
         await endSession();
     };
-
+    
+    useEffect(() => {
+        if (isFinished) {
+            handleEndInterview();
+        }
+    }, [isFinished]);
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] bg-[#0a0f14]">
@@ -767,7 +745,7 @@ export default function MixedInterviewRoomPage() {
                                 <div className="absolute top-4 left-4 flex items-center gap-2 px-2 py-1 rounded-full bg-red-500/90">
                                     <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                                     <span className="text-white text-xs font-medium">
-                                        REC {formatVideoTime(recordingTime)}
+                                        REC {formatTimeMs(180000 - timeRemainingMs)}
                                     </span>
                                 </div>
                             )}
@@ -776,51 +754,20 @@ export default function MixedInterviewRoomPage() {
 
                     {/* Recording Controls */}
                     <div className="flex items-center justify-center gap-4 py-4">
-                        <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20'}`}
-                        >
+                        <button onClick={() => setIsMuted(!isMuted)} className={`w-12 h-12 rounded-full flex items-center justify-center transition ${isMuted ? "bg-red-500/20 text-red-400" : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20"}`}>
                             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
-
-                        <button
-                            className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition"
-                        >
+                        <button className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 flex items-center justify-center transition">
                             <Video className="w-5 h-5" />
                         </button>
-
                         <div className="w-px h-8 bg-gray-300 dark:bg-white/10" />
-
-                        {!isRecording && !videoBlob && (
-                            <button
-                                onClick={startRecording}
-                                className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-teal-500 text-white flex items-center justify-center hover:opacity-90 transition shadow-lg shadow-indigo-500/25"
-                            >
-                                <div className="w-5 h-5 rounded-full bg-white" />
-                            </button>
-                        )}
-
                         {isRecording && (
-                            <button
-                                onClick={stopRecording}
-                                className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition shadow-lg shadow-red-500/25"
-                            >
-                                <Square className="w-5 h-5" />
-                            </button>
-                        )}
-
-                        {videoBlob && !isRecording && (
-                            <button
-                                onClick={submitVideoAnswer}
-                                disabled={submitting}
-                                className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-teal-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                                Submit Answer
+                            <button onClick={advanceQuestion} disabled={isSubmitting} className="px-6 py-3 rounded-full bg-gradient-to-r from-teal-500 to-indigo-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2">
+                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+                                Next Question
                             </button>
                         )}
                     </div>
-
                     {/* Bottom Metrics - Combined Technical + HR */}
                     <div className="grid grid-cols-4 gap-4">
                         {/* Sentiment Analysis (Technical) */}
@@ -881,7 +828,7 @@ export default function MixedInterviewRoomPage() {
                             {/* Recording indicator */}
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30">
                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatElapsedTime(elapsedTime)}</span>
+                                <span className="text-red-500 dark:text-red-400 text-sm font-medium">REC • {formatTimeMs(180000 - timeRemainingMs)}</span>
                             </div>
 
                             {/* Mic toggle */}

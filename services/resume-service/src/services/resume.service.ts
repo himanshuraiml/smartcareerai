@@ -6,7 +6,8 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { parseResumeContent } from '../utils/ai';
-import { generateEmbedding, upsertVector } from '../utils/vectorUtils';
+import { generateEmbedding, upsertVector } from '@placenxt/shared';
+import { encrypt, decrypt } from '../utils/crypto';
 
 interface UploadedFile {
     originalname: string;
@@ -115,20 +116,16 @@ export class ResumeService {
         const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100);
         const storageKey = `${userId}/${timestamp}-${sanitizedName}`;
 
-        // Upload to MinIO
+        // Phase 8: Secuity - Encrypt the buffer before uploading
+        const encryptedBuffer = encrypt(file.buffer);
+
+        // Upload to MinIO (using encrypted buffer)
         await this.minioClient.putObject(
             this.bucketName,
             storageKey,
-            file.buffer,
-            file.size,
-            { 'Content-Type': file.mimetype }
-        );
-
-        // Generate presigned URL (valid for 2 hours for security)
-        const fileUrl = await this.minioClient.presignedGetObject(
-            this.bucketName,
-            storageKey,
-            2 * 60 * 60
+            encryptedBuffer,
+            encryptedBuffer.length,
+            { 'Content-Type': 'application/octet-stream', 'X-Amz-Meta-Original-Type': file.mimetype }
         );
 
         // Save to database
@@ -136,14 +133,14 @@ export class ResumeService {
             data: {
                 userId,
                 fileName: storageKey, // Store the full storage key to ensure retrievability
-                fileUrl,
+                fileUrl: '', // URL will be generated on the fly for encrypted files
                 fileSize: file.size,
                 mimeType: file.mimetype,
                 status: 'PENDING',
             },
         });
 
-        // Trigger async parsing
+        // Trigger async parsing (use original unencrypted buffer)
         this.parseResumeAsync(resume.id, file.buffer, file.mimetype);
 
         return this.formatResume(resume);
@@ -181,7 +178,40 @@ export class ResumeService {
         return this.formatResume(resume);
     }
 
+    /**
+     * Get decrypted file buffer and metadata
+     */
+    async getDecryptedFile(resumeId: string, userId?: string) {
+        const where: any = { id: resumeId, isActive: true };
+        if (userId) where.userId = userId;
+
+        const resume = await prisma.resume.findFirst({ where });
+
+        if (!resume) {
+            throw new AppError('Resume not found', 404);
+        }
+
+        // Download from MinIO
+        const objectStream = await this.minioClient.getObject(this.bucketName, resume.fileName);
+        const chunks: Buffer[] = [];
+        for await (const chunk of objectStream) {
+            chunks.push(chunk);
+        }
+        const encryptedBuffer = Buffer.concat(chunks);
+
+        // Decrypt
+        const decryptedBuffer = decrypt(encryptedBuffer);
+
+        return {
+            buffer: decryptedBuffer,
+            mimeType: resume.mimeType,
+            fileName: resume.fileName.split('/').pop() || 'resume.pdf'
+        };
+    }
+
     async getDownloadUrl(resumeId: string) {
+        // For encrypted files, we need the client to request the decrypted file via an API endpoint.
+        // We'll return the relative API path instead of a MinIO presigned URL.
         const resume = await prisma.resume.findFirst({
             where: { id: resumeId, isActive: true },
         });
@@ -190,14 +220,10 @@ export class ResumeService {
             throw new AppError('Resume not found', 404);
         }
 
-        // Generate a fresh presigned URL valid for 1 hour
-        const url = await this.minioClient.presignedGetObject(
-            this.bucketName,
-            resume.fileName,
-            60 * 60
-        );
+        // This path will be proxied by Gateway to our download route
+        const url = `/api/v1/resumes/${resumeId}/download-file`;
 
-        return { url };
+        return { url, isEncrypted: true };
     }
 
     async getDownloadUrlByCandidate(candidateId: string) {
@@ -210,13 +236,9 @@ export class ResumeService {
             throw new AppError('Resume not found', 404);
         }
 
-        const url = await this.minioClient.presignedGetObject(
-            this.bucketName,
-            resume.fileName,
-            60 * 60
-        );
+        const url = `/api/v1/resumes/${resume.id}/download-file`;
 
-        return { url };
+        return { url, isEncrypted: true };
     }
 
     async deleteResume(resumeId: string, userId: string) {
@@ -260,20 +282,8 @@ export class ResumeService {
             throw new AppError('Resume not found', 404);
         }
 
-        // Download file from MinIO
-        // Use resume.fileName as the object key. 
-        // Note: For older uploads where fileName was just the original name, this may fail if the key format was different.
-        // However, since we now store the full storage key in fileName, this is the correct approach for new uploads.
-        const objectStream = await this.minioClient.getObject(
-            this.bucketName,
-            resume.fileName
-        );
-
-        const chunks: Buffer[] = [];
-        for await (const chunk of objectStream) {
-            chunks.push(chunk);
-        }
-        const buffer = Buffer.concat(chunks);
+        // Download and decrypt
+        const { buffer } = await this.getDecryptedFile(resumeId, userId);
 
         // Parse based on type
         const parsedText = await this.extractText(buffer, resume.mimeType);
@@ -290,6 +300,7 @@ export class ResumeService {
         const structuredData = await parseResumeContent(parsedText);
         return { ...this.formatResume(updatedResume), ...structuredData };
     }
+
     private async parseResumeAsync(resumeId: string, buffer: Buffer, mimeType: string) {
         try {
             await prisma.resume.update({
@@ -297,6 +308,7 @@ export class ResumeService {
                 data: { status: 'PARSING' },
             });
 
+            // buffer is already unencrypted here as it's passed from uploadResume
             const parsedText = await this.extractText(buffer, mimeType);
             const structuredData = await parseResumeContent(parsedText);
 
@@ -364,6 +376,63 @@ export class ResumeService {
             return result.value;
         }
         throw new AppError('Unsupported file type', 400);
+    }
+
+    // ── Avatar Upload ────────────────────────────────────────────────────────────
+
+    private readonly avatarBucket = 'avatars';
+
+    private async ensureAvatarBucket() {
+        try {
+            const exists = await this.minioClient.bucketExists(this.avatarBucket);
+            if (!exists) {
+                await this.minioClient.makeBucket(this.avatarBucket);
+                // Set public read policy so <img src="..."> works directly
+                const policy = JSON.stringify({
+                    Version: '2012-10-17',
+                    Statement: [{
+                        Effect: 'Allow',
+                        Principal: { AWS: ['*'] },
+                        Action: ['s3:GetObject'],
+                        Resource: [`arn:aws:s3:::${this.avatarBucket}/*`],
+                    }],
+                });
+                await this.minioClient.setBucketPolicy(this.avatarBucket, policy);
+                logger.info(`Created public avatars bucket`);
+            }
+        } catch (err) {
+            logger.error('Failed to init avatars bucket', err);
+        }
+    }
+
+    async uploadAvatar(userId: string, file: { buffer: Buffer; mimetype: string }) {
+        await this.ensureAvatarBucket();
+
+        const ext = file.mimetype === 'image/jpeg' ? 'jpg'
+            : file.mimetype === 'image/png' ? 'png'
+                : file.mimetype === 'image/webp' ? 'webp'
+                    : 'jpg';
+        const key = `${userId}/profile.${ext}`;
+
+        await this.minioClient.putObject(
+            this.avatarBucket,
+            key,
+            file.buffer,
+            file.buffer.length,
+            { 'Content-Type': file.mimetype },
+        );
+
+        const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
+        const port = process.env.MINIO_PORT || '9000';
+        const useSSL = process.env.MINIO_USE_SSL === 'true';
+        const baseUrl = process.env.MINIO_PUBLIC_BASE_URL
+            || `${useSSL ? 'https' : 'http'}://${endpoint}:${port}`;
+        const avatarUrl = `${baseUrl}/${this.avatarBucket}/${key}?v=${Date.now()}`;
+
+        await prisma.user.update({ where: { id: userId }, data: { avatarUrl } });
+
+        logger.info(`Avatar uploaded for user ${userId}`);
+        return avatarUrl;
     }
 
     private formatResume(resume: any) {

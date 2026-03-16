@@ -55,27 +55,27 @@ async function main() {
 
     // Create Institution
     const institution = await prisma.institution.upsert({
-        where: { domain: 'stanford.edu' },
+        where: { domain: 'srmisttrichy.edu' },
         update: {},
         create: {
-            name: 'Stanford University',
-            domain: 'stanford.edu',
-            address: '450 Serra Mall, Stanford, CA 94305',
-            logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Seal_of_Leland_Stanford_Junior_University.svg/1200px-Seal_of_Leland_Stanford_Junior_University.svg.png'
+            name: 'SRM Institute of Science and Technology (SRMIST)',
+            domain: 'srmisttrichy.edu',
+            address: 'SRM Nagar, Tiruchirappalli, Tamil Nadu 621105',
+            logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/30/SRM_Institute_of_Science_and_Technology_logo.png/220px-SRM_Institute_of_Science_and_Technology_logo.png'
         }
     });
 
     const instAdmin = await prisma.user.upsert({
-        where: { email: 'admin@stanford.edu' },
+        where: { email: 'admin@srmisttrichy.edu' },
         update: {
             role: 'INSTITUTION_ADMIN',
             passwordHash: instAdminPassword,
             adminForInstitutionId: institution.id
         },
         create: {
-            email: 'admin@stanford.edu',
+            email: 'admin@srmisttrichy.edu',
             passwordHash: instAdminPassword,
-            name: 'Stanford Admin',
+            name: 'SRMIST Admin',
             role: 'INSTITUTION_ADMIN',
             isVerified: true,
             adminForInstitutionId: institution.id

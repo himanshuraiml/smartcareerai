@@ -4,8 +4,8 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function verifyLogin() {
-    console.log('🔍 Verifying Stanford Admin Login...');
-    const email = 'admin@stanford.edu';
+    console.log('🔍 Verifying SRMIST Admin Login...');
+    const email = 'admin@srmisttrichy.edu';
     const password = 'InstAdmin123!';
 
     try {

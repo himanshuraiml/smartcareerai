@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
 import { authFetch } from '@/lib/auth-fetch';
+import Logo from '@/components/layout/Logo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
@@ -30,7 +31,6 @@ export default function RegisterPage() {
     const [loadingRoles, setLoadingRoles] = useState(true);
     const [institutions, setInstitutions] = useState<{ id: string; name: string }[]>([]);
 
-    // Add institutionId to formData
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -129,22 +129,7 @@ export default function RegisterPage() {
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-block">
-                        <Image
-                            src="/logo-new-light.png"
-                            alt="PlaceNxt Logo"
-                            width={320}
-                            height={80}
-                            className="h-20 w-auto mx-auto block dark:hidden"
-                            priority
-                        />
-                        <Image
-                            src="/logo-new-dark.png"
-                            alt="PlaceNxt Logo"
-                            width={320}
-                            height={80}
-                            className="h-20 w-auto mx-auto hidden dark:block"
-                            priority
-                        />
+                        <Logo width={240} height={80} className="mx-auto" />
                     </Link>
                 </div>
 

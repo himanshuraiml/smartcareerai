@@ -31,10 +31,16 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     const hfToken = process.env.HF_API_KEY || process.env.HUGGINGFACEHUB_API_TOKEN;
 
     if (hfToken) {
-        return generateEmbeddingHF(text, hfToken);
+        try {
+            return await generateEmbeddingHF(text, hfToken);
+        } catch (error: any) {
+            console.warn('Hugging Face embedding failed, falling back to local model:', error.message);
+            // Don't throw here, fall through to local fallback below
+        }
     }
 
     // Fallback: local Xenova (works in dev, NOT recommended for Railway production)
+    console.info('Using local model for embedding generation...');
     return generateEmbeddingLocal(text);
 };
 

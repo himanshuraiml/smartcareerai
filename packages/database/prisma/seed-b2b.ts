@@ -7,14 +7,14 @@ async function main() {
     console.log('🌱 Starting B2B Seeding...');
 
     // 1. Create Institutions
-    const stanford = await prisma.institution.upsert({
-        where: { domain: 'stanford.edu' },
+    const srmist = await prisma.institution.upsert({
+        where: { domain: 'srmisttrichy.edu' },
         update: {},
         create: {
-            name: 'Stanford University',
-            domain: 'stanford.edu',
-            address: '450 Serra Mall, Stanford, CA 94305',
-            logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/Stanford_University_seal_2003.svg',
+            name: 'SRM Institute of Science and Technology (SRMIST)',
+            domain: 'srmisttrichy.edu',
+            address: 'SRM Nagar, Tiruchirappalli, Tamil Nadu 621105',
+            logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/30/SRM_Institute_of_Science_and_Technology_logo.png/220px-SRM_Institute_of_Science_and_Technology_logo.png',
         },
     });
 
@@ -29,27 +29,27 @@ async function main() {
         },
     });
 
-    console.log(`✅ Created Institutions: ${stanford.name}, ${mit.name}`);
+    console.log(`✅ Created Institutions: ${srmist.name}, ${mit.name}`);
 
-    // 2. Create Institution Admin for Stanford
+    // 2. Create Institution Admin for SRMIST
     const passwordHash = await bcrypt.hash('Password123!', 12);
-    const stanfordAdmin = await prisma.user.upsert({
-        where: { email: 'admin@stanford.edu' },
+    const srmistAdmin = await prisma.user.upsert({
+        where: { email: 'admin@srmisttrichy.edu' },
         update: {
             role: UserRole.INSTITUTION_ADMIN,
-            adminForInstitutionId: stanford.id,
+            adminForInstitutionId: srmist.id,
         },
         create: {
-            email: 'admin@stanford.edu',
+            email: 'admin@srmisttrichy.edu',
             passwordHash,
-            name: 'Stanford Admin',
+            name: 'SRMIST Admin',
             role: UserRole.INSTITUTION_ADMIN,
-            adminForInstitutionId: stanford.id,
+            adminForInstitutionId: srmist.id,
             isVerified: true,
         },
     });
 
-    console.log(`✅ Created Stanford Admin: ${stanfordAdmin.email}`);
+    console.log(`✅ Created SRMIST Admin: ${srmistAdmin.email}`);
 
     // 3. Create a Recruiter
     const recruiterUser = await prisma.user.upsert({
@@ -77,28 +77,28 @@ async function main() {
 
     console.log(`✅ Created Recruiter: ${recruiterUser.email}`);
 
-    // 4. Create Students for Stanford
+    // 4. Create Students for SRMIST
     const studentNames = ['Alice Chen', 'Bob Smith', 'Charlie Davis', 'Diana Prince'];
     const students = [];
 
     for (let i = 0; i < studentNames.length; i++) {
-        const email = `student${i + 1}@stanford.edu`;
+        const email = `student${i + 1}@srmisttrichy.edu`;
         const student = await prisma.user.upsert({
             where: { email },
-            update: { institutionId: stanford.id },
+            update: { institutionId: srmist.id },
             create: {
                 email,
                 passwordHash,
                 name: studentNames[i],
                 role: UserRole.USER,
-                institutionId: stanford.id,
+                institutionId: srmist.id,
                 isVerified: true,
             },
         });
         students.push(student);
     }
 
-    console.log(`✅ Created ${students.length} Stanford Students`);
+    console.log(`✅ Created ${students.length} SRMIST Students`);
 
     // 5. Create some Skills for the students (to test profile completion)
     const skills = await prisma.skill.findMany({ take: 3 });
@@ -123,12 +123,12 @@ async function main() {
             job: {
                 create: {
                     recruiterId: recruiter.id,
-                    title: 'Software Engineer Intern (Stanford Only)',
-                    description: 'A special B2B targeted job for Stanford students.',
+                    title: 'Software Engineer Intern (SRMIST Only)',
+                    description: 'A special B2B targeted job for SRMIST students.',
                     location: 'Remote',
                     requirements: ['React', 'Node.js'],
                     requiredSkills: ['React', 'TypeScript'],
-                    targetInstitutionId: stanford.id,
+                    targetInstitutionId: srmist.id,
                     approvalStatus: ApprovalStatus.APPROVED,
                 },
             },

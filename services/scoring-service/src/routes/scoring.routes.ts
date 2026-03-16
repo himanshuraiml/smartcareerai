@@ -12,5 +12,6 @@ router.post('/analyze', authMiddleware, validateRequest(ScoreRequestSchema), sco
 router.get('/history', authMiddleware, scoringController.getScoreHistory);
 router.get('/:id', authMiddleware, scoringController.getScoreById);
 router.get('/roles', scoringController.getJobRoles);
+router.post('/assessments/:attemptId/score', scoringController.scoreAssessment);
 
 export { router as scoringRouter };

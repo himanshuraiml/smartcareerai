@@ -57,6 +57,7 @@ interface InterviewSession {
     feedback: string | null;
     startedAt: string | null;
     completedAt: string | null;
+    cutoffScore?: number;
     questions: Question[];
 }
 
@@ -490,6 +491,15 @@ export default function InterviewRoomPage() {
                             <p className="text-center text-teal-400 font-medium">
                                 {(session.overallScore || 0) >= 80 ? 'Excellent' : (session.overallScore || 0) >= 60 ? 'Good' : 'Needs Improvement'}
                             </p>
+                            {session.cutoffScore && (
+                                <div className="mt-4 p-2 rounded-lg bg-white/10 text-center border border-white/20">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Passing Cutoff</p>
+                                    <p className="text-xl font-black text-white">{session.cutoffScore}%</p>
+                                    <p className={`text-xs mt-1 font-bold ${(session.overallScore || 0) >= (session.cutoffScore || 0) ? 'text-green-400' : 'text-red-400'}`}>
+                                        {(session.overallScore || 0) >= (session.cutoffScore || 0) ? 'PASSED' : 'NOT PASSED'}
+                                    </p>
+                                </div>
+                            )}
                             <p className="text-center text-gray-500 text-sm mt-1">Foundation builder ⓘ</p>
                         </div>
 
@@ -838,6 +848,11 @@ export default function InterviewRoomPage() {
                     <p className="text-gray-500 dark:text-gray-400 mb-6">
                         Difficulty: {session.difficulty} •{' '}
                         {session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10} questions
+                        {session.cutoffScore && (
+                            <span className="block mt-2 text-amber-500 font-bold">
+                                Target Score to Pass: {session.cutoffScore}%
+                            </span>
+                        )}
                     </p>
 
                     <div className="p-4 rounded-lg bg-white dark:bg-white/5 mb-6 text-left max-w-md mx-auto">
@@ -891,6 +906,12 @@ export default function InterviewRoomPage() {
                         <p className="text-gray-500 dark:text-gray-400 text-sm">{session.targetRole}</p>
                     </div>
                 </div>
+                {session.cutoffScore && (
+                    <div className="hidden md:flex flex-col items-end mr-4">
+                        <span className="text-[10px] text-gray-500 uppercase font-black">Target</span>
+                        <span className="text-lg font-black text-amber-500">{session.cutoffScore}%</span>
+                    </div>
+                )}
                 <div className="flex items-center gap-4">
                     <span className="text-gray-500 dark:text-gray-400">
                         Question {currentQuestionIndex + 1} of {session.questions.length}

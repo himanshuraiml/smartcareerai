@@ -1,19 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTheme } from '@/providers/ThemeProvider';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { platformSolutions } from '@/constants/solutions';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight, FileText, Zap, Mic, Rocket, Gem,
-    Check, Star, Users, TrendingUp, Award, Menu, X,
-    ChevronRight, Sparkles, ShieldCheck
+    Check, Users, TrendingUp, Menu, X,
+    ChevronRight, Sparkles, ShieldCheck, Building2, Briefcase, Target,
+    GraduationCap, LineChart, BrainCircuit, Database, LayoutDashboard, Award,
+    Cpu, Code2, Binary, Sliders, Trash2, GripVertical, AlertCircle, Activity,
+    Flame, Star, Bell, Moon, FlaskConical, CheckCircle2, UserCircle2,
+    Search, Layout
 } from 'lucide-react';
 import Image from 'next/image';
-import ThemeToggle from '@/components/theme/ThemeToggle';
-import { useTheme } from '@/providers/ThemeProvider';
+import Link from 'next/link';
 
 export default function HomePage() {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [activeSolution, setActiveSolution] = useState(0);
     const { theme } = useTheme();
     const isLight = theme === 'light';
 
@@ -36,315 +42,363 @@ export default function HomePage() {
             />
 
             {/* ── Navigation ── */}
-            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isLight
-                ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/80 shadow-sm'
-                : 'bg-[#080C16]/80 backdrop-blur-xl border-b border-white/[0.06]'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
-                        <Link href="/" className="flex items-center gap-2.5">
-                            <Image
-                                src="/logo-new-light.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-16 w-auto md:h-20 block dark:hidden"
-                                priority
-                            />
-                            <Image
-                                src="/logo-new-dark.png"
-                                alt="PlaceNxt Logo"
-                                width={320}
-                                height={80}
-                                className="h-16 w-auto md:h-20 hidden dark:block"
-                                priority
-                            />
-                        </Link>
-
-                        {/* Desktop Nav */}
-                        <div className="hidden md:flex items-center gap-1">
-                            {[
-                                { label: 'Blog', href: '/blog' },
-                                { label: 'Pricing', href: '/pricing' },
-                            ].map(item => (
-                                <Link key={item.href} href={item.href}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isLight
-                                        ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                                    {item.label}
-                                </Link>
-                            ))}
-                            <div className={`mx-3 h-5 w-px ${isLight ? 'bg-gray-200' : 'bg-white/10'}`} />
-                            <Link href="/login"
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isLight
-                                    ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                                Login
-                            </Link>
-                            <Link href="/register"
-                                className="ml-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/25 flex items-center gap-1.5">
-                                Get Started <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
-                            <div className="ml-2"><ThemeToggle /></div>
-                        </div>
-
-                        {/* Mobile */}
-                        <div className="md:hidden flex items-center gap-2">
-                            <ThemeToggle />
-                            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className={`p-2 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-gray-300'}`}
-                                aria-label="Toggle menu">
-                                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile Menu */}
-                <AnimatePresence>
-                    {mobileMenuOpen && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
-                            className={`md:hidden border-t ${isLight ? 'border-gray-100 bg-white' : 'border-white/5 bg-[#0B0F19]'}`}>
-                            <div className="px-4 py-4 space-y-1">
-                                {[
-                                    { label: 'Blog', href: '/blog' },
-                                    { label: 'Pricing', href: '/pricing' },
-                                    { label: 'Login', href: '/login' },
-                                ].map(item => (
-                                    <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
-                                        className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isLight
-                                            ? 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
-                                            : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}>
-                                        {item.label}
-                                    </Link>
-                                ))}
-                                <Link href="/register" onClick={() => setMobileMenuOpen(false)}
-                                    className="block px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold text-center mt-2">
-                                    Get Started Free
-                                </Link>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </nav>
+            <Navbar />
 
             {/* ── Hero Section ── */}
-            <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 px-4 overflow-hidden">
-                {/* Layered glow mesh */}
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className={`absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full blur-[160px] ${isLight ? 'bg-indigo-400/20' : 'bg-indigo-600/20'}`} />
-                    <div className={`absolute top-1/3 -left-48 w-[500px] h-[400px] rounded-full blur-[120px] ${isLight ? 'bg-violet-300/15' : 'bg-violet-700/15'}`} />
-                    <div className={`absolute top-1/3 -right-48 w-[500px] h-[400px] rounded-full blur-[120px] ${isLight ? 'bg-cyan-300/10' : 'bg-cyan-700/10'}`} />
-                    {/* Grid dots */}
-                    <div className={`absolute inset-0 ${isLight ? 'opacity-[0.04]' : 'opacity-[0.06]'}`}
-                        style={{ backgroundImage: 'radial-gradient(circle, #6366f1 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-                </div>
-
-                <div className="max-w-5xl mx-auto text-center relative z-10">
-                    {/* Status badge */}
-                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                        className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-medium mb-8 border ${isLight
-                            ? 'bg-white border-indigo-100 text-indigo-700 shadow-md shadow-indigo-100/60'
-                            : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300'}`}>
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                        </span>
-                        AI-Powered Placement Platform
-                    </motion.div>
-
-                    {/* Headline */}
-                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                        className="text-4xl sm:text-6xl md:text-7xl font-black mb-6 leading-[1.05] tracking-tight">
-                        <span className="gradient-text">Your Next Placement</span>
-                        <br />
-                        <span className={isLight ? 'text-gray-900' : 'text-white'}>Starts Here</span>
-                    </motion.h1>
-
-                    {/* Sub */}
-                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                        className={`text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-10 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                        One platform for resume scoring, skill validation, mock interviews,
-                        and job tracking – everything you need to get placed, powered by AI.
-                    </motion.p>
-
-                    {/* CTAs */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                        <Link href="/register"
-                            className="group w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-semibold text-base sm:text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-2xl shadow-indigo-500/30">
-                            Start Free
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-                        <Link href="#roadmap"
-                            className={`w-full sm:w-auto px-8 py-4 rounded-xl font-semibold text-base sm:text-lg transition-all flex items-center justify-center gap-2 ${isLight
-                                ? 'bg-white border border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-600 shadow-sm'
-                                : 'bg-white/5 border border-white/10 text-gray-300 hover:border-indigo-500/40 hover:text-white'}`}>
-                            See How It Works
-                        </Link>
-                    </motion.div>
-
-                    {/* Social proof */}
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                        className={`flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {[
-                            { icon: Users, value: '10,000+', label: 'Students Placed', iconColor: 'text-indigo-400' },
-                            { icon: Star, value: '4.9/5', label: 'User Rating', iconColor: 'text-amber-400' },
-                            { icon: TrendingUp, value: '85%', label: 'Success Rate', iconColor: 'text-emerald-400' },
-                        ].map(stat => (
-                            <div key={stat.label} className="flex items-center gap-2.5">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
-                                    <stat.icon className={`w-4 h-4 ${stat.iconColor}`} />
-                                </div>
-                                <span>
-                                    <strong className={`font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{stat.value}</strong>
-                                    {' '}{stat.label}
-                                </span>
-                            </div>
-                        ))}
-                    </motion.div>
-                </div>
-
-                {/* Feature pill row */}
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                    className="mt-14 flex flex-wrap items-center justify-center gap-3 max-w-2xl mx-auto relative z-10">
-                    {['Resume AI Scoring', 'Skill Tests & Badges', 'Mock AI Interviews', 'Job Application Tracker', 'Gap Analysis'].map((pill) => (
-                        <span key={pill}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${isLight
-                                ? 'bg-white border-gray-200 text-gray-600 shadow-sm'
-                                : 'bg-white/5 border-white/10 text-gray-400'}`}>
-                            <Check className="w-3 h-3 text-indigo-400 flex-shrink-0" />
-                            {pill}
-                        </span>
-                    ))}
-                </motion.div>
-            </section>
-
-            {/* ── Career Roadmap Section ── */}
-            <section id="roadmap" className="py-16 md:py-28 px-4 relative">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/[0.04] to-transparent" />
-
-                <div className="max-w-5xl mx-auto relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }} className="text-center mb-20">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border mb-5 ${isLight
-                            ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
-                            : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
-                            <Sparkles className="w-3 h-3" /> Guided Career Path
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 leading-tight">
-                            <span className="gradient-text">5 Stages. One Mission.</span>
-                            <br />
-                            <span className={isLight ? 'text-gray-900' : 'text-white'}>Your Career.</span>
-                        </h2>
-                        <p className={`text-base md:text-lg max-w-xl mx-auto ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Follow the guided path or skip ahead. Each stage unlocks AI-powered tools to accelerate your placement.
+            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-4">
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:flex-[1.6] text-center lg:text-left">
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border ${isLight ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
+                            <Sparkles className="w-4 h-4" />
+                            <span className="text-sm font-bold tracking-tight">AI-Powered Career Transformation</span>
+                        </div>
+                        <h1 className={`text-5xl lg:text-7xl font-black mb-8 leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                            Resumes don’t <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 italic">predict success.</span> <br />
+                            Your skills do.
+                        </h1>
+                        <p className={`text-lg lg:text-xl mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+                            Get hired based on the true skills that prove your performance. PlaceNxt gives you validated, defensible, and predictive proof of your talent, so you gain the clarity and confidence to stand out and land the career you deserve.
                         </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                            <Link href="/register"
+                                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2">
+                                Get Started <ArrowRight className="w-5 h-5" />
+                            </Link>
+                            <Link href="/solutions"
+                                className={`w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-lg border transition-all flex items-center justify-center ${isLight ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}>
+                                View Solutions
+                            </Link>
+                        </div>
                     </motion.div>
 
-                    {/* Roadmap */}
-                    <div className="relative">
-                        {/* Center line */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-500/0 via-indigo-500/40 to-indigo-500/0 -translate-x-1/2 hidden md:block" />
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="lg:flex-[1] w-full relative">
+                        {/* ── Scaled Down Dashboard Window ── */}
+                        <div className="relative w-full group overflow-visible">
+                            <div className={`relative w-full rounded-[2rem] border shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[400px] lg:min-h-[500px] origin-top lg:origin-right transform lg:scale-[0.85] xl:scale-[0.75] transition-transform duration-500 hover:scale-[0.9] ${isLight ? 'bg-white border-gray-100 shadow-blue-100/50' : 'bg-[#0B0F19] border-white/10 shadow-black'}`}>
 
-                        <div className="md:space-y-0">
-                            {roadmapStages.map((stage, i) => (
-                                <motion.div key={stage.id}
-                                    initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    viewport={{ once: true, margin: '-100px' }}
-                                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                                    className={`relative flex flex-col md:items-center gap-6 md:gap-0 md:py-10 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                                {/* Dashboard Grid Background */}
+                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                                    style={{ backgroundImage: `radial-gradient(${isLight ? '#000' : '#fff'} 1px, transparent 1px)`, backgroundSize: '32px 32px' }}
+                                />
 
-                                    {/* Card */}
-                                    <div className={`flex-1 ${i % 2 === 0 ? 'md:pr-20' : 'md:pl-20'}`}>
-                                        <div className={`p-6 rounded-2xl border transition-all duration-300 group cursor-default
-                                            hover:shadow-xl hover:-translate-y-0.5 ${isLight
-                                                ? 'bg-white border-gray-100 shadow-sm hover:border-indigo-200 hover:shadow-indigo-100'
-                                                : 'bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/30'}`}>
-                                            <div className={`text-xs font-bold uppercase tracking-widest mb-2 ${isLight ? 'text-indigo-400' : 'text-indigo-500'}`}>
-                                                Stage {i + 1}
+                                {/* Compact Sidebar */}
+                                <div className={`w-16 h-auto md:h-full border-r flex flex-col items-center py-6 relative z-10 ${isLight ? 'bg-white border-gray-100' : 'bg-[#0B0F19]/80 border-white/5 backdrop-blur-xl'}`}>
+                                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 mb-8">
+                                        <Rocket className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="space-y-4 flex-1">
+                                        {[LayoutDashboard, FileText, Zap, Mic, BrainCircuit, Briefcase, Activity].map((Icon, i) => (
+                                            <div key={i} className={`p-2.5 rounded-xl transition-all ${i === 0 ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/10 text-white') : (isLight ? 'text-gray-400' : 'text-gray-500')}`}>
+                                                <Icon className="w-5 h-5" />
                                             </div>
-                                            <h3 className={`text-2xl font-bold mb-2 group-hover:text-indigo-500 transition-colors ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                                                {stage.title}
-                                            </h3>
-                                            <p className={`mb-5 text-sm leading-relaxed ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {stage.description}
-                                            </p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {stage.tools.map((tool, ti) => (
-                                                    <span key={ti} className={`px-3 py-1 rounded-full text-xs font-medium border ${isLight
-                                                        ? 'bg-gray-50 border-gray-200 text-gray-600'
-                                                        : 'bg-white/5 border-white/10 text-gray-300'}`}>
-                                                        {tool}
-                                                    </span>
-                                                ))}
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Content Area */}
+                                <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
+                                    {/* Mini Header */}
+                                    <div className={`h-16 border-b flex items-center justify-between px-6 ${isLight ? 'bg-white/80 border-gray-100' : 'bg-[#0B0F19]/80 border-white/5'} backdrop-blur-sm`}>
+                                        <div className="flex items-center gap-3 border-l pl-4 border-gray-100 h-8 ml-auto">
+                                            <div className="text-right">
+                                                <p className={`text-[10px] font-black leading-none ${isLight ? 'text-gray-900' : 'text-white'}`}>Arjun Sharma</p>
+                                                <p className="text-[8px] text-gray-500 font-bold">GOLD</p>
+                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-blue-600 p-0.5">
+                                                <div className="w-full h-full rounded-full border-2 border-white bg-gray-200 overflow-hidden">
+                                                    <Image src="https://i.pravatar.cc/150?u=arjun" alt="Arjun" width={32} height={32} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Icon node */}
-                                    <div className={`absolute left-1/2 -translate-x-1/2 w-14 h-14 rounded-2xl bg-gradient-to-br ${stage.color} flex items-center justify-center shadow-lg z-10 hidden md:flex ring-4 ${isLight ? 'ring-[#F8FAFC]' : 'ring-[#080C16]'}`}>
-                                        <stage.icon className="w-7 h-7 text-white" />
-                                    </div>
+                                    {/* Dashboard Body */}
+                                    <div className="p-6 space-y-6">
+                                        <div className={`p-4 rounded-2xl border flex items-center justify-between ${isLight ? 'bg-orange-50/50 border-orange-100' : 'bg-orange-500/5'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <Flame className="w-6 h-6 text-orange-500" />
+                                                <p className={`text-xs font-black ${isLight ? 'text-orange-900' : 'text-orange-100'}`}>12 Day Streak!</p>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                {[1, 2, 3].map(i => <div key={i} className="w-5 h-5 rounded-full bg-orange-500" />)}
+                                            </div>
+                                        </div>
 
-                                    {/* Mobile icon */}
-                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stage.color} flex items-center justify-center flex-shrink-0 md:hidden shadow-lg`}>
-                                        <stage.icon className="w-6 h-6 text-white" />
+                                        <div className={`p-6 rounded-[2rem] border shadow-lg ${isLight ? 'bg-white border-gray-100' : 'bg-[#121926]'}`}>
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <Target className="w-4 h-4 text-blue-500" />
+                                                <h4 className="text-[9px] font-black uppercase text-gray-400">Readiness Score</h4>
+                                            </div>
+                                            <div className="flex items-center justify-center mb-6">
+                                                <div className="relative w-28 h-28 flex items-center justify-center">
+                                                    <svg className="w-full h-full transform -rotate-90">
+                                                        <circle cx="56" cy="56" r="45" fill="none" strokeWidth="10" className={isLight ? 'stroke-gray-100' : 'stroke-white/5'} />
+                                                        <circle cx="56" cy="56" r="45" fill="none" strokeWidth="10" strokeLinecap="round" stroke="#3b82f6" strokeDasharray="210 1000" />
+                                                    </svg>
+                                                    <p className={`absolute text-2xl font-black ${isLight ? 'text-gray-900' : 'text-white'}`}>82</p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {[88, 72, 94].map((v, i) => (
+                                                    <div key={i} className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${v}%` }} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div className="flex-1 hidden md:block" />
-                                </motion.div>
-                            ))}
+                            {/* Glow Effect */}
+                            <div className="absolute -inset-4 bg-blue-500/10 blur-3xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
-            {/* ── Features Grid ── */}
-            <section className="py-16 md:py-24 px-4 relative">
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] blur-[100px] rounded-full ${isLight ? 'bg-violet-400/10' : 'bg-violet-600/10'}`} />
-                </div>
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }} className="text-center mb-16">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border mb-5 ${isLight
-                            ? 'bg-violet-50 border-violet-100 text-violet-600'
-                            : 'bg-violet-500/10 border-violet-500/20 text-violet-400'}`}>
-                            <Zap className="w-3 h-3" /> Feature-Packed
-                        </span>
-                        <h2 className="text-3xl md:text-5xl font-black mb-4">
-                            <span className="gradient-text">Powered by AI,</span>
-                            <span className={isLight ? ' text-gray-900' : ' text-white'}> Built for You</span>
+            {/* ── Why PlaceNxt for Recruiters ── */}
+            <section className="py-24 px-4 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+                    <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex-1">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 ${isLight ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                            <Briefcase className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Recruiter Excellence</span>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-black mb-6 leading-tight">
+                            Hire Talent Based on <br className="hidden lg:block" />
+                            <span className="text-emerald-500">Verified AI Insights</span>
                         </h2>
-                        <p className={`text-base md:text-lg max-w-xl mx-auto ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Every tool designed to give you an unfair advantage in the placement race.
-                        </p>
+                        <ul className="space-y-5 mb-8">
+                            {[
+                                { title: 'Pre-Vetted Candidate Pools', desc: 'Access students who have already passed AI-led mock interviews and technical assessments.' },
+                                { title: 'Automated Skill Ranking', desc: 'Our platform ranks candidates by objective skill scores, not just their resume keyword density.' },
+                                { title: '80% Reduction in Hiring Time', desc: 'Stop screening hundreds of resumes. Let our AI tell you who to interview first.' }
+                            ].map((point, index) => (
+                                <li key={index} className="flex gap-4">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${isLight ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                        <Check className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h4 className={`text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{point.title}</h4>
+                                        <p className={`text-sm leading-relaxed ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{point.desc}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
                     </motion.div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {features.map((feature, i) => (
-                            <motion.div key={i}
-                                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }} transition={{ delay: i * 0.06 }}
-                                className={`group p-6 rounded-2xl border transition-all duration-300 cursor-default
-                                    hover:shadow-xl hover:-translate-y-0.5 ${isLight
-                                        ? 'bg-white border-gray-100 shadow-sm hover:border-indigo-200 hover:shadow-indigo-100/60'
-                                        : 'bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/30'}`}>
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                    <feature.icon className="w-6 h-6 text-white" />
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex-1 w-full relative">
+                        {/* ── High Fidelity Visual Pipeline Creation ── */}
+                        <div className={`rounded-[2.5rem] p-6 md:p-8 border shadow-2xl relative overflow-hidden ${isLight ? 'bg-white border-gray-100' : 'bg-[#0B0F19] border-white/10'}`}>
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-8 px-2">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-blue-500" />
+                                    <span className={`text-xs font-black uppercase tracking-[0.2em] ${isLight ? 'text-gray-900' : 'text-gray-400'}`}>Visual Pipeline</span>
                                 </div>
-                                <h3 className={`text-lg font-bold mb-2 group-hover:text-indigo-500 transition-colors ${isLight ? 'text-gray-900' : 'text-white'}`}>
-                                    {feature.title}
-                                </h3>
-                                <p className={`text-sm leading-relaxed ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {feature.description}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold ${isLight ? 'bg-gray-100 text-gray-600' : 'bg-white/5 text-gray-400'}`}>
+                                    5 Stages Active
+                                </div>
+                            </div>
+
+                            {/* Pipeline Container (Dashed border) */}
+                            <div className={`rounded-3xl p-4 border-2 border-dashed ${isLight ? 'border-gray-100 bg-gray-50/50' : 'border-white/5 bg-white/[0.01]'}`}>
+                                <div className="space-y-3">
+                                    {[
+                                        { id: 1, title: 'Behavioural...', icon: BrainCircuit, color: 'purple', auto: true },
+                                        { id: 2, title: 'Analytical ...', icon: Cpu, color: 'blue', auto: true },
+                                        { id: 3, title: 'Coding Test', icon: Code2, color: 'emerald', auto: true },
+                                        { id: 4, title: 'Technical In...', icon: Binary, color: 'cyan', auto: true },
+                                        { id: 5, title: 'HR Intervie...', icon: Users, color: 'rose', auto: true, actions: true }
+                                    ].map((stage, i) => (
+                                        <motion.div
+                                            key={stage.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className={`group relative flex items-center gap-4 p-4 rounded-2xl border transition-all ${isLight
+                                                ? 'bg-white border-gray-100 hover:shadow-lg'
+                                                : 'bg-[#111827] border-white/5 hover:border-white/10 shadow-lg'}`}
+                                        >
+                                            {/* Drag Handle */}
+                                            <GripVertical className={`w-4 h-4 ${isLight ? 'text-gray-300' : 'text-gray-600'}`} />
+
+                                            {/* Icon Square */}
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm border ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
+                                                <stage.icon className={`w-6 h-6 text-${stage.color}-500`} />
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${isLight ? 'bg-gray-800 text-white' : 'bg-white/10 text-white'}`}>
+                                                        {stage.id}
+                                                    </div>
+                                                    <h4 className={`text-sm font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{stage.title}</h4>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 grayscale opacity-50">
+                                                    <ArrowRight className="w-3 h-3" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Auto-Advance</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Actions (for last item) */}
+                                            {stage.actions && (
+                                                <div className="flex items-center gap-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Sliders className={`w-4 h-4 ${isLight ? 'text-gray-400' : 'text-gray-500'}`} />
+                                                    <Trash2 className="w-4 h-4 text-rose-500/70" />
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Decorative Glow */}
+                            {!isLight && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── Why PlaceNxt for Universities ── */}
+            <section className="py-24 px-4 bg-gradient-to-b from-transparent to-purple-500/5">
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row-reverse items-center gap-16">
+                    <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex-1 text-left">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 ${isLight ? 'bg-purple-50 text-purple-600' : 'bg-purple-500/10 text-purple-400'}`}>
+                            <Building2 className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Intuitional Success</span>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-black mb-6 leading-tight">
+                            Elevate Your Institution's <br className="hidden lg:block" />
+                            <span className="text-purple-500">Placement Record</span>
+                        </h2>
+                        <ul className="space-y-5 mb-8">
+                            {[
+                                { title: 'Batch Tracking & Analytics', desc: 'Monitor the preparation progress of thousands of students using aggregate dashboards.' },
+                                { title: 'Industry-Aligned Curriculum', desc: 'Bridge the gap between academia and industry requirements with our targeted skill insights.' },
+                                { title: 'Co-Branded Portals', desc: 'Provide students with a premium, tailored experience under your university\'s banner.' }
+                            ].map((point, index) => (
+                                <li key={index} className="flex gap-4">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${isLight ? 'bg-purple-100 text-purple-600' : 'bg-purple-500/20 text-purple-400'}`}>
+                                        <Check className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h4 className={`text-lg font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{point.title}</h4>
+                                        <p className={`text-sm leading-relaxed ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{point.desc}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </motion.div>
+
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex-[1.5] w-full relative">
+                        {/* ── High Fidelity Placement Analytics Dashboard ── */}
+                        <div className={`rounded-[2.5rem] p-6 border shadow-2xl relative overflow-hidden flex flex-col gap-6 ${isLight ? 'bg-white border-gray-100 shadow-indigo-100' : 'bg-[#0B0F19] border-white/10'}`}>
+
+                            {/* Stats Row */}
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                {[
+                                    { label: 'Total Registered', val: '1,280', sub: '+12% this month', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-500/10', trend: 'up' },
+                                    { label: 'Total Placed', val: '840', sub: '65% placement rate', icon: Award, color: 'text-purple-500', bg: 'bg-purple-500/10', trend: 'up' },
+                                    { label: 'Interviews', val: '124', sub: 'In last 7 days', icon: Briefcase, color: 'text-blue-500', bg: 'bg-blue-500/10', trend: 'up' },
+                                    { label: 'Avg AI Score', val: '78/100', sub: '+5.4% improvement', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10', trend: 'up' },
+                                    { label: 'At-Risk Students', val: '12', sub: 'Action required', icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10', trend: 'down' }
+                                ].map((stat, i) => (
+                                    <div key={i} className={`p-4 rounded-2xl border ${isLight ? 'bg-gray-50/50 border-gray-100' : 'bg-white/[0.02] border-white/5'}`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className={`text-[9px] font-black uppercase tracking-wider text-gray-500`}>{stat.label}</span>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${stat.bg} ${stat.color}`}>
+                                                <stat.icon className="w-4 h-4" />
+                                            </div>
+                                        </div>
+                                        <div className={`text-xl font-black mb-1 ${isLight ? 'text-gray-900' : 'text-white'}`}>{stat.val}</div>
+                                        <div className="flex items-center gap-1">
+                                            {stat.trend === 'up' && <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />}
+                                            <span className="text-[9px] text-gray-500 font-bold">{stat.sub}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Main Content Area */}
+                            <div className="flex flex-col lg:flex-row gap-4">
+                                {/* Activity Trend Chart */}
+                                <div className={`flex-[2] p-6 rounded-3xl border ${isLight ? 'bg-white border-gray-100' : 'bg-white/[0.02] border-white/5'}`}>
+                                    <div className="flex items-center gap-2 mb-8">
+                                        <TrendingUp className="w-4 h-4 text-indigo-500" />
+                                        <h4 className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-gray-900' : 'text-gray-400'}`}>Activity Trend</h4>
+                                    </div>
+
+                                    {/* SVG Chart Recreation */}
+                                    <div className="relative h-48 w-full">
+                                        {/* Grid Lines */}
+                                        <div className="absolute inset-0 flex flex-col justify-between opacity-20">
+                                            {[1, 2, 3, 4, 5].map(i => <div key={i} className="border-t border-gray-500 w-full" />)}
+                                        </div>
+                                        {/* Chart Line */}
+                                        <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                            <motion.path
+                                                initial={{ pathLength: 0 }}
+                                                whileInView={{ pathLength: 1 }}
+                                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                                d="M 0,80 L 10,85 L 20,70 L 30,75 L 40,60 L 50,65 L 60,40 L 70,45 L 80,30 L 90,35 L 100,10"
+                                                fill="none"
+                                                stroke="url(#chartGradient)"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                            />
+                                            <defs>
+                                                <linearGradient id="chartGradient" x1="0" y1="0" x2="1" y2="0">
+                                                    <stop offset="0%" stopColor="#6366f1" />
+                                                    <stop offset="100%" stopColor="#818cf8" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        {/* Labels */}
+                                        <div className="absolute -bottom-6 left-0 right-0 flex justify-between px-1">
+                                            {['24 Feb', '1 Mar', '6 Mar', '9 Mar'].map(d => (
+                                                <span key={d} className="text-[8px] font-bold text-gray-500">{d}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activity */}
+                                <div className={`flex-1 p-6 rounded-3xl border flex flex-col ${isLight ? 'bg-white border-gray-100' : 'bg-white/[0.02] border-white/5'}`}>
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <Activity className="w-4 h-4 text-purple-500" />
+                                        <h4 className={`text-xs font-black uppercase tracking-widest ${isLight ? 'text-gray-900' : 'text-gray-400'}`}>Recent Activity</h4>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {[
+                                            { user: 'Siddharth M.', action: 'Cleared AI Interview', time: '2m ago' },
+                                            { user: 'Rahul K.', action: 'Resume Score: 85', time: '15m ago' },
+                                            { user: 'Ananya S.', action: 'New placement offer', time: '1h ago' },
+                                            { user: 'Priya D.', action: 'Skill Badge earned', time: '3h ago' }
+                                        ].map((item, i) => (
+                                            <div key={i} className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${isLight ? 'bg-purple-100 text-purple-600' : 'bg-purple-500/20 text-purple-400'}`}>
+                                                        {item.user[0]}
+                                                    </div>
+                                                    <div>
+                                                        <p className={`text-[11px] font-bold ${isLight ? 'text-gray-900' : 'text-white'}`}>{item.user}</p>
+                                                        <p className="text-[9px] text-gray-500 font-medium">{item.action}</p>
+                                                    </div>
+                                                </div>
+                                                <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">{item.time}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
             </section>
 
@@ -366,39 +420,139 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── CTA Section ── */}
-            <section className="py-16 md:py-24 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <motion.div initial={{ opacity: 0, scale: 0.97 }}
-                        whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-                        className="relative overflow-hidden rounded-3xl p-12 md:p-16 text-center">
-                        {/* Gradient bg */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
-                        {/* Glow orbs */}
-                        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-                        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-                        {/* Dot grid */}
-                        <div className="absolute inset-0 opacity-10"
-                            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            {/* ── Smart CTA Section ── */}
+            <section className="py-20 px-4">
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className={`relative overflow-hidden rounded-[3rem] border transition-all ${isLight ? 'bg-white border-gray-100 shadow-2xl shadow-indigo-100' : 'bg-[#080C16] border-white/10 shadow-black'}`}
+                    >
+                        {/* Background Effects */}
+                        <div className="absolute top-0 left-0 w-full h-full">
+                            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]" />
+                            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]" />
+                        </div>
 
-                        <div className="relative z-10">
-                            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 shadow-xl">
-                                <Rocket className="w-8 h-8 text-white" />
+                        <div className="relative z-10 flex flex-col lg:flex-row items-center">
+                            {/* Left Content */}
+                            <div className="flex-1 p-8 md:p-16 text-center lg:text-left">
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 text-blue-500 text-sm font-bold mb-6"
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                    8x Higher Chance of Placement
+                                </motion.div>
+                                <h2 className={`text-3xl md:text-5xl font-black mb-6 leading-tight ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                                    Ready to turn skills <br />
+                                    into <span className="text-blue-500 italic">offers?</span>
+                                </h2>
+                                <p className={`text-lg mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+                                    Join the elite group of students who stopped guessing and started preparing. Use AI to fix your resume, ace interviews, and get recommended to top companies.
+                                </p>
+
+                                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
+                                    <Link href="/register"
+                                        className="w-full sm:w-auto px-8 py-4 rounded-xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2">
+                                        Free Preparation <ArrowRight className="w-5 h-5" />
+                                    </Link>
+                                    <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                        <ShieldCheck className="w-4 h-4 text-green-500" />
+                                        No Credit Card Required
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-center lg:justify-start -space-x-3">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <div key={i} className={`w-10 h-10 rounded-full border-2 ${isLight ? 'border-white bg-gray-100' : 'border-[#080C16] bg-gray-800'} overflow-hidden`}>
+                                            <Image
+                                                src={`https://i.pravatar.cc/150?u=${i + 10}`}
+                                                alt="User"
+                                                width={40}
+                                                height={40}
+                                            />
+                                        </div>
+                                    ))}
+                                    <div className={`px-4 py-2 rounded-full text-xs font-bold ${isLight ? 'bg-gray-100 text-gray-600' : 'bg-white/5 text-gray-400'}`}>
+                                        +50k Prepared
+                                    </div>
+                                </div>
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
-                                Ready to Get Placed?
-                            </h2>
-                            <p className="text-indigo-100 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-                                Join thousands of students using AI to ace their placements. One platform replaces three separate tools.
-                            </p>
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <Link href="/register"
-                                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-indigo-600 font-bold text-lg hover:bg-indigo-50 transition-colors shadow-xl flex items-center justify-center gap-2">
-                                    Start Free <ArrowRight className="w-5 h-5" />
-                                </Link>
-                                <div className="flex items-center gap-2 text-indigo-200 text-sm">
-                                    <ShieldCheck className="w-4 h-4" />
-                                    No credit card required
+
+                            {/* Right Visual - Smart Feature Preview */}
+                            <div className={`flex-1 w-full p-8 lg:p-16 ${isLight ? 'bg-gray-50/50' : 'bg-white/[0.02]'}`}>
+                                <div className="relative">
+                                    {/* Score Card */}
+                                    <motion.div
+                                        whileHover={{ y: -5 }}
+                                        className={`p-6 rounded-[2rem] border shadow-2xl relative z-20 ${isLight ? 'bg-white border-gray-100' : 'bg-[#0B0F19] border-white/10'}`}
+                                    >
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                                                    <Target className="w-5 h-5 text-green-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Placement Score</p>
+                                                    <h4 className={`text-xl font-black ${isLight ? 'text-gray-900' : 'text-white'}`}>Advanced</h4>
+                                                </div>
+                                            </div>
+                                            <div className="text-3xl font-black text-blue-500">88%</div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {[
+                                                { label: 'Technical Interview', val: 92, color: 'bg-blue-500' },
+                                                { label: 'ATS Resume Score', val: 85, color: 'bg-indigo-500' },
+                                                { label: 'Behavioral Prep', val: 78, color: 'bg-violet-500' }
+                                            ].map((stat, i) => (
+                                                <div key={i}>
+                                                    <div className="flex justify-between text-xs font-bold mb-1">
+                                                        <span className={isLight ? 'text-gray-600' : 'text-gray-400'}>{stat.label}</span>
+                                                        <span className={isLight ? 'text-gray-900' : 'text-white'}>{stat.val}%</span>
+                                                    </div>
+                                                    <div className={`h-1.5 w-full rounded-full ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            whileInView={{ width: `${stat.val}%` }}
+                                                            className={`h-full rounded-full ${stat.color}`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className={`mt-8 pt-6 border-t ${isLight ? 'border-gray-50' : 'border-white/5'} flex items-center justify-between`}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase">Interview Ready</span>
+                                            </div>
+                                            <button className="text-[10px] items-center flex gap-1 font-bold text-blue-500 uppercase hover:underline">
+                                                View Skills <ChevronRight className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Floating Badges */}
+                                    <motion.div
+                                        animate={{ y: [0, -10, 0] }}
+                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                        className="absolute -top-6 -right-6 p-4 rounded-2xl glass-premium shadow-xl border border-white/20 z-30"
+                                    >
+                                        <Briefcase className="w-6 h-6 text-orange-500" />
+                                    </motion.div>
+
+                                    <motion.div
+                                        animate={{ y: [0, 10, 0] }}
+                                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                        className="absolute -bottom-10 -left-6 p-4 rounded-2xl glass-premium shadow-xl border border-white/20 z-30"
+                                    >
+                                        <Award className="w-6 h-6 text-yellow-500" />
+                                    </motion.div>
                                 </div>
                             </div>
                         </div>
@@ -406,137 +560,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── Footer ── */}
-            <footer className={`pt-12 pb-8 px-4 border-t ${isLight ? 'border-gray-200' : 'border-white/[0.06]'}`}>
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-                        {/* Brand */}
-                        <Link href="/" className="flex items-center gap-2.5">
-                            <Image
-                                src="/logo-new-light.png"
-                                alt="PlaceNxt Logo"
-                                width={240}
-                                height={60}
-                                className="h-14 w-auto md:h-16 block dark:hidden"
-                            />
-                            <Image
-                                src="/logo-new-dark.png"
-                                alt="PlaceNxt Logo"
-                                width={240}
-                                height={60}
-                                className="h-14 w-auto md:h-16 hidden dark:block"
-                            />
-                        </Link>
-                        <p className={`text-sm ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>
-                            AI-powered placement preparation — resume, skills, interviews, jobs.
-                        </p>
-                        <div className={`flex items-center gap-5 text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {[
-                                { label: 'Pricing', href: '/pricing' },
-                                { label: 'Privacy', href: '/privacy' },
-                                { label: 'Terms', href: '/terms' },
-                                { label: 'Contact', href: '/contact' },
-                            ].map(link => (
-                                <Link key={link.href} href={link.href}
-                                    className={`transition-colors ${isLight ? 'hover:text-gray-900' : 'hover:text-white'}`}>
-                                    {link.label}
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                    <div className={`pt-6 border-t text-center text-xs ${isLight ? 'border-gray-100 text-gray-400' : 'border-white/5 text-gray-600'}`}>
-                        © 2026 PlaceNxt. All rights reserved.
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 }
-
-/* ── Data ── */
-const roadmapStages = [
-    {
-        id: 'resume',
-        title: 'Resume Score',
-        description: 'Upload your resume and get instant ATS scores. Know your score before HR does.',
-        icon: FileText,
-        tools: ['Resume Parser', 'ATS Scorer', 'Skill Extractor'],
-        color: 'from-blue-500 to-cyan-500',
-        shadow: 'neon-cyan',
-    },
-    {
-        id: 'skills',
-        title: 'Skill Lab',
-        description: 'Prove your skills with AI-powered assessments. Earn verified badges that recruiters trust.',
-        icon: Zap,
-        tools: ['Skill Tests', 'Gap Analysis', 'Skill Badges'],
-        color: 'from-amber-500 to-orange-500',
-        shadow: 'neon-amber',
-    },
-    {
-        id: 'interviews',
-        title: 'Interview Arena',
-        description: 'Practice with AI interviewers for technical, behavioral, and HR rounds. Get real-time feedback.',
-        icon: Mic,
-        tools: ['Mock Interviews', 'Voice Analysis', 'Answer Coaching'],
-        color: 'from-rose-500 to-pink-500',
-        shadow: 'neon-pink',
-    },
-    {
-        id: 'jobs',
-        title: 'Job Board',
-        description: 'Find and track opportunities from top sources. Every application, one dashboard.',
-        icon: Rocket,
-        tools: ['Job Matching', 'Application Tracker', 'Email Alerts'],
-        color: 'from-emerald-500 to-teal-500',
-        shadow: 'neon-emerald',
-    },
-    {
-        id: 'offers',
-        title: 'Offer Hub',
-        description: 'Compare offers, negotiate better, and plan your career growth with AI guidance.',
-        icon: Gem,
-        tools: ['Offer Analysis', 'Salary Insights', 'Growth Planner'],
-        color: 'from-violet-500 to-purple-500',
-        shadow: 'neon-purple',
-    },
-];
-
-const features = [
-    {
-        icon: FileText,
-        title: 'ATS Resume Scoring',
-        description: 'Know your score before HR does. AI-powered ATS analysis and smart improvement suggestions.',
-        color: 'from-blue-500 to-cyan-500',
-    },
-    {
-        icon: Award,
-        title: 'Verified Skill Badges',
-        description: 'Prove it. Badge it. Show it. Digital badges trusted by recruiters at top companies.',
-        color: 'from-amber-500 to-orange-500',
-    },
-    {
-        icon: Mic,
-        title: 'AI Mock Interviews',
-        description: 'Practice with AI. Perform with confidence. Real-time feedback on every answer.',
-        color: 'from-rose-500 to-pink-500',
-    },
-    {
-        icon: Zap,
-        title: 'Personalized Learning',
-        description: 'Close skill gaps with AI-curated roadmaps tailored to your target role and company.',
-        color: 'from-violet-500 to-purple-500',
-    },
-    {
-        icon: TrendingUp,
-        title: 'Career Analytics',
-        description: 'Track your progress with detailed insights, growth metrics, and placement readiness scores.',
-        color: 'from-emerald-500 to-teal-500',
-    },
-    {
-        icon: Rocket,
-        title: 'Smart Job Matching',
-        description: 'Get matched to opportunities with AI that understands your skills, not just keywords.',
-        color: 'from-indigo-500 to-blue-500',
-    },
-];

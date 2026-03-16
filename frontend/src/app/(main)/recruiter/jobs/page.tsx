@@ -15,7 +15,8 @@ import {
     Users,
     Trash2,
     EyeOff,
-    Eye
+    Eye,
+    IndianRupee
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
@@ -29,6 +30,7 @@ interface Job {
     locationType: string;
     salaryMin?: number;
     salaryMax?: number;
+    salaryCurrency?: string;
     isActive: boolean;
     createdAt: string;
     _count?: {
@@ -255,10 +257,14 @@ export default function JobPostingsPage() {
                                             {(job.salaryMin || job.salaryMax) && (
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                                        <DollarSign className="w-3.5 h-3.5" />
+                                                        {job.salaryCurrency === 'INR' ? <IndianRupee className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
                                                     </div>
                                                     <span className="text-gray-700 dark:text-gray-300">
-                                                        ${job.salaryMin?.toLocaleString()} - ${job.salaryMax?.toLocaleString()}
+                                                        {job.salaryCurrency === 'INR' ? (
+                                                            `${job.salaryMin} LPA - ${job.salaryMax} LPA`
+                                                        ) : (
+                                                            `${job.salaryCurrency} ${job.salaryMin?.toLocaleString()} - ${job.salaryMax?.toLocaleString()}`
+                                                        )}
                                                     </span>
                                                 </div>
                                             )}

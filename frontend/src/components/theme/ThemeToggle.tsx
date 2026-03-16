@@ -4,15 +4,15 @@ import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/providers/ThemeProvider";
 
 export default function ThemeToggle() {
-    const { theme, toggleTheme } = useTheme();
+    const { resolvedTheme, toggleTheme } = useTheme();
 
     return (
         <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
         >
-            {theme === "dark" ? (
+            {resolvedTheme === "dark" ? (
                 <Sun className="w-5 h-5 text-gray-400 hover:text-yellow-400 transition-colors" />
             ) : (
                 <Moon className="w-5 h-5 text-gray-600 hover:text-indigo-500 transition-colors" />
@@ -20,5 +20,4 @@ export default function ThemeToggle() {
         </button>
     );
 }
-
 

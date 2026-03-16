@@ -7,13 +7,13 @@ export class AIAssistantController {
     async generateJobDescription(req: Request, res: Response, next: NextFunction) {
         try {
             const recruiterId = req.recruiter!.id;
-            const { title, keywords } = req.body;
+            const { title, keywords, vertical } = req.body;
 
             if (!title || !Array.isArray(keywords) || keywords.length === 0) {
                 return res.status(400).json({ success: false, message: 'Valid title and keywords array are required' });
             }
 
-            const result = await aiAssistantService.generateJobDescription(title, keywords, recruiterId);
+            const result = await aiAssistantService.generateJobDescription(title, keywords, recruiterId, vertical);
             res.json({ success: true, data: result });
         } catch (error) {
             next(error);
@@ -70,6 +70,20 @@ export class AIAssistantController {
             const { id } = req.params;
 
             const result = await aiAssistantService.generateShortlistJustification(id, recruiterId);
+            res.json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // POST /recruiter/ai-assistant/analyze-jd  (F4: JD Bias & SEO Scoring)
+    async analyzeJobDescription(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { text } = req.body;
+            if (!text || typeof text !== 'string' || text.trim().length < 50) {
+                return res.status(400).json({ success: false, message: 'Job description text (min 50 chars) is required' });
+            }
+            const result = await aiAssistantService.analyzeJobDescription(text.trim());
             res.json({ success: true, data: result });
         } catch (error) {
             next(error);

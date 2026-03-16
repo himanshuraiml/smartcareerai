@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
+import { useFaceAnalysis } from "@/hooks/use-face-analysis";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { useMediaSoup } from '@/hooks/useMediaSoup';
 import { useMeetingSocket, type ProducerInfo, type WaitingParticipant } from '@/hooks/useMeetingSocket';
 import { useScreenShare } from '@/hooks/useScreenShare';
@@ -25,6 +27,7 @@ import { NetworkQualityBadge } from './NetworkQualityBadge';
 
 interface MeetingRoomProps {
     meetingId: string;
+    onInterviewStarted?: () => void;
 }
 
 interface PeerState {
@@ -37,7 +40,7 @@ interface PeerState {
 
 type SidePanel = 'chat' | 'participants' | null;
 
-export function MeetingRoom({ meetingId }: MeetingRoomProps) {
+export function MeetingRoom({ meetingId, onInterviewStarted: onStartedProp }: MeetingRoomProps) {
     const router = useRouter();
     const { user } = useAuthStore();
 
@@ -51,6 +54,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     const [sidePanel, setSidePanel] = useState<SidePanel>(null);
     const [handRaised, setHandRaised] = useState(false);
     const [meetingTimer, setMeetingTimer] = useState(0);
+    const [interviewStarted, setInterviewStarted] = useState(false);
 
     // Peer tracking
     const [peers, setPeers] = useState<Map<string, PeerState>>(new Map());
@@ -61,6 +65,26 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     const [remoteScreenSharers, setRemoteScreenSharers] = useState<Map<string, string>>(new Map());
 
     // Hooks
+    // Behavior Analysis for Candidate
+    const localVideoRef = useRef<HTMLVideoElement>(null);
+    const speech = useSpeechRecognition();
+    const faceAnalysis = useFaceAnalysis(localVideoRef);
+
+    // Sync isRecording with Analysis when joined and interview started
+    useEffect(() => {
+        if (joined && role === 'CANDIDATE' && interviewStarted) {
+            speech.startListening();
+            faceAnalysis.startAnalysis();
+        } else {
+            speech.stopListening();
+            faceAnalysis.stopAnalysis();
+        }
+
+        return () => {
+            speech.stopListening();
+            faceAnalysis.stopAnalysis();
+        };
+    }, [joined, role, interviewStarted]);
     const mediasoup = useMediaSoup({ meetingId });
     const chat = useMeetingChat();
     const { quality: myNetworkQuality } = useNetworkQuality({
@@ -73,7 +97,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
         routerRtpCapabilities: unknown;
         existingProducers: ProducerInfo[];
         participantCount: number;
-    }) => void>(() => {});
+    }) => void>(() => { });
 
     // Update the ref's implementation each render without changing the identity
     const handleRoomJoinedImpl = useCallback(async (data: {
@@ -96,7 +120,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
             setError((err as Error).message);
             setJoining(false);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     handleRoomJoinedRef.current = handleRoomJoinedImpl;
@@ -163,6 +187,10 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                 return next;
             });
         },
+        onInterviewStarted: () => {
+            setInterviewStarted(true);
+            onStartedProp?.();
+        }
     });
 
     // Screen share
@@ -173,12 +201,12 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
         onStopped: (producerId) => socket.notifyProducerClosed(producerId),
     });
 
-    // Meeting timer
+    // Meeting timer - only run if interview started
     useEffect(() => {
-        if (!joined) return;
+        if (!joined || !interviewStarted) return;
         const id = setInterval(() => setMeetingTimer((t) => t + 1), 1000);
         return () => clearInterval(id);
-    }, [joined]);
+    }, [joined, interviewStarted]);
 
     // Chat unread tracking
     useEffect(() => {
@@ -211,6 +239,24 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     };
 
     const handleEndCall = async () => {
+        if (role === 'CANDIDATE') {
+            try {
+                // Submit behavior metrics before leaving
+                const metrics = {
+                    wpm: speech.wpm,
+                    eyeContactScore: faceAnalysis.metrics.eyeContactScore,
+                    sentiment: faceAnalysis.metrics.sentiment,
+                    detectedKeywords: [] // Optional
+                };
+                await authFetch(`/interviews/sessions/${meetingId}/behavior-metrics`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ metrics })
+                });
+            } catch (err) {
+                console.error('Failed to save behavior metrics:', err);
+            }
+        }
         mediasoup.cleanup();
         await authFetch(`/meetings/${meetingId}/leave`, { method: 'DELETE' });
         router.push('/dashboard/interviews');
@@ -368,6 +414,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                                 isMuted={mediasoup.audioMuted}
                                 handRaised={handRaised}
                                 isLocal
+                                videoRef={localVideoRef}
                                 isLarge
                             />
                         )}
@@ -384,6 +431,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                                     isMuted={mediasoup.audioMuted}
                                     handRaised={handRaised}
                                     isLocal
+                                    videoRef={localVideoRef}
                                 />
                             </div>
                         )}
@@ -459,6 +507,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                 onToggleParticipants={() => togglePanel('participants')}
                 participantListOpen={sidePanel === 'participants'}
                 waitingCount={waitingParticipants.length}
+                onStartInterview={(role === 'HOST' && !interviewStarted) ? socket.startInterview : undefined}
             />
         </div>
     );

@@ -21,6 +21,59 @@ import {
     aiRateLimiter,
     requestSizeLimits,
 } from './middleware/security';
+import register from 'prom-client';
+
+// ============================================
+// MONITORING SETUP
+// ============================================
+
+const collectDefaultMetrics = register.collectDefaultMetrics;
+collectDefaultMetrics({ prefix: 'gateway_' });
+
+const httpRequestsTotal = new register.Counter({
+    name: 'gateway_http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'path', 'status'],
+});
+
+const gatewayResponseTime = new register.Histogram({
+    name: 'gateway_response_time_seconds',
+    help: 'Response time in seconds',
+    labelNames: ['method', 'path'],
+    buckets: [0.1, 0.5, 1, 2, 5],
+});
+
+// ============================================
+// ROLE-BASED AUTHORIZATION (Phase 8)
+// ============================================
+
+export const roleMiddleware = (allowedRoles: string[]) => {
+    return (req: any, res: express.Response, next: express.NextFunction) => {
+        const authHeader = req.headers['authorization'] || `Bearer ${req.cookies?.accessToken}`;
+        const userId = extractUserIdFromToken(authHeader);
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        try {
+            const token = (authHeader as string).substring(7);
+            const decoded = jwt.decode(token) as any;
+            const userRole = decoded?.role;
+
+            if (!userRole || !allowedRoles.includes(userRole)) {
+                logger.warn(`Unauthorized role access attempt: ${userRole} tried to access ${req.path}`);
+                res.status(403).json({ error: 'Access denied: insufficient permissions' });
+                return;
+            }
+
+            return next();
+        } catch (err) {
+            res.status(401).json({ error: 'Invalid token session' });
+            return;
+        }
+    };
+};
 
 
 const SERVICE_NAME = 'api-gateway';
@@ -118,7 +171,7 @@ const corsConfig = {
 
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-user-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-user-id', 'x-recruiter-id', 'x-organization-id'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 86400,
 };
@@ -168,6 +221,22 @@ const limiter = rateLimit({
     skip: (req) => req.path === '/health',
 });
 app.use(limiter);
+
+// Metrics endpoint
+app.get('/metrics', async (_req, res) => {
+    res.setHeader('Content-Type', register.register.contentType);
+    res.send(await register.register.metrics());
+});
+
+// Track metrics for all requests
+app.use((req, res, next) => {
+    const end = gatewayResponseTime.startTimer({ method: req.method, path: req.path });
+    res.on('finish', () => {
+        httpRequestsTotal.inc({ method: req.method, path: req.path, status: res.statusCode.toString() });
+        end();
+    });
+    next();
+});
 
 // Health check with service status
 app.get('/health', (_req, res) => {
@@ -388,8 +457,15 @@ app.use(
 // ============================================
 
 const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3009';
+const ASSESSMENT_SERVICE_URL = process.env.ASSESSMENT_SERVICE_URL || 'http://localhost:3015';
 const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
 const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3008';
+const REPORT_SERVICE_URL = process.env.REPORT_SERVICE_URL || 'http://localhost:4010';
+
+app.use(
+    `${API_PREFIX}/assessments`,
+    createProxyMiddleware(createProxyOptions(ASSESSMENT_SERVICE_URL, { [`^${API_PREFIX}/assessments`]: '/api/v1/assessments' }))
+);
 
 app.use(
     `${API_PREFIX}/billing`,
@@ -409,6 +485,26 @@ app.use(
 app.use(
     `${API_PREFIX}/institutions`,
     createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/institutions`]: '/institutions' }))
+);
+
+app.use(
+    `${API_PREFIX}/institution-admin`,
+    createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/institution-admin`]: '/institution' }))
+);
+
+app.use(
+    `${API_PREFIX}/university/reports`,
+    createProxyMiddleware(createProxyOptions(REPORT_SERVICE_URL, { [`^${API_PREFIX}/university/reports`]: '' }))
+);
+
+app.use(
+    `${API_PREFIX}/university`,
+    createProxyMiddleware(
+        createProxyOptions(ADMIN_SERVICE_URL, {
+            [`^${API_PREFIX}/university/analytics/overview`]: '/institution/dashboard',
+            [`^${API_PREFIX}/university`]: '/institution'
+        })
+    )
 );
 
 app.use(
@@ -525,6 +621,7 @@ const server = app.listen(PORT, () => {
     logger.info(`🏢 Recruiter Service: ${RECRUITER_SERVICE_URL}`);
     logger.info(`📧 Email Tracking Service: ${EMAIL_SERVICE_URL}`);
     logger.info(`📹 Media Service: ${MEDIA_SERVICE_URL}`);
+    logger.info(`📋 Report Service: ${REPORT_SERVICE_URL}`);
 });
 
 // Initialize Socket.io Event Bus

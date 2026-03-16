@@ -4,14 +4,16 @@ import { z } from 'zod';
 // REDIS CACHE
 // ============================================
 
-export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache.js';
+export { cacheGet, cacheSet, cacheDel, cacheDelPattern, disconnectRedis, getRedisClient } from './cache';
+export { cacheMiddleware } from './cache-middleware';
 
 // ============================================
-// SKILL NORMALIZATION
+// SKILL NORMALIZATION & MQ
 // ============================================
 
 export { normalizeSkillName, normalizeSkillList } from './skill-normalization.js';
-export { generateEmbedding, upsertVector, querySimilarVectors, getPineconeClient } from './vectorUtils.js';
+export * from './vectorUtils.js';
+export { publishMessage, consumeMessages, getRabbitMQChannel, disconnectRabbitMQ } from './rabbitmq.js';
 
 // ============================================
 // AUTH SCHEMAS

@@ -1,7 +1,11 @@
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-600 dark:text-gray-300 py-20 px-4">
-            <div className="max-w-4xl mx-auto space-y-8 glass-card p-10 rounded-2xl">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] text-gray-600 dark:text-gray-300">
+            <Navbar />
+            <div className="max-w-4xl mx-auto space-y-8 glass-card p-10 rounded-2xl mt-40 mb-20">
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">Privacy Policy</h1>
 
                 <section>
@@ -26,8 +30,7 @@ export default function PrivacyPage() {
 
                 <p className="text-sm text-gray-500 mt-8">Last updated: {new Date().toLocaleDateString()}</p>
             </div>
+            <Footer />
         </div>
     );
 }
-
-

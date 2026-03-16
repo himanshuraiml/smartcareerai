@@ -389,7 +389,7 @@ export default function AdminInstitutionsPage() {
                                         type="text"
                                         value={formData.domain}
                                         onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                                        placeholder="e.g. stanford.edu"
+                                        placeholder="e.g. srmisttrichy.edu"
                                         className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Used for auto-verification of students with email domains</p>
