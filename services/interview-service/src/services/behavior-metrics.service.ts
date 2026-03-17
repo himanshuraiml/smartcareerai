@@ -116,7 +116,7 @@ export class BehaviorMetricsService {
             throw new Error(`Interview session ${sessionId} not found or unauthorized`);
         }
 
-        return (session.behaviorMetrics as AggregatedBehaviorMetrics) ?? null;
+        return (session.behaviorMetrics as unknown as AggregatedBehaviorMetrics) ?? null;
     }
 }
 

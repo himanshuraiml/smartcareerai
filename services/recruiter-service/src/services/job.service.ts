@@ -412,6 +412,11 @@ export class JobService {
             endTime = new Date(startTime.getTime() + (durationMinutes || 60) * 60 * 1000);
         }
 
+        // Auto-set inviteExpiresAt for AI async interviews (14 days)
+        const inviteExpiresAt = inviteType === 'AI'
+            ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+            : undefined;
+
         // Create InterviewSession directly (credit check bypassed — recruiter invited)
         const session = await prisma.interviewSession.create({
             data: {
@@ -424,6 +429,7 @@ export class JobService {
                 inviteType,
                 ...(startTime ? { scheduledAt: startTime } : {}),
                 ...(endTime ? { scheduledEndAt: endTime } : {}),
+                ...(inviteExpiresAt ? { inviteExpiresAt } : {}),
             },
         });
 
@@ -520,30 +526,6 @@ export class JobService {
                 logger.warn(`Google Calendar event creation failed (non-fatal): ${calErr.message}`);
             }
         }
-
-
-        // Auto-set inviteExpiresAt for AI async interviews (14 days)
-        const inviteExpiresAt = inviteType === 'AI'
-            ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-            : undefined;
-
-        // Create InterviewSession directly (credit check bypassed — recruiter invited)
-        const session = await prisma.interviewSession.create({
-            data: {
-                userId: applicant.candidateId,
-                type: interviewType as InterviewType,
-                targetRole: job.title,
-                difficulty: difficulty as Difficulty,
-                status: 'PENDING',
-                jobId: job.id,
-                inviteType,
-                ...(startTime ? { scheduledAt: startTime } : {}),
-                ...(endTime ? { scheduledEndAt: endTime } : {}),
-                ...(meetLink ? { meetLink } : {}),
-                ...(calendarEventId ? { calendarEventId } : {}),
-                ...(inviteExpiresAt ? { inviteExpiresAt } : {}),
-            },
-        });
 
 
         // Pre-populate questions from aiInterviewConfig if present
