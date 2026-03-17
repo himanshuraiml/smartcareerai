@@ -19,10 +19,14 @@
         "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
+            "@placenxt/shared": ["../../packages/shared/dist/index.d.ts"],
+            "@placenxt/database": ["../../packages/database/dist/index.d.ts"],
             "*": [
                 "node_modules/*",
                 "src/*"
             ]
         }
-    }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }
