@@ -18,7 +18,7 @@
     "start": "npm run start -w @placenxt/database && concurrently --kill-others-on-fail \"npm run start:services\" \"npm run start:frontend\"",
     "start:services": "concurrently \"npm run start -w @placenxt/api-gateway\" \"npm run start -w @placenxt/auth-service\" \"npm run start -w @placenxt/resume-service\" \"npm run start -w @placenxt/scoring-service\" \"npm run start -w @placenxt/skill-service\" \"npm run start -w @placenxt/job-service\" \"npm run start -w @placenxt/application-service\" \"npm run start -w @placenxt/interview-service\" \"npm run start -w @placenxt/validation-service\" \"npm run start -w @placenxt/billing-service\" \"npm run start -w @placenxt/admin-service\" \"npm run start -w @placenxt/recruiter-service\" \"npm run start -w @placenxt/assessment-service\" \"npm run start -w @placenxt/email-tracking-service\" \"npm run start -w @placenxt/report-service\"",
     "start:frontend": "npm run start -w frontend",
-    "build": "npm run build --workspaces",
+    "build": "npm run build -w @placenxt/database -w @placenxt/shared && npm run build --workspaces",
     "build:shared": "npm run build -w @placenxt/database && npm run build -w @placenxt/shared",
     "build:api-gateway": "npm run build:shared && npm run build -w @placenxt/api-gateway",
     "build:auth-service": "npm run build:shared && npm run build -w @placenxt/auth-service",
