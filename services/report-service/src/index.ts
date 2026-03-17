@@ -14,8 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = express();
-// Force port 4010 explicitly instead of process.env.PORT to bypass global conflicts
-const port = process.env.REPORT_SERVICE_PORT || 4010;
+const port = process.env.PORT || process.env.REPORT_SERVICE_PORT || 4010;
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors());
