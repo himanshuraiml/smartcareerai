@@ -32,7 +32,7 @@ COPY services/media-service ./services/media-service
 RUN for dir in api-gateway auth-service resume-service scoring-service skill-service \
     job-service application-service interview-service validation-service \
     billing-service admin-service recruiter-service email-tracking-service \
-    meeting-bot-service; do \
+    meeting-bot-service assessment-service report-service ai-interviewer-service; do \
     mkdir -p "services/$dir" && \
     echo "{\"name\":\"@placenxt/$dir\",\"version\":\"1.0.0\",\"private\":true}" \
     > "services/$dir/package.json"; \
