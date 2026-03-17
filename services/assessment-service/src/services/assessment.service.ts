@@ -378,7 +378,7 @@ export class AssessmentService {
 
         // Trigger scoring via Scoring Service
         try {
-            axios.post(`${SCORING_SERVICE_URL}/assessments/${attemptId}/score`).catch(err => {
+            axios.post(`${SCORING_SERVICE_URL}/assessments/${attemptId}/score`).catch((err: any) => {
                 logger.error(`Failed to trigger async scoring: ${err.message}`);
             });
         } catch (error: any) {
