@@ -28,7 +28,7 @@ export default function ContactPage() {
         name: "",
         email: "",
         company: "",
-        inquiryType: "enterprise",
+        inquiryType: "demo",
         message: ""
     });
 
@@ -44,7 +44,7 @@ export default function ContactPage() {
         setTimeout(() => {
             setLoading(false);
             setSuccess(true);
-            setFormData({ name: "", email: "", company: "", inquiryType: "enterprise", message: "" });
+            setFormData({ name: "", email: "", company: "", inquiryType: "demo", message: "" });
 
             // Reset success message after 5 seconds
             setTimeout(() => setSuccess(false), 5000);
@@ -180,6 +180,7 @@ export default function ContactPage() {
                                             onChange={handleChange}
                                             className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                         >
+                                            <option value="demo">Request a Demo</option>
                                             <option value="enterprise">Enterprise Plan Request</option>
                                             <option value="education">Educational Institution Setup</option>
                                             <option value="support">General Support</option>

@@ -52,7 +52,7 @@ export default function PanelSchedulerModal({
         setLoading(true);
         setError('');
         try {
-            const res = await authFetch(`/api/v1/applications/${applicationId}/panel`, {
+            const res = await authFetch(`/recruiter/applications/${applicationId}/panel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

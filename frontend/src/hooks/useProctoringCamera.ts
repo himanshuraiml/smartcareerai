@@ -52,7 +52,7 @@ export function useProctoringCamera(attemptId: string | null, intervalMs = 30000
         const timestamp = new Date().toISOString();
 
         try {
-            await authFetch(`/api/v1/assessments/attempts/${attemptId}/snapshots`, {
+            await authFetch(`/assessments/attempts/${attemptId}/snapshots`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ timestamp, imageData }),

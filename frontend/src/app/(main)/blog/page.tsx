@@ -1,9 +1,11 @@
-import { getPublishedPosts, getAllCategories } from '@/lib/blog';
+import { getPublishedPostsFromApi, getAllPublishedCategoriesFromApi } from '@/lib/blog';
 import BlogList from './BlogList';
 
-export default function BlogPage() {
-    const posts = getPublishedPosts();
-    const categories = getAllCategories();
+export default async function BlogPage() {
+    const [posts, categories] = await Promise.all([
+        getPublishedPostsFromApi({ limit: 50 }),
+        getAllPublishedCategoriesFromApi(),
+    ]);
 
     return <BlogList initialPosts={posts} categories={categories} />;
 }

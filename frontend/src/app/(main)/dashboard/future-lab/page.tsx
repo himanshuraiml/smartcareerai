@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
     FlaskConical, Zap, Star, ChevronRight, Lock,
     ArrowRight, Cpu, Globe, Shield, Bot, Code2, TrendingUp,
-    Activity, Award, Play, CheckCircle2, Clock, Loader2
+    Activity, Award, Play, CheckCircle2, Clock, Loader2,
+    Trophy, Download, X, BookOpen, AlarmCheck, XCircle
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -60,6 +61,17 @@ const TECH_RADAR = [
     { name: 'WebAssembly', trend: 'rising', demandChange: '+38%', color: 'from-blue-500 to-indigo-500', icon: Globe, category: 'Web' },
     { name: 'Web3 / Solidity', trend: 'stable', demandChange: '+12%', color: 'from-emerald-500 to-teal-500', icon: Shield, category: 'Blockchain' },
 ];
+
+// ─── Lab Simulator ───────────────────────────────────────────────────────────
+
+interface LabDetails extends ApiLab {
+    content: string;
+    track: {
+        id: string;
+        title: string;
+        gradient: string;
+    };
+}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -125,11 +137,21 @@ function ExpandedTrack({
     track,
     onClose,
     onStartLab,
+    onViewCertificate,
 }: {
     track: ApiTrack;
     onClose: () => void;
     onStartLab: (trackId: string, labId: string) => void;
+    onViewCertificate: (trackId: string, trackTitle: string) => void;
 }) {
+    // Sequential unlock: a lesson is unlocked if it's first or previous is COMPLETED
+    const isUnlocked = (index: number) => {
+        if (index === 0) return true;
+        return track.labs[index - 1]?.userStatus === 'COMPLETED';
+    };
+
+    const allDone = track.completedLabs >= track.totalLabs && track.totalLabs > 0;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -142,36 +164,69 @@ function ExpandedTrack({
                     <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${track.gradient} flex items-center justify-center`}>
                         <FlaskConical className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="font-bold text-gray-900 dark:text-white text-sm">{track.title}</h3>
+                    <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white text-sm">{track.title}</h3>
+                        <p className="text-[11px] text-gray-400">{track.completedLabs}/{track.totalLabs} lessons completed</p>
+                    </div>
                 </div>
                 <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xs font-medium">✕ Close</button>
             </div>
 
-            <div className="space-y-2">
-                {track.labs.map((lab, i) => (
-                    <div key={lab.id} className={`flex items-center gap-3 p-3 rounded-xl border ${lab.isFree ? 'bg-white/60 dark:bg-white/5 border-white/40 dark:border-white/10' : 'bg-gray-50/60 dark:bg-black/20 border-gray-200/50 dark:border-white/5'}`}>
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${lab.isFree ? `bg-gradient-to-br ${track.gradient} text-white shadow-sm` : 'bg-gray-100 dark:bg-white/5 text-gray-400'}`}>
-                            {lab.userStatus === 'COMPLETED' ? <CheckCircle2 className="w-3.5 h-3.5" /> : lab.isFree ? i + 1 : <Lock className="w-3 h-3" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold ${lab.isFree ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{lab.title}</p>
-                            <p className="text-xs text-gray-400">{lab.duration} · {lab.userStatus === 'COMPLETED' ? '✓ Done' : lab.userStatus === 'IN_PROGRESS' ? 'In Progress' : 'Not started'}</p>
-                        </div>
-                        {lab.isFree ? (
-                            <button
-                                onClick={() => onStartLab(track.id, lab.id)}
-                                className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-gradient-to-r ${track.gradient} text-white shadow-sm hover:opacity-90 flex-shrink-0`}
-                            >
-                                <Play className="w-3 h-3" /> {lab.userStatus === 'NOT_STARTED' ? 'Start' : 'Continue'}
-                            </button>
-                        ) : (
-                            <span className="text-[11px] text-gray-400 flex-shrink-0 flex items-center gap-1">
-                                <Lock className="w-3 h-3" /> 1 credit
-                            </span>
-                        )}
+            {allDone && (
+                <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3">
+                    <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Track Complete!</p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-300">Your certificate is ready to download.</p>
                     </div>
-                ))}
+                    <button
+                        onClick={() => onViewCertificate(track.id, track.title)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1"
+                    >
+                        <Download className="w-3 h-3" /> Certificate
+                    </button>
+                </div>
+            )}
+
+            <div className="space-y-2">
+                {track.labs.map((lab, i) => {
+                    const unlocked = isUnlocked(i);
+                    return (
+                        <div key={lab.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${unlocked ? 'bg-white/60 dark:bg-white/5 border-white/40 dark:border-white/10' : 'bg-gray-50/60 dark:bg-black/20 border-gray-200/50 dark:border-white/5 opacity-60'}`}>
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${lab.userStatus === 'COMPLETED' ? 'bg-emerald-500 text-white shadow-sm' : unlocked ? `bg-gradient-to-br ${track.gradient} text-white shadow-sm` : 'bg-gray-100 dark:bg-white/5 text-gray-400'}`}>
+                                {lab.userStatus === 'COMPLETED' ? <CheckCircle2 className="w-3.5 h-3.5" /> : unlocked ? i + 1 : <Lock className="w-3 h-3" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold ${unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+                                    Lesson {i + 1}: {lab.title}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                    {lab.duration} · {lab.userStatus === 'COMPLETED' ? '✓ Passed test' : lab.userStatus === 'IN_PROGRESS' ? 'In Progress' : unlocked ? 'Ready to start' : 'Complete previous lesson first'}
+                                </p>
+                            </div>
+                            {unlocked ? (
+                                <button
+                                    onClick={() => onStartLab(track.id, lab.id)}
+                                    className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-gradient-to-r ${track.gradient} text-white shadow-sm hover:opacity-90 flex-shrink-0`}
+                                >
+                                    <Play className="w-3 h-3" /> {lab.userStatus === 'NOT_STARTED' ? 'Start' : lab.userStatus === 'COMPLETED' ? 'Review' : 'Continue'}
+                                </button>
+                            ) : (
+                                <span className="text-[11px] text-gray-400 flex-shrink-0 flex items-center gap-1">
+                                    <Lock className="w-3 h-3" /> Locked
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
+
+            {!allDone && track.totalLabs > 0 && (
+                <p className="mt-4 text-[11px] text-gray-400 text-center">
+                    <BookOpen className="w-3 h-3 inline mr-1" />
+                    Pass the test at the end of each lesson to unlock the next one.
+                </p>
+            )}
         </motion.div>
     );
 }
@@ -356,28 +411,459 @@ function MarkdownRenderer({ content }: { content: string }) {
     return <>{elements}</>;
 }
 
-// ─── Lab Simulator ───────────────────────────────────────────────────────────
+// ─── Lesson Quiz ─────────────────────────────────────────────────────────────
 
-interface LabDetails extends ApiLab {
-    content: string;
-    track: {
-        id: string;
-        title: string;
-        gradient: string;
+interface QuizQuestion {
+    q: string;
+    options: string[];
+    answer: number;
+}
+
+function generateQuiz(labTitle: string): QuizQuestion[] {
+    // 1. Understanding AI Agents & ReAct Pattern
+    if (labTitle.includes('Understanding AI Agents & ReAct Pattern')) {
+        return [
+            {
+                q: 'In a ReAct loop, what happens immediately after the "Observation" step?',
+                options: [
+                    'The agent provides the Final Answer to the user',
+                    'The agent enters a new "Thought" step to reason about the tool output',
+                    'The agent calls another tool automatically',
+                    'The loop terminates to save tokens',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'Which production-grade safeguard is most effective at preventing an agent from entering an "Infinite Loop"?',
+                options: [
+                    'Setting Temperature to 0.7',
+                    'Using a larger context window (e.g., 128k)',
+                    'Implementing a "Step Counter" and a "Max Steps" threshold',
+                    'Asking the user to manually verify every action',
+                ],
+                answer: 2,
+            },
+            {
+                q: 'When a tool returns an error message (e.g., 401 Unauthorized), how should a robust ReAct agent typically behave?',
+                options: [
+                    'It should crash and throw a 500 error',
+                    'It should ignore the error and proceed to the Final Answer',
+                    'It should receive the error as an "Observation," allowing the next "Thought" to pivot',
+                    'It should hallucinate a plausible result to keep the user engaged',
+                ],
+                answer: 2,
+            },
+            {
+                q: 'Why is "Temperature = 0" (or very low) strongly recommended for agentic workflows?',
+                options: [
+                    'To make the agent more creative and empathetic',
+                    'To ensure the agent chooses the exact same "Action" for the same "Thought" every time',
+                    'Because LLMs generate text faster at lower temperatures',
+                    'To prevent the model from calling too many tools at once',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'What acts as the "Working Memory" for an AI Agent during a single session?',
+                options: [
+                    'A separate SQL database',
+                    'The Model\'s training data',
+                    'The Context Window (Message History)',
+                    'The User\'s browser cache',
+                ],
+                answer: 2,
+            },
+        ];
+    }
+
+    // 2. Building Your First Tool-Calling Agent
+    if (labTitle.includes('Building Your First Tool-Calling Agent')) {
+        return [
+            {
+                q: 'Why is the "description" field critical when defining tools for an LLM?',
+                options: [
+                    'It is only used for debugging by human developers',
+                    'The model uses it to decide "when" and "how" to call the tool based on intent',
+                    'It increases the cost of the API call',
+                    'It is where the actual Python code is stored',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'If a tool requires a "query" string, how does the model provide it?',
+                options: [
+                    'It asks the user to type the argument manually',
+                    'It extracts the relevant info from the conversation and puts it in "tool_calls"',
+                    'It guesses a random string to fill the requirement',
+                    'It can only call tools that have no arguments',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'In a production agent loop, what is the role of the "execute_tool" function?',
+                options: [
+                    'To train the LLM on new data',
+                    'To safely run the actual code associated with the tool and return its result',
+                    'To translate the code from Python to Javascript',
+                    'To provide a chat UI to the user',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'What is the primary benefit of "Parallel Tool Calling"?',
+                options: [
+                    'It makes the model more creative',
+                    'It allow the model to request multiple tool runs (e.g., 3 city searches) in one turn',
+                    'It bypasses the need for a system prompt',
+                    'It makes the agent cheaper to run',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'How does the agent loop know when to provide the "Final Answer"?',
+                options: [
+                    'After exactly 3 iterations every time',
+                    'When the user says "Stop"',
+                    'When the LLM returns a response WITHOUT any "tool_calls"',
+                    'When the LLM runs out of tokens',
+                ],
+                answer: 2,
+            },
+        ];
+    }
+
+    // 3. Agentic Advanced Memory (Vector DBs)
+    if (labTitle.includes('Agentic Advanced Memory')) {
+        return [
+            {
+                q: 'What is the primary purpose of converting text into "Vector Embeddings"?',
+                options: [
+                    'To encrypt the data for security',
+                    'To allow for "Semantic Search" based on meaning rather than keywords',
+                    'To make the text file smaller in size',
+                    'To enable the model to speak multiple languages',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'Which component represents "Long-Term Memory" in an Agentic system?',
+                options: [
+                    'The Conversation History passed to the LLM',
+                    'A Vector Database (like ChromaDB or Pinecone)',
+                    'The system\'s RAM',
+                    'The LLM\'s internal training weights',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'Why do we inject "Retrieved Memories" into the system prompt?',
+                options: [
+                    'To give the LLM relevant context from past sessions it wouldn\'t otherwise have',
+                    'To trick the user into thinking the AI is human',
+                    'To consume more tokens and hit higher billing tiers',
+                    'To prevent the model from using tools',
+                ],
+                answer: 0,
+            },
+            {
+                q: 'What makes a Vector Database different from a traditional SQL database?',
+                options: [
+                    'It only stores images and videos',
+                    'It is optimized for "Nearest Neighbor" searches in high-dimensional space',
+                    'It cannot store strings or numbers',
+                    'It is slower and less reliable than SQL',
+                ],
+                answer: 1,
+            },
+            {
+                q: 'When should an agent ideally extract and store new memories?',
+                options: [
+                    'Every time the user types a single word',
+                    'After a conversation ends, by using an LLM to extract key facts from history',
+                    'Only when the database is empty',
+                    'Manual storage by the developer is the only way',
+                ],
+                answer: 1,
+            },
+        ];
+    }
+
+    // Generic 3-question quiz for other tracks
+    return [
+        {
+            q: `What is the primary purpose of studying "${labTitle}"?`,
+            options: [
+                'To understand the theory behind the concept',
+                'To apply it in real-world production scenarios',
+                'Both understanding theory and applying it practically',
+                "Neither \u2014 it's only relevant in academic settings",
+            ],
+            answer: 2,
+        },
+        {
+            q: 'Which of the following best describes a hands-on learning approach?',
+            options: [
+                'Reading documentation without practice',
+                'Building, experimenting, and iterating on real examples',
+                'Watching videos without taking notes',
+                'Memorizing syntax without understanding concepts',
+            ],
+            answer: 1,
+        },
+        {
+            q: 'After completing a lesson, what should you do next?',
+            options: [
+                'Move on immediately without reviewing',
+                'Review key concepts, then apply them in a mini-project',
+                'Skip to the last lesson',
+                'Wait for a mentor to explain everything again',
+            ],
+            answer: 1,
+        },
+    ];
+}
+
+function LessonQuiz({
+    labTitle,
+    onPass,
+    onFail,
+    onNext,
+}: {
+    labTitle: string;
+    onPass: () => void;
+    onFail: () => void;
+    onNext?: () => void;
+}) {
+    const questions = generateQuiz(labTitle);
+    const [answers, setAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
+    const [submitted, setSubmitted] = useState(false);
+
+    const score = submitted
+        ? answers.filter((a, i) => a === questions[i].answer).length
+        : 0;
+    const passingScore = Math.ceil(questions.length * 0.7); // 70% to pass
+    const passed = score >= passingScore;
+
+    const handleSubmit = () => {
+        if (answers.some(a => a === null)) return;
+        setSubmitted(true);
     };
+
+    return (
+        <div className="space-y-6">
+            {questions.map((q, qi) => (
+                <div key={qi}>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white mb-3">
+                            Q{qi + 1}. {q.q}
+                        </p>
+                        <div className="space-y-2">
+                            {q.options.map((opt, oi) => {
+                                const isSelected = answers[qi] === oi;
+                                const isCorrect = submitted && oi === q.answer;
+                                const isWrong = submitted && isSelected && oi !== q.answer;
+                                return (
+                                    <button
+                                        key={oi}
+                                        disabled={submitted}
+                                        onClick={() => setAnswers(prev => { const n = [...prev]; n[qi] = oi; return n; })}
+                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm border transition-all ${
+                                            isCorrect
+                                                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 text-emerald-700 dark:text-emerald-300 font-semibold'
+                                                : isWrong
+                                                    ? 'bg-red-50 dark:bg-red-500/10 border-red-400 text-red-700 dark:text-red-300'
+                                                    : isSelected
+                                                        ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-400 text-indigo-700 dark:text-indigo-300 font-semibold'
+                                                        : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
+                                        }`}
+                                    >
+                                        {isCorrect && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1.5 text-emerald-500" />}
+                                        {isWrong && <XCircle className="w-3.5 h-3.5 inline mr-1.5 text-red-500" />}
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+
+                {!submitted ? (
+                    <button
+                        onClick={handleSubmit}
+                        disabled={answers.some(a => a === null)}
+                        className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    >
+                        Submit Test
+                    </button>
+                ) : passed ? (
+                    <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-center animate-in zoom-in-95 duration-300">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
+                        <h4 className="text-lg font-bold text-emerald-900 dark:text-emerald-400">Congratulations!</h4>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mb-6">
+                            You passed with {score}/{questions.length} correct. Lesson complete!
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={onPass}
+                                className="flex-1 py-3 rounded-xl border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                            >
+                                Exit Lesson
+                            </button>
+                            <button
+                                onClick={onNext || onPass}
+                                className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 group"
+                            >
+                                Next Lesson
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 text-center">
+                        <XCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                        <p className="font-bold text-red-700 dark:text-red-400">Score: {score}/{questions.length} — Need {passingScore}+ to pass</p>
+                        <button
+                            onClick={() => { setAnswers(Array(questions.length).fill(null)); setSubmitted(false); }}
+                            className="mt-3 px-5 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
+        </div>
+    );
+}
+
+function QuizModal({
+    labTitle,
+    onPass,
+    onClose,
+    onNext,
+}: {
+    labTitle: string;
+    onPass: () => void;
+    onClose: () => void;
+    onNext?: () => void;
+}) {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                            <AlarmCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-base">End-of-Lesson Test</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Validate your knowledge</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 pt-2">
+                    <LessonQuiz
+                        labTitle={labTitle}
+                        onPass={onPass}
+                        onFail={onClose}
+                        onNext={onNext}
+                    />
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+// ─── Certificate Modal ────────────────────────────────────────────────────────
+
+function CertificateModal({
+    trackTitle,
+    onClose,
+}: {
+    trackTitle: string;
+    onClose: () => void;
+}) {
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
+            >
+                {/* Certificate */}
+                <div className="bg-gradient-to-br from-violet-600 to-indigo-700 p-8 text-white text-center relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-4 left-4 w-24 h-24 border-4 border-white rounded-full" />
+                        <div className="absolute bottom-4 right-4 w-16 h-16 border-4 border-white rounded-full" />
+                    </div>
+                    <div className="relative">
+                        <Trophy className="w-14 h-14 mx-auto mb-4 text-yellow-300" />
+                        <p className="text-xs font-bold tracking-widest uppercase text-violet-200 mb-2">Certificate of Completion</p>
+                        <h2 className="text-2xl font-black mb-1">Congratulations!</h2>
+                        <p className="text-violet-100 text-sm">You have successfully completed</p>
+                        <p className="text-xl font-black mt-2 mb-1">{trackTitle}</p>
+                        <p className="text-violet-200 text-xs">PlaceNxt Future-Ready Lab · {today}</p>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="p-6 flex flex-col gap-3">
+                    <button
+                        onClick={() => {
+                            // Simple print-based download
+                            window.print();
+                        }}
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                    >
+                        <Download className="w-4 h-4" /> Download Certificate
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                        Close
+                    </button>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
 }
 
 function LabSimulator({
     labId,
     onClose,
-    onComplete
+    onComplete,
+    onNext
 }: {
     labId: string;
     onClose: () => void;
     onComplete: (trackId: string, labId: string) => void;
+    onNext?: (trackId: string, currentLabId: string) => void;
 }) {
     const [lab, setLab] = useState<LabDetails | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showQuiz, setShowQuiz] = useState(false);
 
     useEffect(() => {
         async function fetchLab() {
@@ -422,16 +908,18 @@ function LabSimulator({
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => onComplete(lab.track.id, lab.id)}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${lab.userStatus === 'COMPLETED' ? 'bg-emerald-500' : `bg-gradient-to-r ${lab.track.gradient}`}`}
-                    >
-                        {lab.userStatus === 'COMPLETED' ? (
-                            <><CheckCircle2 className="w-4 h-4" /> Lab Completed</>
-                        ) : (
-                            <><Zap className="w-4 h-4" /> Complete Lab & Earn XP</>
-                        )}
-                    </button>
+                    {lab.userStatus === 'COMPLETED' ? (
+                        <span className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-emerald-500 shadow-sm">
+                            <CheckCircle2 className="w-4 h-4" /> Lesson Passed
+                        </span>
+                    ) : (
+                        <button
+                            onClick={() => setShowQuiz(true)}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r ${lab.track.gradient}`}
+                        >
+                            <AlarmCheck className="w-4 h-4" /> Take Lesson Test
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -442,26 +930,51 @@ function LabSimulator({
                         <MarkdownRenderer content={lab.content} />
                     </div>
 
-                    <div className="mt-12 p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Hands-On Checklist</h4>
+                    <div className="mt-10 p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Lesson Checklist</h4>
                         <div className="space-y-3">
                             {[
                                 'Read the conceptual breakdown above',
-                                'Explore the provided tool-use code examples',
-                                'Complete the interactive exercise below',
-                                'Verify your understanding by clicking Complete'
+                                'Explore the provided code examples',
+                                'Take the end-of-lesson test to unlock the next lesson',
+                                'Pass the test (70% correct) to earn XP and progress'
                             ].map((task, i) => (
                                 <div key={i} className="flex items-start gap-3 text-xs text-gray-500 dark:text-gray-400">
-                                    <div className="w-5 h-5 rounded-md border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <CheckCircle2 className="w-3 h-3 opacity-0" />
-                                    </div>
+                                    <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${i < 2 ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`} />
                                     <span>{task}</span>
                                 </div>
                             ))}
                         </div>
+                        {lab.userStatus !== 'COMPLETED' && (
+                            <button
+                                onClick={() => setShowQuiz(true)}
+                                className={`mt-4 w-full py-3 rounded-xl bg-gradient-to-r ${lab.track.gradient} text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity`}
+                            >
+                                <AlarmCheck className="w-4 h-4" /> Take End-of-Lesson Test
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Quiz Modal */}
+            <AnimatePresence mode="wait">
+                {showQuiz && lab.userStatus !== 'COMPLETED' && (
+                    <QuizModal
+                        labTitle={lab.title}
+                        onPass={() => {
+                            setShowQuiz(false);
+                            onComplete(lab.track.id, lab.id);
+                        }}
+                        onClose={() => setShowQuiz(false)}
+                        onNext={onNext ? () => {
+                            setShowQuiz(false);
+                            onComplete(lab.track.id, lab.id);
+                            onNext(lab.track.id, lab.id);
+                        } : undefined}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
@@ -482,6 +995,7 @@ export default function FutureReadyLabPage() {
     const [writeup, setWriteup] = useState('');
     const [submitError, setSubmitError] = useState('');
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [certificateTrack, setCertificateTrack] = useState<{ id: string; title: string } | null>(null);
 
     const fetchData = useCallback(async () => {
         try {
@@ -528,17 +1042,39 @@ export default function FutureReadyLabPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setTracks(prev => prev.map(t => t.id === trackId ? {
-                    ...t,
-                    completedLabs: t.labs.find(l => l.id === labId && l.userStatus !== 'COMPLETED') ? t.completedLabs + 1 : t.completedLabs,
-                    labs: t.labs.map(l => l.id === labId ? { ...l, userStatus: 'COMPLETED' as const } : l)
-                } : t));
+                let newTracks: ApiTrack[] = [];
+                setTracks(prev => {
+                    newTracks = prev.map(t => t.id === trackId ? {
+                        ...t,
+                        completedLabs: t.labs.find(l => l.id === labId && l.userStatus !== 'COMPLETED') ? t.completedLabs + 1 : t.completedLabs,
+                        labs: t.labs.map(l => l.id === labId ? { ...l, userStatus: 'COMPLETED' as const } : l)
+                    } : t);
+                    return newTracks;
+                });
                 setSelectedLabId(null);
+
+                // Check if track is now fully completed → show certificate
+                const updatedTrack = newTracks.find(t => t.id === trackId);
+                if (updatedTrack && updatedTrack.completedLabs >= updatedTrack.totalLabs && updatedTrack.totalLabs > 0) {
+                    setTimeout(() => setCertificateTrack({ id: trackId, title: updatedTrack.title }), 500);
+                }
             }
         } catch (err) {
             console.error('Failed to complete lab:', err);
         }
     };
+    const handleNextLab = (trackId: string, currentLabId: string) => {
+        const track = tracks.find(t => t.id === trackId);
+        if (!track) return;
+        const currentIdx = track.labs.findIndex(l => l.id === currentLabId);
+        if (currentIdx !== -1 && currentIdx < track.labs.length - 1) {
+            const nextLab = track.labs[currentIdx + 1];
+            setSelectedLabId(nextLab.id);
+        } else {
+            setSelectedLabId(null);
+        }
+    };
+
 
     const handleSubmitChallenge = async () => {
         if (!challenge || (!githubUrl && !writeup)) return;
@@ -576,6 +1112,16 @@ export default function FutureReadyLabPage() {
 
     return (
         <div className="space-y-6">
+            {/* Certificate Modal */}
+            <AnimatePresence>
+                {certificateTrack && (
+                    <CertificateModal
+                        trackTitle={certificateTrack.title}
+                        onClose={() => setCertificateTrack(null)}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Lab Simulator Overlay */}
             <AnimatePresence>
                 {selectedLabId && (
@@ -583,6 +1129,7 @@ export default function FutureReadyLabPage() {
                         labId={selectedLabId}
                         onClose={() => setSelectedLabId(null)}
                         onComplete={handleCompleteLab}
+                        onNext={handleNextLab}
                     />
                 )}
             </AnimatePresence>
@@ -647,7 +1194,7 @@ export default function FutureReadyLabPage() {
                         <AnimatePresence mode="wait">
                             {expandedTrackId && currentTrack ? (
                                 <motion.div key="expanded">
-                                    <ExpandedTrack track={currentTrack} onClose={() => setExpandedTrackId(null)} onStartLab={handleStartLab} />
+                                    <ExpandedTrack track={currentTrack} onClose={() => setExpandedTrackId(null)} onStartLab={handleStartLab} onViewCertificate={(id, title) => setCertificateTrack({ id, title })} />
                                 </motion.div>
                             ) : (
                                 <motion.div key="grid" className="grid grid-cols-1 md:grid-cols-2 gap-4">

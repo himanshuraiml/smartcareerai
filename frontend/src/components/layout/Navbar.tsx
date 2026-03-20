@@ -88,7 +88,8 @@ export default function Navbar() {
 
                             {[
                                 { label: 'Pricing', href: '/pricing' },
-                                { label: 'Success Stories', href: '/#success' },
+                                { label: 'Success Stories', href: '/success-stories' },
+                                { label: 'Resources', href: '/resources' },
                             ].map(item => (
                                 <Link key={item.href} href={item.href}
                                     className={`text-sm font-medium transition-colors ${isLight

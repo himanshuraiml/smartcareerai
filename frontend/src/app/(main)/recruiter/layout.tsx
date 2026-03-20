@@ -28,6 +28,7 @@ import {
     Plug,
     Download,
     ChevronDown,
+    Video,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import Logo from "@/components/layout/Logo";
@@ -59,6 +60,7 @@ const navGroups = [
             { href: "/recruiter/analytics/diversity", icon: BarChart2, label: "D&I Analytics" },
             { href: "/recruiter/analytics/market", icon: Globe, label: "Market Intel" },
             { href: "/recruiter/hire-quality", icon: TrendingUp, label: "Hire Quality" },
+            { href: "/recruiter/meetings/analytics", icon: Video, label: "Meeting AI" },
         ],
     },
     {
@@ -133,7 +135,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
                 });
 
                 const { endpoint, keys } = sub.toJSON() as any;
-                await authFetch('/api/v1/recruiter/push-subscription', {
+                await authFetch('/recruiter/push-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ endpoint, keys }),

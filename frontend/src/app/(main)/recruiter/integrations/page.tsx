@@ -8,7 +8,6 @@ import {
     Trash2,
     CheckCircle,
     XCircle,
-    RefreshCw,
     Send,
     ChevronDown,
     ChevronUp,
@@ -62,7 +61,7 @@ interface WebhookLog {
 
 export default function IntegrationsPage() {
     const [configs, setConfigs] = useState<AtsConfig[]>([]);
-    const [logs, setLogs] = useState<WebhookLog[]>([]);
+    const [logs] = useState<WebhookLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [orgId, setOrgId] = useState<string>("");
     const [showModal, setShowModal] = useState(false);
@@ -79,16 +78,6 @@ export default function IntegrationsPage() {
         fieldMappings: {} as Record<string, string>,
     });
     const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        fetchOrg();
-    }, []);
-
-    useEffect(() => {
-        if (orgId) {
-            fetchConfigs();
-        }
-    }, [orgId]);
 
     async function fetchOrg() {
         try {
@@ -111,6 +100,12 @@ export default function IntegrationsPage() {
         } catch {}
         setLoading(false);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { fetchOrg(); }, []);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { if (orgId) fetchConfigs(); }, [orgId]);
 
     function openAddModal() {
         setEditingConfig(null);

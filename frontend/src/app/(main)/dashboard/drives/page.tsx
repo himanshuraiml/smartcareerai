@@ -33,7 +33,7 @@ export default function StudentDrivesPage() {
 
     useEffect(() => {
         if (!user) return;
-        authFetch("/institution-admin/student/drives")
+        authFetch("/university/student/drives")
             .then(r => r.ok ? r.json() : null)
             .then(d => { if (d?.data) setDrives(d.data); })
             .finally(() => setLoading(false));
@@ -42,7 +42,7 @@ export default function StudentDrivesPage() {
     const handleRegister = async (driveId: string) => {
         setRegistering(driveId);
         try {
-            const res = await authFetch(`/institution-admin/drives/${driveId}/register`, { method: "POST" });
+            const res = await authFetch(`/university/drives/${driveId}/register`, { method: "POST" });
             if (res.ok) {
                 setDrives(prev => prev.map(d => d.id === driveId ? { ...d, isRegistered: true } : d));
                 setToast({ msg: "Successfully registered for the drive!", ok: true });

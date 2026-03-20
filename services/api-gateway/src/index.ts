@@ -156,7 +156,7 @@ app.set('trust proxy', 1);
 // CORS Configuration — must be first so error responses from security middleware still include CORS headers
 const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:3100', 'http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com'];
+    : ['http://localhost:3100', 'http://localhost:3000', 'https://www.placenxt.com', 'https://placenxt.com', 'https://api.placenxt.com'];
 
 const corsConfig = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -505,6 +505,12 @@ app.use(
             [`^${API_PREFIX}/university`]: '/institution'
         })
     )
+);
+
+// CMS routes (blog) — must be before /admin proxy
+app.use(
+    `${API_PREFIX}/cms`,
+    createProxyMiddleware(createProxyOptions(ADMIN_SERVICE_URL, { [`^${API_PREFIX}/cms`]: '/cms' }))
 );
 
 app.use(

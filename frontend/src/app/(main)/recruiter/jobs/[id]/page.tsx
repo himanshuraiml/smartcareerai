@@ -606,7 +606,7 @@ export default function RecruiterJobATSPage() {
                                                                         onBgv={async () => {
                                                                             setBgvLoading(app.applicationId);
                                                                             try {
-                                                                                const res = await authFetch(`/api/v1/applications/${app.applicationId}/bgv/initiate`, { method: 'POST' });
+                                                                                const res = await authFetch(`/recruiter/applications/${app.applicationId}/bgv/initiate`, { method: 'POST' });
                                                                                 const data = await res.json();
                                                                                 if (!data.success) throw new Error(data.message);
                                                                                 showToast(`BGV initiated for ${app.name}`, "success");

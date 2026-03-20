@@ -15,6 +15,7 @@ import { adminRouter } from './routes/admin.routes';
 import { institutionRouter } from './routes/institution.routes';
 import { placementOpsRouter } from './routes/placement-ops.routes';
 import { settingsRouter } from './routes/settings.routes';
+import { blogRouter } from './routes/blog.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 
@@ -142,6 +143,8 @@ app.get('/institutions', async (_req, res, next) => {
 app.use('/institution/:institutionId/ops', placementOpsRouter);
 app.use('/institution', institutionRouter);
 app.use('/settings', settingsRouter);
+// CMS blog routes must be mounted BEFORE '/' adminRouter (which applies adminMiddleware globally)
+app.use('/cms', blogRouter);
 app.use('/', adminRouter);
 
 // Error handler (must be last)

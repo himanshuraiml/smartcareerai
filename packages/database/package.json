@@ -8,15 +8,17 @@
         "migrate": "prisma migrate dev",
         "migrate:deploy": "prisma migrate deploy",
         "generate": "prisma generate",
-        "seed": "ts-node prisma/seed.ts",
-        "seed:interviews": "ts-node prisma/seed-interview-questions.ts",
-        "seed:coding": "ts-node prisma/seed-coding-challenges.ts",
-        "seed:analytical": "ts-node prisma/seed-analytical-questions.ts",
-        "seed:behavioral": "ts-node prisma/seed-behavioral-questions.ts",
-        "seed:psychometric": "ts-node prisma/seed-psychometric-questions.ts",
+        "seed": "npx ts-node prisma/seed.ts",
+        "seed:future-lab": "npx ts-node scripts/seed-future-lab.ts",
+        "seed:interviews": "npx ts-node prisma/seed-interview-questions.ts",
+        "seed:coding": "npx ts-node prisma/seed-coding-challenges.ts",
+        "seed:analytical": "npx ts-node prisma/seed-analytical-questions.ts",
+        "seed:behavioral": "npx ts-node prisma/seed-behavioral-questions.ts",
+        "seed:psychometric": "npx ts-node prisma/seed-psychometric-questions.ts",
         "start": "prisma migrate deploy",
         "studio": "prisma studio",
-        "test": "jest"
+        "test": "jest",
+        "seed:blog": "npx ts-node scripts/seed-blog-posts.ts"
     },
     "prisma": {
         "seed": "ts-node prisma/seed.ts"

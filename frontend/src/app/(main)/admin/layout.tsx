@@ -16,7 +16,8 @@ import {
     Mail,
     CreditCard,
     AlertTriangle,
-    Ticket
+    Ticket,
+    BookOpen
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import ThemeToggle from "@/components/theme/ThemeToggle";
@@ -31,6 +32,7 @@ const navItems = [
     { href: "/admin/errors", icon: AlertTriangle, label: "Error Monitoring" },
     { href: "/admin/activity", icon: Activity, label: "System Activity" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
+    { href: "/cms/admin/posts", icon: BookOpen, label: "Blog CMS" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

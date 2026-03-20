@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowUpDown, ExternalLink, TrendingUp } from 'lucide-react';
 
 interface CandidateRow {
@@ -42,6 +42,20 @@ function ScoreCell({ value }: { value: number }) {
     return <span className={`font-semibold tabular-nums ${color}`}>{value > 0 ? value : '—'}</span>;
 }
 
+function SortHeader({ label, k, onSort }: { label: string; k: SortKey; onSort: (k: SortKey) => void }) {
+    return (
+        <th
+            className="px-3 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer hover:text-zinc-200 transition-colors select-none"
+            onClick={() => onSort(k)}
+        >
+            <div className="flex items-center gap-1">
+                {label}
+                <ArrowUpDown className="h-3 w-3 opacity-50" />
+            </div>
+        </th>
+    );
+}
+
 export function CandidateComparisonTable({ rows }: CandidateComparisonTableProps) {
     const [sortKey, setSortKey] = useState<SortKey>('overall');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -65,20 +79,6 @@ export function CandidateComparisonTable({ rows }: CandidateComparisonTableProps
         return 0;
     });
 
-    function SortHeader({ label, k }: { label: string; k: SortKey }) {
-        return (
-            <th
-                className="px-3 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer hover:text-zinc-200 transition-colors select-none"
-                onClick={() => handleSort(k)}
-            >
-                <div className="flex items-center gap-1">
-                    {label}
-                    <ArrowUpDown className="h-3 w-3 opacity-50" />
-                </div>
-            </th>
-        );
-    }
-
     if (rows.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
@@ -96,15 +96,15 @@ export function CandidateComparisonTable({ rows }: CandidateComparisonTableProps
             <table className="w-full text-sm">
                 <thead className="bg-zinc-800/50">
                     <tr>
-                        <SortHeader label="Candidate" k="candidateName" />
-                        <SortHeader label="Date" k="date" />
+                        <SortHeader label="Candidate" k="candidateName" onSort={handleSort} />
+                        <SortHeader label="Date" k="date" onSort={handleSort} />
                         <th className="px-3 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                             Recommendation
                         </th>
-                        <SortHeader label="Overall" k="overall" />
-                        <SortHeader label="Technical" k="technical" />
-                        <SortHeader label="Communication" k="communication" />
-                        <SortHeader label="Confidence" k="confidence" />
+                        <SortHeader label="Overall" k="overall" onSort={handleSort} />
+                        <SortHeader label="Technical" k="technical" onSort={handleSort} />
+                        <SortHeader label="Communication" k="communication" onSort={handleSort} />
+                        <SortHeader label="Confidence" k="confidence" onSort={handleSort} />
                         <th className="px-3 py-3 text-left text-xs font-medium text-zinc-400 uppercase">Links</th>
                     </tr>
                 </thead>

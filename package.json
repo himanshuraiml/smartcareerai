@@ -42,6 +42,7 @@
     "ci-check": "powershell -ExecutionPolicy Bypass -File ./scripts/ci-check.ps1",
     "db:migrate": "npm run migrate -w @placenxt/database",
     "db:seed": "npm run seed -w @placenxt/database",
+    "db:seed:future-lab": "npm run seed:future-lab -w @placenxt/database",
     "db:migrate:railway": "powershell -Command \"$env:DATABASE_URL = (railway variables --service 'Postgres' --json 2>$null | ConvertFrom-Json | Select-Object -ExpandProperty DATABASE_PUBLIC_URL); cd packages/database; npx prisma migrate deploy\"",
     "db:seed:railway": "powershell -Command \"$env:DATABASE_URL = (railway variables --service 'Postgres' --json 2>$null | ConvertFrom-Json | Select-Object -ExpandProperty DATABASE_PUBLIC_URL); cd packages/database; npx ts-node scripts/seed-future-lab.ts\"",
     "db:studio:railway": "powershell -Command \"$env:DATABASE_URL = (railway variables --service 'Postgres' --json 2>$null | ConvertFrom-Json | Select-Object -ExpandProperty DATABASE_PUBLIC_URL); cd packages/database; npx prisma studio\"",

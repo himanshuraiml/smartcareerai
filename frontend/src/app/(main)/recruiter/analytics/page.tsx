@@ -54,7 +54,7 @@ export default function RecruiterAnalyticsPage() {
     async function loadDashboard() {
         setLoading(true);
         try {
-            const res = await authFetch('/api/v1/meeting-analysis/recruiter/dashboard');
+            const res = await authFetch('/meeting-analysis/recruiter/dashboard');
             if (res.ok) {
                 const body = await res.json();
                 setDashboard(body.data);
@@ -67,7 +67,7 @@ export default function RecruiterAnalyticsPage() {
     async function loadComparison() {
         setComparisonLoading(true);
         try {
-            const res = await authFetch('/api/v1/meeting-analysis/recruiter/candidates/compare');
+            const res = await authFetch('/meeting-analysis/recruiter/candidates/compare');
             if (res.ok) {
                 const body = await res.json();
                 setComparison(body.data ?? []);

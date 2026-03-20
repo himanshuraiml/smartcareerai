@@ -122,7 +122,7 @@ export default function OnboardingPage() {
         setFormData({ ...formData, institutionId: '' });
         // Send empty/null to backend
         try {
-            await authFetch(`/users/me/institution`, {
+            await authFetch(`/auth/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

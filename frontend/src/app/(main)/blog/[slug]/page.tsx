@@ -1,39 +1,37 @@
 import Link from 'next/link';
-import { ArrowLeft, Clock, Calendar, Tag, Share2, Menu, X, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, Tag, ArrowRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getPostBySlug, getAllPosts } from '@/lib/blog';
-import { MDXRemote } from 'next-mdx-remote/rsc';
+import { getPublishedPostBySlugFromApi, getPublishedPostsFromApi } from '@/lib/blog';
 import Logo from '@/components/layout/Logo';
-// Since we are using App Router, we should use a Server Component.
-// Regular 'next-mdx-remote' works for Client Components, 'next-mdx-remote/rsc' for Server Components.
-// I will use 'next-mdx-remote/rsc' as it is standard for App Router.
+import ShareButton from '@/components/blog/ShareButton';
 
 export async function generateStaticParams() {
-    const posts = getAllPosts();
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
+    const posts = await getPublishedPostsFromApi({ limit: 500 });
+    return posts.map((post) => ({ slug: post.slug }));
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-    const post = getPostBySlug(slug);
+    const post = await getPublishedPostBySlugFromApi(slug);
 
     if (!post) {
         notFound();
     }
 
-    // Related posts (same category, excluding current) - fetching again is cheap with file system
-    const allPosts = getAllPosts();
+    const allPosts = await getPublishedPostsFromApi({ limit: 100 });
     const relatedPosts = allPosts
-        .filter(p => p.frontmatter.category === post.frontmatter.category && p.slug !== post.slug)
+        .filter(p => p.category === post.category && p.slug !== post.slug)
         .slice(0, 2);
+
+    const formattedDate = post.publishedAt
+        ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : '';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] bg-grid landing-page text-gray-900 dark:text-white overflow-x-hidden">
 
-            {/* Navigation (Reused) - Ideally this should be a component */}
+            {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 glass-premium border-b border-gray-200 dark:border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
@@ -54,13 +52,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             </Link>
                         </div>
 
-                        {/* Mobile Menu Button - We need client component for this. 
-                            For simplicity in this static server component, I will omit the mobile menu interactivity 
-                            or we can make a reusable Client Nav component later. 
-                            For now, I will keep the button but it won't toggle (limit of SC).
-                            To fix this properly, I should extract Navigation to a component. 
-                            But to save time I will just render a static non-functional menu or link back.
-                          */}
                         <Link
                             href="/blog"
                             className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
@@ -83,23 +74,31 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     <div className="mb-10 text-center">
                         <div className="flex items-center justify-center gap-4 mb-6">
                             <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-sm font-bold rounded-lg border border-indigo-500/30">
-                                {post.frontmatter.category}
+                                {post.category}
                             </span>
-                            <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                                <Clock className="w-4 h-4" /> {post.frontmatter.readTime}
-                            </span>
-                            <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                                <Calendar className="w-4 h-4" /> {post.frontmatter.date}
-                            </span>
+                            {post.readTime && (
+                                <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <Clock className="w-4 h-4" /> {post.readTime}
+                                </span>
+                            )}
+                            {formattedDate && (
+                                <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <Calendar className="w-4 h-4" /> {formattedDate}
+                                </span>
+                            )}
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">{post.frontmatter.title}</h1>
-                        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{post.frontmatter.excerpt}</p>
+                        <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">{post.title}</h1>
+                        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">{post.excerpt}</p>
 
                         {/* Author Info */}
                         <div className="flex items-center justify-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">P</div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                                {(post.author.name || 'P').charAt(0).toUpperCase()}
+                            </div>
                             <div className="text-left">
-                                <div className="text-gray-900 dark:text-white font-medium">PlaceNxt Team</div>
+                                <div className="text-gray-900 dark:text-white font-medium">
+                                    {post.author.name || 'PlaceNxt Team'}
+                                </div>
                                 <div className="text-xs text-gray-500">Career Experts</div>
                             </div>
                         </div>
@@ -107,10 +106,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                     {/* Featured Image */}
                     <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 border border-gray-200 dark:border-white/5 shadow-2xl shadow-indigo-500/10">
-                        {post.frontmatter.image ? (
+                        {post.coverImage ? (
                             <Image
-                                src={post.frontmatter.image}
-                                alt={post.frontmatter.title}
+                                src={post.coverImage}
+                                alt={post.title}
                                 fill
                                 className="object-cover"
                                 priority
@@ -122,24 +121,23 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         )}
                     </div>
 
-                    {/* Content */}
-                    <article className="prose dark:prose-invert prose-lg max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-white prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:marker:text-indigo-500">
-                        <MDXRemote source={post.content} />
-                    </article>
+                    {/* Content — TipTap HTML rendered safely */}
+                    <article
+                        className="prose dark:prose-invert prose-lg max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-white prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:marker:text-indigo-500"
+                        dangerouslySetInnerHTML={{ __html: post.content }}
+                    />
 
                     {/* Article Footer: Keywords & Share */}
                     <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/10">
                         <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
                             <div className="flex flex-wrap gap-2">
-                                {post.frontmatter.keywords.map(keyword => (
+                                {post.keywords.map(keyword => (
                                     <span key={keyword} className="px-3 py-1 bg-white dark:bg-white/5 rounded-full text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/5">
                                         #{keyword}
                                     </span>
                                 ))}
                             </div>
-                            <button className="flex items-center gap-2 text-indigo-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                <Share2 className="w-4 h-4" /> Share Article
-                            </button>
+                            <ShareButton title={post.title} slug={post.slug} />
                         </div>
                     </div>
 
@@ -152,9 +150,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             <div className="grid md:grid-cols-2 gap-8">
                                 {relatedPosts.map(related => (
                                     <Link key={related.slug} href={`/blog/${related.slug}`} className="group p-6 rounded-2xl glass-card border border-gray-200 dark:border-white/5 hover:border-indigo-500/30 transition-all">
-                                        <div className="text-xs text-indigo-400 mb-2 font-medium">{related.frontmatter.category}</div>
-                                        <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-300 transition-colors">{related.frontmatter.title}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{related.frontmatter.excerpt}</p>
+                                        <div className="text-xs text-indigo-400 mb-2 font-medium">{related.category}</div>
+                                        <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-300 transition-colors">{related.title}</h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{related.excerpt}</p>
                                     </Link>
                                 ))}
                             </div>
@@ -193,4 +191,3 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
     );
 }
-

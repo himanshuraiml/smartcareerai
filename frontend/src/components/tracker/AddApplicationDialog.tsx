@@ -43,7 +43,7 @@ export default function AddApplicationDialog({ isOpen, onClose, onSuccess }: Add
         setLoading(true);
 
         try {
-            const response = await authFetch(`/applications`, {
+            const response = await authFetch(`/applications/applications`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

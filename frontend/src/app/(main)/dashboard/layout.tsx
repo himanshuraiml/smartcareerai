@@ -173,7 +173,13 @@ export default function DashboardLayout({
         }
     }, [user, router, _hasHydrated]);
 
-
+    // Daily-login engagement ping — fires once per browser session
+    useEffect(() => {
+        if (!user || !_hasHydrated) return;
+        if (sessionStorage.getItem('pn_daily_login_pinged')) return;
+        sessionStorage.setItem('pn_daily_login_pinged', '1');
+        authFetch('/billing/engagement/daily-login', { method: 'POST' }).catch(() => { /* non-critical */ });
+    }, [user, _hasHydrated]);
 
     if (!_hasHydrated || !user) {
         // Show nothing or a loading spinner while hydrating or redirecting

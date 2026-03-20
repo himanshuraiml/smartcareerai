@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Socket } from 'socket.io-client';
 import { authFetch } from '@/lib/auth-fetch';
 
 export interface TranscriptSegment {
@@ -19,20 +18,19 @@ export interface TranscriptSegment {
 interface UseMeetingTranscriptOptions {
     meetingId: string;
     /** Pass the socketRef from useMeetingSocket to subscribe to live events */
-    socketRef: React.MutableRefObject<import('socket.io-client').Socket | null>;
+    socketRef: React.RefObject<import('socket.io-client').Socket | null>;
 }
 
 export function useMeetingTranscript({ meetingId, socketRef }: UseMeetingTranscriptOptions) {
     const [segments, setSegments] = useState<TranscriptSegment[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     // Load existing transcript on mount
     useEffect(() => {
         if (!meetingId) return;
 
-        setLoading(true);
-        authFetch(`/api/v1/meeting-analysis/${meetingId}/transcript`)
+        authFetch(`/meeting-analysis/${meetingId}/transcript`)
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.data)) {

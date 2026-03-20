@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { RealtimeTranscript } from './RealtimeTranscript';
 import { CopilotSuggestions } from './CopilotSuggestions';
 import { io, Socket } from 'socket.io-client';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, MicOff, Wifi, WifiOff } from 'lucide-react';
+import { Mic, MicOff, Wifi, WifiOff } from 'lucide-react';
 
 interface CopilotOverlayProps {
     interviewId: string;
@@ -152,10 +152,11 @@ export function CopilotOverlay({ interviewId, meetingUrl, triggerStart }: Copilo
 
     // Handle external start trigger
     useEffect(() => {
-        if (triggerStart && isConnected && !isListening) {
+        if (triggerStart && isConnected && !isListeningRef.current) {
             startListening();
         }
-    }, [triggerStart, isConnected, isListening, startListening]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [triggerStart, isConnected, startListening]);
 
     // Cleanup on unmount
     useEffect(() => {

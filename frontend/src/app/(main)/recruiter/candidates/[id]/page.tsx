@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, User, Mail, Award, Clock, Activity, FileText, AlertCircle, MessageSquare, TrendingUp, TrendingDown, ShieldAlert, Percent, ClipboardList, Star, Send, Camera } from "lucide-react";
+import { useParams, useRouter, usePathname } from "next/navigation";
+import { ArrowLeft, User, Award, Clock, Activity, FileText, AlertCircle, MessageSquare, Mail, TrendingUp, TrendingDown, ShieldAlert, Percent, ClipboardList, Star, Camera, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import ScorecardSummaryCard from "@/components/recruiter/ScorecardSummaryCard";
 import ProctoringReport from "@/components/recruiter/ProctoringReport";
@@ -63,7 +62,6 @@ export default function CandidateProfilePage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const { user } = useAuthStore();
 
     // State
@@ -78,6 +76,8 @@ export default function CandidateProfilePage() {
     const [proctoringReports, setProctoringReports] = useState<any[]>([]);
     const [proctoringLoading, setProctoringLoading] = useState(false);
     const [surveyingSent, setSurveyingSent] = useState<Record<string, boolean>>({});
+    const [bgvLoading, setBgvLoading] = useState<Record<string, boolean>>({});
+    const [offerLoading, setOfferLoading] = useState<Record<string, boolean>>({});
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
     const showToast = (message: string, type: "success" | "error") => {
@@ -96,6 +96,37 @@ export default function CandidateProfilePage() {
             showToast("NPS survey sent to candidate", "success");
         } catch (err: any) {
             showToast(err.message || "Failed to send survey", "error");
+        }
+    };
+
+    const handleInitiateBgv = async (applicationId: string) => {
+        setBgvLoading(prev => ({ ...prev, [applicationId]: true }));
+        try {
+            const res = await authFetch(`/recruiter/applications/${applicationId}/bgv/initiate`, { method: "POST" });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.error?.message || "Failed to initiate BGV"); }
+            setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, bgvStatus: "IN_PROGRESS", bgvInitiatedAt: new Date().toISOString() } : a));
+            showToast("Background verification initiated", "success");
+        } catch (err: any) {
+            showToast(err.message || "Failed to initiate BGV", "error");
+        } finally {
+            setBgvLoading(prev => ({ ...prev, [applicationId]: false }));
+        }
+    };
+
+    const handleGenerateOfferLetter = async (applicationId: string) => {
+        setOfferLoading(prev => ({ ...prev, [applicationId]: true }));
+        try {
+            const res = await authFetch(`/recruiter/applications/${applicationId}/offer-letter`, { method: "POST" });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || "Failed to generate offer letter");
+            const url = data.data?.url || data.data?.offerLetterUrl;
+            setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, offerLetterUrl: url, offerLetterGeneratedAt: new Date().toISOString() } : a));
+            showToast("Offer letter generated", "success");
+            if (url) window.open(url, "_blank");
+        } catch (err: any) {
+            showToast(err.message || "Failed to generate offer letter", "error");
+        } finally {
+            setOfferLoading(prev => ({ ...prev, [applicationId]: false }));
         }
     };
 
@@ -502,10 +533,11 @@ export default function CandidateProfilePage() {
                                                 </div>
                                             </div>
 
-                                            {/* Offer Letter + BGV Status */}
-                                            {(app.offerLetterUrl || app.bgvStatus) && (
+                                            {/* Offer Letter + BGV Actions */}
+                                            {(app.offerLetterUrl || app.bgvStatus || ["OFFER", "PLACED"].includes(app.status)) && (
                                                 <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex flex-wrap gap-3 items-center">
-                                                    {app.offerLetterUrl && (
+                                                    {/* Offer Letter */}
+                                                    {app.offerLetterUrl ? (
                                                         <a
                                                             href={app.offerLetterUrl}
                                                             target="_blank"
@@ -520,8 +552,18 @@ export default function CandidateProfilePage() {
                                                                 </span>
                                                             )}
                                                         </a>
+                                                    ) : ["OFFER", "PLACED"].includes(app.status) && (
+                                                        <button
+                                                            onClick={() => handleGenerateOfferLetter(app.id)}
+                                                            disabled={offerLoading[app.id]}
+                                                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors disabled:opacity-60"
+                                                        >
+                                                            {offerLoading[app.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
+                                                            {offerLoading[app.id] ? "Generating..." : "Generate Offer Letter"}
+                                                        </button>
                                                     )}
-                                                    {app.bgvStatus && (
+                                                    {/* BGV */}
+                                                    {app.bgvStatus ? (
                                                         <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border ${
                                                             app.bgvStatus === 'CLEAR' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
                                                             : app.bgvStatus === 'FLAGGED' ? 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-100 dark:border-red-500/20'
@@ -536,6 +578,15 @@ export default function CandidateProfilePage() {
                                                                 </span>
                                                             )}
                                                         </span>
+                                                    ) : ["OFFER", "PLACED"].includes(app.status) && (
+                                                        <button
+                                                            onClick={() => handleInitiateBgv(app.id)}
+                                                            disabled={bgvLoading[app.id]}
+                                                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors disabled:opacity-60"
+                                                        >
+                                                            {bgvLoading[app.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />}
+                                                            {bgvLoading[app.id] ? "Initiating..." : "Initiate BGV"}
+                                                        </button>
                                                     )}
                                                 </div>
                                             )}

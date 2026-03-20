@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Flag, Loader2, AlertTriangle, Clock, Check } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -56,7 +56,7 @@ export default function ProctoringReport({ report }: ProctoringReportProps) {
         if (!report.attempt?.id) return;
         setFlagging(true);
         try {
-            const res = await authFetch(`/api/v1/assessments/attempts/${report.attempt.id}/flag`, {
+            const res = await authFetch(`/assessments/attempts/${report.attempt.id}/flag`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ flagged: newFlagged, reason: newFlagged ? flagReason : undefined }),

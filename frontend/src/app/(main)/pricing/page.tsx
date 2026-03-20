@@ -269,7 +269,7 @@ function PricingContent() {
         try {
             // If the plan is free, handle it differently (usually just activate)
             if (plan.priceMonthly === 0) {
-                const response = await authFetch('/billing/subscriptions/subscribe-free', {
+                const response = await authFetch('/billing/subscriptions/subscribe', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ planName: plan.name })

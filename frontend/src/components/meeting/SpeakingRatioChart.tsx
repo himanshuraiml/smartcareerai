@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 
 interface SpeakerRatio {
     name: string;
@@ -30,12 +29,11 @@ export function SpeakingRatioChart({ data }: SpeakingRatioChartProps) {
     const cy = size / 2;
     const r = 45;
 
-    let cumulativePercent = 0;
     const slices = speakers.map((speaker, i) => {
-        const startPercent = cumulativePercent;
-        cumulativePercent += speaker.percentage / 100;
+        const startPercent = speakers.slice(0, i).reduce((sum, s) => sum + s.percentage / 100, 0);
+        const endPercent = startPercent + speaker.percentage / 100;
         const startAngle = startPercent * 2 * Math.PI - Math.PI / 2;
-        const endAngle = cumulativePercent * 2 * Math.PI - Math.PI / 2;
+        const endAngle = endPercent * 2 * Math.PI - Math.PI / 2;
         const largeArc = speaker.percentage > 50 ? 1 : 0;
         const x1 = cx + r * Math.cos(startAngle);
         const y1 = cy + r * Math.sin(startAngle);

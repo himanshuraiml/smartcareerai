@@ -76,6 +76,18 @@ export const adminMiddleware = async (
     next();
 };
 
+export const editorOrAdminMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const role = req.user?.role;
+    if (role !== 'EDITOR' && role !== 'ADMIN') {
+        return next(createError('Editor or Admin access required', 403, 'FORBIDDEN'));
+    }
+    next();
+};
+
 export const institutionAdminMiddleware = async (
     req: Request,
     res: Response,

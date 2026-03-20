@@ -286,7 +286,7 @@ export default function JobsPage() {
     // External job apply
     const handleExternalApply = async (job: Job) => {
         try {
-            await authFetch('/applications', {
+            await authFetch('/applications/applications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

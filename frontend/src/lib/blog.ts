@@ -85,3 +85,75 @@ export function getAllCategories(): string[] {
     return ["All", ...Array.from(categories)];
 }
 
+// ============================================
+// API-BACKED BLOG FUNCTIONS (CMS database)
+// ============================================
+
+export interface BlogPostData {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    category: string;
+    coverImage: string | null;
+    featured: boolean;
+    readTime: string | null;
+    keywords: string[];
+    status: string;
+    authorId: string;
+    publishedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    author: {
+        id: string;
+        name: string | null;
+        avatarUrl: string | null;
+        email: string;
+    };
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+export async function getPublishedPostsFromApi(params?: {
+    category?: string;
+    page?: number;
+    limit?: number;
+}): Promise<BlogPostData[]> {
+    try {
+        const query = new URLSearchParams();
+        if (params?.category && params.category !== 'All') query.set('category', params.category);
+        if (params?.page) query.set('page', String(params.page));
+        if (params?.limit) query.set('limit', String(params.limit));
+        const qs = query.toString();
+
+        const res = await fetch(`${API_URL}/cms/posts${qs ? `?${qs}` : ''}`, {
+            next: { revalidate: 60 },
+        });
+        if (!res.ok) return [];
+        const json = await res.json();
+        return json.data || [];
+    } catch {
+        return [];
+    }
+}
+
+export async function getPublishedPostBySlugFromApi(slug: string): Promise<BlogPostData | null> {
+    try {
+        const res = await fetch(`${API_URL}/cms/posts/slug/${encodeURIComponent(slug)}`, {
+            next: { revalidate: 60 },
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.data || null;
+    } catch {
+        return null;
+    }
+}
+
+export async function getAllPublishedCategoriesFromApi(): Promise<string[]> {
+    const posts = await getPublishedPostsFromApi({ limit: 200 });
+    const cats = new Set(posts.map(p => p.category));
+    return ['All', ...Array.from(cats)];
+}
+

@@ -96,6 +96,9 @@ model User {
   // RBAC Relations
   placementUserRoles PlacementUserRole[]
 
+  // Blog CMS
+  blogPosts BlogPost[] @relation("BlogPostAuthor")
+
   @@map("users")
 }
 
@@ -594,6 +597,14 @@ enum UserRole {
   DEPT_COORDINATOR
   PLACEMENT_STAFF
   STUDENT_VOLUNTEER
+  EDITOR
+}
+
+enum BlogPostStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
 }
 
 // ============================================
@@ -2289,4 +2300,35 @@ model BgvLog {
   @@index([applicationId])
   @@index([status])
   @@map("bgv_logs")
+}
+
+// ============================================
+// BLOG CMS
+// ============================================
+
+model BlogPost {
+  id          String         @id @default(uuid())
+  title       String
+  slug        String         @unique
+  excerpt     String         @db.Text
+  content     String         @db.Text
+  category    String
+  coverImage  String?        @map("cover_image")
+  featured    Boolean        @default(false)
+  readTime    String?        @map("read_time")
+  keywords    String[]
+  status      BlogPostStatus @default(DRAFT)
+  authorId    String         @map("author_id")
+  publishedAt DateTime?      @map("published_at")
+  rejectedAt  DateTime?      @map("rejected_at")
+  rejectNote  String?        @map("reject_note") @db.Text
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  author User @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([category])
+  @@map("blog_posts")
 }

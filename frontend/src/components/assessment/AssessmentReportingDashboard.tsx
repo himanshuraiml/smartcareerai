@@ -26,7 +26,6 @@ export const AssessmentReportingDashboard = ({ jobId }: { jobId: string }) => {
 
     useEffect(() => {
         if (!jobId) return;
-        setLoading(true);
         authFetch(`/assessments/attempts/job/${jobId}`)
             .then(r => r.json())
             .then(({ data }) => setAttempts(data ?? []))

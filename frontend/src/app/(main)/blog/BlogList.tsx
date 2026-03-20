@@ -9,13 +9,18 @@ import {
     ChevronRight, Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
-import { BlogPost } from '@/lib/blog';
+import { BlogPostData } from '@/lib/blog';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 interface BlogListProps {
-    initialPosts: BlogPost[];
+    initialPosts: BlogPostData[];
     categories: string[];
+}
+
+function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export default function BlogList({ initialPosts, categories }: BlogListProps) {
@@ -25,14 +30,14 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredPosts = initialPosts.filter(post => {
-        const matchesCategory = selectedCategory === 'All' || post.frontmatter.category === selectedCategory;
+        const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
         const matchesSearch =
-            post.frontmatter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.frontmatter.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
-    const featuredPost = filteredPosts.find(p => p.frontmatter.featured) || filteredPosts[0];
+    const featuredPost = filteredPosts.find(p => p.featured) || filteredPosts[0];
     const regularPosts = filteredPosts.filter(p => p.slug !== featuredPost?.slug);
 
     return (
@@ -120,25 +125,29 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                                             <div className="p-8 md:p-12 flex flex-col justify-end min-h-[360px]">
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <span className="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-100 dark:border-indigo-500/30">
-                                                        {featuredPost.frontmatter.category}
+                                                        {featuredPost.category}
                                                     </span>
                                                     <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-100 dark:border-amber-500/30 flex items-center gap-1">
                                                         <Tag className="w-3 h-3" /> Featured
                                                     </span>
                                                 </div>
                                                 <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                                                    {featuredPost.frontmatter.title}
+                                                    {featuredPost.title}
                                                 </h2>
                                                 <p className="text-gray-500 dark:text-gray-300 text-base mb-7 line-clamp-2 leading-relaxed">
-                                                    {featuredPost.frontmatter.excerpt}
+                                                    {featuredPost.excerpt}
                                                 </p>
                                                 <div className="flex items-center gap-5 text-sm text-gray-400 dark:text-gray-400">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs">P</div>
-                                                        <span className="text-gray-600 dark:text-gray-300">PlaceNxt Team</span>
+                                                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs">
+                                                            {(featuredPost.author.name || 'P').charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span className="text-gray-600 dark:text-gray-300">
+                                                            {featuredPost.author.name || 'PlaceNxt Team'}
+                                                        </span>
                                                     </div>
-                                                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {featuredPost.frontmatter.readTime}</span>
-                                                    <span>{featuredPost.frontmatter.date}</span>
+                                                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {featuredPost.readTime || '5 min read'}</span>
+                                                    <span>{formatDate(featuredPost.publishedAt)}</span>
                                                 </div>
                                                 <div className="mt-6 inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-sm group-hover:gap-3 transition-all">
                                                     Read Article <ArrowRight className="w-4 h-4" />
@@ -146,9 +155,9 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                                             </div>
                                             {/* Image panel */}
                                             <div className="hidden md:block relative bg-gray-100 dark:bg-gray-800 min-h-[360px]">
-                                                {featuredPost.frontmatter.image ? (
+                                                {featuredPost.coverImage ? (
                                                     <>
-                                                        <Image src={featuredPost.frontmatter.image} alt={featuredPost.frontmatter.title}
+                                                        <Image src={featuredPost.coverImage} alt={featuredPost.title}
                                                             fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                                                         <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-white dark:to-gray-950 opacity-20" />
                                                     </>
@@ -182,8 +191,8 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                                                     className="h-full flex flex-col group rounded-2xl overflow-hidden border border-gray-100 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-500/20 transition-all duration-300 cursor-pointer">
                                                     {/* Image */}
                                                     <div className="h-48 relative overflow-hidden bg-gray-100 dark:bg-gray-800">
-                                                        {post.frontmatter.image ? (
-                                                            <Image src={post.frontmatter.image} alt={post.frontmatter.title}
+                                                        {post.coverImage ? (
+                                                            <Image src={post.coverImage} alt={post.title}
                                                                 fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
                                                         ) : (
                                                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/30 flex items-center justify-center">
@@ -192,7 +201,7 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                                                         )}
                                                         <div className="absolute top-3 left-3">
                                                             <span className="px-2.5 py-1 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-sm text-xs font-semibold text-gray-700 dark:text-white border border-gray-200/50 dark:border-white/10">
-                                                                {post.frontmatter.category}
+                                                                {post.category}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -200,15 +209,15 @@ export default function BlogList({ initialPosts, categories }: BlogListProps) {
                                                     {/* Card body */}
                                                     <div className="p-5 flex-1 flex flex-col">
                                                         <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-                                                            <Clock className="w-3 h-3" /> {post.frontmatter.readTime}
+                                                            <Clock className="w-3 h-3" /> {post.readTime || '5 min read'}
                                                             <span className="text-gray-300 dark:text-gray-700">•</span>
-                                                            <span>{post.frontmatter.date}</span>
+                                                            <span>{formatDate(post.publishedAt)}</span>
                                                         </div>
                                                         <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
-                                                            {post.frontmatter.title}
+                                                            {post.title}
                                                         </h3>
                                                         <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-5 flex-1 leading-relaxed">
-                                                            {post.frontmatter.excerpt}
+                                                            {post.excerpt}
                                                         </p>
                                                         <div className="flex items-center text-indigo-500 dark:text-indigo-400 text-sm font-semibold gap-1 mt-auto group-hover:gap-2 transition-all">
                                                             Read Article <ArrowRight className="w-3.5 h-3.5" />

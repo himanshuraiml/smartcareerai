@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import { Globe, RefreshCw, TrendingUp, Users, Briefcase, AlertCircle, Map } from "lucide-react";
@@ -129,26 +129,27 @@ export default function MarketIntelPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         const res = await authFetch("/recruiter/analytics/market-intelligence");
         if (!res.ok) throw new Error("Failed to load market intelligence");
         const d = await res.json();
-        setData(d.data);
-    };
+        return d.data as MarketIntelligence;
+    }, []);
 
     useEffect(() => {
         if (!user) return;
-        setLoading(true);
         fetchData()
+            .then(d => setData(d))
             .catch(e => setError(e.message))
             .finally(() => setLoading(false));
-    }, [user]);
+    }, [user, fetchData]);
 
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
             await authFetch("/recruiter/analytics/market-intelligence/refresh", { method: "POST" });
-            await fetchData();
+            const d = await fetchData();
+            setData(d);
         } catch { }
         setRefreshing(false);
     };

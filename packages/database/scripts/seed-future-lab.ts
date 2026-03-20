@@ -31,12 +31,13 @@ const TRACKS = [
 A traditional LLM chatbot answers one question at a time. You ask → it answers. Done.
 
 An **AI Agent** is fundamentally different. It can:
-- Decide *what action to take* based on a goal
-- Call external tools (search, code execution, APIs)
-- Observe the result and decide what to do *next*
-- Repeat this loop until the goal is achieved
+- **Decide** *what action to take* based on a goal
+- **Call** external tools (search, code execution, APIs)
+- **Observe** the result and decide what to do *next*
+- **Repeat** this loop until the goal is achieved
 
-Think of it this way: a chatbot is a one-shot rocket. An agent is a guided missile that continuously corrects its trajectory.
+> [!TIP]
+> **Think of it this way:** A chatbot is a one-shot rocket. An agent is a guided missile that continuously corrects its trajectory.
 
 ---
 
@@ -46,21 +47,15 @@ ReAct, introduced by Google in 2022, is the foundational pattern behind most mod
 
 The loop looks like this:
 
-Thought → Action → Observation → Thought → Action → Observation → ... → Final Answer
+\`Thought → Action → Observation → Thought → Action → Observation → ... → Final Answer\`
 
 ### Example: "What is the current stock price of Apple?"
 
-> **Thought:** The user wants Apple's current stock price. I need to look this up in real time because my training data is outdated.
-> 
-> **Action:** search_web("Apple AAPL stock price today")
-> 
-> **Observation:** AAPL is trading at $189.50 as of 2 minutes ago.
-> 
-> **Thought:** I now have the current price. I can answer the user.
-> 
-> **Final Answer:** Apple (AAPL) is currently trading at $189.50.
-
-Without the tool call, the model would have guessed — or worse, hallucinated a plausible but wrong number.
+1. **Thought:** The user wants Apple's current stock price. I need to look this up in real time because my training data is outdated.
+2. **Action:** \`search_web("Apple AAPL stock price today")\`
+3. **Observation:** AAPL is trading at $189.50 as of 2 minutes ago.
+4. **Thought:** I now have the current price. I can answer the user.
+5. **Final Answer:** Apple (AAPL) is currently trading at \`$189.50\`.
 
 ---
 
@@ -82,45 +77,38 @@ Here is a simplified Python implementation of the core agent loop:
 import openai
 import json
 
-def run_agent(user_query: str, tools: list, max_steps: int = 10):
+def run_agent(user_query, tools):
     messages = [
         {"role": "system", "content": "You are a helpful agent. Think step by step before acting."},
         {"role": "user", "content": user_query}
     ]
     
-    for step in range(max_steps):
+    for step in range(10):  # Setting a Max Step limit
         # 1. Ask the LLM what to do next
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=messages,
-            tools=tools,        # <-- Tool definitions (JSON schemas)
-            tool_choice="auto"  # Let the model decide when to call tools
+            tools=tools,
+            tool_choice="auto"
         )
         
         msg = response.choices[0].message
+        messages.append(msg)
         
-        # 2. If the model chose to call a tool...
-        if msg.tool_calls:
-            messages.append(msg)  # Add model's response to history
-            
-            for tool_call in msg.tool_calls:
-                tool_name = tool_call.function.name
-                tool_args = json.loads(tool_call.function.arguments)
-                
-                # 3. Execute the tool (Observation)
-                result = execute_tool(tool_name, tool_args)
-                
-                # 4. Feed the result back to the model
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": str(result)
-                })
-        else:
-            # 5. Model is done — return the final answer
+        # 2. Check if the model is done
+        if not msg.tool_calls:
             return msg.content
-    
-    return "Max steps reached."
+            
+        # 3. Execute the tool (Observation)
+        for tool_call in msg.tool_calls:
+            result = execute_tool(tool_call.function.name, tool_call.function.arguments)
+            
+            # 4. Feed the result back to the model
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": str(result)
+            })
 \`\`\`
 
 ---
@@ -158,21 +146,67 @@ Read the following scenario and fill in the blank Thought/Action/Observation ste
 
 **User Query:** "Is it cheaper to fly from Delhi to Mumbai or take the train?"
 
-Step 1:
+**Step 1:**
 > Thought: _______________________________________________
 > Action: search_web("_______________________________________________")
 > Observation: Flight price ~₹3,500 (1h 50m)
 
-Step 2:
+**Step 2:**
 > Thought: _______________________________________________
 > Action: search_web("_______________________________________________")
 > Observation: Train price ~₹800 (16h, Rajdhani Express)
 
-Step 3:
+**Step 3:**
 > Thought: _______________________________________________
 > Final Answer: _______________________________________________
 
-After completing this exercise, you'll have a solid intuition for how an agent reasons through a multi-step problem.
+---
+
+## Hands-On Checklist
+- [x] Read the conceptual breakdown above
+- [x] Explore the provided tool-use code examples
+- [ ] Complete the interactive exercise above
+- [ ] Verify your understanding by completing the quiz below
+
+---
+
+## 🧠 Check Your Understanding (Deep Dive Quiz)
+
+**1. In a ReAct loop, what happens immediately after the "Observation" step?**
+- A) The agent provides the Final Answer to the user
+- B) The agent enters a new "Thought" step to reason about the tool output
+- C) The agent calls another tool automatically
+- D) The loop terminates to save tokens
+
+**2. Which production-grade safeguard is most effective at preventing an agent from entering an "Infinite Loop" (e.g., repeatedly calling the same failed search)?**
+- A) Setting Temperature to 0.7
+- B) Using a larger context window (e.g., 128k)
+- C) Implementing a "Step Counter" and a "Max Steps" threshold (e.g., 10 iterations)
+- D) Asking the user to manually verify every action
+
+**3. When a tool returns an error message (e.g., 'API Key Expired'), how should a robust ReAct agent typically behave?**
+- A) It should crash and throw a 500 Internal Server Error
+- B) it should ignore the error and proceed to the Final Answer
+- C) It should receive the error as an "Observation," allowing the next "Thought" step to pivot or retry
+- D) It should hallucinate a plausible result to avoid disappointing the user
+
+**4. Why is "Temperature = 0" (or very low) strongly recommended for agentic workflows?**
+- A) To make the agent's personality more creative and empathetic
+- B) To ensure the agent chooses the exact same "Action" for the same "Thought" every time, making the loop predictable and debuggable 
+- C) Because LLMs generate text faster at lower temperatures
+- D) To prevent the model from calling too many tools at once
+
+**5. What is the main risk of "Context Overflow" in long-running agent sessions?**
+- A) The agent will lose its original Goal and start hallucinating irrelevant actions
+- B) The model will become more accurate as it has more data
+- C) The price per API call will decrease significantly
+- D) The agent will automatically upgrade to a newer model version
+
+**6. Which statement best describes the "Context Window" in the context of an AI Agent?**
+- A) It is a permanent hard drive where the agent stores all user data
+- B) It acts as the "Working Memory," containing the history of thoughts, actions, and observations for the current session
+- C) It is the UI window where the user types their query
+- D) It is the time limit set for the agent to complete a task
 
 ---
 
