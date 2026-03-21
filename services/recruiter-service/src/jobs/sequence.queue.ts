@@ -1,14 +1,23 @@
 import { Queue } from 'bullmq';
 import { logger } from '../utils/logger';
 
-const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379');
+function parseRedisConnection(url: string) {
+    try {
+        const parsed = new URL(url);
+        return {
+            host: parsed.hostname || 'localhost',
+            port: parseInt(parsed.port || '6379'),
+            password: parsed.password || undefined,
+        };
+    } catch {
+        return { host: 'localhost', port: 6379, password: undefined };
+    }
+}
+
+const redisConnection = parseRedisConnection(process.env.REDIS_URL || 'redis://localhost:6379');
 
 export const sequenceQueue = new Queue('sequence-messages', {
-    connection: {
-        host: REDIS_HOST,
-        port: REDIS_PORT,
-    },
+    connection: redisConnection,
     defaultJobOptions: {
         removeOnComplete: 100,
         removeOnFail: 200,

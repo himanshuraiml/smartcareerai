@@ -9,14 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
-interface JobRole {
-    id: string;
-    title: string;
-    category: string;
-}
+import { fetchJobRoles, type JobRole } from '@/lib/job-roles';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -70,18 +63,7 @@ export default function SettingsPage() {
 
     // Fetch job roles
     useEffect(() => {
-        const fetchJobRoles = async () => {
-            try {
-                const res = await authFetch('/job-roles');
-                if (res.ok) {
-                    const data = await res.json();
-                    setJobRoles(data.data || []);
-                }
-            } catch (err) {
-                console.error('Failed to fetch job roles:', err);
-            }
-        };
-        fetchJobRoles();
+        fetchJobRoles(authFetch).then(setJobRoles);
 
         const fetchInstitutions = async () => {
             try {

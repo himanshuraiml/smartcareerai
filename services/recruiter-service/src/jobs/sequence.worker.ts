@@ -6,8 +6,20 @@ import type { SequenceJobData } from './sequence.queue';
 
 const prisma = new PrismaClient();
 
-const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379');
+function parseRedisConnection(url: string) {
+    try {
+        const parsed = new URL(url);
+        return {
+            host: parsed.hostname || 'localhost',
+            port: parseInt(parsed.port || '6379'),
+            password: parsed.password || undefined,
+        };
+    } catch {
+        return { host: 'localhost', port: 6379, password: undefined };
+    }
+}
+
+const redisConnection = parseRedisConnection(process.env.REDIS_URL || 'redis://localhost:6379');
 
 export function startSequenceWorker(): Worker {
     const worker = new Worker<SequenceJobData>(
@@ -39,10 +51,7 @@ export function startSequenceWorker(): Worker {
             logger.info(`Drip sequence step ${stepIndex} sent for application ${applicationId}`);
         },
         {
-            connection: {
-                host: REDIS_HOST,
-                port: REDIS_PORT,
-            },
+            connection: redisConnection,
             concurrency: 5,
         },
     );

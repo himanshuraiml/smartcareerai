@@ -15,6 +15,11 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors());
 app.use(express.json({ limit: '5mb' })); // Allow base64 snapshot images
 
+// Health check
+app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'assessment-service' });
+});
+
 // Main Routes
 app.use('/api/v1/assessments', assessmentRoutes);
 

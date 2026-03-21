@@ -9,18 +9,11 @@ import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
 import { authFetch } from '@/lib/auth-fetch';
+import { fetchJobRoles, type JobRole } from '@/lib/job-roles';
 import Logo from '@/components/layout/Logo';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
-interface JobRole {
-    id: string;
-    title: string;
-    category: string;
-}
-
 // Categories for grouping job roles
-const ROLE_CATEGORIES = ['Engineering', 'Data', 'Design', 'Product', 'Marketing', 'Operations'];
+const ROLE_CATEGORIES = ['Engineering', 'Data', 'Design', 'Product', 'Management', 'Marketing', 'Operations'];
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -43,15 +36,12 @@ export default function RegisterPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [rolesRes, instRes] = await Promise.all([
-                    authFetch(`/job-roles`, { skipAuth: true }),
+                const [roles, instRes] = await Promise.all([
+                    fetchJobRoles((url, opts) => authFetch(url, { ...opts, skipAuth: true })),
                     authFetch(`/institutions`, { skipAuth: true })
                 ]);
 
-                if (rolesRes.ok) {
-                    const data = await rolesRes.json();
-                    setJobRoles(data.data || []);
-                }
+                setJobRoles(roles);
 
                 if (instRes.ok) {
                     const data = await instRes.json();
