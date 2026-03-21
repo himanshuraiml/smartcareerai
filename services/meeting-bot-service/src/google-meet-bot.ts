@@ -21,8 +21,13 @@ export class GoogleMeetBot {
             console.log(`Starting bot for meeting: ${this.meetingUrl}`);
 
             this.browser = await puppeteer.launch({
-                headless: true, // Need true for server deployment, false for local debugging
+                // headless: false so puppeteer does NOT add --headless; we manually pass --headless=old
+                // Chrome 112+ requires --headless=old to use legacy headless mode that supports
+                // Chrome extensions (needed by puppeteer-stream's chrome.tabCapture API)
+                headless: false,
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
                 args: [
+                    '--headless=old',
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--use-fake-ui-for-media-stream',
@@ -30,7 +35,6 @@ export class GoogleMeetBot {
                     '--disable-web-security',
                     '--disable-features=IsolateOrigins,site-per-process'
                 ],
-                // Require specific executable path if deploying to Alpine/Docker
             });
 
             this.page = await this.browser.newPage();

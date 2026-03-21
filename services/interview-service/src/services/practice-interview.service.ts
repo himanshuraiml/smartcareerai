@@ -145,6 +145,34 @@ export class PracticeInterviewService {
             throw new AppError('Question not found', 404);
         }
 
+        // Idempotent check: If already answered, return next question
+        if (question.userAnswer) {
+            const nextQuestion = await prisma.interviewQuestion.findFirst({
+                where: {
+                    sessionId,
+                    userAnswer: null,
+                    orderIndex: { gt: question.orderIndex },
+                },
+                orderBy: { orderIndex: 'asc' },
+            });
+
+            return {
+                evaluation: {
+                    score: question.score,
+                    feedback: question.feedback,
+                    metrics: question.metrics,
+                    improvedAnswer: question.improvedAnswer,
+                },
+                nextQuestion: nextQuestion ? {
+                    id: nextQuestion.id,
+                    questionText: nextQuestion.questionText,
+                    questionType: nextQuestion.questionType,
+                    orderIndex: nextQuestion.orderIndex,
+                } : null,
+                isComplete: !nextQuestion,
+            };
+        }
+
         if (!question.bankQuestionId) {
             throw new AppError('Practice mode only supports question bank questions', 400);
         }

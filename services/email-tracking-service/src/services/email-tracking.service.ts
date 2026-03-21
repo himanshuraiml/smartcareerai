@@ -1,8 +1,7 @@
-import { PrismaClient, ApplicationStatus } from '@prisma/client';
+import { ApplicationStatus } from '@prisma/client';
 import { GmailService, JobEmail } from './gmail.service';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/prisma';
 
 interface GetTrackedEmailsOptions {
     page: number;

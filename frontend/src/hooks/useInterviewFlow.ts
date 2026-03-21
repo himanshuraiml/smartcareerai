@@ -41,8 +41,11 @@ export function useInterviewFlow({
         latestTranscriptRef.current = transcript;
     }, [transcript]);
 
+    const isSubmittingRef = useRef(false);
+
     const submitCurrentQuestion = useCallback(async (manual: boolean = false) => {
-        if (isSubmitting || isFinished) return;
+        if (isSubmittingRef.current || isFinished) return;
+        isSubmittingRef.current = true;
         setIsSubmitting(true);
 
         // Stop timers
@@ -50,10 +53,6 @@ export function useInterviewFlow({
         if (intervalRef.current) clearInterval(intervalRef.current);
 
         const currentTranscript = latestTranscriptRef.current;
-
-        // If it was auto-submitted due to silence but the transcript is empty,
-        // we might want to wait instead of submitting an empty answer, unless time is up.
-        // However, for consistency, if they click next or time is up, we submit what we have.
 
         try {
             const shouldAdvance = await onAnswerSubmit(currentQuestionIndex, currentTranscript);
@@ -75,8 +74,9 @@ export function useInterviewFlow({
             console.error("Failed to submit answer:", error);
         } finally {
             setIsSubmitting(false);
+            isSubmittingRef.current = false;
         }
-    }, [isSubmitting, isFinished, currentQuestionIndex, totalQuestions, onAnswerSubmit, onInterviewComplete, resetTranscript, stopListening, timeLimitMs]);
+    }, [isFinished, currentQuestionIndex, totalQuestions, onAnswerSubmit, onInterviewComplete, resetTranscript, stopListening, timeLimitMs]);
 
     // Timer countdown
     useEffect(() => {
