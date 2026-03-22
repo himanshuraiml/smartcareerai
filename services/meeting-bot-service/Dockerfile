@@ -64,6 +64,8 @@ ENV NODE_ENV=production \
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/services/meeting-bot-service/dist ./services/meeting-bot-service/dist
 COPY --from=builder /app/services/meeting-bot-service/package.json ./services/meeting-bot-service/package.json
+# Copy service-specific node_modules (puppeteer@19 is nested due to version conflict with root puppeteer@24)
+COPY --from=builder /app/services/meeting-bot-service/node_modules ./services/meeting-bot-service/node_modules
 
 WORKDIR /app/services/meeting-bot-service
 

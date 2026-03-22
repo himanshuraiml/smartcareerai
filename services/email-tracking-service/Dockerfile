@@ -55,6 +55,8 @@ COPY --from=builder /app/packages/database/package.json ./packages/database/pack
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 COPY --from=builder /app/services/email-tracking-service/dist ./services/email-tracking-service/dist
 COPY --from=builder /app/services/email-tracking-service/package.json ./services/email-tracking-service/package.json
+# Copy service-specific node_modules for packages not hoisted to root (e.g. node-cron@3 vs root @4)
+COPY --from=builder /app/services/email-tracking-service/node_modules ./services/email-tracking-service/node_modules
 
 WORKDIR /app/services/email-tracking-service
 
