@@ -8,14 +8,23 @@ import { logger } from '../utils/logger';
  * RTP/Opus encoding and delivery via a MediaSoup PlainTransport.
  */
 export class TTSService {
-    private client: OpenAI;
+    private client: OpenAI | null = null;
     private model: string;
     private voice: OpenAI.Audio.Speech.SpeechCreateParams['voice'];
 
     constructor() {
-        this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         this.model = process.env.TTS_MODEL || 'tts-1';
         this.voice = (process.env.TTS_VOICE as OpenAI.Audio.Speech.SpeechCreateParams['voice']) || 'nova';
+    }
+
+    private getClient(): OpenAI {
+        if (!this.client) {
+            if (!process.env.OPENAI_API_KEY) {
+                throw new Error('OPENAI_API_KEY environment variable is not set');
+            }
+            this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        }
+        return this.client;
     }
 
     /**
@@ -25,7 +34,7 @@ export class TTSService {
     async synthesise(text: string): Promise<Buffer> {
         logger.info(`TTS synthesising ${text.length} chars`);
 
-        const response = await this.client.audio.speech.create({
+        const response = await this.getClient().audio.speech.create({
             model: this.model,
             voice: this.voice,
             input: text,
