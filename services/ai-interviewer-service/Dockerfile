@@ -51,6 +51,8 @@ COPY --from=builder /app/packages/database/package.json ./packages/database/pack
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 COPY --from=builder /app/services/ai-interviewer-service/dist ./services/ai-interviewer-service/dist
 COPY --from=builder /app/services/ai-interviewer-service/package.json ./services/ai-interviewer-service/package.json
+# Copy service-specific node_modules (groq-sdk@0.9, uuid@11, @types/express@5 nested due to version conflicts)
+COPY --from=builder /app/services/ai-interviewer-service/node_modules ./services/ai-interviewer-service/node_modules
 
 WORKDIR /app/services/ai-interviewer-service
 

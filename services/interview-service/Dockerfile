@@ -55,6 +55,8 @@ COPY --from=builder /app/packages/database/package.json ./packages/database/pack
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 COPY --from=builder /app/services/interview-service/dist ./services/interview-service/dist
 COPY --from=builder /app/services/interview-service/package.json ./services/interview-service/package.json
+# Copy service-specific node_modules (groq-sdk@0.3 nested due to conflict with root @0.37)
+COPY --from=builder /app/services/interview-service/node_modules ./services/interview-service/node_modules
 
 WORKDIR /app/services/interview-service
 
