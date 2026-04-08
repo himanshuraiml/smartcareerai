@@ -300,7 +300,7 @@ export default function DashboardPage() {
             </motion.div>
 
             {/* Daily Streak & Rewards Banner */}
-            <StreakBanner />
+            <StreakBanner totalXp={xp} />
 
             {/* Placement-Ready Score */}
             <PlacementReadyScore
