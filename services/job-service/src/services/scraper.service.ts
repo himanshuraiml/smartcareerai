@@ -25,8 +25,8 @@ export class ScraperService {
 
     async init() {
         if (!this.browser) {
-            this.browser = await puppeteer.launch({
-                headless: true, // Set to false for debugging
+            const launchOptions: any = {
+                headless: true,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -35,7 +35,11 @@ export class ScraperService {
                     '--no-first-run',
                     '--no-zygote',
                 ],
-            });
+            };
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            }
+            this.browser = await puppeteer.launch(launchOptions);
         }
     }
 
