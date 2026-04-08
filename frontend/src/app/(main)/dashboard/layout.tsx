@@ -47,7 +47,7 @@ interface NavItem {
 const journeyItems: NavItem[] = [
     { href: '/dashboard/resumes', icon: FileText, label: 'Resumes', iconColor: 'text-blue-400' },
     { href: '/dashboard/skills', icon: Target, label: 'Skills', iconColor: 'text-cyan-400' },
-    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', iconColor: 'text-amber-400' },
+    { href: '/dashboard/tests', icon: FileQuestion, label: 'Skill Tests', iconColor: 'text-amber-400', badge: 'Free' },
     { href: '/dashboard/practice-interview', icon: MessageSquare, label: 'AI Practice', iconColor: 'text-emerald-400', badge: 'Free' },
     { href: '/dashboard/interviews', icon: Video, label: 'Mock Interviews', iconColor: 'text-rose-400' },
     { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', iconColor: 'text-emerald-400' },
