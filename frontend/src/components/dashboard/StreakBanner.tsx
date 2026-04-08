@@ -141,17 +141,6 @@ export default function StreakBanner({ totalXp }: StreakBannerProps = {}) {
                 )}
             </AnimatePresence>
 
-            {/* XP Summary (above streak) */}
-            <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
-                    <Zap className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                    <span className="text-[13px] font-bold text-indigo-600 dark:text-indigo-400">
-                        {(totalXp ?? stats.xp).toLocaleString()} XP
-                    </span>
-                    <span className="text-[11px] text-indigo-400 dark:text-indigo-500 font-medium">· Lv {stats.level}</span>
-                </div>
-            </div>
-
             {/* Streak Banner */}
             <div className="rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/10 dark:to-amber-500/10 border border-orange-100 dark:border-orange-500/20 p-4 mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -178,6 +167,15 @@ export default function StreakBanner({ totalXp }: StreakBannerProps = {}) {
                             </p>
                         </div>
                     </div>
+
+                    {/* XP + 7-Day Progress */}
+                    <div className="flex flex-col items-end gap-1.5">
+                        {/* Total XP */}
+                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
+                            <Zap className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400">{(totalXp ?? stats.xp).toLocaleString()} XP</span>
+                            <span className="text-[10px] text-indigo-400 dark:text-indigo-500 font-medium">· Lv {stats.level}</span>
+                        </div>
 
                     {/* 7-Day Progress Dots */}
                     <div className="flex items-center gap-1.5">
@@ -208,6 +206,8 @@ export default function StreakBanner({ totalXp }: StreakBannerProps = {}) {
                             );
                         })}
                     </div>
+                    </div>
+
                 </div>
             </div>
         </>
