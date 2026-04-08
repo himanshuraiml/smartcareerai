@@ -164,6 +164,15 @@ export default function StreakBanner() {
                         </div>
                     </div>
 
+                    {/* XP + 7-Day Progress */}
+                    <div className="flex flex-col items-end gap-1.5">
+                        {/* Total XP */}
+                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
+                            <Zap className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400">{stats.xp.toLocaleString()} XP</span>
+                            <span className="text-[10px] text-indigo-400 dark:text-indigo-500 font-medium">· Lv {stats.level}</span>
+                        </div>
+
                     {/* 7-Day Progress Dots */}
                     <div className="flex items-center gap-1.5">
                         {streakDays.map((day) => {
@@ -192,6 +201,7 @@ export default function StreakBanner() {
                                 </div>
                             );
                         })}
+                    </div>
                     </div>
 
                 </div>
