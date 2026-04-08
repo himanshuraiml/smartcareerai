@@ -21,8 +21,14 @@ export class ResumeService {
     private bucketName: string;
 
     constructor() {
-        const endPoint = process.env.MINIO_ENDPOINT || 'localhost';
-        const port = parseInt(process.env.MINIO_PORT || '9000');
+        // Railway provides MINIO_ENDPOINT as a full URL (e.g. https://t3.storageapi.dev)
+        // MinIO client expects just the hostname, so strip any protocol prefix
+        const endPointRaw = process.env.MINIO_ENDPOINT || 'localhost';
+        const endPoint = endPointRaw.replace(/^https?:\/\//, '');
+        const useSSL = process.env.MINIO_USE_SSL === 'true';
+        // Railway S3-compatible storage uses port 443; default MinIO port is 9000
+        const portEnv = parseInt(process.env.MINIO_PORT || '0');
+        const port = portEnv || (useSSL ? 443 : 9000);
         const accessKey = process.env.MINIO_ACCESS_KEY;
         const secretKey = process.env.MINIO_SECRET_KEY;
 
@@ -33,7 +39,7 @@ export class ResumeService {
         this.minioClient = new Client({
             endPoint,
             port,
-            useSSL: process.env.MINIO_USE_SSL === 'true',
+            useSSL,
             accessKey,
             secretKey,
         });
@@ -422,9 +428,11 @@ export class ResumeService {
             { 'Content-Type': file.mimetype },
         );
 
-        const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
-        const port = process.env.MINIO_PORT || '9000';
+        const endpointRaw = process.env.MINIO_ENDPOINT || 'localhost';
+        const endpoint = endpointRaw.replace(/^https?:\/\//, '');
         const useSSL = process.env.MINIO_USE_SSL === 'true';
+        const portEnv = parseInt(process.env.MINIO_PORT || '0');
+        const port = portEnv || (useSSL ? 443 : 9000);
         const baseUrl = process.env.MINIO_PUBLIC_BASE_URL
             || `${useSSL ? 'https' : 'http'}://${endpoint}:${port}`;
         const avatarUrl = `${baseUrl}/${this.avatarBucket}/${key}?v=${Date.now()}`;
