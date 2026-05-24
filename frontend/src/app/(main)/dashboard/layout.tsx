@@ -56,7 +56,7 @@ const journeyItems: NavItem[] = [
     { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', iconColor: 'text-violet-400' },
     { href: '/dashboard/assessments', icon: GitBranch, label: 'Pipeline & Stages', iconColor: 'text-orange-400' },
     { href: '/dashboard/dsa', icon: BookOpen, label: 'DSA Guide', iconColor: 'text-pink-400', badge: 'New' },
-    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400' },
+    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400', badge: 'New' },
 ];
 
 // General / standalone features (most moved to header dropdown)
