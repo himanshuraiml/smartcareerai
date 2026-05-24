@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { authFetch, authFetchJson } from '@/lib/auth-fetch';
 import { Loader2, Camera, Mic, Play, Square, CheckCircle2, AlertCircle, ChevronRight, Code2 } from 'lucide-react';
+import Image from 'next/image';
 import Editor from "@monaco-editor/react";
 
 // Interfaces
@@ -295,7 +296,7 @@ export default function CandidateInterviewPage() {
                 <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
                     <div className="p-8 sm:p-12">
                         {isBranded && org?.logoUrl ? (
-                            <img src={org.logoUrl} alt={orgName} className="h-16 object-contain mb-6" />
+                            <Image src={org.logoUrl} alt={orgName} width={160} height={64} className="h-16 object-contain mb-6" unoptimized />
                         ) : (
                             <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-500/20 rounded-2xl flex items-center justify-center mb-6">
                                 <Camera className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
@@ -371,7 +372,7 @@ export default function CandidateInterviewPage() {
             <header className="px-6 py-4 bg-gray-900 border-b border-gray-800 flex justify-between items-center text-white z-10">
                 <div className="flex items-center gap-4">
                     {isBranded && org?.logoUrl && (
-                        <img src={org.logoUrl} alt="Logo" className="h-8 max-w-[120px] object-contain" />
+                        <Image src={org.logoUrl} alt="Logo" width={120} height={32} className="h-8 max-w-[120px] object-contain" unoptimized />
                     )}
                     <div>
                         <h1 className="font-bold text-lg">{job?.title} Interview</h1>

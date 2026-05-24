@@ -1003,6 +1003,7 @@ Return JSON:
                 ];
 
                 for (const config of testConfigs) {
+                    // Create test as inactive — activated only after questions are successfully generated
                     const test = await prisma.skillTest.create({
                         data: {
                             skillId: newSkill.id,
@@ -1011,13 +1012,24 @@ Return JSON:
                             difficulty: config.difficulty as any,
                             durationMinutes: config.durationMinutes,
                             passingScore: config.passingScore,
-                            questionsCount: config.questionsCount,
+                            questionsCount: 0,
+                            isActive: false,
                         },
                     });
 
-                    // Generate MCQ questions via LLM (async — don't block on failure)
+                    // Generate questions in the background, then activate the test
                     this.generateTestQuestionsForSkill(test.id, normalizedName, config.difficulty, config.questionsCount)
-                        .catch(err => logger.error(`Failed to generate questions for ${normalizedName} ${config.difficulty}:`, err));
+                        .then(async (generated) => {
+                            if (generated > 0) {
+                                await prisma.skillTest.update({
+                                    where: { id: test.id },
+                                    data: { isActive: true, questionsCount: generated },
+                                }).catch(() => { /* best-effort */ });
+                            }
+                        })
+                        .catch(async (err) => {
+                            logger.error(`Failed to generate questions for ${normalizedName} ${config.difficulty}:`, err);
+                        });
                 }
 
                 createdSkills.push(newSkill);
@@ -1066,18 +1078,31 @@ Return JSON:
 
     /**
      * Generate MCQ test questions for a skill using LLM.
+     * Returns the number of valid questions successfully saved.
      */
     private async generateTestQuestionsForSkill(
         testId: string,
         skillName: string,
         difficulty: string,
         count: number
-    ): Promise<void> {
+    ): Promise<number> {
+        const difficultyGuide =
+            difficulty === 'EASY'
+                ? 'definition-based, single-concept, no code required'
+                : difficulty === 'MEDIUM'
+                ? 'application-level, may involve code snippets or multi-step reasoning'
+                : 'advanced, requires deep understanding, edge cases, and trade-off analysis';
+
         const result = await analyzeWithLLM(
             'You are an expert quiz creator for technical skills assessment. Return JSON only.',
             `Generate ${count} ${difficulty.toLowerCase()} multiple-choice questions for "${skillName}".
+Difficulty guide: ${difficultyGuide}
 
-Each question must have exactly 4 options with 1 correct answer.
+Rules:
+- Each question must have exactly 4 distinct options
+- The correctAnswer MUST be one of the options verbatim
+- No duplicate options within a question
+- No duplicate questions
 
 Return JSON:
 {
@@ -1094,12 +1119,23 @@ Return JSON:
 
         if (!result?.questions || !Array.isArray(result.questions)) {
             logger.warn(`LLM did not return valid questions for ${skillName} ${difficulty}`);
-            return;
+            return 0;
         }
 
+        let saved = 0;
         for (let i = 0; i < result.questions.length; i++) {
             const q = result.questions[i];
-            if (!q.questionText || !q.options || !q.correctAnswer) continue;
+
+            // Validate structure
+            if (!q.questionText || !Array.isArray(q.options) || !q.correctAnswer) continue;
+            if (q.options.length !== 4) continue;
+            // All options must be non-empty strings
+            if (q.options.some((o: any) => typeof o !== 'string' || o.trim() === '')) continue;
+            // Options must be unique
+            const uniqueOptions = new Set(q.options.map((o: string) => o.trim().toLowerCase()));
+            if (uniqueOptions.size !== 4) continue;
+            // Correct answer must be one of the options
+            if (!q.options.includes(q.correctAnswer)) continue;
 
             await prisma.testQuestion.create({
                 data: {
@@ -1111,9 +1147,11 @@ Return JSON:
                     orderIndex: i + 1,
                 },
             });
+            saved++;
         }
 
-        logger.info(`Generated ${result.questions.length} questions for ${skillName} ${difficulty}`);
+        logger.info(`Generated ${saved} valid questions for ${skillName} ${difficulty}`);
+        return saved;
     }
 }
 

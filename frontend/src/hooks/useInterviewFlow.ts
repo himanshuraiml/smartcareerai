@@ -3,10 +3,10 @@ import { useSpeechRecognition } from './use-speech-recognition';
 
 interface UseInterviewFlowProps {
     totalQuestions: number;
-    onAnswerSubmit: (questionIndex: number, transcript: string) => Promise<boolean>; // Returns true if it should advance
+    onAnswerSubmit: (questionIndex: number, transcript: string) => Promise<boolean>;
     onInterviewComplete: () => Promise<void>;
-    timeLimitMs?: number; // Max time per question (e.g., 180000 for 3 mins)
-    silenceThresholdMs?: number; // Auto-submit if silent for this long (e.g., 5000)
+    timeLimitMs?: number;
+    silenceThresholdMs?: number;
 }
 
 export function useInterviewFlow({
@@ -14,7 +14,7 @@ export function useInterviewFlow({
     onAnswerSubmit,
     onInterviewComplete,
     timeLimitMs = 180000,
-    silenceThresholdMs = 5000
+    silenceThresholdMs = 120000, // 2 min silence before auto-submit (effectively disabled)
 }: UseInterviewFlowProps) {
     const {
         transcript,
@@ -30,25 +30,54 @@ export function useInterviewFlow({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [timeRemainingMs, setTimeRemainingMs] = useState(timeLimitMs);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [transitionCountdown, setTransitionCountdown] = useState(3);
+    // True once startInterview() has been called — drives the timer independently of speech API
+    const [interviewStarted, setInterviewStarted] = useState(false);
 
     const lastTranscriptLengthRef = useRef(0);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const transitionIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const latestTranscriptRef = useRef(transcript);
+    const isSubmittingRef = useRef(false);
+    const isTransitioningRef = useRef(false);
 
-    // Keep strict reference to transcript for timers
     useEffect(() => {
         latestTranscriptRef.current = transcript;
     }, [transcript]);
 
-    const isSubmittingRef = useRef(false);
+    useEffect(() => {
+        isTransitioningRef.current = isTransitioning;
+    }, [isTransitioning]);
 
-    const submitCurrentQuestion = useCallback(async (manual: boolean = false) => {
-        if (isSubmittingRef.current || isFinished) return;
+    const advanceToNextQuestion = useCallback((nextIndex: number) => {
+        if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
+        setIsTransitioning(true);
+        isTransitioningRef.current = true;
+        setTransitionCountdown(3);
+
+        let count = 3;
+        transitionIntervalRef.current = setInterval(() => {
+            count -= 1;
+            setTransitionCountdown(count);
+            if (count <= 0) {
+                clearInterval(transitionIntervalRef.current!);
+                setIsTransitioning(false);
+                isTransitioningRef.current = false;
+                setCurrentQuestionIndex(nextIndex);
+                setTimeRemainingMs(timeLimitMs);
+                resetTranscript();
+                lastTranscriptLengthRef.current = 0;
+            }
+        }, 1000);
+    }, [timeLimitMs, resetTranscript]);
+
+    const submitCurrentQuestion = useCallback(async (_manual: boolean = false) => {
+        if (isSubmittingRef.current || isFinished || isTransitioningRef.current) return;
         isSubmittingRef.current = true;
         setIsSubmitting(true);
 
-        // Stop timers
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         if (intervalRef.current) clearInterval(intervalRef.current);
 
@@ -58,12 +87,11 @@ export function useInterviewFlow({
             const shouldAdvance = await onAnswerSubmit(currentQuestionIndex, currentTranscript);
 
             if (shouldAdvance) {
-                resetTranscript();
-                lastTranscriptLengthRef.current = 0;
-
                 if (currentQuestionIndex < totalQuestions - 1) {
-                    setCurrentQuestionIndex(prev => prev + 1);
-                    setTimeRemainingMs(timeLimitMs);
+                    setIsSubmitting(false);
+                    isSubmittingRef.current = false;
+                    advanceToNextQuestion(currentQuestionIndex + 1);
+                    return;
                 } else {
                     setIsFinished(true);
                     stopListening();
@@ -71,62 +99,61 @@ export function useInterviewFlow({
                 }
             }
         } catch (error) {
-            console.error("Failed to submit answer:", error);
+            console.error('Failed to submit answer:', error);
         } finally {
             setIsSubmitting(false);
             isSubmittingRef.current = false;
         }
-    }, [isFinished, currentQuestionIndex, totalQuestions, onAnswerSubmit, onInterviewComplete, resetTranscript, stopListening, timeLimitMs]);
+    }, [isFinished, currentQuestionIndex, totalQuestions, onAnswerSubmit, onInterviewComplete, stopListening, advanceToNextQuestion]);
 
-    // Timer countdown
+    // Per-question countdown timer — driven by interviewStarted, NOT isListening
+    // This prevents a momentary Speech API restart from pausing or resetting the clock
     useEffect(() => {
-        if (isListening && !isSubmitting && !isFinished) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+
+        if (interviewStarted && !isSubmitting && !isFinished && !isTransitioning) {
             intervalRef.current = setInterval(() => {
                 setTimeRemainingMs(prev => {
                     if (prev <= 1000) {
                         clearInterval(intervalRef.current!);
-                        submitCurrentQuestion(false); // Time Limit exceeded
+                        submitCurrentQuestion(false);
                         return 0;
                     }
                     return prev - 1000;
                 });
             }, 1000);
-
-            return () => {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-            };
         }
-    }, [isListening, isSubmitting, isFinished, submitCurrentQuestion]);
 
-    // Silence detection
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [interviewStarted, isSubmitting, isFinished, isTransitioning, currentQuestionIndex, submitCurrentQuestion]);
+
+    // Silence detection (with high threshold to avoid interfering with thinking pauses)
     useEffect(() => {
-        if (isListening && !isSubmitting && !isFinished) {
+        if (isListening && !isSubmitting && !isFinished && !isTransitioning) {
             if (transcript.length > lastTranscriptLengthRef.current) {
-                // User is talking, reset silence timer
                 lastTranscriptLengthRef.current = transcript.length;
-
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-
-                // Only start detecting silence if they have spoken at least something significant
                 if (transcript.trim().length > 10) {
                     silenceTimerRef.current = setTimeout(() => {
-                        submitCurrentQuestion(false); // Silence detected
+                        submitCurrentQuestion(false);
                     }, silenceThresholdMs);
                 }
             }
         }
-
         return () => {
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         };
-    }, [transcript, isListening, isSubmitting, isFinished, submitCurrentQuestion, silenceThresholdMs]);
+    }, [transcript, isListening, isSubmitting, isFinished, isTransitioning, submitCurrentQuestion, silenceThresholdMs]);
 
-    // Helper to start the flow
     const startInterview = useCallback(() => {
         setCurrentQuestionIndex(0);
         setTimeRemainingMs(timeLimitMs);
         setIsFinished(false);
         setIsSubmitting(false);
+        setIsTransitioning(false);
+        setInterviewStarted(true);
         resetTranscript();
         startListening();
     }, [startListening, resetTranscript, timeLimitMs]);
@@ -135,14 +162,18 @@ export function useInterviewFlow({
         currentQuestionIndex,
         isSubmitting,
         isFinished,
+        isTransitioning,
+        transitionCountdown,
         timeRemainingMs,
+        timeLimitMs,
         transcript,
         wpm,
         isListening,
+        isActive: interviewStarted && !isFinished, // timer/controls should show even if speech API restarts
         speechError,
         startInterview,
         advanceQuestion: () => submitCurrentQuestion(true),
-        stopInterview: stopListening,
-        setQuestionIndex: setCurrentQuestionIndex
+        stopInterview: () => { setInterviewStarted(false); stopListening(); },
+        setQuestionIndex: setCurrentQuestionIndex,
     };
 }

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Briefcase, ChevronRight, Sparkles } from 'lucide-react';
-import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
 import { authFetch } from '@/lib/auth-fetch';
@@ -124,19 +123,28 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Progress Steps */}
-                <div className="flex items-center justify-center gap-4 mb-8">
-                    {[1, 2, 3].map((s) => (
-                        <div key={s} className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
-                                ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
-                                : 'bg-gray-100 dark:bg-white/10 text-gray-500'
-                                }`}>
-                                {step > s ? <Check className="w-4 h-4" /> : s}
+                {(() => {
+                    const stepLabels = ['Account', 'Target Role', 'Institution'];
+                    return (
+                        <div className="mb-8">
+                            <p className="text-center text-xs font-semibold text-gray-400 dark:text-gray-500 mb-3 tracking-wide uppercase">
+                                Step {step} of 3 — {stepLabels[step - 1]}
+                            </p>
+                            <div className="flex items-center justify-center gap-4">
+                                {[1, 2, 3].map((s) => (
+                                    <div key={s} className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
+                                            ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
+                                            : 'bg-gray-100 dark:bg-white/10 text-gray-500'}`}>
+                                            {step > s ? <Check className="w-4 h-4" /> : s}
+                                        </div>
+                                        {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-gray-100 dark:bg-white/10'}`} />}
+                                    </div>
+                                ))}
                             </div>
-                            {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-gray-100 dark:bg-white/10'}`} />}
                         </div>
-                    ))}
-                </div>
+                    );
+                })()}
 
                 {/* Card */}
                 <motion.div

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { Check, Loader2, Zap, Star, Briefcase, Gem, ArrowLeft, Tag, X, AlertCircle } from "lucide-react";
+import { Check, Loader2, Zap, Star, Briefcase, Gem, Tag, X, AlertCircle, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import useRazorpay from "@/hooks/useRazorpay";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,19 +9,6 @@ import { authFetch } from "@/lib/auth-fetch";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
-
-// Light mode card styles
-const lightCardStyle = {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
-};
-
-const darkCardStyle = {
-    background: 'rgba(17, 24, 39, 0.5)',
-    border: '1px solid rgba(255, 255, 255, 0.1)'
-};
 
 interface PlanFeature {
     text: string;
@@ -145,7 +132,7 @@ function PricingContent() {
     const searchParams = useSearchParams();
     const [isLightMode, setIsLightMode] = useState(false);
     const [plans, setPlans] = useState<PricingPlan[]>(DEFAULT_PLANS);
-    const [plansLoading, setPlansLoading] = useState(true);
+    const [openFaq, setOpenFaq] = useState<number | null>(null);
 
     // Auto-validate if coupon provided in URL
     useEffect(() => {
@@ -232,8 +219,6 @@ function PricingContent() {
                 }
             } catch (err) {
                 console.error("Failed to fetch plans, using defaults", err);
-            } finally {
-                setPlansLoading(false);
             }
         };
         fetchPlans();
@@ -555,6 +540,39 @@ function PricingContent() {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* FAQ */}
+            <div className="max-w-3xl mx-auto px-4 pb-24">
+                <h2 className={`text-2xl font-bold text-center mb-10 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+                    Frequently Asked Questions
+                </h2>
+                <div className="space-y-3">
+                    {[
+                        { q: 'Can I switch plans later?', a: 'Yes. You can upgrade or downgrade at any time from your dashboard. Changes take effect at the start of the next billing cycle.' },
+                        { q: 'Is there a free trial for paid plans?', a: 'The Free plan is available indefinitely with no credit card required. Paid plans don\'t have a separate trial, but you can start on Free and upgrade when ready.' },
+                        { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards and UPI via Razorpay. Enterprise customers can request invoice-based billing.' },
+                        { q: 'Are the AI scores guaranteed to improve my placement chances?', a: 'Our AI provides data-driven feedback based on industry benchmarks. Results vary by individual effort and market conditions. Scores are for guidance — not a guarantee of placement.' },
+                        { q: 'Can institutions get a custom plan?', a: 'Absolutely. Contact us via the Enterprise option or the Contact page and we\'ll craft a plan that fits your batch size, branding, and integration needs.' },
+                        { q: 'What happens to my data if I cancel?', a: 'Your account data is retained for 30 days after cancellation. You can export your resume scans and interview history from the dashboard before then.' },
+                    ].map((item, i) => (
+                        <div
+                            key={i}
+                            className={`rounded-xl border overflow-hidden transition-colors ${isLightMode ? 'border-gray-200 bg-white' : 'border-white/10 bg-white/[0.03]'}`}
+                        >
+                            <button
+                                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                            >
+                                <span className={`font-semibold text-sm ${isLightMode ? 'text-gray-900' : 'text-white'}`}>{item.q}</span>
+                                <ChevronDown className={`w-4 h-4 flex-shrink-0 ml-4 transition-transform ${openFaq === i ? 'rotate-180 text-blue-500' : isLightMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                            </button>
+                            {openFaq === i && (
+                                <p className={`px-5 pb-4 text-sm leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>{item.a}</p>
+                            )}
                         </div>
                     ))}
                 </div>

@@ -13,6 +13,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import { calculateAgeInDays, safeEffectStateUpdate } from "@/lib/purity-helpers";
 import Link from "next/link";
+import NextImage from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
@@ -211,7 +212,7 @@ function CandidateCard({
             <div className="flex items-start gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
                     {candidate.avatarUrl ? (
-                        <img src={candidate.avatarUrl} alt="" className="w-full h-full object-cover rounded-xl" />
+                        <NextImage src={candidate.avatarUrl} alt="" width={48} height={48} className="w-full h-full object-cover rounded-xl" unoptimized />
                     ) : (
                         <span className="text-white font-bold text-base">
                             {candidate.name.charAt(0).toUpperCase()}

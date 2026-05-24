@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import Image from 'next/image';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -14,13 +13,22 @@ export default function LoginPage() {
     const router = useRouter();
     const { login, googleLogin, isLoading, error } = useAuthStore();
     const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+
+    const validate = () => {
+        const errs: typeof fieldErrors = {};
+        if (!formData.email) errs.email = 'Email is required.';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Enter a valid email address.';
+        if (!formData.password) errs.password = 'Password is required.';
+        else if (formData.password.length < 6) errs.password = 'Password must be at least 6 characters.';
+        setFieldErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         const success = await login(formData.email, formData.password);
         if (success) {
             // Check user role and redirect accordingly
@@ -40,6 +48,14 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-4">
             <div className="w-full max-w-md">
+                {/* Back to Home */}
+                <div className="mb-6">
+                    <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Home
+                    </Link>
+                </div>
+
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-block">
@@ -66,12 +82,12 @@ export default function LoginPage() {
                                 <input
                                     type="email"
                                     value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setFieldErrors(f => ({ ...f, email: undefined })); }}
+                                    className={`w-full pl-10 pr-4 py-3 rounded-lg bg-white dark:bg-white/5 border text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${fieldErrors.email ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-white/10'}`}
                                     placeholder="you@example.com"
-                                    required
                                 />
                             </div>
+                            {fieldErrors.email && <p className="mt-1.5 text-xs text-red-500">{fieldErrors.email}</p>}
                         </div>
 
                         <div>
@@ -81,10 +97,9 @@ export default function LoginPage() {
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    onChange={(e) => { setFormData({ ...formData, password: e.target.value }); setFieldErrors(f => ({ ...f, password: undefined })); }}
+                                    className={`w-full pl-10 pr-12 py-3 rounded-lg bg-white dark:bg-white/5 border text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${fieldErrors.password ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-white/10'}`}
                                     placeholder="••••••••"
-                                    required
                                 />
                                 <button
                                     type="button"
@@ -95,6 +110,7 @@ export default function LoginPage() {
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
+                            {fieldErrors.password && <p className="mt-1.5 text-xs text-red-500">{fieldErrors.password}</p>}
                         </div>
 
                         <div className="flex items-center justify-between">

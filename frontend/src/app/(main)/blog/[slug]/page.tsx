@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { getPublishedPostBySlugFromApi, getPublishedPostsFromApi } from '@/lib/blog';
 import Logo from '@/components/layout/Logo';
 import ShareButton from '@/components/blog/ShareButton';
+import SafeHtml from '@/components/blog/SafeHtml';
 
 export async function generateStaticParams() {
     const posts = await getPublishedPostsFromApi({ limit: 500 });
@@ -121,10 +122,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         )}
                     </div>
 
-                    {/* Content — TipTap HTML rendered safely */}
-                    <article
+                    {/* Content — TipTap HTML sanitized with DOMPurify */}
+                    <SafeHtml
+                        html={post.content}
                         className="prose dark:prose-invert prose-lg max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 dark:prose-strong:text-white prose-ul:text-gray-600 dark:prose-ul:text-gray-300 prose-li:marker:text-indigo-500"
-                        dangerouslySetInnerHTML={{ __html: post.content }}
                     />
 
                     {/* Article Footer: Keywords & Share */}

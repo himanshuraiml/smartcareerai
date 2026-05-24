@@ -8,7 +8,7 @@ import { scorecardRouter } from './scorecard.routes';
 import { sequenceRouter } from './sequence.routes';
 import { offerLetterRouter } from './offer-letter.routes';
 import { npsSurveyController } from '../controllers/nps-survey.controller';
-import { authMiddleware, recruiterMiddleware } from '../middleware/auth.middleware';
+import { authMiddleware, recruiterMiddleware, internalAuthMiddleware } from '../middleware/auth.middleware';
 import { diversityController } from '../controllers/diversity.controller';
 import { marketIntelController } from '../controllers/market-intel.controller';
 import { hireQualityController } from '../controllers/hire-quality.controller';
@@ -66,8 +66,8 @@ router.get('/jobs/:id/applicants', authMiddleware, recruiterMiddleware, atsContr
 router.patch('/applications/:applicationId/status', authMiddleware, recruiterMiddleware, atsController.updateApplicationStatus.bind(atsController));
 router.post('/jobs/:id/bulk-invite', authMiddleware, recruiterMiddleware, atsController.bulkAddApplicants.bind(atsController));
 
-// Internal Webhook for automated pipeline progression (unprotected from role middleware, could use secure secret IRL)
-router.post('/internal/pipeline/advance/:applicationId', atsController.advancePipelineInternal.bind(atsController));
+// Internal service-to-service route — requires X-Internal-Secret header
+router.post('/internal/pipeline/advance/:applicationId', internalAuthMiddleware, atsController.advancePipelineInternal.bind(atsController));
 
 // AI Interview Workflow
 router.post('/jobs/:id/ai-interview/config', authMiddleware, recruiterMiddleware, aiInterviewController.generateConfig.bind(aiInterviewController));

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Building2, Search, Code2, Briefcase, Zap, Trophy, PlayCircle, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { authFetchJson } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 
@@ -128,7 +129,7 @@ export default function CandidatePracticeHub() {
             // Actually, we should redirect to `/candidate/practice/room/${sessionId}` which doesn't exist yet,
             // OR we redirect to `/interviews/${sessionId}` which might be a generic room.
             // Let's create `/candidate/practice/room/[sessionId]/page.tsx` for the Mock session.
-            router.push(`/candidate/practice/room/${sessionId}`);
+            router.push(`/candidate/practice/setup/${sessionId}`);
         } catch (err: any) {
             alert('Error starting mock interview: ' + err.message);
         } finally {
@@ -200,7 +201,7 @@ export default function CandidatePracticeHub() {
                             <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${company.color} opacity-[0.03] group-hover:opacity-10 rounded-bl-[100px] transition-opacity duration-500 pointer-events-none`}></div>
 
                             <div className="h-14 flex items-center mb-6">
-                                <img src={company.logo} alt={company.name} className="max-h-12 max-w-full object-contain filter drop-shadow-sm dark:brightness-200 dark:contrast-200" style={{ filter: company.id === 'apple' ? 'invert(1)' : 'none' }} />
+                                <Image src={company.logo} alt={company.name} width={200} height={48} className="max-h-12 max-w-full object-contain drop-shadow-sm dark:brightness-200 dark:contrast-200" style={{ filter: company.id === 'apple' ? 'invert(1)' : 'none' }} />
                             </div>
 
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -245,7 +246,7 @@ export default function CandidatePracticeHub() {
                         <div className="px-8 pt-8 pb-6 border-b border-gray-100 dark:border-gray-700">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 inline-block mb-4 shadow-sm">
-                                    <img src={selectedCompany.logo} alt={selectedCompany.name} className="h-8 object-contain" style={{ filter: selectedCompany.id === 'apple' ? 'invert(1)' : 'none' }} />
+                                    <Image src={selectedCompany.logo} alt={selectedCompany.name} width={120} height={32} className="h-8 object-contain" style={{ filter: selectedCompany.id === 'apple' ? 'invert(1)' : 'none' }} />
                                 </div>
                                 <button
                                     onClick={() => setSelectedCompany(null)}

@@ -1,14 +1,53 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
-import { generateQuestions, evaluateAnswer, generateFeedback, generateFollowUpQuestion, generateCopilotSuggestionsFromTranscript, generateInterviewSummary } from '../utils/llm';
+import { generateQuestions, evaluateAnswer, EvaluationResult, generateFeedback, generateCopilotSuggestionsFromTranscript, generateInterviewSummary } from '../utils/llm';
 import { selectQuestionsFromBank } from '../utils/question-bank';
+import { evaluatePracticeAnswer } from '../utils/practice-evaluator';
 import { AppError } from '../utils/errors';
+import { cacheGet, cacheSet } from '@placenxt/shared';
 
 interface CreateSessionData {
     type: 'TECHNICAL' | 'BEHAVIORAL' | 'HR' | 'MIXED';
     targetRole: string;
     difficulty: 'EASY' | 'MEDIUM' | 'HARD';
     jobId?: string;
+}
+
+interface SessionSummary {
+    scores: number[];
+    keyGaps: string[];
+}
+
+// Builds feedback text for Tier-1 shortcut (score ≥ 78) without an LLM call.
+function buildTier1Feedback(score: number, missingKeywords: string[], questionType: string): string {
+    const parts: string[] = [];
+    if (score >= 90) {
+        parts.push('Excellent answer! You covered all the key concepts comprehensively.');
+    } else {
+        parts.push('Good answer! You covered the main concepts well.');
+    }
+    if (missingKeywords.length > 0) {
+        parts.push(`Minor areas to enhance: consider mentioning ${missingKeywords.slice(0, 3).join(', ')}.`);
+    }
+    const isBehavioral = ['BEHAVIORAL', 'HR', 'behavioral', 'hr'].includes(questionType);
+    if (isBehavioral && score < 90) {
+        parts.push('Continue using the STAR structure to keep your answers well-organized.');
+    }
+    return parts.join(' ');
+}
+
+// Accumulates per-answer scores and key gaps in Redis for compressed final feedback.
+// Avoids re-sending all Q&A text to the LLM at session completion (~600 tokens saved).
+async function accumulateSessionSummary(sessionId: string, score: number, keywords: string[]): Promise<void> {
+    const key = `interview:session-summary:${sessionId}`;
+    const existing = (await cacheGet<SessionSummary>(key)) || { scores: [], keyGaps: [] };
+    existing.scores.push(score);
+    for (const kw of keywords.slice(0, 3)) {
+        if (!existing.keyGaps.includes(kw) && existing.keyGaps.length < 12) {
+            existing.keyGaps.push(kw);
+        }
+    }
+    await cacheSet(key, existing, 86400); // 24 hours
 }
 
 export class InterviewService {
@@ -306,7 +345,7 @@ export class InterviewService {
         if (bankQuestions.length >= questionCount) {
             // Use curated bank questions — no LLM call needed
             logger.info(`Using ${questionCount} bank questions for session ${sessionId}`);
-            createdQuestions = await Promise.all(
+            createdQuestions = await prisma.$transaction(
                 bankQuestions.slice(0, questionCount).map((q, index) =>
                     prisma.interviewQuestion.create({
                         data: {
@@ -329,7 +368,7 @@ export class InterviewService {
                 questionCount
             );
 
-            createdQuestions = await Promise.all(
+            createdQuestions = await prisma.$transaction(
                 questions.map((q, index) =>
                     prisma.interviewQuestion.create({
                         data: {
@@ -382,23 +421,33 @@ export class InterviewService {
             throw new AppError('Question not found', 404);
         }
 
-        // Idempotent check: If already answered, return next question
-        if (question.userAnswer) {
+        // Atomic claim: only proceed if the question is still unanswered.
+        // This prevents two concurrent submissions for the same question from both evaluating.
+        const claimed = await prisma.interviewQuestion.updateMany({
+            where: { id: questionId, sessionId, userAnswer: null },
+            data: { userAnswer: answer },
+        });
+
+        // If claimed.count === 0, someone else already answered (idempotent path)
+        if (claimed.count === 0) {
+            const existingQuestion = await prisma.interviewQuestion.findFirst({
+                where: { id: questionId, sessionId },
+            });
             const nextQuestion = await prisma.interviewQuestion.findFirst({
                 where: {
                     sessionId,
                     userAnswer: null,
-                    orderIndex: { gt: question.orderIndex },
+                    orderIndex: { gt: (existingQuestion?.orderIndex ?? question.orderIndex) },
                 },
                 orderBy: { orderIndex: 'asc' },
             });
 
             return {
                 evaluation: {
-                    score: question.score,
-                    feedback: question.feedback,
-                    metrics: question.metrics,
-                    improvedAnswer: question.improvedAnswer,
+                    score: existingQuestion?.score ?? question.score,
+                    feedback: existingQuestion?.feedback ?? question.feedback,
+                    metrics: existingQuestion?.metrics ?? question.metrics,
+                    improvedAnswer: existingQuestion?.improvedAnswer ?? question.improvedAnswer,
                 },
                 nextQuestion: nextQuestion ? {
                     id: nextQuestion.id,
@@ -410,31 +459,109 @@ export class InterviewService {
             };
         }
 
-        // Evaluate the answer using LLM (scoring + personalized feedback still needs LLM)
-        const evaluation = await evaluateAnswer(
-            question.questionText,
-            answer,
-            session.targetRole,
-            session.type,
-            metrics
-        );
+        const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
 
-        // If question came from the bank, use the curated ideal answer instead of LLM-generated one
+        // ── Tier-0: Hard gate ────────────────────────────────────────────
+        // Answers under 10 words get an immediate low score — no LLM call.
+        if (wordCount < 10) {
+            const tooShortResult: EvaluationResult = {
+                score: 15,
+                feedback: 'Your answer is too brief. Provide more detail, specific examples, and a structured response.',
+                improvedAnswer: '',
+                followUpQuestion: null,
+                isFallback: false,
+                metrics: { clarity: 15, relevance: 15, confidence: 15 },
+            };
+            await prisma.interviewQuestion.update({
+                where: { id: questionId },
+                data: { score: tooShortResult.score, feedback: tooShortResult.feedback, metrics: tooShortResult.metrics },
+            });
+            await accumulateSessionSummary(sessionId, tooShortResult.score, []);
+            const nextQ = await prisma.interviewQuestion.findFirst({
+                where: { sessionId, userAnswer: null, orderIndex: { gt: question.orderIndex } },
+                orderBy: { orderIndex: 'asc' },
+            });
+            return {
+                evaluation: tooShortResult,
+                nextQuestion: nextQ ? { id: nextQ.id, questionText: nextQ.questionText, questionType: nextQ.questionType, orderIndex: nextQ.orderIndex } : null,
+                isComplete: !nextQ,
+            };
+        }
+
+        // ── Tier-1: Fast NLP scoring (zero LLM cost) ─────────────────────
+        // Only possible when the question came from the bank (idealAnswer is available).
+        let quickScore: number | undefined;
+        let missingKeywords: string[] = [];
+        let bankIdealAnswer: string | undefined;
+
         if (question.bankQuestionId) {
             const bankQuestion = await prisma.interviewBankQuestion.findUnique({
                 where: { id: question.bankQuestionId },
                 select: { idealAnswer: true },
             });
             if (bankQuestion) {
-                evaluation.improvedAnswer = bankQuestion.idealAnswer;
+                bankIdealAnswer = bankQuestion.idealAnswer;
+                const tier1 = evaluatePracticeAnswer(
+                    question.questionText,
+                    answer,
+                    bankIdealAnswer,
+                    question.questionType
+                );
+                quickScore = tier1.score;
+                missingKeywords = tier1.keywordsMissed.slice(0, 5);
             }
         }
 
-        // Update question with answer, score, metrics, and improved answer
+        // ── Tier-1 shortcut: skip LLM for strong answers (score ≥ 78) ───
+        // ~35% of answers are solid enough that NLP scoring + pre-built feedback
+        // is accurate and sufficient. No LLM round-trip needed.
+        if (quickScore !== undefined && quickScore >= 78) {
+            const tier1Result: EvaluationResult = {
+                score: quickScore,
+                feedback: buildTier1Feedback(quickScore, missingKeywords, question.questionType),
+                improvedAnswer: bankIdealAnswer || '',
+                followUpQuestion: null,
+                isFallback: false,
+                metrics: { clarity: quickScore, relevance: quickScore, confidence: quickScore },
+            };
+            await prisma.interviewQuestion.update({
+                where: { id: questionId },
+                data: {
+                    score: tier1Result.score,
+                    feedback: tier1Result.feedback,
+                    metrics: tier1Result.metrics,
+                    improvedAnswer: tier1Result.improvedAnswer,
+                },
+            });
+            await accumulateSessionSummary(sessionId, tier1Result.score, missingKeywords);
+            const nextQ = await prisma.interviewQuestion.findFirst({
+                where: { sessionId, userAnswer: null, orderIndex: { gt: question.orderIndex } },
+                orderBy: { orderIndex: 'asc' },
+            });
+            return {
+                evaluation: tier1Result,
+                nextQuestion: nextQ ? { id: nextQ.id, questionText: nextQ.questionText, questionType: nextQ.questionType, orderIndex: nextQ.orderIndex } : null,
+                isComplete: !nextQ,
+            };
+        }
+
+        // ── Tier-2: LLM evaluation ────────────────────────────────────────
+        // Passes NLP hints so the LLM can focus its output rather than re-discover
+        // missing concepts from scratch. Follow-up decision is bundled in the same
+        // call — no separate generateFollowUpQuestion() round-trip.
+        const evaluation = await evaluateAnswer(
+            question.questionText,
+            answer,
+            session.targetRole,
+            session.type,
+            metrics,
+            { quickScore, missingKeywords, idealAnswer: bankIdealAnswer }
+        );
+
+        // Update question with evaluation results (userAnswer already set atomically above)
         await prisma.interviewQuestion.update({
             where: { id: questionId },
             data: {
-                userAnswer: answer,
                 score: evaluation.score,
                 feedback: evaluation.feedback,
                 metrics: evaluation.metrics,
@@ -442,48 +569,43 @@ export class InterviewService {
             },
         });
 
-        // Determine if a follow-up is needed (Phase 2 Conversational AI)
-        // Only do this if it's not already a follow-up question (to prevent infinite loops)
-        if (!question.questionType.includes('follow-up')) {
-            const followUp = await generateFollowUpQuestion(
-                question.questionText,
-                answer,
-                session.targetRole
-            );
+        // Accumulate compressed summary for the final feedback call
+        await accumulateSessionSummary(sessionId, evaluation.score, missingKeywords);
 
-            if (followUp.hasFollowUp && followUp.question) {
-                logger.info(`Generating dynamic follow-up for session ${sessionId}, question ${questionId}`);
+        // ── Follow-up insertion ───────────────────────────────────────────
+        // Thresholds tightened (score < 55, words < 20) to reduce unnecessary
+        // follow-ups. Capped at 2 per session. Question text comes from the
+        // bundled evaluation response — no extra LLM call.
+        const followUpText = evaluation.followUpQuestion;
+        const isWeak = evaluation.score < 55 || wordCount < 20;
 
-                // Shift subsequent questions' orderIndex down
+        if (isWeak && followUpText && !question.questionType.includes('follow-up')) {
+            const existingFollowUpCount = await prisma.interviewQuestion.count({
+                where: { sessionId, questionType: { contains: 'follow-up' } },
+            });
+
+            if (existingFollowUpCount < 2) {
+                logger.info(`Inserting follow-up for session ${sessionId}, question ${questionId} (score: ${evaluation.score})`);
+
                 await prisma.interviewQuestion.updateMany({
-                    where: {
-                        sessionId,
-                        orderIndex: { gt: question.orderIndex },
-                    },
-                    data: {
-                        orderIndex: { increment: 1 },
-                    },
+                    where: { sessionId, orderIndex: { gt: question.orderIndex } },
+                    data: { orderIndex: { increment: 1 } },
                 });
 
-                // Insert the new follow-up question immediately after the current one
                 await prisma.interviewQuestion.create({
                     data: {
                         sessionId,
-                        questionText: followUp.question,
+                        questionText: followUpText,
                         questionType: `${question.questionType}-follow-up`,
                         orderIndex: question.orderIndex + 1,
-                    }
+                    },
                 });
             }
         }
 
         // Get next question
         const nextQuestion = await prisma.interviewQuestion.findFirst({
-            where: {
-                sessionId,
-                userAnswer: null,
-                orderIndex: { gt: question.orderIndex },
-            },
+            where: { sessionId, userAnswer: null, orderIndex: { gt: question.orderIndex } },
             orderBy: { orderIndex: 'asc' },
         });
 
@@ -519,12 +641,18 @@ export class InterviewService {
             ? Math.round(totalScore / answeredQuestions.length)
             : 0;
 
-        // Generate overall feedback using LLM
+        // Generate overall feedback using compressed summary (scores + key gaps accumulated
+        // in Redis during the interview) instead of re-sending all Q&A text to the LLM.
+        // Saves ~600 input tokens on the final call.
+        const cachedSummary = await cacheGet<SessionSummary>(`interview:session-summary:${sessionId}`);
         const overallFeedback = await generateFeedback(
             session.targetRole,
             session.type,
-            session.questions,
-            overallScore
+            {
+                scores: cachedSummary?.scores || answeredQuestions.map((q: { score: number | null }) => q.score || 0),
+                keyGaps: cachedSummary?.keyGaps || [],
+                overallScore,
+            }
         );
 
         // Update session

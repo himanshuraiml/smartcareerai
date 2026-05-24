@@ -5,14 +5,22 @@ import { AppError } from '../utils/errors';
 interface JwtPayload {
     id: string;
     email: string;
+    role?: string;
 }
 
 export const authMiddleware = (req: Request, _res: Response, next: NextFunction) => {
     try {
-        // Check for user ID header (passed by API gateway)
+        // Check for user ID header (passed by API gateway after JWT verification)
         const userIdHeader = req.headers['x-user-id'];
         if (userIdHeader) {
-            (req as any).user = { id: userIdHeader };
+            // Decode (not verify — gateway already verified) to get role claim
+            const authHeader = req.headers.authorization;
+            let role: string | undefined;
+            if (authHeader?.startsWith('Bearer ')) {
+                const decoded = jwt.decode(authHeader.split(' ')[1]) as JwtPayload | null;
+                role = decoded?.role;
+            }
+            (req as any).user = { id: userIdHeader, role };
             return next();
         }
 

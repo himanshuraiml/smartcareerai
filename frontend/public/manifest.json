@@ -1,8 +1,8 @@
 {
-    "name": "PlaceNxt Recruiter",
+    "name": "PlaceNxt - AI Career Platform",
     "short_name": "PlaceNxt",
-    "description": "AI-powered talent acquisition and placement platform",
-    "start_url": "/recruiter",
+    "description": "AI-powered resume scoring, mock interviews, and skill verification for students.",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#0F172A",
     "theme_color": "#2563EB",
@@ -20,20 +20,20 @@
             "type": "image/png"
         }
     ],
-    "categories": ["business", "productivity"],
+    "categories": ["education", "productivity"],
     "shortcuts": [
         {
-            "name": "Jobs",
-            "short_name": "Jobs",
-            "description": "View your job postings",
-            "url": "/recruiter/jobs",
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "Go to your dashboard",
+            "url": "/dashboard",
             "icons": [{ "src": "/logo-new.png", "sizes": "96x96" }]
         },
         {
-            "name": "Candidates",
-            "short_name": "Candidates",
-            "description": "Search candidates",
-            "url": "/recruiter",
+            "name": "Practice Interview",
+            "short_name": "Practice",
+            "description": "Start a mock interview",
+            "url": "/candidate/practice",
             "icons": [{ "src": "/logo-new.png", "sizes": "96x96" }]
         }
     ]

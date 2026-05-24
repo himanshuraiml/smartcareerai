@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { cmsApi, BlogPostData } from '@/lib/cms-api';
 import { PenSquare, Eye, Trash2, Send, Plus, RefreshCw } from 'lucide-react';
+import Image from 'next/image';
 
 const STATUS_TABS = ['All', 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'] as const;
 type TabType = typeof STATUS_TABS[number];
@@ -135,7 +136,7 @@ export default function CmsPostsPage() {
                         >
                             {/* Cover */}
                             {post.coverImage ? (
-                                <img src={post.coverImage} alt="" className="w-16 h-12 rounded-lg object-cover shrink-0" />
+                                <Image src={post.coverImage} alt="" width={64} height={48} className="rounded-lg object-cover shrink-0" unoptimized />
                             ) : (
                                 <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shrink-0" />
                             )}

@@ -249,7 +249,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
                     <Link href="/recruiter" className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.1] flex items-center justify-center shrink-0 shadow-lg overflow-hidden p-1">
                             {orgProfile?.logoUrl ? (
-                                <img src={orgProfile.logoUrl} alt="Company Logo" className="w-full h-full object-contain" />
+                                <Image src={orgProfile.logoUrl} alt="Company Logo" width={36} height={36} className="w-full h-full object-contain" unoptimized />
                             ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                                     <Briefcase className="w-5 h-5 text-white" />
@@ -376,7 +376,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
                 <header className="hidden lg:flex h-[68px] items-center justify-between px-8 bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 shrink-0 z-20 transition-all">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                         {orgProfile?.logoUrl ? (
-                            <img src={orgProfile.logoUrl} alt="Logo" className="w-5 h-5 object-contain" />
+                            <Image src={orgProfile.logoUrl} alt="Logo" width={20} height={20} className="object-contain" unoptimized />
                         ) : (
                             <Briefcase className="w-4 h-4 text-blue-500" />
                         )}
@@ -459,7 +459,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
                             <ThemeToggle />
                             <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 dark:border-white/10 flex items-center justify-center shadow-md overflow-hidden p-1">
                                 {orgProfile?.logoUrl ? (
-                                    <img src={orgProfile.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                    <Image src={orgProfile.logoUrl} alt="Logo" width={28} height={28} className="w-full h-full object-contain" unoptimized />
                                 ) : (
                                     <Briefcase className="w-4 h-4 text-blue-500" />
                                 )}

@@ -1,25 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import { useTheme } from '@/providers/ThemeProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { platformSolutions } from '@/constants/solutions';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-    ArrowRight, FileText, Zap, Mic, Rocket, Gem,
-    Check, Users, TrendingUp, Menu, X,
+    ArrowRight, FileText, Zap, Mic, Rocket,
+    Check, Users, TrendingUp,
     ChevronRight, Sparkles, ShieldCheck, Building2, Briefcase, Target,
-    GraduationCap, LineChart, BrainCircuit, Database, LayoutDashboard, Award,
+    BrainCircuit, LayoutDashboard, Award,
     Cpu, Code2, Binary, Sliders, Trash2, GripVertical, AlertCircle, Activity,
-    Flame, Star, Bell, Moon, FlaskConical, CheckCircle2, UserCircle2,
-    Search, Layout
+    Flame, FlaskConical, Quote, Star,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function HomePage() {
-    const [activeSolution, setActiveSolution] = useState(0);
     const { theme } = useTheme();
     const isLight = theme === 'light';
 
@@ -48,11 +44,11 @@ export default function HomePage() {
             <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-4">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:flex-[1.6] text-center lg:text-left">
-                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border ${isLight ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
-                            <Sparkles className="w-4 h-4" />
-                            <span className="text-sm font-bold tracking-tight">AI-Powered Career Transformation</span>
+                        <div className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full mb-6 border ${isLight ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
+                            <Sparkles className="w-4 h-4 shrink-0" />
+                            <span className="text-xs sm:text-sm font-bold tracking-tight">AI-Powered Career Transformation</span>
                         </div>
-                        <h1 className={`text-5xl lg:text-7xl font-black mb-8 leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                        <h1 className={`text-4xl sm:text-5xl lg:text-7xl font-black mb-8 leading-[1.1] ${isLight ? 'text-gray-900' : 'text-white'}`}>
                             Resumes don’t <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 italic">predict success.</span> <br />
                             Your skills do.
@@ -300,8 +296,15 @@ export default function HomePage() {
                         {/* ── High Fidelity Placement Analytics Dashboard ── */}
                         <div className={`rounded-[2.5rem] p-6 border shadow-2xl relative overflow-hidden flex flex-col gap-6 ${isLight ? 'bg-white border-gray-100 shadow-indigo-100' : 'bg-[#0B0F19] border-white/10'}`}>
 
+                            {/* Demo badge */}
+                            <div className="flex justify-end">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isLight ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'}`}>
+                                    <FlaskConical className="w-3 h-3" /> Demo data
+                                </span>
+                            </div>
+
                             {/* Stats Row */}
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                 {[
                                     { label: 'Total Registered', val: '1,280', sub: '+12% this month', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-500/10', trend: 'up' },
                                     { label: 'Total Placed', val: '840', sub: '65% placement rate', icon: Award, color: 'text-purple-500', bg: 'bg-purple-500/10', trend: 'up' },
@@ -405,17 +408,98 @@ export default function HomePage() {
             {/* ── Trust Strip ── */}
             <section className="py-12 px-4">
                 <div className="max-w-3xl mx-auto">
-                    <div className={`rounded-2xl border p-8 text-center ${isLight
+                    <div className={`rounded-2xl border p-6 sm:p-8 text-center ${isLight
                         ? 'bg-white border-gray-100 shadow-sm'
                         : 'bg-white/[0.02] border-white/[0.06]'}`}>
                         <p className={`text-sm font-semibold uppercase tracking-widest mb-6 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>
                             Trusted by students from
                         </p>
-                        <div className={`flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-lg font-bold ${isLight ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <div className={`flex flex-wrap items-center justify-center gap-x-6 sm:gap-x-10 gap-y-3 text-sm sm:text-base font-bold ${isLight ? 'text-gray-300' : 'text-gray-600'}`}>
                             {['IIT Bombay', 'NIT Trichy', 'BITS Pilani', 'VIT', 'SRM', 'Manipal'].map(name => (
                                 <span key={name}>{name}</span>
                             ))}
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Testimonials ── */}
+            <section className="py-20 px-4">
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-12"
+                    >
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-500 text-sm font-bold mb-4">
+                            <Star className="w-3.5 h-3.5" /> Real Students, Real Results
+                        </span>
+                        <h2 className={`text-3xl sm:text-4xl font-black mb-3 ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                            From Students Who Made It
+                        </h2>
+                        <p className={`text-base max-w-xl mx-auto ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                            Tier-2 colleges to top-10 companies. These students used PlaceNxt to land their dream jobs.
+                        </p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: 'Aditya Verma', role: 'Software Engineer @ Google', college: 'BITS Pilani',
+                                avatar: 'AV', gradient: 'from-blue-500 to-cyan-500', salaryIncrease: '3.2x',
+                                quote: 'I had 3 rejections at top companies. PlaceNxt\'s AI mock interviews showed me exactly where I was going wrong. Got the Google offer on the next attempt.',
+                            },
+                            {
+                                name: 'Priya Menon', role: 'Product Manager @ Razorpay', college: 'IIM Kozhikode',
+                                avatar: 'PM', gradient: 'from-violet-500 to-purple-500', salaryIncrease: '2.8x',
+                                quote: 'My resume scored 42% before. After PlaceNxt\'s AI recommendations I hit 91% and started hearing back from companies I never would have heard from.',
+                            },
+                            {
+                                name: 'Meera Nair', role: 'ML Engineer @ PhonePe', college: 'DSCE Bangalore',
+                                avatar: 'MN', gradient: 'from-indigo-500 to-blue-500', salaryIncrease: '5.2x',
+                                quote: 'PlaceNxt matched me with PhonePe before they even posted the job. They had me in their talent pool because of my AI/ML skill badges.',
+                            },
+                        ].map((story, i) => (
+                            <motion.div
+                                key={story.name}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1 }}
+                                className={`rounded-2xl p-6 flex flex-col gap-4 border ${isLight ? 'bg-white border-gray-100 shadow-sm' : 'bg-white/[0.03] border-white/8'}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${story.gradient} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}>
+                                        {story.avatar}
+                                    </div>
+                                    <div>
+                                        <p className={`font-bold text-sm ${isLight ? 'text-gray-900' : 'text-white'}`}>{story.name}</p>
+                                        <p className="text-xs text-gray-500">{story.role}</p>
+                                        <p className="text-[11px] text-gray-400">{story.college}</p>
+                                    </div>
+                                    <div className="ml-auto text-right">
+                                        <p className="text-lg font-black text-emerald-500">{story.salaryIncrease}</p>
+                                        <p className="text-[10px] text-gray-400">salary jump</p>
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <Quote className={`w-5 h-5 absolute -top-1 -left-1 ${isLight ? 'text-gray-200' : 'text-white/10'}`} />
+                                    <p className={`text-sm leading-relaxed pl-4 italic ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
+                                        &ldquo;{story.quote}&rdquo;
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <Link
+                            href="/success-stories"
+                            className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors ${isLight ? 'text-gray-500 hover:text-gray-800' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            See all success stories <ChevronRight className="w-4 h-4" />
+                        </Link>
                     </div>
                 </div>
             </section>

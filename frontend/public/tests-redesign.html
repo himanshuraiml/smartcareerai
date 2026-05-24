@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill Tests — PlaceNxt Redesign Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #F1F5F9; }
+
+    /* Active node pulse ring */
+    @keyframes pulse-ring {
+      0%   { transform: scale(0.9); opacity: 0.55; }
+      70%  { transform: scale(1.7); opacity: 0; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+    .pulse-ring { animation: pulse-ring 1.9s ease-out infinite; }
+
+    /* Smooth tab switch */
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Hover row highlight */
+    .skill-row:hover { background: #F8FAFC; }
+
+    /* Lock overlay on badge */
+    .badge-locked { filter: grayscale(1); opacity: 0.45; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+  <!-- ─── Page shell: mimics dashboard sidebar offset ─── -->
+  <div class="max-w-4xl mx-auto px-4 py-8 space-y-5">
+
+    <!-- ═══════════════════════════════════════════════
+         1. PAGE HEADER
+    ═══════════════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-7 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+
+        <!-- Left: title + pills + role chip -->
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-black text-blue-500 uppercase tracking-[0.18em] mb-2">Skill Validation</p>
+          <h1 class="text-3xl font-black text-gray-900 mb-1 leading-tight">Skill Tests</h1>
+          <p class="text-sm text-gray-400 mb-5">Prove what you know. Earn verifiable badges.</p>
+
+          <!-- Inline stat pills -->
+          <div class="flex flex-wrap gap-2 mb-5">
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[11px] font-bold">
+              <!-- file icon -->
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+              8 Tests Available
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[11px] font-bold">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+              3 Badges Earned
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-[11px] font-bold">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              1 Advanced
+            </span>
+          </div>
+
+          <!-- Target role chip -->
+          <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-100">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <span class="text-[11px] text-indigo-400 font-semibold">Target role</span>
+            <span class="text-sm font-bold text-indigo-700">Frontend Developer</span>
+          </div>
+        </div>
+
+        <!-- Right: progress donut -->
+        <div class="flex-shrink-0 flex flex-col items-center gap-2">
+          <div class="relative w-28 h-28">
+            <svg viewBox="0 0 100 100" class="w-28 h-28" style="transform: rotate(-90deg);">
+              <!-- Track -->
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#E5E7EB" stroke-width="9"/>
+              <!-- Progress: 3/5 = 60% · circ = 2π×38 ≈ 238.8 -->
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#2563EB" stroke-width="9"
+                stroke-linecap="round" stroke-dasharray="143.3 238.8"/>
+              <!-- Tick marks at each skill (72° apart) -->
+              <circle cx="50" cy="50" r="38" fill="none" stroke="white" stroke-width="9"
+                stroke-dasharray="1 47.6" stroke-dashoffset="-0"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-2xl font-black text-gray-900 leading-none">3/5</span>
+              <span class="text-[10px] text-gray-400 font-medium mt-0.5">skills</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-gray-400 font-medium">skills validated</p>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════
+         2. TABS
+    ═══════════════════════════════════════════════ -->
+    <div class="flex gap-1 p-1 rounded-xl bg-white border border-gray-200 shadow-sm w-fit">
+      <button id="tab-tests" onclick="switchTab('tests')"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white shadow-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Skill Tests
+        <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-white/20 text-white">8</span>
+      </button>
+      <button id="tab-badges" onclick="switchTab('badges')"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-gray-400 hover:text-gray-700">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+        My Badges
+        <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">3</span>
+      </button>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════
+         TESTS TAB
+    ═══════════════════════════════════════════════ -->
+    <div id="pane-tests" class="tab-pane active space-y-5">
+
+      <!-- ── 2a. Featured Recommended Test ── -->
+      <!-- Only shown when target role is set -->
+      <div class="relative bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #FDE68A; border-left: 4px solid #F59E0B;">
+        <!-- Subtle warm wash -->
+        <div class="absolute inset-0 bg-gradient-to-r from-amber-50/60 to-transparent pointer-events-none"></div>
+
+        <div class="relative px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <!-- Info side -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-800 text-[10px] font-black uppercase tracking-wider">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Next Up For You
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold uppercase">Medium</span>
+              <span class="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-400 text-[10px] font-semibold">Fills skill gap for Frontend Developer</span>
+            </div>
+
+            <div class="flex items-center gap-2.5 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">TS</div>
+              <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">TypeScript · Frontend</p>
+              </div>
+            </div>
+
+            <h2 class="text-xl font-black text-gray-900 mb-1.5 leading-snug">TypeScript Intermediate — Type Systems</h2>
+            <p class="text-sm text-gray-500 mb-4 leading-relaxed">Generics, conditional types, mapped types and advanced interface patterns used in real-world applications.</p>
+
+            <div class="flex flex-wrap gap-4 text-xs text-gray-400">
+              <span class="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                15 questions
+              </span>
+              <span class="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                20 minutes
+              </span>
+              <span class="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                Pass at 75%
+              </span>
+            </div>
+          </div>
+
+          <!-- CTA side -->
+          <div class="flex-shrink-0 flex flex-col items-center gap-2 w-full sm:w-auto">
+            <button class="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-bold text-sm text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+              style="background: linear-gradient(135deg, #F59E0B, #EF4444); box-shadow: 0 8px 24px rgba(245,158,11,0.30);">
+              Start Test
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <p class="text-[11px] text-gray-400 text-center">Earns you the TS Intermediate badge</p>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ── 2b. Skill Progression Tracks ── -->
+      <div>
+        <div class="flex items-center gap-2 mb-3 px-1">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.15em]">Your Skill Progression</h2>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+          <!-- Legend row -->
+          <div class="flex items-center gap-5 px-7 py-3 border-b border-gray-50 bg-gray-50/60">
+            <div class="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
+              <div class="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              Completed
+            </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
+              <div class="w-4 h-4 rounded-full bg-blue-600"></div>
+              Current
+            </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
+              <div class="w-4 h-4 rounded-full border-2 border-gray-200 bg-white"></div>
+              Locked
+            </div>
+          </div>
+
+          <!-- ── Row: React.js — EASY active ── -->
+          <div class="skill-row flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5 border-b border-gray-50 transition-colors cursor-default">
+            <!-- Skill identity -->
+            <div class="flex items-center gap-3 w-44 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-base flex-shrink-0 font-black" style="background:#ECFEFF; border: 1px solid #CFFAFE; color:#0E7490;">⚛</div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">React.js</p>
+                <p class="text-[11px] text-gray-400 font-medium">Frontend</p>
+              </div>
+            </div>
+
+            <!-- Track -->
+            <div class="flex-1 flex flex-col gap-2">
+              <!-- Circles + lines -->
+              <div class="flex items-center">
+                <!-- EASY: ACTIVE -->
+                <div class="relative flex-shrink-0">
+                  <div class="pulse-ring absolute inset-0 rounded-full bg-blue-400/30" style="transform-origin: center;"></div>
+                  <div class="relative w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md z-10" style="box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                </div>
+                <!-- Line: gray -->
+                <div class="h-0.5 flex-1 bg-gray-200"></div>
+                <!-- MEDIUM: LOCKED -->
+                <div class="w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <!-- Line: gray -->
+                <div class="h-0.5 flex-1 bg-gray-200"></div>
+                <!-- HARD: LOCKED -->
+                <div class="w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+              </div>
+              <!-- Labels -->
+              <div class="flex items-center text-[10px] font-bold uppercase tracking-wide">
+                <span class="w-8 text-center text-blue-600">Easy</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-gray-300">Med</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-gray-300">Hard</span>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <a href="#" class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 whitespace-nowrap"
+              style="background:#2563EB; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
+              Take Easy
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+
+          <!-- ── Row: TypeScript — EASY done, MEDIUM active ── -->
+          <div class="skill-row flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5 border-b border-gray-50 transition-colors cursor-default">
+            <div class="flex items-center gap-3 w-44 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0" style="background:#EFF6FF; border: 1px solid #BFDBFE; color:#1D4ED8;">TS</div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">TypeScript</p>
+                <p class="text-[11px] text-gray-400 font-medium">Frontend</p>
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-2">
+              <div class="flex items-center">
+                <!-- EASY: DONE -->
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <!-- Line: emerald (completed) -->
+                <div class="h-0.5 flex-1 bg-emerald-300"></div>
+                <!-- MEDIUM: ACTIVE -->
+                <div class="relative flex-shrink-0">
+                  <div class="pulse-ring absolute inset-0 rounded-full bg-blue-400/30" style="transform-origin: center;"></div>
+                  <div class="relative w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md z-10" style="box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                </div>
+                <!-- Line: gray -->
+                <div class="h-0.5 flex-1 bg-gray-200"></div>
+                <!-- HARD: LOCKED -->
+                <div class="w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+              </div>
+              <div class="flex items-center text-[10px] font-bold uppercase tracking-wide">
+                <span class="w-8 text-center text-emerald-500">Easy</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-blue-600">Med</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-gray-300">Hard</span>
+              </div>
+            </div>
+
+            <a href="#" class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 whitespace-nowrap"
+              style="background: linear-gradient(135deg,#F59E0B,#EF4444); box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+              Take Medium
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+
+          <!-- ── Row: Node.js — EASY+MEDIUM done, HARD active ── -->
+          <div class="skill-row flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5 border-b border-gray-50 transition-colors cursor-default">
+            <div class="flex items-center gap-3 w-44 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0" style="background:#F0FDF4; border: 1px solid #BBF7D0; color:#15803D;">N</div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">Node.js</p>
+                <p class="text-[11px] text-gray-400 font-medium">Backend</p>
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-2">
+              <div class="flex items-center">
+                <!-- EASY: DONE -->
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="h-0.5 flex-1 bg-emerald-300"></div>
+                <!-- MEDIUM: DONE -->
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="h-0.5 flex-1 bg-emerald-300"></div>
+                <!-- HARD: ACTIVE -->
+                <div class="relative flex-shrink-0">
+                  <div class="pulse-ring absolute inset-0 rounded-full bg-rose-400/30" style="transform-origin: center;"></div>
+                  <div class="relative w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center shadow-md z-10" style="box-shadow: 0 4px 12px rgba(225,29,72,0.30);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center text-[10px] font-bold uppercase tracking-wide">
+                <span class="w-8 text-center text-emerald-500">Easy</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-emerald-500">Med</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-rose-600">Hard</span>
+              </div>
+            </div>
+
+            <a href="#" class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 whitespace-nowrap"
+              style="background:#E11D48; box-shadow: 0 4px 12px rgba(225,29,72,0.25);">
+              Take Hard
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+
+          <!-- ── Row: CSS — ALL DONE (mastered) ── -->
+          <div class="skill-row flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5 border-b border-gray-50 transition-colors cursor-default" style="background: linear-gradient(to right, #F0FDF4, #FFFFFF);">
+            <div class="flex items-center gap-3 w-44 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black flex-shrink-0" style="background:#FFF7ED; border: 1px solid #FED7AA; color:#C2410C;">CSS</div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">CSS / Styling</p>
+                <p class="text-[11px] text-gray-400 font-medium">Frontend</p>
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-2">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="h-0.5 flex-1 bg-emerald-300"></div>
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="h-0.5 flex-1 bg-emerald-300"></div>
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0" style="box-shadow: 0 2px 8px rgba(16,185,129,0.30);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div class="flex items-center text-[10px] font-bold uppercase tracking-wide">
+                <span class="w-8 text-center text-emerald-500">Easy</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-emerald-500">Med</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-emerald-500">Hard</span>
+              </div>
+            </div>
+
+            <span class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 whitespace-nowrap">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              Mastered
+            </span>
+          </div>
+
+          <!-- ── Row: Python — EASY active ── -->
+          <div class="skill-row flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5 transition-colors cursor-default">
+            <div class="flex items-center gap-3 w-44 flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0" style="background:#FEFCE8; border: 1px solid #FEF08A; color:#854D0E;">Py</div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">Python</p>
+                <p class="text-[11px] text-gray-400 font-medium">Backend</p>
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-2">
+              <div class="flex items-center">
+                <!-- EASY: ACTIVE -->
+                <div class="relative flex-shrink-0">
+                  <div class="pulse-ring absolute inset-0 rounded-full bg-blue-400/30" style="transform-origin: center;"></div>
+                  <div class="relative w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md z-10" style="box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                </div>
+                <div class="h-0.5 flex-1 bg-gray-200"></div>
+                <div class="w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <div class="h-0.5 flex-1 bg-gray-200"></div>
+                <div class="w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+              </div>
+              <div class="flex items-center text-[10px] font-bold uppercase tracking-wide">
+                <span class="w-8 text-center text-blue-600">Easy</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-gray-300">Med</span>
+                <div class="flex-1"></div>
+                <span class="w-8 text-center text-gray-300">Hard</span>
+              </div>
+            </div>
+
+            <a href="#" class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 whitespace-nowrap"
+              style="background:#2563EB; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
+              Take Easy
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+
+        </div><!-- /track table -->
+      </div><!-- /section -->
+
+    </div><!-- /pane-tests -->
+
+
+    <!-- ═══════════════════════════════════════════════
+         BADGES TAB
+    ═══════════════════════════════════════════════ -->
+    <div id="pane-badges" class="tab-pane space-y-7">
+
+      <!-- Earned badges -->
+      <div>
+        <div class="flex items-center gap-2 mb-4 px-1">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+          <h2 class="text-[11px] font-black text-gray-500 uppercase tracking-[0.15em]">Earned Badges &nbsp;·&nbsp; 3</h2>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+
+          <!-- Badge: Node.js Advanced -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-lg hover:border-violet-200 transition-all duration-200 group">
+            <div class="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform duration-200"
+              style="background: linear-gradient(135deg, #7C3AED, #4F46E5); box-shadow: 0 8px 20px rgba(124,58,237,0.30);">
+              <span class="text-2xl">🚀</span>
+              <div class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <p class="text-sm font-black text-gray-900 mb-0.5">Node.js</p>
+            <p class="text-xs font-bold mb-3" style="background: linear-gradient(135deg,#7C3AED,#4F46E5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ADVANCED</p>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-700 mb-1.5" style="background:#F0FDF4; border: 1px solid #BBF7D0;">88% score</span>
+            <p class="text-[11px] text-gray-400">Mar 15, 2026</p>
+          </div>
+
+          <!-- Badge: React.js Intermediate -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-lg hover:border-cyan-200 transition-all duration-200 group">
+            <div class="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform duration-200"
+              style="background: linear-gradient(135deg, #0EA5E9, #06B6D4); box-shadow: 0 8px 20px rgba(14,165,233,0.30);">
+              <span class="text-2xl">⭐</span>
+              <div class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <p class="text-sm font-black text-gray-900 mb-0.5">React.js</p>
+            <p class="text-xs font-bold mb-3" style="background: linear-gradient(135deg,#0EA5E9,#06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">INTERMEDIATE</p>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-700 mb-1.5" style="background:#F0FDF4; border: 1px solid #BBF7D0;">79% score</span>
+            <p class="text-[11px] text-gray-400">Feb 28, 2026</p>
+          </div>
+
+          <!-- Badge: CSS Beginner -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-lg hover:border-emerald-200 transition-all duration-200 group">
+            <div class="relative w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform duration-200"
+              style="background: linear-gradient(135deg, #10B981, #14B8A6); box-shadow: 0 8px 20px rgba(16,185,129,0.30);">
+              <span class="text-2xl">✦</span>
+              <div class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <p class="text-sm font-black text-gray-900 mb-0.5">CSS / Styling</p>
+            <p class="text-xs font-bold mb-3" style="background: linear-gradient(135deg,#10B981,#14B8A6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">BEGINNER</p>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-700 mb-1.5" style="background:#F0FDF4; border: 1px solid #BBF7D0;">82% score</span>
+            <p class="text-[11px] text-gray-400">Feb 10, 2026</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Locked badges -->
+      <div>
+        <div class="flex items-center gap-2 mb-4 px-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <h2 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.15em]">Still to Unlock &nbsp;·&nbsp; 5 remaining</h2>
+        </div>
+
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+
+          <!-- Locked: TypeScript Advanced -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center badge-locked">
+            <div class="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style="background: linear-gradient(135deg, #F59E0B, #EF4444);">
+              <span class="text-xl">⚡</span>
+              <div class="absolute inset-0 rounded-2xl flex items-center justify-center" style="background:rgba(0,0,0,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-600 mb-0.5">TypeScript</p>
+            <p class="text-[10px] font-bold text-gray-400 mb-1">ADVANCED</p>
+            <p class="text-[10px] text-gray-400 leading-tight">Pass Medium first</p>
+          </div>
+
+          <!-- Locked: React.js Advanced -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center badge-locked">
+            <div class="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style="background: linear-gradient(135deg, #7C3AED, #4F46E5);">
+              <span class="text-xl">🚀</span>
+              <div class="absolute inset-0 rounded-2xl flex items-center justify-center" style="background:rgba(0,0,0,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-600 mb-0.5">React.js</p>
+            <p class="text-[10px] font-bold text-gray-400 mb-1">ADVANCED</p>
+            <p class="text-[10px] text-gray-400 leading-tight">Pass Medium first</p>
+          </div>
+
+          <!-- Locked: Python Intermediate -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center badge-locked">
+            <div class="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style="background: linear-gradient(135deg, #10B981, #14B8A6);">
+              <span class="text-xl">⭐</span>
+              <div class="absolute inset-0 rounded-2xl flex items-center justify-center" style="background:rgba(0,0,0,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-600 mb-0.5">Python</p>
+            <p class="text-[10px] font-bold text-gray-400 mb-1">INTERMEDIATE</p>
+            <p class="text-[10px] text-gray-400 leading-tight">Pass Easy first</p>
+          </div>
+
+          <!-- Locked: Node.js Expert -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center badge-locked">
+            <div class="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style="background: linear-gradient(135deg, #F59E0B, #EF4444);">
+              <span class="text-xl">⚡</span>
+              <div class="absolute inset-0 rounded-2xl flex items-center justify-center" style="background:rgba(0,0,0,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-600 mb-0.5">Node.js</p>
+            <p class="text-[10px] font-bold text-gray-400 mb-1">EXPERT</p>
+            <p class="text-[10px] text-gray-400 leading-tight">Pass Hard first</p>
+          </div>
+
+          <!-- Locked: CSS Expert -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center badge-locked">
+            <div class="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style="background: linear-gradient(135deg, #EF4444, #EC4899);">
+              <span class="text-xl">🏆</span>
+              <div class="absolute inset-0 rounded-2xl flex items-center justify-center" style="background:rgba(0,0,0,0.35);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-600 mb-0.5">CSS / Styling</p>
+            <p class="text-[10px] font-bold text-gray-400 mb-1">EXPERT</p>
+            <p class="text-[10px] text-gray-400 leading-tight">Pass Hard first</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /pane-badges -->
+
+  </div><!-- /max-w wrapper -->
+
+
+  <script>
+    function switchTab(tab) {
+      // Panes
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('pane-' + tab).classList.add('active');
+
+      // Tab buttons
+      const testsBtn  = document.getElementById('tab-tests');
+      const badgesBtn = document.getElementById('tab-badges');
+
+      if (tab === 'tests') {
+        testsBtn.style.cssText  = 'background:#2563EB; color:white; box-shadow: 0 2px 8px rgba(37,99,235,0.20);';
+        badgesBtn.style.cssText = 'background:transparent; color:#9CA3AF;';
+        // restore count pill color
+        testsBtn.querySelector('span').style.cssText  = 'background:rgba(255,255,255,0.20); color:white;';
+        badgesBtn.querySelector('span').style.cssText = 'background:#F3F4F6; color:#9CA3AF;';
+      } else {
+        badgesBtn.style.cssText = 'background:#2563EB; color:white; box-shadow: 0 2px 8px rgba(37,99,235,0.20);';
+        testsBtn.style.cssText  = 'background:transparent; color:#9CA3AF;';
+        badgesBtn.querySelector('span').style.cssText = 'background:rgba(255,255,255,0.20); color:white;';
+        testsBtn.querySelector('span').style.cssText  = 'background:#F3F4F6; color:#9CA3AF;';
+      }
+    }
+  </script>
+
+</body>
+</html>

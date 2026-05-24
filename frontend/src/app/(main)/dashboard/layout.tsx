@@ -26,6 +26,8 @@ import {
     QrCode,
     GitBranch,
     GraduationCap,
+    Code2,
+    BookOpen,
 } from 'lucide-react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -53,6 +55,8 @@ const journeyItems: NavItem[] = [
     { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', iconColor: 'text-emerald-400' },
     { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', iconColor: 'text-violet-400' },
     { href: '/dashboard/assessments', icon: GitBranch, label: 'Pipeline & Stages', iconColor: 'text-orange-400' },
+    { href: '/dashboard/dsa', icon: BookOpen, label: 'DSA Guide', iconColor: 'text-pink-400', badge: 'New' },
+    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400' },
 ];
 
 // General / standalone features (most moved to header dropdown)

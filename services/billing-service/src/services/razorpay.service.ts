@@ -183,7 +183,10 @@ export class RazorpayService {
             .update(`${orderId}|${paymentId}`)
             .digest('hex');
 
-        return expectedSignature === signature;
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'hex'),
+            Buffer.from(signature, 'hex')
+        );
     }
 
     /**
@@ -199,19 +202,30 @@ export class RazorpayService {
             .update(`${paymentId}|${subscriptionId}`)
             .digest('hex');
 
-        return expectedSignature === signature;
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'hex'),
+            Buffer.from(signature, 'hex')
+        );
     }
 
     /**
      * Verify webhook signature
      */
     verifyWebhookSignature(body: string, signature: string): boolean {
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (!secret) {
+            logger.error('RAZORPAY_WEBHOOK_SECRET is not set');
+            return false;
+        }
         const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
+            .createHmac('sha256', secret)
             .update(body)
             .digest('hex');
 
-        return expectedSignature === signature;
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'hex'),
+            Buffer.from(signature, 'hex')
+        );
     }
 
     /**

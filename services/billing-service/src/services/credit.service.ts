@@ -274,32 +274,32 @@ export class CreditService {
             throw createError('Invalid payment signature', 400, 'INVALID_SIGNATURE');
         }
 
-        // Add credits to user balance
-        const userCredit = await prisma.userCredit.upsert({
-            where: {
-                userId_creditType: { userId, creditType },
-            },
-            create: {
-                userId,
-                creditType,
-                balance: quantity,
-            },
-            update: {
-                balance: { increment: quantity },
-            },
-        });
-
-        // Log the transaction
-        await prisma.creditTransaction.create({
-            data: {
-                userId,
-                creditType,
-                amount: quantity,
-                transactionType: 'PURCHASE',
-                description: `Purchased ${quantity} ${creditType} credits`,
-                referenceId: paymentId,
-            },
-        });
+        // Add credits and log the transaction atomically
+        const [userCredit] = await prisma.$transaction([
+            prisma.userCredit.upsert({
+                where: {
+                    userId_creditType: { userId, creditType },
+                },
+                create: {
+                    userId,
+                    creditType,
+                    balance: quantity,
+                },
+                update: {
+                    balance: { increment: quantity },
+                },
+            }),
+            prisma.creditTransaction.create({
+                data: {
+                    userId,
+                    creditType,
+                    amount: quantity,
+                    transactionType: 'PURCHASE',
+                    description: `Purchased ${quantity} ${creditType} credits`,
+                    referenceId: paymentId,
+                },
+            }),
+        ]);
 
         // Record coupon usage if applied
         if (couponId) {
@@ -351,25 +351,25 @@ export class CreditService {
             }
         }
 
-        // Check credit balance
-        const userCredit = await prisma.userCredit.findUnique({
-            where: {
-                userId_creditType: { userId, creditType },
-            },
-        });
+        // Atomically deduct 1 credit only if balance >= 1 (prevents TOCTOU race condition)
+        const [updatedCredit] = await prisma.$transaction([
+            prisma.userCredit.updateMany({
+                where: {
+                    userId_creditType: { userId, creditType },
+                    balance: { gte: 1 },
+                },
+                data: { balance: { decrement: 1 } },
+            }),
+        ]);
 
-        if (!userCredit || userCredit.balance <= 0) {
+        if (updatedCredit.count === 0) {
             throw createError(`Insufficient ${creditType} credits`, 402, 'INSUFFICIENT_CREDITS');
         }
 
-        // Deduct credit
-        await prisma.userCredit.update({
-            where: {
-                userId_creditType: { userId, creditType },
-            },
-            data: {
-                balance: { decrement: 1 },
-            },
+        // Fetch updated balance for response
+        const userCredit = await prisma.userCredit.findUnique({
+            where: { userId_creditType: { userId, creditType } },
+            select: { balance: true },
         });
 
         // Log the transaction
@@ -386,7 +386,7 @@ export class CreditService {
 
         logger.info(`Consumed 1 ${creditType} credit for user ${userId}`);
 
-        return { consumed: true, remainingBalance: userCredit.balance - 1 };
+        return { consumed: true, remainingBalance: userCredit?.balance ?? 0 };
     }
 
     /**

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { cmsApi, BlogPostData } from '@/lib/cms-api';
 import { ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const STATUS_LABEL: Record<string, string> = {
     DRAFT: 'Draft',
@@ -94,10 +95,10 @@ export default function PreviewPostPage() {
                     />
                 )}
 
-                {/* Content */}
+                {/* Content — sanitized before rendering */}
                 <article
                     className="prose dark:prose-invert prose-blue prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
                 />
 
                 {/* Keywords */}

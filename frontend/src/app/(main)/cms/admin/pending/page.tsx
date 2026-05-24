@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { cmsApi, BlogPostData } from '@/lib/cms-api';
 import { Eye, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PendingReviewPage() {
     const { user } = useAuthStore();
@@ -85,7 +86,7 @@ export default function PendingReviewPage() {
                         >
                             <div className="flex items-start gap-4">
                                 {post.coverImage ? (
-                                    <img src={post.coverImage} alt="" className="w-20 h-14 rounded-lg object-cover shrink-0" />
+                                    <Image src={post.coverImage} alt="" width={80} height={56} className="rounded-lg object-cover shrink-0" unoptimized />
                                 ) : (
                                     <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 shrink-0" />
                                 )}

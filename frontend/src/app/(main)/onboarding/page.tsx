@@ -122,19 +122,28 @@ export default function OnboardingPage() {
 
             <div className="w-full max-w-md relative z-10">
                 {/* Progress */}
-                <div className="flex items-center justify-center gap-4 mb-8">
-                    {[1, 2].map((s) => (
-                        <div key={s} className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
-                                ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
-                                : 'bg-gray-100 dark:bg-white/10 text-gray-500'
-                                }`}>
-                                {step > s ? <Check className="w-4 h-4" /> : s}
+                {(() => {
+                    const stepLabels = ['Target Role', 'Institution'];
+                    return (
+                        <div className="mb-8">
+                            <p className="text-center text-xs font-semibold text-gray-400 dark:text-gray-500 mb-3 tracking-wide uppercase">
+                                Step {step} of 2 — {stepLabels[step - 1]}
+                            </p>
+                            <div className="flex items-center justify-center gap-4">
+                                {[1, 2].map((s) => (
+                                    <div key={s} className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s
+                                            ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white'
+                                            : 'bg-gray-100 dark:bg-white/10 text-gray-500'}`}>
+                                            {step > s ? <Check className="w-4 h-4" /> : s}
+                                        </div>
+                                        {s < 2 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-gray-100 dark:bg-white/10'}`} />}
+                                    </div>
+                                ))}
                             </div>
-                            {s < 2 && <div className={`w-8 h-0.5 ${step > s ? 'bg-indigo-500' : 'bg-gray-100 dark:bg-white/10'}`} />}
                         </div>
-                    ))}
-                </div>
+                    );
+                })()}
 
                 <motion.div className="p-8 rounded-2xl glass-premium" layout>
                     <AnimatePresence mode="wait">

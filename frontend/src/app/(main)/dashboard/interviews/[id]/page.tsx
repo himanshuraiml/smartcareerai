@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-    ArrowLeft, Play, Send, Loader2, CheckCircle, Clock,
-    MessageSquare, Award, RefreshCw, Mic, Square, Pause, RotateCcw, Video, VideoOff, AlertTriangle
+    ArrowLeft, Play, Send, Loader2, CheckCircle,
+    MessageSquare, RefreshCw, Mic, Square, Pause, RotateCcw, Video, VideoOff, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
 import { useAudioRecorder, formatTime } from '@/hooks/useAudioRecorder';
 import { useVideoRecorder, formatVideoTime } from '@/hooks/useVideoRecorder';
-import ReactMarkdown from 'react-markdown';
+import AIDisclaimer from '@/components/ui/AIDisclaimer';
 
 
 interface QuestionMetrics {
@@ -61,8 +61,6 @@ interface InterviewSession {
     questions: Question[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
 // Normalize and validate UUID format
 const normalizeUUID = (id: string | string[] | undefined): string | null => {
     if (!id || Array.isArray(id)) return null;
@@ -92,6 +90,18 @@ export default function InterviewRoomPage() {
     const [lastFeedback, setLastFeedback] = useState<{ score: number; feedback: string } | null>(null);
     const [audioAnalysis, setAudioAnalysis] = useState<AudioAnalysis | null>(null);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
+
+    // Setup wizard state (used when session.status === 'PENDING')
+    const [setupStep, setSetupStep] = useState(1);
+    const [micStatus, setMicStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+    const [camStatus, setCamStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const [wpm, setWpm] = useState(0);
+    const [fillerCount, setFillerCount] = useState(0);
+    const [isWarmupListening, setIsWarmupListening] = useState(false);
+    const warmupRecognitionRef = useRef<any>(null);
+    const warmupStartRef = useRef<number>(0);
 
     // Audio recording hook
     const {
@@ -178,9 +188,70 @@ export default function InterviewRoomPage() {
         }
     }, [user, sessionId, params.id, fetchSession]);
 
+    const checkDevices = useCallback(async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            streamRef.current = stream;
+            if (videoRef.current) videoRef.current.srcObject = stream;
+            setMicStatus('ok');
+            setCamStatus('ok');
+        } catch {
+            setMicStatus('error');
+            setCamStatus('error');
+        }
+    }, []);
+
+    useEffect(() => {
+        if (session?.status === 'PENDING' && setupStep === 1) checkDevices();
+    }, [session?.status, setupStep, checkDevices]);
+
+    const startWarmup = useCallback(() => {
+        const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SR) return;
+        const rec = new SR();
+        rec.continuous = true;
+        rec.interimResults = true;
+        warmupStartRef.current = Date.now();
+        setWpm(0);
+        setFillerCount(0);
+        setIsWarmupListening(true);
+        rec.onresult = (event: any) => {
+            let full = '';
+            for (let i = 0; i < event.results.length; i++) full += event.results[i][0].transcript;
+            const words = full.trim().split(/\s+/).filter(Boolean);
+            const elapsed = (Date.now() - warmupStartRef.current) / 60000;
+            if (elapsed > 0.05) setWpm(Math.round(words.length / elapsed));
+            const fillers = ['um', 'uh', 'like', 'you know', 'basically', 'literally'];
+            setFillerCount(fillers.filter(f => full.toLowerCase().includes(f)).length);
+        };
+        rec.start();
+        warmupRecognitionRef.current = rec;
+    }, []);
+
+    const stopWarmup = useCallback(() => {
+        warmupRecognitionRef.current?.stop();
+        setIsWarmupListening(false);
+    }, []);
+
+    useEffect(() => {
+        if (session?.status === 'PENDING') {
+            if (setupStep === 2) startWarmup();
+            else stopWarmup();
+        }
+    }, [session?.status, setupStep, startWarmup, stopWarmup]);
+
+    useEffect(() => {
+        return () => {
+            streamRef.current?.getTracks().forEach(t => t.stop());
+            warmupRecognitionRef.current?.stop();
+        };
+    }, []);
+
     const startInterview = async () => {
         if (!sessionId) return;
         setStarting(true);
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        warmupRecognitionRef.current?.stop();
         try {
             const response = await authFetch(`/interviews/sessions/${sessionId}/start`, {
                 method: 'POST'
@@ -430,12 +501,8 @@ export default function InterviewRoomPage() {
         );
     }
 
-    // Completed interview view - Rich Feedback UI
+    // Completed interview view — Session Summary
     if (session.status === 'COMPLETED') {
-        // Calculate metrics from session data
-        const avgScore = session.questions.reduce((sum, q) => sum + (q.score || 0), 0) / session.questions.length;
-
-        // Calculate average metrics from all questions
         const questionsWithMetrics = session.questions.filter(q => q.metrics);
         const avgClarity = questionsWithMetrics.length > 0
             ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.clarity || 0), 0) / questionsWithMetrics.length)
@@ -450,440 +517,577 @@ export default function InterviewRoomPage() {
             ? Math.round(questionsWithMetrics.reduce((sum, q) => sum + (q.metrics?.wpm || 0), 0) / questionsWithMetrics.filter(q => q.metrics?.wpm).length)
             : 0;
 
-        // Verbal fluency data for radar chart - using actual metrics
-        const verbalFluencyData = [
-            avgWpm > 0 ? Math.min(100, Math.round((avgWpm / 150) * 100)) : 70, // pace (normalized to 150 wpm ideal)
-            avgConfidence, // tone/confidence
-            avgClarity, // fluency/clarity
-            Math.round((avgClarity + avgConfidence) / 2), // pauses (derived)
-            avgRelevance // words/relevance
-        ];
-        const verbalFluencyLabels = ['pace', 'tone', 'fluency', 'pause', 'words'];
+        const overallScore = session.overallScore
+            ?? Math.round(session.questions.reduce((s, q) => s + (q.score || 0), 0) / (session.questions.length || 1));
+        const commScore = Math.round(avgConfidence * 0.45 + avgClarity * 0.35 + avgRelevance * 0.2);
+        const techScore = Math.round(avgRelevance * 0.45 + avgClarity * 0.35 + avgConfidence * 0.2);
+
+        const overallVerdict = overallScore >= 80 ? 'Excellent' : overallScore >= 65 ? 'Strong' : overallScore >= 50 ? 'Good' : 'Needs Work';
+        const overallVerdictColor = overallScore >= 80 ? '#10b981' : overallScore >= 65 ? '#0d9488' : overallScore >= 50 ? '#f59e0b' : '#ef4444';
+
+        const durationMs = session.completedAt && session.startedAt
+            ? new Date(session.completedAt).getTime() - new Date(session.startedAt).getTime() : null;
+        const durationStr = durationMs
+            ? `${Math.floor(durationMs / 60000)} min ${Math.floor((durationMs % 60000) / 1000)} sec` : null;
+
+        const weakAreas: string[] = [];
+        session.questions.forEach(q => {
+            if ((q.score || 0) < 65) {
+                const area = q.questionType === 'technical' ? 'Technical Concepts'
+                    : q.questionType === 'behavioral' ? 'STAR Method'
+                    : q.questionType === 'hr' ? 'Self-Awareness'
+                    : 'Depth & Trade-offs';
+                if (!weakAreas.includes(area)) weakAreas.push(area);
+            }
+        });
+
+        const MAX_BAR_H = 130;
+        const barGradient = (score: number) =>
+            score >= 75 ? 'linear-gradient(to top, #10b981, rgba(16,185,129,0.6))'
+            : score >= 50 ? 'linear-gradient(to top, #f59e0b, rgba(245,158,11,0.6))'
+            : 'linear-gradient(to top, #ef4444, rgba(239,68,68,0.55))';
+        const barTextCol = (score: number) =>
+            score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#f87171';
+
+        const selectedQ = session.questions[selectedQuestionIndex];
 
         return (
-            <div className="space-y-6">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white">Dashboard</Link>
-                    <span>›</span>
-                    <Link href="/dashboard/interviews" className="hover:text-gray-900 dark:hover:text-white">My Interviews</Link>
-                    <span>›</span>
-                    <span className="text-gray-900 dark:text-white">{session.targetRole}</span>
+            <div style={{ background: 'radial-gradient(ellipse at 70% 0%, rgba(13,148,136,0.06) 0%, transparent 55%)', minHeight: '100vh', margin: '-24px -32px', padding: '32px', fontFamily: "'DM Sans', sans-serif", color: 'white' }}>
+                <style>{`
+                    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+                    @keyframes cs4BarRise { from { height: 0; opacity: 0; } to { opacity: 1; } }
+                    @keyframes cs4Count { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+                    @keyframes cs4Live { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                    .cs4-bar { animation: cs4BarRise 0.9s cubic-bezier(0.16,1,0.3,1) forwards; }
+                    .cs4-count { animation: cs4Count 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
+                    .cs4-live { animation: cs4Live 1.4s ease-in-out infinite; }
+                    .cs4-glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.07); }
+                `}</style>
+                <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+
+                {/* ── Header ── */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, marginBottom: 32 }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <Link href="/dashboard/interviews" style={{ color: '#6b7280', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, textDecoration: 'none' }}>
+                                <ArrowLeft style={{ width: 14, height: 14 }} /> Interviews
+                            </Link>
+                            <span style={{ color: '#374151' }}>›</span>
+                            <span style={{ padding: '3px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', fontSize: 12, fontWeight: 600, color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                <span className="cs4-live" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block', flexShrink: 0 }} />
+                                Interview Complete
+                            </span>
+                            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                                {session.targetRole} · {session.type} · {session.difficulty}
+                            </span>
+                        </div>
+                        <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 30, fontWeight: 800, color: 'white', margin: '0 0 4px' }}>Session Summary</h1>
+                        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                            {durationStr ? `Completed in ${durationStr} · ` : ''}{session.questions.length} questions answered
+                        </p>
+                        <AIDisclaimer className="mt-4" />
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                        <button style={{ padding: '10px 18px', borderRadius: 11, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, fontFamily: 'DM Sans, sans-serif' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download PDF
+                        </button>
+                        <button onClick={() => router.push('/dashboard/interviews')} style={{ padding: '10px 18px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 4px 16px rgba(37,99,235,0.3)', fontFamily: 'DM Sans, sans-serif' }}>
+                            <RefreshCw style={{ width: 13, height: 13 }} /> Retry Weak Questions
+                        </button>
+                    </div>
                 </div>
 
-                {/* Performance Breakdown */}
-                <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Performance Breakdown</h2>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">An in-depth look at your mock interview performance metrics.</p>
+                {/* ── 3-metric row ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Score Card */}
-                        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/20">
-                            <div className="flex items-center justify-center mb-4">
-                                <div className="relative">
-                                    <div className="w-32 h-32 rounded-full border-8 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
-                                        <span className={`text-4xl font-bold ${getScoreColor(session.overallScore || 0)}`}>
-                                            {session.overallScore || 0}/100
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-center text-teal-400 font-medium">
-                                {(session.overallScore || 0) >= 80 ? 'Excellent' : (session.overallScore || 0) >= 60 ? 'Good' : 'Needs Improvement'}
-                            </p>
-                            {session.cutoffScore && (
-                                <div className="mt-4 p-2 rounded-lg bg-white/10 text-center border border-white/20">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Passing Cutoff</p>
-                                    <p className="text-xl font-black text-white">{session.cutoffScore}%</p>
-                                    <p className={`text-xs mt-1 font-bold ${(session.overallScore || 0) >= (session.cutoffScore || 0) ? 'text-green-400' : 'text-red-400'}`}>
-                                        {(session.overallScore || 0) >= (session.cutoffScore || 0) ? 'PASSED' : 'NOT PASSED'}
-                                    </p>
-                                </div>
-                            )}
-                            <p className="text-center text-gray-500 text-sm mt-1">Foundation builder ⓘ</p>
+                    {/* Overall Score */}
+                    <div className="cs4-glass" style={{ borderRadius: 22, padding: 28, position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #2563eb, #0d9488)' }} />
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Overall Score</div>
+                        <div className="cs4-count" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
+                            <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 56, fontWeight: 800, lineHeight: 1, color: 'white' }}>{overallScore}</span>
+                            <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.25)', paddingBottom: 8 }}>/100</span>
                         </div>
-
-                        {/* Recruiter Perspective & Knowledge */}
-                        <div className="lg:col-span-2 space-y-4">
-                            <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                                <h3 className="text-gray-900 dark:text-white font-medium mb-2">Recruiter&apos;s Perspective</h3>
-                                <div className="text-gray-500 dark:text-gray-400 text-sm prose prose-sm dark:prose-invert max-w-none
-                                               prose-p:my-2 prose-p:leading-relaxed
-                                               prose-strong:text-gray-900 dark:prose-strong:text-white prose-strong:font-semibold
-                                               prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
-                                               prose-li:my-1">
-                                    <ReactMarkdown>
-                                        {session.feedback || 'Complete the interview to receive detailed feedback.'}
-                                    </ReactMarkdown>
-                                </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                                <div style={{ width: `${overallScore}%`, height: '100%', background: 'linear-gradient(90deg, #2563eb, #0d9488)', borderRadius: 2, transition: 'width 1.2s ease' }} />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Knowledge & Domain Understanding</h3>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                        Average technical score: {Math.round(avgScore)}%
-                                    </p>
-                                </div>
-
-                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                                    <h3 className="text-gray-900 dark:text-white font-medium mb-2">Areas of Improvement</h3>
-                                    <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-teal-400">•</span>
-                                            Provide more detailed answers
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-teal-400">•</span>
-                                            Focus on clarity and depth
-                                        </li>
-                                    </ul>
-                                </div>
+                            <span style={{ fontSize: 12, color: overallVerdictColor, fontWeight: 600 }}>{overallVerdict}</span>
+                        </div>
+                        {session.cutoffScore && (
+                            <div style={{ marginTop: 12, padding: '6px 12px', borderRadius: 8, background: overallScore >= session.cutoffScore ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${overallScore >= session.cutoffScore ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Cutoff {session.cutoffScore}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: overallScore >= session.cutoffScore ? '#10b981' : '#f87171' }}>{overallScore >= session.cutoffScore ? 'PASSED' : 'NOT PASSED'}</span>
                             </div>
+                        )}
+                    </div>
+
+                    {/* Communication */}
+                    <div className="cs4-glass" style={{ borderRadius: 22, padding: 28 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Communication</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 16 }}>
+                            <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 56, fontWeight: 800, lineHeight: 1, color: 'white' }}>{commScore}</span>
+                            <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.25)', paddingBottom: 8 }}>/100</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {[
+                                { label: 'Speaking pace', value: avgWpm > 0 ? `✓ ${avgWpm} avg WPM` : '— not measured', good: avgWpm >= 100 && avgWpm <= 160 },
+                                { label: 'Confidence', value: `${avgConfidence >= 70 ? '✓' : '↑'} ${avgConfidence}/100`, good: avgConfidence >= 70 },
+                                { label: 'Clarity', value: `${avgClarity >= 70 ? '✓' : '↑'} ${avgClarity}/100`, good: avgClarity >= 70 },
+                            ].map(row => (
+                                <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.45)' }}>{row.label}</span>
+                                    <span style={{ color: row.good ? '#10b981' : '#f59e0b', fontWeight: 600 }}>{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Technical Depth */}
+                    <div className="cs4-glass" style={{ borderRadius: 22, padding: 28 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Technical Depth</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 16 }}>
+                            <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 56, fontWeight: 800, lineHeight: 1, color: 'white' }}>{techScore}</span>
+                            <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.25)', paddingBottom: 8 }}>/100</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {[
+                                { label: 'Core concepts', value: `${avgRelevance}/100`, good: avgRelevance >= 70 },
+                                { label: 'Depth & trade-offs', value: `${avgClarity}/100`, good: avgClarity >= 70 },
+                                { label: 'Examples used', value: `${Math.round(avgConfidence * 0.7)}/100`, good: avgConfidence >= 65 },
+                            ].map(row => (
+                                <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.45)' }}>{row.label}</span>
+                                    <span style={{ color: row.good ? '#10b981' : row.value.startsWith('4') || row.value.startsWith('3') ? '#f87171' : '#f59e0b', fontWeight: 600 }}>{row.value}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Analytics Section */}
-                <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">An in-depth look at your mock interview performance metrics.</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Content Relevance Score */}
-                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Content Relevance Score per Question</h3>
-                            <p className="text-gray-500 text-xs mb-4">Answer quality and topic alignment rating</p>
-                            <div className="space-y-2">
-                                {session.questions.map((q, i) => (
-                                    <div key={q.id} className="flex items-center gap-2">
-                                        <span className="text-gray-500 dark:text-gray-400 text-xs w-6">Q{i + 1}</span>
-                                        <div className="flex-1 h-4 bg-gray-200 dark:bg-gray-900 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-teal-500 rounded-full"
-                                                style={{ width: `${(q.score || 0)}%` }}
-                                            />
+                {/* ── Main 2-col: Bar chart + Sidebar ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start', marginBottom: 24 }}>
+                    <div>
+                        {/* Bar chart */}
+                        <div className="cs4-glass" style={{ borderRadius: 22, padding: 28, marginBottom: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                                <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, fontWeight: 700 }}>Question Scores</div>
+                                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                                    {([['#10b981', 'Good (≥75)'], ['#f59e0b', 'Fair (50–74)'], ['#f87171', 'Needs work']] as [string, string][]).map(([c, l]) => (
+                                        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <span style={{ width: 8, height: 8, borderRadius: 2, background: c, display: 'inline-block' }} />{l}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', height: 140, padding: '0 8px' }}>
+                                {session.questions.map((q, i) => {
+                                    const sc = q.score || 0;
+                                    const h = Math.max(4, Math.round((sc / 100) * MAX_BAR_H));
+                                    return (
+                                        <div key={q.id} onClick={() => setSelectedQuestionIndex(i)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                                            <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 12, fontWeight: 600, color: barTextCol(sc) }}>{sc}</span>
+                                            <div className="cs4-bar" style={{ width: '100%', borderRadius: '6px 6px 0 0', background: barGradient(sc), height: h, animationDelay: `${i * 0.06}s`, outline: i === selectedQuestionIndex ? '1.5px solid rgba(255,255,255,0.3)' : 'none' }} />
+                                            <span style={{ fontSize: 11, color: i === selectedQuestionIndex ? '#93c5fd' : 'rgba(255,255,255,0.35)', fontWeight: i === selectedQuestionIndex ? 600 : 400 }}>Q{i + 1}</span>
                                         </div>
-                                        <span className="text-gray-900 dark:text-white text-xs w-8 text-right">{q.score || 0}</span>
+                                    );
+                                })}
+                            </div>
+                            <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>Tap any bar to review that question&apos;s feedback</div>
+                        </div>
+
+                        {/* Weak area tags */}
+                        <div className="cs4-glass" style={{ borderRadius: 18, padding: 22 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Practice these next</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                {(weakAreas.length > 0 ? weakAreas : ['Concrete Examples', 'Depth & Trade-offs']).map((area, i) => (
+                                    <span key={area} style={{ padding: '8px 16px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 500, background: i % 2 === 0 ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.08)', border: i % 2 === 0 ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(245,158,11,0.2)', color: i % 2 === 0 ? 'rgba(239,68,68,0.9)' : '#f59e0b' }}>{area} →</span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right sidebar */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div className="cs4-glass" style={{ borderRadius: 18, padding: 22 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>What to study next</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                {[
+                                    { bg: 'rgba(239,68,68,0.07)', border: 'rgba(239,68,68,0.12)', ibg: 'rgba(239,68,68,0.15)', emoji: '🖥️', title: 'System Design Patterns', sub: 'Rate limiting, caching, load balancing' },
+                                    { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.12)', ibg: 'rgba(245,158,11,0.15)', emoji: '⭐', title: 'STAR Method Practice', sub: 'Quantify outcomes in every answer' },
+                                    { bg: 'rgba(37,99,235,0.07)', border: 'rgba(37,99,235,0.12)', ibg: 'rgba(37,99,235,0.15)', emoji: '📈', title: 'Failure Mode Analysis', sub: 'What happens when things break?' },
+                                ].map(item => (
+                                    <div key={item.title} style={{ display: 'flex', gap: 12, padding: 14, borderRadius: 12, cursor: 'pointer', background: item.bg, border: `1px solid ${item.border}` }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: item.ibg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{item.emoji}</div>
+                                        <div>
+                                            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>{item.title}</div>
+                                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{item.sub}</div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-
-                        {/* Verbal Fluency Index - Radar */}
-                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Verbal Fluency Index</h3>
-                            <p className="text-gray-500 text-xs mb-4">Multi-dimensional speech quality analysis</p>
-                            <div className="aspect-square max-w-[200px] mx-auto">
-                                <svg viewBox="0 0 200 200" className="w-full h-full">
-                                    {/* Grid */}
-                                    {[20, 40, 60, 80, 100].map((level) => (
-                                        <polygon
-                                            key={level}
-                                            points={verbalFluencyLabels.map((_, i) => {
-                                                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                                                const r = (level / 100) * 70;
-                                                return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
-                                            }).join(' ')}
-                                            fill="none"
-                                            stroke="#1a2530"
-                                            strokeWidth="1"
-                                        />
-                                    ))}
-                                    {/* Data */}
-                                    <polygon
-                                        points={verbalFluencyData.map((value, i) => {
-                                            const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                                            const r = (value / 100) * 70;
-                                            return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
-                                        }).join(' ')}
-                                        fill="rgba(20, 184, 166, 0.2)"
-                                        stroke="#14b8a6"
-                                        strokeWidth="2"
-                                    />
-                                    {/* Labels */}
-                                    {verbalFluencyLabels.map((label, i) => {
-                                        const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                                        const r = 90;
-                                        return (
-                                            <text
-                                                key={i}
-                                                x={100 + r * Math.cos(angle)}
-                                                y={100 + r * Math.sin(angle)}
-                                                fill="#9ca3af"
-                                                fontSize="10"
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                            >
-                                                {label}
-                                            </text>
-                                        );
-                                    })}
-                                </svg>
-                            </div>
-                        </div>
-
-                        {/* Confidence & Clarity Index - Gauge */}
-                        <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                            <h3 className="text-gray-900 dark:text-white font-medium mb-2">Confidence & Clarity Index</h3>
-                            <p className="text-gray-500 text-xs mb-4">Overall communication effectiveness score</p>
-                            <div className="relative aspect-[2/1] max-w-[200px] mx-auto">
-                                <svg viewBox="0 0 200 100" className="w-full h-full">
-                                    <path
-                                        d="M 20 100 A 80 80 0 0 1 180 100"
-                                        fill="none"
-                                        stroke="#1a2530"
-                                        strokeWidth="12"
-                                        strokeLinecap="round"
-                                    />
-                                    <path
-                                        d="M 20 100 A 80 80 0 0 1 180 100"
-                                        fill="none"
-                                        stroke="#14b8a6"
-                                        strokeWidth="12"
-                                        strokeLinecap="round"
-                                        strokeDasharray={`${((session.overallScore || 0) / 100) * 251.2} 251.2`}
-                                    />
-                                    <circle cx="180" cy="100" r="8" fill="#14b8a6" />
-                                </svg>
-                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{session.overallScore || 0}%</p>
-                                </div>
-                            </div>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>Share Result</button>
+                            <button onClick={() => router.push('/dashboard/interviews')} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>New Interview</button>
                         </div>
                     </div>
                 </div>
 
-                {/* Question-wise Feedback */}
-                <div className="p-6 rounded-2xl glass">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Question wise feedback</h2>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">Detailed AI analysis of your responses with actionable insights for improvement</p>
+                {/* ── Selected Question Detail ── */}
+                {selectedQ && (
+                    <div className="cs4-glass" style={{ borderRadius: 22, padding: 28 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                            <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700 }}>Q{selectedQuestionIndex + 1} Feedback</div>
+                            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.25)', color: '#93c5fd' }}>{selectedQ.questionType}</span>
+                            <span style={{ marginLeft: 'auto', fontFamily: 'DM Mono, monospace', fontSize: 20, fontWeight: 700, color: barTextCol(selectedQ.score || 0) }}>{selectedQ.score || 0}/100</span>
+                        </div>
 
-                    {/* Question Tabs */}
-                    <div className="flex flex-wrap gap-2 mb-6">
-                        {session.questions.map((q, i) => (
-                            <button
-                                key={q.id}
-                                onClick={() => setSelectedQuestionIndex(i)}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all ${i === selectedQuestionIndex
-                                    ? 'bg-teal-500 text-white'
-                                    : q.userAnswer
-                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-500'
-                                    }`}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
-                    </div>
+                        <div style={{ marginBottom: 20, padding: '14px 18px', borderRadius: 12, background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.15)' }}>
+                            <p style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0, lineHeight: 1.6 }}>{selectedQ.questionText}</p>
+                        </div>
 
-                    {/* Selected Question Content */}
-                    {session.questions[selectedQuestionIndex] && (
-                        <div className="space-y-6">
-                            {/* Question */}
-                            <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                                <p className="text-gray-900 dark:text-white font-medium">{session.questions[selectedQuestionIndex].questionText}</p>
-                            </div>
-
-                            {/* Skills Badge - Based on question type */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                             <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Skill Assessed</p>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
-                                        {session.questions[selectedQuestionIndex].questionType}
-                                    </span>
-                                    <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
-                                        communication
-                                    </span>
-                                    {session.questions[selectedQuestionIndex].questionType === 'technical' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
-                                            problem solving
-                                        </span>
-                                    )}
-                                    {session.questions[selectedQuestionIndex].questionType === 'behavioral' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
-                                            situational awareness
-                                        </span>
-                                    )}
-                                    {session.questions[selectedQuestionIndex].questionType === 'hr' && (
-                                        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10">
-                                            self-awareness
-                                        </span>
-                                    )}
+                                <p style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Your Answer</p>
+                                <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', minHeight: 100 }}>
+                                    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, margin: 0 }}>{selectedQ.userAnswer || 'No answer recorded'}</p>
                                 </div>
                             </div>
-
-                            {/* Your Answer */}
                             <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Your Answer</p>
-                                <div className="p-4 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5">
-                                    <p className="text-gray-600 dark:text-gray-300">
-                                        {session.questions[selectedQuestionIndex].userAnswer || 'No answer recorded'}
+                                <p style={{ fontSize: 12, color: '#0d9488', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Model Answer</p>
+                                <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(13,148,136,0.06)', border: '1px solid rgba(13,148,136,0.15)', minHeight: 100 }}>
+                                    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, margin: 0 }}>
+                                        {selectedQ.improvedAnswer || 'A well-structured response includes specific examples, demonstrates clear methodology, and shows awareness of best practices.'}
                                     </p>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Ideal Answer */}
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Ideal Answer</p>
-                                <div className="p-4 rounded-xl bg-teal-500/10 border border-teal-500/20">
-                                    <p className="text-gray-600 dark:text-gray-300">
-                                        {session.questions[selectedQuestionIndex].improvedAnswer ||
-                                            'A well-structured response would include specific examples, demonstrate clear problem-solving methodology, and show awareness of best practices in the field.'}
-                                    </p>
-                                    {session.questions[selectedQuestionIndex].improvedAnswer && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                                                {session.questions[selectedQuestionIndex].bankQuestionId
-                                                    ? '✓ Expert-curated ideal response'
-                                                    : '✓ AI-generated ideal response'}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {!session.questions[selectedQuestionIndex].improvedAnswer && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                                                ✓ clear structure
-                                            </span>
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
-                                                ✓ examples
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                        {selectedQ.feedback && (
+                            <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', marginBottom: 16 }}>
+                                <p style={{ fontSize: 11, fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>💡 AI Coach</p>
+                                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: 0 }}>{selectedQ.feedback}</p>
                             </div>
+                        )}
 
-                            {/* Verbal Fluency Metrics */}
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Answer Quality Metrics</p>
-                                {session.questions[selectedQuestionIndex].metrics ? (
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
-                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Clarity</p>
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.clarity || 0}</p>
-                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
-                                                <div
-                                                    className="h-full bg-teal-500 rounded-full"
-                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.clarity || 0}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
-                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Relevance</p>
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.relevance || 0}</p>
-                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
-                                                <div
-                                                    className="h-full bg-teal-500 rounded-full"
-                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.relevance || 0}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-white/5 text-center">
-                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Confidence</p>
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{session.questions[selectedQuestionIndex].metrics?.confidence || 0}</p>
-                                            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-2">
-                                                <div
-                                                    className="h-full bg-teal-500 rounded-full"
-                                                    style={{ width: `${session.questions[selectedQuestionIndex].metrics?.confidence || 0}%` }}
-                                                />
-                                            </div>
+                        {selectedQ.metrics && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+                                {([['Clarity', selectedQ.metrics.clarity], ['Relevance', selectedQ.metrics.relevance], ['Confidence', selectedQ.metrics.confidence]] as [string, number | undefined][]).map(([label, val]) => (
+                                    <div key={label} style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+                                        <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+                                        <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 22, fontWeight: 700, margin: 0, color: (val || 0) >= 70 ? '#10b981' : (val || 0) >= 50 ? '#f59e0b' : '#f87171' }}>{val || 0}</p>
+                                        <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', marginTop: 8 }}>
+                                            <div style={{ width: `${val || 0}%`, height: '100%', background: (val || 0) >= 70 ? '#10b981' : (val || 0) >= 50 ? '#f59e0b' : '#ef4444', borderRadius: 2 }} />
                                         </div>
                                     </div>
-                                ) : (
-                                    <p className="text-gray-500 text-sm">Metrics not available for this question.</p>
-                                )}
+                                ))}
                             </div>
+                        )}
 
-                            {/* Feedback */}
-                            {session.questions[selectedQuestionIndex].feedback && (
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">How can You Improve?</p>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm">{session.questions[selectedQuestionIndex].feedback}</p>
-                                </div>
-                            )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <button onClick={() => setSelectedQuestionIndex(Math.max(0, selectedQuestionIndex - 1))} disabled={selectedQuestionIndex === 0} style={{ padding: '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: selectedQuestionIndex === 0 ? '#374151' : 'rgba(255,255,255,0.6)', fontSize: 13, cursor: selectedQuestionIndex === 0 ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif' }}>← Previous</button>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                {session.questions.map((q, i) => (
+                                    <button key={i} onClick={() => setSelectedQuestionIndex(i)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: i === selectedQuestionIndex ? '#2563eb' : (q.score || 0) >= 75 ? 'rgba(16,185,129,0.2)' : (q.score || 0) >= 50 ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)', color: i === selectedQuestionIndex ? 'white' : barTextCol(q.score || 0) }}>{i + 1}</button>
+                                ))}
+                            </div>
+                            <button onClick={() => setSelectedQuestionIndex(Math.min(session.questions.length - 1, selectedQuestionIndex + 1))} disabled={selectedQuestionIndex === session.questions.length - 1} style={{ padding: '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: selectedQuestionIndex === session.questions.length - 1 ? '#374151' : 'rgba(255,255,255,0.6)', fontSize: 13, cursor: selectedQuestionIndex === session.questions.length - 1 ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif' }}>Next →</button>
                         </div>
-                    )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4">
-                    <Link
-                        href="/dashboard/interviews"
-                        className="flex-1 text-center px-4 py-3 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-                    >
-                        Back to Interviews
-                    </Link>
-                    <button
-                        onClick={() => router.push('/dashboard/interviews')}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium"
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                        Try Another Interview
-                    </button>
+                    </div>
+                )}
                 </div>
             </div>
         );
     }
 
-    // Pending interview - need to start
+    // Pending interview — 3-step setup wizard
     if (session.status === 'PENDING') {
+        const qCount = session.questions?.length || (session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10);
+        const diffColor = session.difficulty === 'EASY' ? '#10B981' : session.difficulty === 'HARD' ? '#EF4444' : '#F59E0B';
+        const estMinutes = qCount * 3;
+
+        const WARMUP_PHRASE = "I'm a full-stack developer with experience building scalable APIs and modern web applications.";
+        const wpmColor = wpm === 0 ? 'rgba(255,255,255,.4)' : wpm >= 120 && wpm <= 160 ? '#2DD4BF' : '#F59E0B';
+        const wpmLabel = wpm === 0 ? '—' : wpm >= 120 && wpm <= 160 ? '✓ Ideal pace' : wpm < 120 ? '↑ Speak faster' : '↓ Slow down';
+        const clarityScore = wpm === 0 ? null : Math.max(50, Math.min(100, 100 - fillerCount * 8 - (wpm > 165 ? 12 : 0) - (wpm < 100 ? 15 : 0)));
+        const clarityColor = clarityScore === null ? 'rgba(255,255,255,.4)' : clarityScore >= 80 ? '#2DD4BF' : '#F59E0B';
+        const clarityFeedback = clarityScore === null ? 'Start speaking' : clarityScore >= 80 ? '✓ Clear' : '↑ Enunciate more';
+
+        const MB_CLASSES = ['sw-mb1','sw-mb2','sw-mb3','sw-mb4','sw-mb5','sw-mb6','sw-mb7','sw-mb8','sw-mb9','sw-mb10','sw-mb11','sw-mb12'];
+
         return (
-            <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard/interviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ready to Start</h1>
-                        <p className="text-gray-500 dark:text-gray-400">{session.type} Interview - {session.targetRole}</p>
+            <>
+                <style>{`
+                    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+                    @keyframes sw-mb1{0%,100%{height:5px}50%{height:26px}}
+                    @keyframes sw-mb2{0%,100%{height:16px}50%{height:7px}}
+                    @keyframes sw-mb3{0%,100%{height:22px}40%{height:6px}}
+                    @keyframes sw-mb4{0%,100%{height:8px}60%{height:30px}}
+                    @keyframes sw-mb5{0%,100%{height:18px}50%{height:6px}}
+                    @keyframes sw-mb6{0%,100%{height:11px}45%{height:24px}}
+                    @keyframes sw-mb7{0%,100%{height:20px}55%{height:8px}}
+                    @keyframes sw-mb8{0%,100%{height:6px}50%{height:22px}}
+                    @keyframes sw-mb9{0%,100%{height:14px}50%{height:28px}}
+                    @keyframes sw-mb10{0%,100%{height:9px}50%{height:18px}}
+                    @keyframes sw-mb11{0%,100%{height:20px}50%{height:5px}}
+                    @keyframes sw-mb12{0%,100%{height:12px}50%{height:25px}}
+                    .sw-mb1{animation:sw-mb1 .8s ease-in-out infinite}
+                    .sw-mb2{animation:sw-mb2 .65s ease-in-out infinite .1s}
+                    .sw-mb3{animation:sw-mb3 .9s ease-in-out infinite .2s}
+                    .sw-mb4{animation:sw-mb4 .7s ease-in-out infinite .05s}
+                    .sw-mb5{animation:sw-mb5 1s ease-in-out infinite .15s}
+                    .sw-mb6{animation:sw-mb6 .75s ease-in-out infinite .25s}
+                    .sw-mb7{animation:sw-mb7 .85s ease-in-out infinite .1s}
+                    .sw-mb8{animation:sw-mb8 .6s ease-in-out infinite .3s}
+                    .sw-mb9{animation:sw-mb9 .95s ease-in-out infinite .08s}
+                    .sw-mb10{animation:sw-mb10 .78s ease-in-out infinite .18s}
+                    .sw-mb11{animation:sw-mb11 .68s ease-in-out infinite .22s}
+                    .sw-mb12{animation:sw-mb12 .88s ease-in-out infinite .12s}
+                    @keyframes sw-live{0%,100%{opacity:1}50%{opacity:.3}}
+                    .sw-live{animation:sw-live 1.4s ease-in-out infinite}
+                    @keyframes sw-fadeup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+                    .sw-fadeup{animation:sw-fadeup .45s ease forwards}
+                    .sw-glass{background:rgba(255,255,255,.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.07)}
+                    .sw-sora{font-family:'Sora',sans-serif}
+                    .sw-mono{font-family:'DM Mono',monospace}
+                `}</style>
+
+                <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%,rgba(37,99,235,.08) 0%,transparent 65%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', fontFamily: "'DM Sans',sans-serif", color: '#fff', margin: '-24px -32px' }}>
+
+                    {/* Step indicator */}
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 48, width: '100%', maxWidth: 480 }}>
+                        {[{n:1,label:'Device Check'},{n:2,label:'Warm-up'},{n:3,label:'Interview Brief'}].map((s, i) => (
+                            <React.Fragment key={s.n}>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: s.n < setupStep ? 'pointer' : 'default' }} onClick={() => s.n < setupStep && setSetupStep(s.n)}>
+                                    <div style={{
+                                        width: 34, height: 34, borderRadius: '50%',
+                                        background: setupStep >= s.n ? '#2563EB' : 'rgba(255,255,255,.07)',
+                                        border: setupStep >= s.n ? 'none' : '1px solid rgba(255,255,255,.12)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: 13, fontWeight: 700,
+                                        color: setupStep >= s.n ? '#fff' : 'rgba(255,255,255,.35)',
+                                        transition: 'all .3s',
+                                    }} className="sw-sora">{setupStep > s.n ? '✓' : s.n}</div>
+                                    <span style={{
+                                        position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
+                                        whiteSpace: 'nowrap', fontSize: 11, fontWeight: 500,
+                                        color: setupStep >= s.n ? '#3B82F6' : 'rgba(255,255,255,.25)',
+                                    }}>{s.label}</span>
+                                </div>
+                                {i < 2 && <div style={{ flex: 1, height: 1, margin: '0 4px', background: setupStep > s.n ? '#2563EB' : 'rgba(255,255,255,.08)', transition: 'all .4s' }} />}
+                            </React.Fragment>
+                        ))}
+                    </div>
+
+                    {/* Step content */}
+                    <div style={{ width: '100%', maxWidth: 640 }}>
+
+                        {/* ── STEP 1: Device Check ── */}
+                        {setupStep === 1 && (
+                            <div className="sw-fadeup">
+                                <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                                    <h1 className="sw-sora" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Check your setup</h1>
+                                    <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 15 }}>Make sure your devices are working before we start</p>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                                    {/* Mic */}
+                                    <div className="sw-glass" style={{ borderRadius: 20, padding: 24 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(13,148,136,.15)', border: '1px solid rgba(13,148,136,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: 14, fontWeight: 600 }}>Microphone</div>
+                                                <div style={{ fontSize: 11, color: micStatus === 'ok' ? '#2DD4BF' : micStatus === 'error' ? '#EF4444' : 'rgba(255,255,255,.4)' }}>
+                                                    {micStatus === 'ok' ? '● Clear signal' : micStatus === 'error' ? '● Not detected' : '● Checking...'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 36, padding: '0 4px' }}>
+                                            {MB_CLASSES.map(cls => (
+                                                <div key={cls} className={cls} style={{ width: '100%', borderRadius: 2, background: 'linear-gradient(to top,#0D9488,#2DD4BF)', minHeight: 3 }} />
+                                            ))}
+                                        </div>
+                                        <div className="sw-mono" style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,.3)' }}>Input level: good</div>
+                                    </div>
+
+                                    {/* Camera */}
+                                    <div className="sw-glass" style={{ borderRadius: 20, padding: 24 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                                            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(37,99,235,.15)', border: '1px solid rgba(37,99,235,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: 14, fontWeight: 600 }}>Camera</div>
+                                                <div style={{ fontSize: 11, color: camStatus === 'ok' ? '#60A5FA' : camStatus === 'error' ? '#EF4444' : 'rgba(255,255,255,.4)' }}>
+                                                    {camStatus === 'ok' ? '● Detected' : camStatus === 'error' ? '● Not detected' : '● Checking...'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ borderRadius: 12, overflow: 'hidden', background: '#1a2332', aspectRatio: '16/9', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <video ref={videoRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: camStatus === 'ok' ? 1 : 0 }} autoPlay muted playsInline />
+                                            {camStatus !== 'ok' && <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                                            {camStatus === 'ok' && (
+                                                <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(239,68,68,.8)', borderRadius: 4, padding: '2px 6px', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <span className="sw-live" style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
+                                                    <span className="sw-mono">LIVE</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Lighting row */}
+                                <div className="sw-glass" style={{ borderRadius: 16, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+                                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Lighting</div>
+                                        <div style={{ fontSize: 12, color: 'rgba(245,158,11,.8)' }}>Move to a brighter area or face a window for best results</div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B' }} />
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,.1)' }} />
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setSetupStep(2)} style={{ width: '100%', padding: 15, borderRadius: 14, background: 'linear-gradient(135deg,#2563EB,#1d4ed8)', border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} className="sw-sora">
+                                    Looks good — Continue
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* ── STEP 2: Warm-up ── */}
+                        {setupStep === 2 && (
+                            <div className="sw-fadeup">
+                                <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                                    <h1 className="sw-sora" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Quick warm-up</h1>
+                                    <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 15 }}>Read this phrase aloud to calibrate your pacing</p>
+                                </div>
+
+                                <div className="sw-glass" style={{ borderRadius: 20, padding: 32, marginBottom: 20, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,#2563EB,#0D9488)' }} />
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,.35)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 20 }}>Say this phrase aloud</div>
+                                    <blockquote className="sw-sora" style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.6, color: 'rgba(255,255,255,.9)', fontStyle: 'italic' }}>
+                                        &ldquo;{WARMUP_PHRASE}&rdquo;
+                                    </blockquote>
+                                    <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 24 }}>
+                                            {['sw-mb3','sw-mb7','sw-mb1','sw-mb5','sw-mb9','sw-mb2'].map(cls => (
+                                                <div key={cls} className={cls} style={{ width: 3, borderRadius: 2, background: '#14B8A6', minHeight: 2 }} />
+                                            ))}
+                                        </div>
+                                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,.4)' }}>{isWarmupListening ? 'Listening...' : 'Microphone ready'}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 28 }}>
+                                    <div className="sw-glass" style={{ borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                                        <div className="sw-mono" style={{ fontSize: 26, fontWeight: 500, color: wpmColor }}>{wpm || '—'}</div>
+                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>WPM</div>
+                                        <div style={{ fontSize: 10, color: wpmColor, marginTop: 2 }}>{wpm ? wpmLabel : 'Start speaking'}</div>
+                                    </div>
+                                    <div className="sw-glass" style={{ borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                                        <div className="sw-mono" style={{ fontSize: 26, fontWeight: 500, color: fillerCount === 0 ? '#2DD4BF' : '#F59E0B' }}>{fillerCount}</div>
+                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>Filler words</div>
+                                        <div style={{ fontSize: 10, color: fillerCount === 0 ? '#2DD4BF' : '#F59E0B', marginTop: 2 }}>{fillerCount === 0 ? '✓ Clean' : '↓ Watch "um/uh"'}</div>
+                                    </div>
+                                    <div className="sw-glass" style={{ borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                                        <div className="sw-mono" style={{ fontSize: 26, fontWeight: 500, color: clarityColor }}>{clarityScore ?? '—'}</div>
+                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>Clarity</div>
+                                        <div style={{ fontSize: 10, color: clarityColor, marginTop: 2 }}>{clarityFeedback}</div>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setSetupStep(3)} style={{ width: '100%', padding: 15, borderRadius: 14, background: 'linear-gradient(135deg,#2563EB,#1d4ed8)', border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} className="sw-sora">
+                                    Continue to Interview Brief
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* ── STEP 3: Interview Brief ── */}
+                        {setupStep === 3 && (
+                            <div className="sw-fadeup">
+                                <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                                    <h1 className="sw-sora" style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>You&apos;re almost ready</h1>
+                                    <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 15 }}>Here&apos;s what to expect in your session</p>
+                                </div>
+
+                                <div className="sw-glass" style={{ borderRadius: 20, padding: 28, marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,#2563EB,#0D9488)' }} />
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,.3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 8 }}>Role</div>
+                                            <div className="sw-sora" style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>{session.targetRole}</div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                <span style={{ padding: '5px 12px', borderRadius: 20, background: 'rgba(37,99,235,.15)', border: '1px solid rgba(37,99,235,.25)', fontSize: 12, fontWeight: 500, color: '#60A5FA' }}>
+                                                    {session.type.charAt(0) + session.type.slice(1).toLowerCase()}
+                                                </span>
+                                                <span style={{ padding: '5px 12px', borderRadius: 20, background: 'rgba(13,148,136,.15)', border: '1px solid rgba(13,148,136,.25)', fontSize: 12, fontWeight: 500, color: '#2DD4BF' }}>
+                                                    {qCount} Questions
+                                                </span>
+                                                <span style={{ padding: '5px 12px', borderRadius: 20, background: `${diffColor}18`, border: `1px solid ${diffColor}30`, fontSize: 12, fontWeight: 500, color: diffColor }}>
+                                                    {session.difficulty.charAt(0) + session.difficulty.slice(1).toLowerCase()}
+                                                </span>
+                                                <span style={{ padding: '5px 12px', borderRadius: 20, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,.6)' }}>
+                                                    3 min / question
+                                                </span>
+                                                {session.cutoffScore && (
+                                                    <span style={{ padding: '5px 12px', borderRadius: 20, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', fontSize: 12, fontWeight: 500, color: '#F59E0B' }}>
+                                                        Target: {session.cutoffScore}%
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', marginBottom: 4 }}>Estimated time</div>
+                                            <div className="sw-mono" style={{ fontSize: 28, fontWeight: 500, color: '#60A5FA' }}>~{estMinutes}</div>
+                                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)' }}>minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ borderRadius: 16, padding: '18px 22px', background: 'rgba(16,185,129,.07)', border: '1px solid rgba(16,185,129,.15)', display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 28 }}>
+                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16,185,129,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: '#10B981', marginBottom: 4 }}>Coach tip</div>
+                                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', lineHeight: 1.6 }}>Take 5–7 seconds to think before answering. Silence is natural and expected. Structure your answer as: context → what you did → result.</div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={startInterview}
+                                    disabled={starting}
+                                    style={{
+                                        width: '100%', padding: 16, borderRadius: 14,
+                                        background: starting ? 'rgba(37,99,235,.4)' : 'linear-gradient(135deg,#2563EB,#1d4ed8)',
+                                        border: 'none', color: '#fff', fontSize: 16, fontWeight: 700,
+                                        cursor: starting ? 'not-allowed' : 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                        boxShadow: starting ? 'none' : '0 8px 32px rgba(37,99,235,.35)',
+                                        opacity: starting ? .7 : 1, transition: 'all .3s',
+                                    }} className="sw-sora"
+                                >
+                                    {starting ? (
+                                        <><Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} /> Generating Questions...</>
+                                    ) : (
+                                        <><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> I&apos;m Ready — Start Interview</>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                <div className="p-8 rounded-2xl glass text-center">
-                    <div className="w-20 h-20 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-6">
-                        <Play className="w-10 h-10 text-indigo-400" />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        {session.type} Interview for {session.targetRole}
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">
-                        Difficulty: {session.difficulty} •{' '}
-                        {session.difficulty === 'EASY' ? 5 : session.difficulty === 'MEDIUM' ? 7 : 10} questions
-                        {session.cutoffScore && (
-                            <span className="block mt-2 text-amber-500 font-bold">
-                                Target Score to Pass: {session.cutoffScore}%
-                            </span>
-                        )}
-                    </p>
-
-                    <div className="p-4 rounded-lg bg-white dark:bg-white/5 mb-6 text-left max-w-md mx-auto">
-                        <h3 className="text-gray-900 dark:text-white font-medium mb-2">Tips for success:</h3>
-                        <ul className="text-gray-500 dark:text-gray-400 text-sm space-y-1">
-                            <li>• Take your time to think before answering</li>
-                            <li>• Use specific examples when possible</li>
-                            <li>• Structure your answers clearly</li>
-                            <li>• Be honest about your experience level</li>
-                        </ul>
-                    </div>
-
-                    <button
-                        onClick={startInterview}
-                        disabled={starting}
-                        className="px-8 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50"
-                    >
-                        {starting ? (
-                            <span className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Generating Questions...
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-2">
-                                <Play className="w-4 h-4" />
-                                Start Interview
-                            </span>
-                        )}
-                    </button>
-                </div>
-            </div>
+            </>
         );
     }
 

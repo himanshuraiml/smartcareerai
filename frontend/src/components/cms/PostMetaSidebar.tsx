@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
+import Image from 'next/image';
 import { PostDraft } from '@/lib/cms-api';
 
 const CATEGORIES = [
@@ -145,7 +146,7 @@ export default function PostMetaSidebar({ value, onChange, status, rejectNote }:
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {value.coverImage && (
-                    <img src={value.coverImage} alt="Cover preview" className="mt-2 w-full h-24 object-cover rounded-lg" />
+                    <Image src={value.coverImage} alt="Cover preview" width={400} height={96} className="mt-2 w-full h-24 object-cover rounded-lg" unoptimized />
                 )}
             </div>
 

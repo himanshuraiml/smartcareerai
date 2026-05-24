@@ -91,7 +91,7 @@ const SidebarContent = ({
             <Link href="/institution-admin" className={`flex items-center ${sidebarOpen ? "gap-3" : "justify-center"} overflow-hidden min-w-0`}>
                 <div className="w-9 h-9 rounded-xl bg-white dark:bg-white/[0.05] border border-white/[0.1] flex items-center justify-center shrink-0 shadow-lg overflow-hidden p-1">
                     {institutionProfile?.logoUrl ? (
-                        <img src={institutionProfile.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                        <Image src={institutionProfile.logoUrl} alt="Logo" width={32} height={32} className="w-full h-full object-contain" unoptimized />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
                             <GraduationCap className="w-5 h-5 text-white" />
@@ -342,7 +342,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                 <header className="hidden lg:flex h-[68px] items-center justify-between px-8 bg-white dark:bg-[#0A0E1A] border-b border-gray-100 dark:border-white/[0.04] shrink-0">
                     <div className="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                         {institutionProfile?.logoUrl ? (
-                            <img src={institutionProfile.logoUrl} alt="Logo" className="w-5 h-5 object-contain" />
+                            <Image src={institutionProfile.logoUrl} alt="Logo" width={20} height={20} className="object-contain" unoptimized />
                         ) : (
                             <GraduationCap className="w-4 h-4 text-teal-500" />
                         )}
@@ -432,7 +432,7 @@ export default function InstitutionAdminLayout({ children }: { children: React.R
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shrink-0 overflow-hidden">
                             {institutionProfile?.logoUrl ? (
-                                <img src={institutionProfile.logoUrl} alt="Logo" className="w-full h-full object-contain p-1 bg-white" />
+                                <Image src={institutionProfile.logoUrl} alt="Logo" width={28} height={28} className="w-full h-full object-contain p-1 bg-white" unoptimized />
                             ) : (
                                 <GraduationCap className="w-4 h-4 text-white" />
                             )}

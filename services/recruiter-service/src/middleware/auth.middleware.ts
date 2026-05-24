@@ -86,6 +86,25 @@ export const recruiterRoleMiddleware = async (
     }
 };
 
+/**
+ * Guards internal service-to-service routes.
+ * Requires X-Internal-Secret header matching INTERNAL_SERVICE_SECRET env var.
+ */
+export const internalAuthMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const secret = req.headers['x-internal-secret'];
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+
+    if (!expected || !secret || secret !== expected) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    next();
+};
+
 export const recruiterMiddleware = async (
     req: Request,
     res: Response,

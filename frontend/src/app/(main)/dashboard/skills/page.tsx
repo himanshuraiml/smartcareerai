@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import AIDisclaimer from '@/components/ui/AIDisclaimer';
 import {
     Target, TrendingUp, BookOpen, Zap, ChevronRight,
-    Loader2, AlertCircle, CheckCircle, CheckCircle2, RefreshCw,
+    Loader2, AlertCircle, CheckCircle2, RefreshCw,
     Award, PlayCircle, Settings, Sparkles, ArrowRight, BarChart2,
-    Clock, ExternalLink, Lock
+    Clock, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
@@ -25,6 +26,10 @@ interface Certification { name: string; issuer: string; level: string; url: stri
 interface TestAttempt {
     id: string; passed: boolean; score: number;
     test: { id: string; difficulty: 'EASY' | 'MEDIUM' | 'HARD'; skillId: string; title: string; };
+}
+interface SkillTest {
+    id: string; difficulty: 'EASY' | 'MEDIUM' | 'HARD'; skillId: string; title: string;
+    skill: { id: string; name: string };
 }
 
 const PROFICIENCY_CONFIG: Record<string, { color: string; bg: string; border: string }> = {
@@ -47,6 +52,7 @@ export default function SkillsPage() {
     const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
     const [allSkills, setAllSkills] = useState<Skill[]>([]);
     const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+    const [availableTests, setAvailableTests] = useState<SkillTest[]>([]);
     const [gapAnalysis, setGapAnalysis] = useState<GapAnalysis | null>(null);
     const [roadmap, setRoadmap] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -78,6 +84,13 @@ export default function SkillsPage() {
         } catch { }
     }, [user]);
 
+    const fetchTests = useCallback(async () => {
+        try {
+            const r = await authFetch('/validation/tests');
+            if (r.ok) setAvailableTests((await r.json()).data || []);
+        } catch { }
+    }, [user]);
+
     const getNextTestLevel = (skillId: string): 'EASY' | 'MEDIUM' | 'HARD' | 'COMPLETED' => {
         const passed = attempts.filter(a => a.test.skillId === skillId && a.passed);
         if (passed.some(a => a.test.difficulty === 'HARD')) return 'COMPLETED';
@@ -90,12 +103,18 @@ export default function SkillsPage() {
         let skillId = skillNameOrId;
         if (!isId) {
             const skill = allSkills.find(s => s.name.toLowerCase() === skillNameOrId.toLowerCase());
-            if (!skill) { alert(`Skill "${skillNameOrId}" not found.`); return; }
+            if (!skill) return; // silently skip if skill not found in list
             skillId = skill.id;
         }
         const next = getNextTestLevel(skillId);
-        if (next === 'COMPLETED') { alert('You have already mastered this skill!'); return; }
-        router.push(`/dashboard/test/test-${skillId}-${next}`);
+        if (next === 'COMPLETED') return;
+
+        // Find the real test UUID from available tests (correct difficulty)
+        const test = availableTests.find(
+            t => t.skill.id === skillId && t.difficulty === next
+        );
+        if (!test) return; // test not available yet
+        router.push(`/dashboard/test/${test.id}`);
     };
 
     const fetchGapAnalysis = useCallback(async () => {
@@ -123,8 +142,8 @@ export default function SkillsPage() {
     };
 
     useEffect(() => {
-        if (user) { fetchUserSkills(); fetchAllSkills(); fetchAttempts(); }
-    }, [user, fetchUserSkills, fetchAllSkills, fetchAttempts]);
+        if (user) { fetchUserSkills(); fetchAllSkills(); fetchAttempts(); fetchTests(); }
+    }, [user, fetchUserSkills, fetchAllSkills, fetchAttempts, fetchTests]);
 
     useEffect(() => {
         if (!user) return;
@@ -172,6 +191,7 @@ export default function SkillsPage() {
                         <p className="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-1">Skill Intelligence</p>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Skills</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Analyze your skills and plan your career growth</p>
+                        <AIDisclaimer className="mt-4" />
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Target Role Badge */}
@@ -426,7 +446,7 @@ export default function SkillsPage() {
                             ) : roadmap?.roadmap?.length > 0 ? (
                                 <>
                                     {/* Stats row */}
-                                    <div className="grid grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {[
                                             { label: 'Duration', value: roadmap.duration, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10', icon: Clock },
                                             { label: 'Total Hours', value: `${roadmap.totalHours}h`, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10', icon: BookOpen },

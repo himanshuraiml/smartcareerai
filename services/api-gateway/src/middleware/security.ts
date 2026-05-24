@@ -174,45 +174,12 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
 // ============================================
 // SQL INJECTION PREVENTION
 // ============================================
+// Regex-based SQL injection filtering is removed: all database access goes
+// through Prisma's parameterized queries which prevent injection natively.
+// Regex patterns were causing false positives on legitimate input such as
+// apostrophes in names ("O'Brien"), C# in search queries, and job descriptions.
 
-export const sqlInjectionPrevention = (req: Request, res: Response, next: NextFunction): void => {
-    const sqlInjectionPatterns = [
-        /(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
-        /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i,
-        /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i,
-        /((\%27)|(\'))union/i,
-        /exec(\s|\+)+(s|x)p\w+/i,
-    ];
-
-    const checkValue = (value: string): boolean => {
-        return sqlInjectionPatterns.some(pattern => pattern.test(value));
-    };
-
-    const checkObject = (obj: unknown): boolean => {
-        if (typeof obj === 'string') {
-            return checkValue(obj);
-        }
-        if (typeof obj === 'object' && obj !== null) {
-            return Object.values(obj).some(checkObject);
-        }
-        return false;
-    };
-
-    // Only check query params and URL params — NOT request body.
-    // JSON request bodies are safely handled by Prisma's parameterized queries,
-    // and the broad regex patterns produce false positives on legitimate content
-    // (e.g. job descriptions containing apostrophes or # characters).
-    if (checkObject(req.query) || checkObject(req.params)) {
-        logger.warn({
-            type: 'SQL_INJECTION_ATTEMPT',
-            ip: req.ip,
-            path: req.path,
-            timestamp: new Date().toISOString(),
-        });
-        res.status(400).json({ error: 'Invalid input detected' });
-        return;
-    }
-
+export const sqlInjectionPrevention = (_req: Request, _res: Response, next: NextFunction): void => {
     next();
 };
 

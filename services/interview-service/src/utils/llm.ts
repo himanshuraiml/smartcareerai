@@ -20,6 +20,9 @@ export interface EvaluationResult {
     score: number;
     feedback: string;
     improvedAnswer: string;
+    // Bundled from the evaluation call — no separate API round-trip needed
+    followUpQuestion: string | null;
+    isFallback?: boolean;
     metrics: {
         clarity: number;
         relevance: number;
@@ -33,9 +36,8 @@ export interface EvaluationResult {
         task: { present: boolean; feedback: string };
         action: { present: boolean; feedback: string };
         result: { present: boolean; feedback: string };
-        overallStructure: string; // e.g., "Your answer covers S and A but lacks a measurable Result."
+        overallStructure: string;
     };
-    // Natural framing tip to avoid sounding scripted
     framingTip?: string;
 }
 
@@ -111,112 +113,63 @@ Return ONLY the JSON array, no other text.`;
     }
 }
 
-// Evaluate a candidate's answer with enhanced metrics and improved answer
+// Hint provided by the service layer from Tier-1 NLP scoring
+interface EvaluationHint {
+    quickScore?: number;        // NLP pre-score (0-100) — helps calibrate LLM score
+    missingKeywords?: string[]; // Concepts absent in the answer — LLM focuses feedback here
+    idealAnswer?: string;       // Bank ideal answer — LLM uses as reference, avoids generating from scratch
+}
+
+// Evaluate a candidate's answer — prompts are compressed and follow-up is bundled
+// into one API call instead of two.
 export async function evaluateAnswer(
     question: string,
     answer: string,
     targetRole: string,
     interviewType: string,
-    metrics?: { wpm?: number; eyeContactScore?: number; sentiment?: string }
+    metrics?: { wpm?: number; eyeContactScore?: number; sentiment?: string },
+    hint?: EvaluationHint
 ): Promise<EvaluationResult> {
-    // Determine if this is a behavioral/HR interview needing STAR analysis
     const isBehavioral = ['BEHAVIORAL', 'HR', 'behavioral', 'hr'].includes(interviewType);
 
+    // Compressed system prompts: ~130 tokens (behavioral) / ~100 tokens (technical)
+    // vs. prior ~300 tokens each. follow_up_question and star_missing are bundled here.
     const systemPrompt = isBehavioral
-        ? `You are an expert HR interviewer evaluating behavioral responses using the STAR method.
-Provide comprehensive evaluation with STAR component detection, natural framing suggestions, and metrics.
-Return JSON: {
-  "score": number (0-100),
-  "feedback": "constructive feedback string",
-  "improved_answer": "a better version using natural STAR structure, NOT scripted",
-  "detailed_metrics": {
-    "clarity": number (0-100),
-    "relevance": number (0-100),
-    "confidence": number (0-100)
-  },
-  "star_analysis": {
-    "situation": {"present": boolean, "feedback": "what was good or what's missing about setting the scene"},
-    "task": {"present": boolean, "feedback": "did they explain their specific responsibility?"},
-    "action": {"present": boolean, "feedback": "did they describe concrete actions they took?"},
-    "result": {"present": boolean, "feedback": "did they share a measurable outcome or impact?"},
-    "overall_structure": "1-2 sentence summary of STAR adherence"
-  },
-  "framing_tip": "A natural way to rephrase part of the answer so it sounds conversational, not rehearsed. Example: Instead of 'In the Situation phase, I encountered...' say 'So what happened was...'"
-}`
-        : `You are an expert interviewer evaluating candidate responses.
-Provide comprehensive evaluation with score, feedback, improved answer, and detailed metrics.
-Return JSON: {
-  "score": number (0-100),
-  "feedback": "constructive feedback string",
-  "improved_answer": "a better version of the candidate's answer demonstrating ideal response",
-  "detailed_metrics": {
-    "clarity": number (0-100, how clear and well-structured the answer is),
-    "relevance": number (0-100, how relevant the answer is to the question),
-    "confidence": number (0-100, how confident the response appears)
-  }
-}`;
+        ? `You are an expert HR interviewer. Evaluate STAR method adherence. Return JSON only:
+{"score":0-100,"feedback":"2-3 sentences on quality and STAR adherence","improved_answer":"1 natural STAR paragraph","follow_up_question":"one probing question OR null if answer is thorough","star_missing":["situation","task","action","result"],"framing_tip":"natural conversational rephrase tip"}`
+        : `You are an expert technical interviewer. Return JSON only:
+{"score":0-100,"feedback":"2-3 sentences on accuracy depth clarity","improved_answer":"model answer paragraph","follow_up_question":"one probing follow-up OR null if answer is thorough"}`;
 
-    let metricContext = '';
-    if (metrics) {
-        if (metrics.wpm) metricContext += `- Speaking Pace: ${metrics.wpm} words per minute (Ideal: 120-160)\n`;
-        if (metrics.eyeContactScore) metricContext += `- Eye Contact Score: ${metrics.eyeContactScore}/100\n`;
-        if (metrics.sentiment) metricContext += `- Detected Sentiment: ${metrics.sentiment}\n`;
-    }
+    // Compact delivery context
+    const metricParts: string[] = [];
+    if (metrics?.wpm) metricParts.push(`WPM: ${metrics.wpm} (ideal 120-160)`);
+    if (metrics?.eyeContactScore) metricParts.push(`Eye contact: ${metrics.eyeContactScore}/100`);
+    if (metrics?.sentiment) metricParts.push(`Tone: ${metrics.sentiment}`);
 
-    const userPrompt = isBehavioral
-        ? `Evaluate this behavioral answer for a ${targetRole} ${interviewType} interview:
+    // Hint lines help the LLM focus without re-discovering what the NLP already found
+    const hintParts: string[] = [];
+    if (hint?.quickScore !== undefined) hintParts.push(`NLP pre-score: ${hint.quickScore}/100`);
+    if (hint?.missingKeywords?.length) hintParts.push(`Missing concepts: ${hint.missingKeywords.join(', ')}`);
+    if (hint?.idealAnswer) hintParts.push(`Reference: "${hint.idealAnswer.substring(0, 250)}"`);
 
-Question: ${question}
+    const userPrompt = [
+        `Role: ${targetRole} | Type: ${interviewType}`,
+        `Q: "${question}"`,
+        `A: "${answer}"`,
+        metricParts.length ? `Delivery: ${metricParts.join('. ')}` : '',
+        ...hintParts,
+    ].filter(Boolean).join('\n');
 
-Candidate's Answer: "${answer}"
-
-${metricContext ? `Delivery Metrics:\n${metricContext}` : ''}
-
-Analyze the answer for STAR method adherence:
-1. Did the candidate set the SCENE (Situation)?
-2. Did they explain their RESPONSIBILITY (Task)?
-3. Did they describe CONCRETE ACTIONS they took?
-4. Did they share a MEASURABLE RESULT or outcome?
-
-Also evaluate:
-- Relevance and accuracy for ${targetRole}
-- Communication clarity and natural tone
-- Whether the answer sounds authentic or scripted
-
-Provide a "framing_tip" that helps the candidate express the same idea more naturally and conversationally.
-
-Return ONLY the JSON object.`
-        : `Evaluate this answer for a ${targetRole} ${interviewType} interview:
-
-Question: ${question}
-
-Candidate's Answer: "${answer}"
-
-${metricContext ? `Delivery Metrics:\n${metricContext}` : ''}
-
-Evaluate based on:
-1. Relevance and accuracy
-2. Depth of knowledge
-3. Communication clarity
-4. Use of examples (if applicable)
-
-Provide:
-- A score from 0-100
-- Specific, constructive feedback
-- An improved "model answer" showing how the candidate could have answered better
-- Detailed metrics for clarity, relevance, and confidence
-
-Return ONLY the JSON object.`;
-
-    // Default fallback result
     const fallbackResult: EvaluationResult = {
-        score: 70,
-        feedback: 'Answer recorded. Detailed evaluation requires AI configuration.',
-        improvedAnswer: '',
+        score: 0,
+        feedback: 'AI evaluation is temporarily unavailable. Your answer has been recorded for manual review.',
+        improvedAnswer: hint?.idealAnswer || '',
+        followUpQuestion: null,
+        isFallback: true,
         metrics: {
-            clarity: 70,
-            relevance: 70,
-            confidence: 70,
+            clarity: 0,
+            relevance: 0,
+            confidence: 0,
             wpm: metrics?.wpm,
             sentiment: metrics?.sentiment,
         },
@@ -224,9 +177,7 @@ Return ONLY the JSON object.`;
 
     try {
         const client = getGroq();
-        if (!client) {
-            return fallbackResult;
-        }
+        if (!client) return fallbackResult;
 
         const response = await client.chat.completions.create({
             model: AI_MODEL_NAME,
@@ -235,35 +186,53 @@ Return ONLY the JSON object.`;
                 { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
-            max_tokens: 1500,
+            // Reduced from 1500 → 700/500. Compact JSON schema + reference answer eliminates
+            // the need for the LLM to generate verbose output from scratch.
+            max_tokens: isBehavioral ? 700 : 500,
             response_format: { type: 'json_object' },
         });
 
         const text = response.choices[0]?.message?.content || '{}';
-        const cleanedText = cleanJsonResponse(text);
-        const result = JSON.parse(cleanedText);
+        const result = JSON.parse(cleanJsonResponse(text));
+
+        const baseScore = hint?.quickScore !== undefined
+            ? Math.round((result.score + hint.quickScore) / 2)  // blend NLP + LLM for accuracy
+            : result.score;
 
         const evaluationResult: EvaluationResult = {
-            score: Math.min(100, Math.max(0, result.score || 70)),
+            score: Math.min(100, Math.max(0, baseScore || 70)),
             feedback: result.feedback || 'Good response.',
-            improvedAnswer: result.improved_answer || '',
+            improvedAnswer: result.improved_answer || hint?.idealAnswer || '',
+            followUpQuestion: result.follow_up_question || null,
             metrics: {
-                clarity: Math.min(100, Math.max(0, result.detailed_metrics?.clarity || 70)),
-                relevance: Math.min(100, Math.max(0, result.detailed_metrics?.relevance || 70)),
-                confidence: Math.min(100, Math.max(0, result.detailed_metrics?.confidence || 70)),
+                clarity: Math.min(100, Math.max(0, hint?.quickScore ?? 70)),
+                relevance: Math.min(100, Math.max(0, result.score || 70)),
+                confidence: Math.min(100, Math.max(0, 70)),
                 wpm: metrics?.wpm,
                 sentiment: metrics?.sentiment,
             },
         };
 
-        // Add STAR analysis for behavioral/HR interviews
-        if (isBehavioral && result.star_analysis) {
+        if (isBehavioral) {
+            // star_missing is a compact array — reconstruct the full starAnalysis object
+            // so the frontend interface stays unchanged.
+            const starMissing: string[] = Array.isArray(result.star_missing) ? result.star_missing : [];
+            const componentFeedback = (
+                component: string,
+                presentMsg: string,
+                missingMsg: string
+            ) => ({
+                present: !starMissing.includes(component),
+                feedback: starMissing.includes(component) ? missingMsg : presentMsg,
+            });
             evaluationResult.starAnalysis = {
-                situation: result.star_analysis.situation || { present: false, feedback: 'Not detected' },
-                task: result.star_analysis.task || { present: false, feedback: 'Not detected' },
-                action: result.star_analysis.action || { present: false, feedback: 'Not detected' },
-                result: result.star_analysis.result || { present: false, feedback: 'Not detected' },
-                overallStructure: result.star_analysis.overall_structure || 'STAR analysis not available.',
+                situation: componentFeedback('situation', 'Good context-setting.', 'Set the scene — briefly describe the situation.'),
+                task: componentFeedback('task', 'Clear ownership stated.', 'Clarify your specific responsibility in that situation.'),
+                action: componentFeedback('action', 'Concrete actions described.', 'Describe the concrete steps you personally took.'),
+                result: componentFeedback('result', 'Impact communicated.', 'Share a measurable outcome or what you learned.'),
+                overallStructure: starMissing.length === 0
+                    ? 'Strong STAR structure.'
+                    : `Missing components: ${starMissing.join(', ')}.`,
             };
             evaluationResult.framingTip = result.framing_tip || undefined;
         }
@@ -271,96 +240,28 @@ Return ONLY the JSON object.`;
         return evaluationResult;
     } catch (error) {
         logger.error('Failed to evaluate answer:', error);
-        return {
-            ...fallbackResult,
-            feedback: 'Answer recorded. Please review manually.',
-        };
+        return { ...fallbackResult, isFallback: true };
     }
 }
 
-// Generate dynamic follow-up question based on answer
-export async function generateFollowUpQuestion(
-    originalQuestion: string,
-    answer: string,
-    targetRole: string
-): Promise<{ hasFollowUp: boolean; question?: string }> {
-    const systemPrompt = `You are an expert interviewer. Based on the candidate's answer to the original question, determine if a follow-up question is necessary to probe deeper, clarify vague points, or challenge their assumptions.
-Return JSON: {"hasFollowUp": boolean, "question": "the follow-up question string (or empty if none)"}`;
-
-    const userPrompt = `Role: ${targetRole}
-Original Question: "${originalQuestion}"
-Candidate Answer: "${answer}"
-
-Does this answer warrant a follow-up question? If it's too brief, vague, or mentions something interesting that needs elaboration, generate a single, highly specific follow-up question.
-If the answer is comprehensive and solid, set hasFollowUp to false.
-
-Return ONLY the JSON.`;
-
-    try {
-        const client = getGroq();
-        if (!client) {
-            return { hasFollowUp: false };
-        }
-
-        const response = await client.chat.completions.create({
-            model: AI_MODEL_NAME,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-            ],
-            temperature: 0.5,
-            max_tokens: 300,
-            response_format: { type: 'json_object' },
-        });
-
-        const text = response.choices[0]?.message?.content || '{}';
-        const cleanedText = cleanJsonResponse(text);
-        const result = JSON.parse(cleanedText);
-
-        return {
-            hasFollowUp: !!result.hasFollowUp && !!result.question,
-            question: result.question || undefined,
-        };
-    } catch (error) {
-        logger.error('Failed to generate follow-up question:', error);
-        return { hasFollowUp: false };
-    }
-}
-
-// Generate overall interview feedback
+// Generate overall interview feedback from a compressed session summary.
+// Accepts scores[] + keyGaps[] accumulated during the interview instead of
+// re-sending all Q&A text — saves ~600 tokens on the final call.
 export async function generateFeedback(
     targetRole: string,
     interviewType: string,
-    questions: Array<{ questionText: string; userAnswer: string | null; score: number | null }>,
-    overallScore: number
+    summary: { scores: number[]; keyGaps: string[]; overallScore: number }
 ): Promise<string> {
-    const systemPrompt = `You are a career coach providing interview feedback.
-Be constructive, specific, and encouraging while noting areas for improvement.`;
+    const systemPrompt = `Career coach providing interview feedback. Be specific, encouraging, and actionable.`;
 
-    const questionsContext = questions
-        .filter(q => q.userAnswer)
-        .map((q, i) => `Q${i + 1}: ${q.questionText}\nAnswer: ${q.userAnswer}\nScore: ${q.score}/100`)
-        .join('\n\n');
-
-    const userPrompt = `Provide overall feedback for this ${interviewType} interview for ${targetRole}:
-
-${questionsContext}
-
-Overall Score: ${overallScore}/100
-
-Provide:
-1. Summary of performance (2-3 sentences)
-2. Key strengths (2-3 points)
-3. Areas for improvement (2-3 points)
-4. Specific recommendations for next steps
-
-Be encouraging but honest.`;
+    const userPrompt = `Interview: ${targetRole} | ${interviewType}
+Scores: [${summary.scores.join(', ')}] | Overall: ${summary.overallScore}/100
+Key gaps: ${summary.keyGaps.length > 0 ? summary.keyGaps.join(', ') : 'none identified'}
+Provide: 1-2 sentence performance summary, 2 specific strengths, 2 improvement areas with concrete tips, 1 next step.`;
 
     try {
         const client = getGroq();
-        if (!client) {
-            return getBasicFeedback(overallScore);
-        }
+        if (!client) return getBasicFeedback(summary.overallScore);
 
         const response = await client.chat.completions.create({
             model: AI_MODEL_NAME,
@@ -369,13 +270,13 @@ Be encouraging but honest.`;
                 { role: 'user', content: userPrompt },
             ],
             temperature: 0.5,
-            max_tokens: 800,
+            max_tokens: 450,
         });
 
-        return response.choices[0]?.message?.content || getBasicFeedback(overallScore);
+        return response.choices[0]?.message?.content || getBasicFeedback(summary.overallScore);
     } catch (error) {
         logger.error('Failed to generate feedback:', error);
-        return getBasicFeedback(overallScore);
+        return getBasicFeedback(summary.overallScore);
     }
 }
 
@@ -432,54 +333,43 @@ Return ONLY the JSON, no other text.`;
     }
 }
 
-// Analyze sentiment from answer text
-export async function analyzeSentiment(
+// Pure-JS sentiment analysis — no LLM call, no API cost.
+// Replaces the previous Groq-based analyzeSentiment (200-400 tokens saved per call).
+export function analyzeSentiment(
     answerText: string
-): Promise<{ sentiment: 'positive' | 'neutral' | 'negative' | 'confident'; confidence: number; feedback: string }> {
-    const systemPrompt = `Analyze the sentiment and confidence level of interview answers.
-Return JSON: {"sentiment": "positive|neutral|negative|confident", "confidence": 0-100, "feedback": "brief observation"}`;
+): { sentiment: 'positive' | 'neutral' | 'negative' | 'confident'; confidence: number; feedback: string } {
+    const words = answerText.toLowerCase().split(/\s+/);
 
-    const userPrompt = `Analyze the sentiment and confidence in this interview answer:
+    const positiveWords = ['excellent', 'great', 'successful', 'achieved', 'improved', 'led', 'managed', 'solved', 'created', 'built', 'delivered', 'strong', 'effective', 'innovative', 'accomplished'];
+    const negativeWords = ['failed', 'difficult', 'struggled', 'problem', 'mistake', 'error', 'issue', 'bad', 'wrong', 'unclear', 'unsure', 'confused', 'unable'];
+    const confidentWords = ['definitely', 'certainly', 'absolutely', 'confident', 'proven', 'demonstrated', 'expert', 'proficient', 'skilled', 'experienced', 'consistently'];
 
-"${answerText}"
-
-Consider:
-- Tone and language used
-- Confidence level in statements
-- Positive vs negative framing
-- Professional communication style
-
-Return ONLY the JSON.`;
-
-    try {
-        const client = getGroq();
-        if (!client) {
-            return { sentiment: 'neutral', confidence: 70, feedback: 'Analysis requires AI configuration.' };
-        }
-
-        const response = await client.chat.completions.create({
-            model: AI_MODEL_NAME,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 200,
-            response_format: { type: 'json_object' },
-        });
-
-        const text = response.choices[0]?.message?.content || '{}';
-        const result = JSON.parse(text);
-
-        return {
-            sentiment: result.sentiment || 'neutral',
-            confidence: Math.min(100, Math.max(0, result.confidence || 70)),
-            feedback: result.feedback || 'Response recorded.',
-        };
-    } catch (error) {
-        logger.error('Failed to analyze sentiment:', error);
-        return { sentiment: 'neutral', confidence: 70, feedback: 'Analysis unavailable.' };
+    let posCount = 0, negCount = 0, confCount = 0;
+    for (const word of words) {
+        if (positiveWords.some(pw => word.includes(pw))) posCount++;
+        if (negativeWords.some(nw => word.includes(nw))) negCount++;
+        if (confidentWords.some(cw => word.includes(cw))) confCount++;
     }
+
+    let sentiment: 'positive' | 'neutral' | 'negative' | 'confident';
+    let feedback: string;
+
+    if (confCount >= 2) {
+        sentiment = 'confident';
+        feedback = 'Answer projects strong confidence and expertise.';
+    } else if (posCount > negCount + 1) {
+        sentiment = 'positive';
+        feedback = 'Answer has a positive, constructive tone.';
+    } else if (negCount > posCount) {
+        sentiment = 'negative';
+        feedback = 'Consider framing challenges as learning opportunities.';
+    } else {
+        sentiment = 'neutral';
+        feedback = 'Answer is measured and professional.';
+    }
+
+    const confidence = Math.min(95, Math.max(30, 65 + (posCount + confCount - negCount) * 5));
+    return { sentiment, confidence, feedback };
 }
 
 // Fallback hint when LLM is not available

@@ -75,8 +75,9 @@ export class ValidationService {
             throw new Error('Test not found');
         }
 
-        await cacheSet(cacheKey, test, 3600); // 1 hour
-        return test;
+        const result = { ...test, questionsCount: test.questions.length };
+        await cacheSet(cacheKey, result, 3600); // 1 hour
+        return result;
     }
 
     // Start a test attempt
@@ -103,8 +104,30 @@ export class ValidationService {
             throw new Error('Test not found');
         }
 
-        // Create attempt
-        const attempt = await prisma.testAttempt.create({
+        if (test.questions.length === 0) {
+            throw new Error('This test has no questions yet. Please try again later.');
+        }
+
+        // Check retake cooldown: 24 hours between attempts on the same test
+        const lastAttempt = await prisma.testAttempt.findFirst({
+            where: { userId, testId, completedAt: { not: null } },
+            orderBy: { completedAt: 'desc' },
+        });
+        if (lastAttempt?.completedAt) {
+            const hoursSince = (Date.now() - lastAttempt.completedAt.getTime()) / (1000 * 60 * 60);
+            if (hoursSince < 24) {
+                const hoursLeft = Math.ceil(24 - hoursSince);
+                throw new Error(`COOLDOWN:${hoursLeft}`);
+            }
+        }
+
+        // Reuse an existing open attempt (prevents duplicate active attempts)
+        const existingOpen = await prisma.testAttempt.findFirst({
+            where: { userId, testId, completedAt: null },
+            orderBy: { startedAt: 'desc' },
+        });
+
+        const attempt = existingOpen ?? await prisma.testAttempt.create({
             data: {
                 userId,
                 testId,
@@ -124,7 +147,7 @@ export class ValidationService {
                 skill: test.skill,
                 durationMinutes: test.durationMinutes,
                 passingScore: test.passingScore,
-                questionsCount: test.questionsCount,
+                questionsCount: test.questions.length,
             },
             questions: test.questions,
         };
@@ -167,6 +190,9 @@ export class ValidationService {
             correct: boolean;
             userAnswer: string;
             correctAnswer: string;
+            explanation: string;
+            questionText: string;
+            options: string[];
         }> = [];
 
         for (const question of test.questions) {
@@ -183,6 +209,9 @@ export class ValidationService {
                 correct: isCorrect,
                 userAnswer,
                 correctAnswer: question.correctAnswer,
+                explanation: (question as any).explanation || '',
+                questionText: question.questionText,
+                options: question.options as string[],
             });
         }
 

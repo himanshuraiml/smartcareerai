@@ -25,80 +25,82 @@ export function useSpeechRecognition(): SpeechRecognitionResult {
     const wordCountRef = useRef<number>(0);
     const isListeningRef = useRef(false);
     const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const retryCountRef = useRef(0);
-    const MAX_RETRIES = 5;
+    // Track if we've had a fatal error (mic denied etc.) — stop retrying in that case
+    const fatalErrorRef = useRef(false);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                const createRecognition = () => {
-                    const rec = new SpeechRecognition();
-                    rec.continuous = true;
-                    rec.interimResults = true;
-                    rec.lang = 'en-US';
+        if (typeof window === 'undefined') return;
 
-                    rec.onresult = (event: any) => {
-                        let currentTranscript = '';
-                        for (let i = 0; i < event.results.length; i++) {
-                            currentTranscript += event.results[i][0].transcript;
-                        }
-                        setTranscript(currentTranscript);
-                        retryCountRef.current = 0; // reset on successful result
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
 
-                        const words = currentTranscript.trim().split(/\s+/);
-                        const count = words.length;
-                        wordCountRef.current = count;
+        const createAndStart = () => {
+            if (!isListeningRef.current || fatalErrorRef.current) return;
 
-                        if (startTimeRef.current && count > 0) {
-                            const durationInMinutes = (Date.now() - startTimeRef.current) / 60000;
-                            if (durationInMinutes > 0.1) {
-                                setWpm(Math.round(count / durationInMinutes));
-                            }
-                        }
-                    };
-
-                    rec.onerror = (event: any) => {
-                        // 'network' and 'no-speech' are transient — don't surface as fatal errors
-                        if (event.error === 'network' || event.error === 'no-speech') {
-                            return; // onend will handle restart
-                        }
-                        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                            setError('Microphone access denied');
-                            setIsListening(false);
-                            isListeningRef.current = false;
-                            return;
-                        }
-                        console.error('Speech recognition error:', event.error);
-                        setError(event.error);
-                    };
-
-                    rec.onend = () => {
-                        // Restart automatically if we're still supposed to be listening
-                        if (isListeningRef.current && retryCountRef.current < MAX_RETRIES) {
-                            retryCountRef.current += 1;
-                            const delay = Math.min(500 * retryCountRef.current, 3000);
-                            retryTimeoutRef.current = setTimeout(() => {
-                                if (isListeningRef.current) {
-                                    try {
-                                        recognitionRef.current = createRecognition();
-                                        recognitionRef.current.start();
-                                    } catch (_) { /* already started */ }
-                                }
-                            }, delay);
-                        } else if (retryCountRef.current >= MAX_RETRIES) {
-                            setError('Speech recognition unavailable. Please check your connection.');
-                            setIsListening(false);
-                            isListeningRef.current = false;
-                        }
-                    };
-
-                    return rec;
-                };
-
-                recognitionRef.current = createRecognition();
+            // Abort any existing instance before creating a new one
+            if (recognitionRef.current) {
+                try { recognitionRef.current.abort(); } catch (_) { /* ok */ }
             }
-        }
+
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'en-US';
+
+            rec.onresult = (event: any) => {
+                let currentTranscript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    currentTranscript += event.results[i][0].transcript;
+                }
+                setTranscript(currentTranscript);
+
+                const words = currentTranscript.trim().split(/\s+/);
+                const count = words.filter(Boolean).length;
+                wordCountRef.current = count;
+
+                if (startTimeRef.current && count > 0) {
+                    const durationInMinutes = (Date.now() - startTimeRef.current) / 60000;
+                    if (durationInMinutes > 0.05) {
+                        setWpm(Math.round(count / durationInMinutes));
+                    }
+                }
+            };
+
+            rec.onerror = (event: any) => {
+                // Fatal errors — mic denied or browser policy
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    fatalErrorRef.current = true;
+                    setError('Microphone access denied. Please allow microphone and refresh.');
+                    setIsListening(false);
+                    isListeningRef.current = false;
+                    return;
+                }
+                // Transient errors (no-speech, network, aborted) — onend will restart
+            };
+
+            rec.onend = () => {
+                // Always restart unless the user explicitly stopped or a fatal error occurred
+                if (!isListeningRef.current || fatalErrorRef.current) return;
+
+                // Small delay to avoid hammering the API
+                retryTimeoutRef.current = setTimeout(() => {
+                    createAndStart();
+                }, 300);
+            };
+
+            recognitionRef.current = rec;
+            try {
+                rec.start();
+            } catch (err: any) {
+                // InvalidStateError: already started — onend will handle restart
+                if (err?.name !== 'InvalidStateError') {
+                    console.warn('Speech recognition start error:', err);
+                }
+            }
+        };
+
+        // Expose createAndStart so startListening can call it
+        (recognitionRef as any)._createAndStart = createAndStart;
 
         return () => {
             if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
@@ -106,27 +108,23 @@ export function useSpeechRecognition(): SpeechRecognitionResult {
     }, []);
 
     const startListening = useCallback(() => {
-        if (recognitionRef.current && !isListeningRef.current) {
-            try {
-                retryCountRef.current = 0;
-                isListeningRef.current = true;
-                recognitionRef.current.start();
-                setIsListening(true);
-                startTimeRef.current = Date.now();
-                setError(null);
-            } catch (err) {
-                console.error('Error starting speech recognition:', err);
-            }
-        }
+        if (isListeningRef.current) return; // already running
+        fatalErrorRef.current = false;
+        isListeningRef.current = true;
+        setIsListening(true);
+        setError(null);
+        startTimeRef.current = Date.now();
+
+        // Trigger the create-and-start cycle
+        const fn = (recognitionRef as any)._createAndStart;
+        if (fn) fn();
     }, []);
 
     const stopListening = useCallback(() => {
         isListeningRef.current = false;
         if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
         if (recognitionRef.current) {
-            try {
-                recognitionRef.current.stop();
-            } catch (_) { /* already stopped */ }
+            try { recognitionRef.current.stop(); } catch (_) { /* ok */ }
         }
         setIsListening(false);
         startTimeRef.current = null;
@@ -138,13 +136,5 @@ export function useSpeechRecognition(): SpeechRecognitionResult {
         wordCountRef.current = 0;
     }, []);
 
-    return {
-        transcript,
-        isListening,
-        wpm,
-        error,
-        startListening,
-        stopListening,
-        resetTranscript
-    };
+    return { transcript, isListening, wpm, error, startListening, stopListening, resetTranscript };
 }

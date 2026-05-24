@@ -41,9 +41,9 @@ export class BillingClient {
             const data = await response.json() as Record<string, any>;
 
             if (!response.ok) {
-                const error = new Error(data.message || 'Failed to consume credit') as CreditError;
+                const error = new Error(data.error?.message || data.message || 'Failed to consume credit') as CreditError;
                 error.statusCode = response.status;
-                error.code = data.code || 'CREDIT_ERROR';
+                error.code = data.error?.code || data.code || 'CREDIT_ERROR';
                 throw error;
             }
 
