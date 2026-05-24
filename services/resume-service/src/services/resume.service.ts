@@ -446,9 +446,14 @@ export class ResumeService {
     private formatResume(resume: any) {
         const latestAnalysis = resume.atsScores?.[0];
 
+        // Storage key format: userId/timestamp-originalname — extract just the original filename
+        const rawKey = resume.fileName as string;
+        const baseName = rawKey.split('/').pop() || rawKey;
+        const displayName = baseName.replace(/^\d+-/, '');
+
         return {
             id: resume.id,
-            fileName: resume.fileName,
+            fileName: displayName,
             fileUrl: resume.fileUrl,
             fileSize: resume.fileSize,
             status: resume.status,
