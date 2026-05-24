@@ -1,6 +1,6 @@
 import { logger } from './logger';
 
-const PISTON_API = 'https://emkc.org/api/v2/piston';
+const PISTON_API = process.env.PISTON_API_URL || 'http://localhost:2000/api/v2/piston';
 
 // Supported language → Piston version mapping
 export const LANGUAGE_VERSIONS: Record<string, string> = {

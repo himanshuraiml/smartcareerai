@@ -107,7 +107,7 @@ const nextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: http://localhost:*; connect-src 'self' http://localhost:* ws: wss: https:; frame-src https://accounts.google.com; frame-ancestors 'none';",
+                        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://accounts.google.com https://apis.google.com; worker-src blob: 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: http://localhost:*; connect-src 'self' http://localhost:* ws: wss: https:; frame-src https://accounts.google.com; frame-ancestors 'none';",
 
                     },
                 ],
