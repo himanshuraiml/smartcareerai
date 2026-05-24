@@ -355,7 +355,8 @@ export class CreditService {
         const [updatedCredit] = await prisma.$transaction([
             prisma.userCredit.updateMany({
                 where: {
-                    userId_creditType: { userId, creditType },
+                    userId,
+                    creditType,
                     balance: { gte: 1 },
                 },
                 data: { balance: { decrement: 1 } },
