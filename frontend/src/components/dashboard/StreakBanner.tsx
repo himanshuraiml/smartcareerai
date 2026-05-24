@@ -26,11 +26,7 @@ interface RewardResult {
     nextMilestone?: number;
 }
 
-interface StreakBannerProps {
-    totalXp?: number;
-}
-
-export default function StreakBanner({ totalXp }: StreakBannerProps = {}) {
+export default function StreakBanner() {
     const [stats, setStats] = useState<EngagementStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [claiming, setClaiming] = useState(false);
@@ -142,72 +138,70 @@ export default function StreakBanner({ totalXp }: StreakBannerProps = {}) {
             </AnimatePresence>
 
             {/* Streak Banner */}
-            <div className="rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/10 dark:to-amber-500/10 border border-orange-100 dark:border-orange-500/20 p-4 mb-2">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    {/* Streak Info */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-sm shadow-orange-500/30">
-                            <Flame className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="font-bold text-orange-700 dark:text-orange-300 text-base">
-                                    {stats.streakCount} Day Streak
-                                </span>
-                                {!stats.rewardAvailable && (
-                                    <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                                        <CheckCircle className="w-3 h-3" /> Today's reward claimed
-                                    </span>
-                                )}
+            <div className="relative mb-2">
+                {/* XP pill — floats above the banner's top-right corner */}
+                <div className="absolute -top-3.5 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-600 dark:bg-indigo-500 shadow-md shadow-indigo-500/30">
+                    <Zap className="w-3.5 h-3.5 text-white" />
+                    <span className="text-[12px] font-bold text-white">{stats.xp.toLocaleString()} XP</span>
+                    <span className="text-[10px] text-indigo-200 font-medium">· Lv {stats.level}</span>
+                </div>
+
+                <div className="rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/10 dark:to-amber-500/10 border border-orange-100 dark:border-orange-500/20 p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        {/* Streak Info */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-sm shadow-orange-500/30">
+                                <Flame className="w-5 h-5 text-white" />
                             </div>
-                            <p className="text-xs text-orange-500/70 dark:text-orange-400/70 mt-0.5">
-                                {stats.nextMilestoneDays === 7
-                                    ? 'Start a streak! Log in daily for a free AI Interview credit on day 7.'
-                                    : `${stats.nextMilestoneDays} more day${stats.nextMilestoneDays !== 1 ? 's' : ''} to earn a free AI Interview credit!`}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* XP + 7-Day Progress */}
-                    <div className="flex flex-col items-end gap-1.5">
-                        {/* Total XP */}
-                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
-                            <Zap className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400">{(totalXp ?? stats.xp).toLocaleString()} XP</span>
-                            <span className="text-[10px] text-indigo-400 dark:text-indigo-500 font-medium">· Lv {stats.level}</span>
-                        </div>
-
-                    {/* 7-Day Progress Dots */}
-                    <div className="flex items-center gap-1.5">
-                        {streakDays.map((day) => {
-                            const isCompleted = day <= (stats.streakCount % 7 || (stats.streakCount > 0 && stats.streakCount % 7 === 0 ? 7 : 0));
-                            const isToday = day === (stats.streakCount % 7 || (stats.streakCount > 0 ? 7 : 1));
-                            const isMilestone = day === 7;
-                            return (
-                                <div
-                                    key={day}
-                                    className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${isMilestone ? 'w-8 h-8' : 'w-7 h-7'
-                                        } ${isCompleted
-                                            ? isMilestone
-                                                ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm shadow-amber-500/40'
-                                                : 'bg-gradient-to-br from-orange-400 to-rose-500'
-                                            : 'bg-orange-100 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20'
-                                        } ${isToday && !isCompleted ? 'ring-2 ring-orange-400 ring-offset-1 dark:ring-offset-gray-950' : ''}`}
-                                    title={isMilestone ? '🎁 Day 7: Free AI Interview Credit!' : `Day ${day}`}
-                                >
-                                    {isMilestone ? (
-                                        <Star className={`w-3.5 h-3.5 ${isCompleted ? 'text-white' : 'text-orange-300 dark:text-orange-500'}`} />
-                                    ) : (
-                                        <span className={`text-[11px] font-bold ${isCompleted ? 'text-white' : 'text-orange-400 dark:text-orange-500'}`}>
-                                            {day}
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-bold text-orange-700 dark:text-orange-300 text-base">
+                                        {stats.streakCount} Day Streak
+                                    </span>
+                                    {!stats.rewardAvailable && (
+                                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                                            <CheckCircle className="w-3 h-3" /> Today's reward claimed
                                         </span>
                                     )}
                                 </div>
-                            );
-                        })}
-                    </div>
-                    </div>
+                                <p className="text-xs text-orange-500/70 dark:text-orange-400/70 mt-0.5">
+                                    {stats.nextMilestoneDays === 7
+                                        ? 'Start a streak! Log in daily for a free AI Interview credit on day 7.'
+                                        : `${stats.nextMilestoneDays} more day${stats.nextMilestoneDays !== 1 ? 's' : ''} to earn a free AI Interview credit!`}
+                                </p>
+                            </div>
+                        </div>
 
+                        {/* 7-Day Progress Dots */}
+                        <div className="flex items-center gap-1.5">
+                            {streakDays.map((day) => {
+                                const isCompleted = day <= (stats.streakCount % 7 || (stats.streakCount > 0 && stats.streakCount % 7 === 0 ? 7 : 0));
+                                const isToday = day === (stats.streakCount % 7 || (stats.streakCount > 0 ? 7 : 1));
+                                const isMilestone = day === 7;
+                                return (
+                                    <div
+                                        key={day}
+                                        className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${isMilestone ? 'w-8 h-8' : 'w-7 h-7'
+                                            } ${isCompleted
+                                                ? isMilestone
+                                                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm shadow-amber-500/40'
+                                                    : 'bg-gradient-to-br from-orange-400 to-rose-500'
+                                                : 'bg-orange-100 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20'
+                                            } ${isToday && !isCompleted ? 'ring-2 ring-orange-400 ring-offset-1 dark:ring-offset-gray-950' : ''}`}
+                                        title={isMilestone ? '🎁 Day 7: Free AI Interview Credit!' : `Day ${day}`}
+                                    >
+                                        {isMilestone ? (
+                                            <Star className={`w-3.5 h-3.5 ${isCompleted ? 'text-white' : 'text-orange-300 dark:text-orange-500'}`} />
+                                        ) : (
+                                            <span className={`text-[11px] font-bold ${isCompleted ? 'text-white' : 'text-orange-400 dark:text-orange-500'}`}>
+                                                {day}
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
