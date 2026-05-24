@@ -55,13 +55,17 @@ const journeyItems: NavItem[] = [
     { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs', iconColor: 'text-emerald-400' },
     { href: '/dashboard/applications', icon: ClipboardList, label: 'Applications', iconColor: 'text-violet-400' },
     { href: '/dashboard/assessments', icon: GitBranch, label: 'Pipeline & Stages', iconColor: 'text-orange-400' },
-    { href: '/dashboard/dsa', icon: BookOpen, label: 'DSA Guide', iconColor: 'text-pink-400', badge: 'New' },
-    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400', badge: 'New' },
 ];
 
-// General / standalone features (most moved to header dropdown)
-const otherItems: NavItem[] = [
+// Learning & tools section
+const learningItems: NavItem[] = [
+    { href: '/dashboard/dsa', icon: BookOpen, label: 'DSA Guide', iconColor: 'text-pink-400', badge: 'New' },
+    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400', badge: 'New' },
     { href: '/dashboard/future-lab', icon: FlaskConical, label: 'Future-Ready Lab', iconColor: 'text-violet-400', badge: 'New' },
+];
+
+// Institution-only items
+const otherItems: NavItem[] = [
     { href: '/dashboard/qr-pass', icon: QrCode, label: 'My QR Pass', iconColor: 'text-emerald-500', institutionOnly: true },
     { href: '/dashboard/drives', icon: GraduationCap, label: 'Campus Drives', iconColor: 'text-blue-400', institutionOnly: true },
 ];
@@ -69,7 +73,7 @@ const otherItems: NavItem[] = [
 
 
 const dashboardItem: NavItem = { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconColor: 'text-blue-400' };
-const allNavItems = [dashboardItem, ...journeyItems, ...otherItems];
+const allNavItems = [dashboardItem, ...journeyItems, ...learningItems, ...otherItems];
 
 // Helper function to get proper page title from pathname
 const getPageTitle = (pathname: string | null): string => {
@@ -297,18 +301,15 @@ export default function DashboardLayout({
                                     })}
                                 </div>
 
-                                {/* Divider */}
+                                {/* Divider + Learning & Tools */}
                                 <div className="mx-2 mb-3 h-px bg-gray-100 dark:bg-white/5" />
 
-                                {/* Other */}
-                                <div className="space-y-1">
-                                    {otherItems
-                                        .filter(item => !item.institutionOnly || (user?.institutionId && user.institutionId !== "null"))
-                                        .map((item) => {
-                                            const isActive = item.href === '/dashboard'
-
-                                            ? pathname === item.href
-                                            : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                                <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                    Learning &amp; Tools
+                                </p>
+                                <div className="space-y-1 mb-3">
+                                    {learningItems.map((item) => {
+                                        const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
                                         return (
                                             <Link
                                                 key={item.href}
@@ -335,6 +336,43 @@ export default function DashboardLayout({
                                         );
                                     })}
                                 </div>
+
+                                {/* Institution-only items */}
+                                {otherItems
+                                    .filter(item => !item.institutionOnly || (user?.institutionId && user.institutionId !== "null"))
+                                    .length > 0 && (
+                                    <div className="space-y-1">
+                                        {otherItems
+                                            .filter(item => !item.institutionOnly || (user?.institutionId && user.institutionId !== "null"))
+                                            .map((item) => {
+                                                const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                                                return (
+                                                    <Link
+                                                        key={item.href}
+                                                        href={item.href}
+                                                        onClick={() => setSidebarOpen(false)}
+                                                        className={`
+                                                            relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                            ${isActive
+                                                                ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
+                                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                                        `}
+                                                    >
+                                                        {isActive && (
+                                                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
+                                                        )}
+                                                        <item.icon className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                        <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                        {item.badge && (
+                                                            <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                    </Link>
+                                                );
+                                            })}
+                                    </div>
+                                )}
                             </nav>
 
                             {/* User Profile Dropdown Trigger */}

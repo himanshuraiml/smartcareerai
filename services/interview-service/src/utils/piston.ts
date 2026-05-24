@@ -152,7 +152,7 @@ async function executeViaJudge0(
             throw new Error(`Judge0 API error ${response.status}: ${text}`);
         }
 
-        const result = await response.json();
+        const result = await response.json() as Record<string, any>;
 
         // Status IDs: 3 = Accepted, 6 = Compilation Error, 5 = TLE, 7-12 = Runtime errors
         const isCompileError = result.status?.id === 6;
