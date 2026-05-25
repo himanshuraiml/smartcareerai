@@ -26,7 +26,6 @@ import {
     QrCode,
     GitBranch,
     GraduationCap,
-    Code2,
     BookOpen,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -60,7 +59,6 @@ const journeyItems: NavItem[] = [
 // Learning & tools section
 const learningItems: NavItem[] = [
     { href: '/dashboard/dsa', icon: BookOpen, label: 'DSA Guide', iconColor: 'text-pink-400', badge: 'New' },
-    { href: '/dashboard/coding', icon: Code2, label: 'Coding Practice', iconColor: 'text-violet-400', badge: 'New' },
     { href: '/dashboard/future-lab', icon: FlaskConical, label: 'Future-Ready Lab', iconColor: 'text-violet-400', badge: 'New' },
 ];
 

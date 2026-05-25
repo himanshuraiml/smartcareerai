@@ -417,12 +417,14 @@ export default function DSAGuidePage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link
-                            href="/dashboard/coding"
+                        <a
+                            href="https://leetcode.com/problemset/"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                         >
                             <Terminal className="w-4 h-4" /> Coding Challenges
-                        </Link>
+                        </a>
                         <Link
                             href="/dashboard/tests"
                             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20"
@@ -525,12 +527,14 @@ export default function DSAGuidePage() {
                                 </h2>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <Link
-                                    href="/dashboard/coding"
+                                <a
+                                    href="https://leetcode.com/problemset/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                                 >
                                     <Code2 className="w-4 h-4" /> Solve Problems
-                                </Link>
+                                </a>
                                 <Link
                                     href="/dashboard/tests"
                                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-colors shadow-md shadow-blue-500/20"
