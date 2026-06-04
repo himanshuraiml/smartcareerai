@@ -13,6 +13,8 @@ import Footer from "@/components/layout/Footer";
 interface PlanFeature {
     text: string;
     included: boolean;
+    isNew?: boolean;      // newly unlocked in this tier — highlight it
+    nextPlan?: string;    // if locked, which plan unlocks it
 }
 
 interface PricingPlan {
@@ -24,6 +26,7 @@ interface PricingPlan {
     description: string;
     color: string;
     popular?: boolean;
+    contactOnly?: boolean;
     icon: any;
     features: PlanFeature[];
 }
@@ -39,67 +42,68 @@ const DEFAULT_PLANS: PricingPlan[] = [
         color: "from-blue-400 to-cyan-400",
         icon: Zap,
         features: [
-            { text: "10 AI Resume Scans", included: true },
-            { text: "2 Mock Interviews", included: true },
-            { text: "Basic Skill Verifications", included: true },
+            { text: "3 AI Resume Scans / month", included: true },
+            { text: "1 Mock Interview / month", included: true },
+            { text: "3 Skill Tests / month", included: true },
             { text: "Community Support", included: true },
-            { text: "Unlimited Scans", included: false },
-            { text: "Priority Support", included: false },
+            { text: "Priority Support", included: false, nextPlan: "Starter" },
+            { text: "Advanced Analytics", included: false, nextPlan: "Pro" },
         ],
     },
     {
         id: "starter",
         name: "starter",
         displayName: "Starter",
-        priceMonthly: 199,
-        priceYearly: 1999,
+        priceMonthly: 349,
+        priceYearly: 3299,
         description: "Perfect for active job seekers needing more practice",
         color: "from-indigo-400 to-violet-400",
         icon: Star,
         popular: true,
         features: [
-            { text: "50 AI Resume Scans", included: true },
-            { text: "15 Mock Interviews", included: true },
-            { text: "All Skill Verifications", included: true },
-            { text: "Priority Email Support", included: true },
+            { text: "Priority Email Support", included: true, isNew: true },
+            { text: "15 AI Resume Scans / month", included: true },
+            { text: "6 Mock Interviews / month", included: true },
+            { text: "10 Skill Tests / month", included: true },
             { text: "Advanced Mock Interviews", included: true },
-            { text: "Dedicated Success Manager", included: false },
+            { text: "Advanced Analytics", included: false, nextPlan: "Pro" },
         ],
     },
     {
         id: "pro",
         name: "pro",
         displayName: "Pro",
-        priceMonthly: 499,
-        priceYearly: 4999,
+        priceMonthly: 849,
+        priceYearly: 7999,
         description: "Unlimited access for serious professionals",
         color: "from-amber-400 to-orange-400",
         icon: Briefcase,
         features: [
-            { text: "Unlimited Resume Scans", included: true },
-            { text: "Unlimited Mock Interviews", included: true },
+            { text: "Advanced Analytics & Profile Promotion", included: true, isNew: true },
+            { text: "50 AI Resume Scans / month", included: true },
+            { text: "25 Mock Interviews / month", included: true },
+            { text: "25 Skill Tests / month", included: true },
             { text: "Skill Certification Badges", included: true },
             { text: "Priority 24/7 Support", included: true },
-            { text: "Advanced Analytics", included: true },
-            { text: "Profile Promotion", included: true },
         ],
     },
     {
         id: "enterprise",
         name: "enterprise",
         displayName: "Enterprise",
-        priceMonthly: 1999,
-        priceYearly: 17999,
-        description: "For institutions and power users requiring API access",
+        priceMonthly: 0,
+        priceYearly: 0,
+        description: "Custom plans for institutions, colleges & placement cells",
         color: "from-emerald-400 to-teal-400",
         icon: Gem,
+        contactOnly: true,
         features: [
-            { text: "Unlimited Everything", included: true },
+            { text: "Dedicated Success Manager", included: true, isNew: true },
+            { text: "Unlimited Resume Scans", included: true },
+            { text: "Unlimited Mock Interviews", included: true },
+            { text: "Unlimited Skill Tests", included: true },
             { text: "Custom AI Models", included: true },
-            { text: "Dedicated Success Manager", included: true },
-            { text: "White-label Reports", included: true },
-            { text: "24/7 Priority Support", included: true },
-            { text: "Full API Access", included: true },
+            { text: "White-label Reports & Full API Access", included: true },
         ],
     },
 ];
@@ -121,7 +125,7 @@ const PLAN_COLORS: Record<string, string> = {
 
 function PricingContent() {
     const router = useRouter();
-    const { user } = useAuthStore();
+    const { user, _hasHydrated } = useAuthStore();
     const isRazorpayLoaded = useRazorpay();
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
     const [loading, setLoading] = useState<string | null>(null);
@@ -209,6 +213,7 @@ function PricingContent() {
                                     color: PLAN_COLORS[p.name] || "from-gray-400 to-gray-500",
                                     icon: PLAN_ICONS[p.name] || Star,
                                     popular: p.name === "starter",
+                                    contactOnly: p.name === "enterprise",
                                     features: formatFeatures(features),
                                 };
                             });
@@ -230,7 +235,6 @@ function PricingContent() {
             free: "Essential tools to get started with your career journey",
             starter: "Perfect for active job seekers needing more practice",
             pro: "Unlimited access for serious professionals",
-            enterprise: "For institutions and power users requiring API access",
         };
         return descriptions[name] || "Boost your career with premium features";
     };
@@ -244,6 +248,7 @@ function PricingContent() {
     };
 
     const handleSubscribe = async (plan: PricingPlan) => {
+        if (!_hasHydrated) return; // wait for localStorage rehydration
         if (!user) {
             router.push("/login?redirect=/pricing");
             return;
@@ -252,82 +257,119 @@ function PricingContent() {
         setLoading(plan.id);
 
         try {
-            // If the plan is free, handle it differently (usually just activate)
+            // Free plan: activate directly without payment
             if (plan.priceMonthly === 0) {
                 const response = await authFetch('/billing/subscriptions/subscribe', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ planName: plan.name })
                 });
-
+                if (response.status === 401) {
+                    router.push("/login?redirect=/pricing");
+                    return;
+                }
                 if (response.ok) {
                     router.push("/dashboard?upgrade=success");
                 } else {
                     const errorData = await response.json();
-                    console.error("Failed to subscribe to free plan:", errorData);
-                    alert("Failed to activate free plan. Please try again.");
+                    throw new Error(errorData.error?.message || "Failed to activate free plan.");
                 }
                 return;
             }
 
-            // 1. Create Subscription on Backend for paid plans
-            const response = await authFetch('/billing/subscriptions/subscribe', {
+            // Step 1: Create Razorpay order on the backend
+            const orderRes = await authFetch('/billing/subscriptions/order', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    planName: plan.name,
-                    billingCycle: billingCycle, // Send selected billing cycle (monthly/yearly)
-                    couponCode: appliedCoupon?.code
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ planName: plan.name, billingCycle }),
             });
 
-            if (!response.ok) {
-                const data = await response.json();
-                const errorMessage = data.error?.message || data.message || "Failed to create subscription";
-                console.error("Subscription Error:", errorMessage, data);
-                throw new Error(errorMessage);
+            if (orderRes.status === 401) {
+                router.push("/login?redirect=/pricing");
+                return;
             }
 
-            const data = await response.json();
+            if (!orderRes.ok) {
+                const err = await orderRes.json();
+                throw new Error(err.error?.message || "Failed to create payment order.");
+            }
 
-            const { razorpaySubscriptionId, paymentUrl } = data.data;
+            const { data: orderData } = await orderRes.json();
+            const { orderId, amount, razorpayKeyId } = orderData;
 
-            // 2. Open Razorpay Checkout
-            if (isRazorpayLoaded && window.Razorpay) {
+            // Step 2: Open Razorpay Standard Checkout modal
+            if (!isRazorpayLoaded || !window.Razorpay) {
+                throw new Error("Payment gateway failed to load. Please refresh and try again.");
+            }
+
+            await new Promise<void>((resolve, reject) => {
                 const options = {
-                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to frontend .env
-                    subscription_id: razorpaySubscriptionId,
+                    key: razorpayKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    amount,
+                    currency: "INR",
                     name: "PlaceNxt",
-                    description: `${plan.displayName} Subscription`,
-                    image: "/logo-new.png", // Ensure this exists
-                    handler: function (response: any) {
-                        // Payment successful
-                        // You can optionally call a verification backend endpoint here
-                        // But webhook handles the actual activation
-                        if (response.razorpay_payment_id) {
+                    description: `${plan.displayName} – ${billingCycle === "yearly" ? "Annual" : "Monthly"} Plan`,
+                    order_id: orderId,
+                    handler: async (response: any) => {
+                        try {
+                            // Step 3: Verify signature and activate subscription
+                            const confirmRes = await authFetch('/billing/subscriptions/confirm', {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    orderId: response.razorpay_order_id,
+                                    paymentId: response.razorpay_payment_id,
+                                    signature: response.razorpay_signature,
+                                    planName: plan.name,
+                                    billingCycle,
+                                }),
+                            });
+
+                            if (confirmRes.status === 401) {
+                                reject(new Error("SESSION_EXPIRED"));
+                                return;
+                            }
+
+                            if (!confirmRes.ok) {
+                                const err = await confirmRes.json();
+                                reject(new Error(err.error?.message || "Payment verification failed."));
+                                return;
+                            }
+
+                            resolve();
                             router.push("/dashboard?upgrade=success");
+                        } catch (e) {
+                            reject(e);
                         }
+                    },
+                    modal: {
+                        ondismiss: () => reject(new Error("Payment cancelled.")),
                     },
                     prefill: {
                         name: user?.name,
                         email: user?.email,
                     },
-                    theme: {
-                        color: "#6366f1",
-                    },
+                    theme: { color: "#6366f1" },
                 };
-                const rzp = new window.Razorpay(options);
-                rzp.open();
-            } else {
-                // Fallback to hosted page if JS fails
-                if (paymentUrl) window.location.href = paymentUrl;
-            }
 
-        } catch (error) {
-            console.error("Subscription error:", error);
-            alert("Something went wrong. Please try again.");
+                const rzp = new window.Razorpay(options);
+                rzp.on("payment.failed", (resp: any) => {
+                    reject(new Error(resp.error?.description || "Payment failed."));
+                });
+                rzp.open();
+            });
+
+        } catch (error: any) {
+            // Session expired during payment confirmation — redirect to login
+            if (error?.message === "SESSION_EXPIRED") {
+                router.push("/login?redirect=/pricing");
+                return;
+            }
+            // Don't alert on user-cancelled payment
+            if (error?.message && error.message !== "Payment cancelled.") {
+                console.error("Subscription error:", error);
+                alert(error.message || "Something went wrong. Please try again.");
+            }
         } finally {
             setLoading(null);
         }
@@ -437,13 +479,10 @@ function PricingContent() {
                             >
                                 {plan.displayName}
                             </h3>
-                            {plan.name === 'enterprise' ? (
-                                <div className="flex items-baseline gap-1 mb-4">
-                                    <span
-                                        className="text-3xl font-bold"
-                                        style={{ color: isLightMode ? '#1e293b' : '#ffffff' }}
-                                    >
-                                        Custom
+                            {plan.contactOnly ? (
+                                <div className="flex items-baseline gap-2 mb-4">
+                                    <span className="text-3xl font-bold" style={{ color: isLightMode ? '#1e293b' : '#ffffff' }}>
+                                        Contact Us
                                     </span>
                                 </div>
                             ) : (
@@ -486,17 +525,14 @@ function PricingContent() {
                             </p>
 
                             <button
-                                onClick={() => {
-                                    if (plan.name === 'enterprise') {
-                                        router.push('/contact');
-                                    } else {
-                                        handleSubscribe(plan);
-                                    }
-                                }}
+                                onClick={() => plan.contactOnly ? router.push('/contact') : handleSubscribe(plan)}
                                 disabled={loading === plan.id}
                                 className={`w-full py-3 rounded-xl font-medium transition-all mb-8 flex items-center justify-center gap-2`}
                                 style={plan.popular ? {
                                     background: 'linear-gradient(to right, #6366f1, #ec4899)',
+                                    color: '#ffffff'
+                                } : plan.contactOnly ? {
+                                    background: 'linear-gradient(to right, #059669, #0d9488)',
                                     color: '#ffffff'
                                 } : {
                                     background: isLightMode ? '#f1f5f9' : 'rgba(255, 255, 255, 0.1)',
@@ -506,39 +542,92 @@ function PricingContent() {
                             >
                                 {loading === plan.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : plan.name === 'enterprise' ? (
-                                    "Contact Us"
+                                ) : plan.contactOnly ? (
+                                    "Get a Quote"
                                 ) : (
                                     plan.priceMonthly === 0 ? "Get Started" : "Subscribe Now"
                                 )}
                             </button>
 
-                            <div className="space-y-3">
-                                {plan.features.map((feature, i) => (
-                                    <div key={i} className="flex items-center gap-3 text-sm">
-                                        <div
-                                            className="w-5 h-5 rounded-full flex items-center justify-center"
-                                            style={{
-                                                background: feature.included
-                                                    ? (isLightMode ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)')
-                                                    : (isLightMode ? '#f1f5f9' : 'rgba(31, 41, 55, 1)'),
-                                                color: feature.included ? '#16a34a' : '#9ca3af'
-                                            }}
-                                        >
-                                            <Check className="w-3 h-3" />
+                            <div className="space-y-2.5">
+                                {plan.features.map((feature, i) => {
+                                    if (feature.isNew) {
+                                        // Newly unlocked in this tier — bright highlight
+                                        return (
+                                            <div
+                                                key={i}
+                                                className="flex items-center gap-3 text-sm px-2.5 py-1.5 rounded-lg"
+                                                style={{
+                                                    background: isLightMode ? 'rgba(22,163,74,0.08)' : 'rgba(34,197,94,0.1)',
+                                                    border: isLightMode ? '1px solid rgba(22,163,74,0.2)' : '1px solid rgba(34,197,94,0.2)',
+                                                }}
+                                            >
+                                                <div
+                                                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'rgba(22,163,74,0.2)', color: '#16a34a' }}
+                                                >
+                                                    <Check className="w-3 h-3" />
+                                                </div>
+                                                <span className="font-semibold flex-1" style={{ color: isLightMode ? '#15803d' : '#4ade80' }}>
+                                                    {feature.text}
+                                                </span>
+                                                <span
+                                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                                    style={{ background: 'rgba(22,163,74,0.15)', color: '#16a34a' }}
+                                                >
+                                                    NEW
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+                                    if (!feature.included) {
+                                        // Locked — show which plan unlocks it
+                                        return (
+                                            <div key={i} className="flex items-center gap-3 text-sm">
+                                                <div
+                                                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                    style={{
+                                                        background: isLightMode ? '#f1f5f9' : 'rgba(31,41,55,1)',
+                                                        color: '#9ca3af'
+                                                    }}
+                                                >
+                                                    <Check className="w-3 h-3" />
+                                                </div>
+                                                <span style={{ color: isLightMode ? '#94a3b8' : '#4b5563', textDecoration: 'line-through' }}>
+                                                    {feature.text}
+                                                </span>
+                                                {feature.nextPlan && (
+                                                    <span
+                                                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                                        style={{
+                                                            background: isLightMode ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.15)',
+                                                            color: '#6366f1'
+                                                        }}
+                                                    >
+                                                        → {feature.nextPlan}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+                                    // Standard included feature
+                                    return (
+                                        <div key={i} className="flex items-center gap-3 text-sm">
+                                            <div
+                                                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                style={{
+                                                    background: isLightMode ? 'rgba(22,163,74,0.15)' : 'rgba(34,197,94,0.2)',
+                                                    color: '#16a34a'
+                                                }}
+                                            >
+                                                <Check className="w-3 h-3" />
+                                            </div>
+                                            <span style={{ color: isLightMode ? '#334155' : '#d1d5db' }}>
+                                                {feature.text}
+                                            </span>
                                         </div>
-                                        <span
-                                            style={{
-                                                color: feature.included
-                                                    ? (isLightMode ? '#334155' : '#d1d5db')
-                                                    : (isLightMode ? '#94a3b8' : '#4b5563'),
-                                                textDecoration: feature.included ? 'none' : 'line-through'
-                                            }}
-                                        >
-                                            {feature.text}
-                                        </span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
@@ -554,9 +643,9 @@ function PricingContent() {
                     {[
                         { q: 'Can I switch plans later?', a: 'Yes. You can upgrade or downgrade at any time from your dashboard. Changes take effect at the start of the next billing cycle.' },
                         { q: 'Is there a free trial for paid plans?', a: 'The Free plan is available indefinitely with no credit card required. Paid plans don\'t have a separate trial, but you can start on Free and upgrade when ready.' },
-                        { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards and UPI via Razorpay. Enterprise customers can request invoice-based billing.' },
+                        { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards and UPI via Razorpay.' },
                         { q: 'Are the AI scores guaranteed to improve my placement chances?', a: 'Our AI provides data-driven feedback based on industry benchmarks. Results vary by individual effort and market conditions. Scores are for guidance — not a guarantee of placement.' },
-                        { q: 'Can institutions get a custom plan?', a: 'Absolutely. Contact us via the Enterprise option or the Contact page and we\'ll craft a plan that fits your batch size, branding, and integration needs.' },
+                        { q: 'Can institutions get a custom plan?', a: 'Yes. Institution plans are handled on a case-by-case basis. Reach out via the Contact page and we\'ll craft a plan that fits your batch size and needs.' },
                         { q: 'What happens to my data if I cancel?', a: 'Your account data is retained for 30 days after cancellation. You can export your resume scans and interview history from the dashboard before then.' },
                     ].map((item, i) => (
                         <div

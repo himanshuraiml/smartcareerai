@@ -1,5 +1,6 @@
 import { PrismaClient, Difficulty } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { skillQuestionBank } from './seed-questions';
 
 const prisma = new PrismaClient();
 
@@ -258,6 +259,23 @@ async function main() {
         { name: 'Natural Language Processing', category: 'AI', demandScore: 78 },
         { name: 'Computer Vision', category: 'AI', demandScore: 75 },
         { name: 'Generative AI', category: 'AI', demandScore: 92 },
+        // Batch 7
+        { name: 'Azure', category: 'Cloud', demandScore: 88 },
+        { name: 'MySQL', category: 'Database', demandScore: 88 },
+        { name: 'Spring MVC', category: 'Framework', demandScore: 82 },
+        { name: 'Hibernate', category: 'Framework', demandScore: 80 },
+        { name: 'Grafana', category: 'Tool', demandScore: 85 },
+        { name: 'Streamlit', category: 'Framework', demandScore: 82 },
+        { name: 'MS Office', category: 'Tool', demandScore: 80 },
+        { name: 'ABAP', category: 'Programming', demandScore: 70 },
+        // Batch 8
+        { name: 'LLM', category: 'AI', demandScore: 95 },
+        { name: 'Transformer Models', category: 'AI', demandScore: 92 },
+        { name: 'Reinforcement Learning', category: 'AI', demandScore: 82 },
+        { name: 'CUDA Programming', category: 'Programming', demandScore: 88 },
+        { name: 'YOLO', category: 'AI', demandScore: 85 },
+        { name: 'Vercel', category: 'Cloud', demandScore: 88 },
+        { name: 'OpenSearch', category: 'Database', demandScore: 82 },
     ];
 
     for (const skill of skills) {
@@ -278,9 +296,12 @@ async function main() {
     const addTestsForSkill = (skill: any, name: string) => {
         if (!skill) return;
         skillTests.push(
-            { skillId: skill.id, title: `${name} Basics`, description: `${name} Fundamentals`, difficulty: Difficulty.EASY, durationMinutes: 10, passingScore: 80, questionsCount: 5 },
-            { skillId: skill.id, title: `${name} Intermediate`, description: `Intermediate ${name}`, difficulty: Difficulty.MEDIUM, durationMinutes: 20, passingScore: 70, questionsCount: 10 },
-            { skillId: skill.id, title: `${name} Advanced`, description: `Advanced ${name} Concepts`, difficulty: Difficulty.HARD, durationMinutes: 30, passingScore: 70, questionsCount: 15 }
+            // Easy: 7 objective questions testing core theoretical concepts (~2 min each)
+            { skillId: skill.id, title: `${name} Basics`, description: `Core concepts and fundamentals of ${name}`, difficulty: Difficulty.EASY, durationMinutes: 15, passingScore: 75, questionsCount: 7 },
+            // Medium: 5 application questions with code/practical scenarios (~4 min each)
+            { skillId: skill.id, title: `${name} Intermediate`, description: `Applied ${name} — code comprehension and practical usage`, difficulty: Difficulty.MEDIUM, durationMinutes: 20, passingScore: 70, questionsCount: 5 },
+            // Hard: 3 scenario-based questions testing deep reasoning (~6 min each)
+            { skillId: skill.id, title: `${name} Advanced`, description: `Advanced ${name} — architecture, debugging, and real-world scenarios`, difficulty: Difficulty.HARD, durationMinutes: 20, passingScore: 70, questionsCount: 3 }
         );
     };
 
@@ -306,21 +327,30 @@ async function main() {
         for (const q of questions) {
             await prisma.testQuestion.upsert({
                 where: { id: `q-${testId}-${q.orderIndex}` },
-                update: { questionText: q.questionText, options: q.options, correctAnswer: q.correctAnswer, testId },
-                create: { id: `q-${testId}-${q.orderIndex}`, ...q, testId },
+                update: {
+                    questionText: q.questionText,
+                    questionType: q.questionType ?? 'mcq',
+                    options: q.options,
+                    correctAnswer: q.correctAnswer,
+                    explanation: q.explanation ?? null,
+                    points: q.points ?? 1,
+                    testId,
+                },
+                create: {
+                    id: `q-${testId}-${q.orderIndex}`,
+                    questionType: q.questionType ?? 'mcq',
+                    explanation: q.explanation ?? null,
+                    points: q.points ?? 1,
+                    ...q,
+                    testId,
+                },
             });
         }
     };
 
-    // Generic questions for Easy/Hard if specific ones aren't defined
-    const getGenericQuestions = (skillName: string, level: string) => [
-        { questionText: `Sample ${level} question 1 for ${skillName}?`, options: ['A', 'B', 'C', 'D'], correctAnswer: 'A', orderIndex: 1 },
-        { questionText: `Sample ${level} question 2 for ${skillName}?`, options: ['True', 'False'], correctAnswer: 'True', orderIndex: 2 },
-        { questionText: `Sample ${level} question 3 for ${skillName}?`, options: ['Yes', 'No'], correctAnswer: 'Yes', orderIndex: 3 },
-    ];
-
-    // Specific questions
-    const questionBank: Record<string, any[]> = {
+    // ─── Legacy question bank (kept for reference / future Batch 2+ migration) ───
+    // New skills should be added to seed-questions.ts instead.
+    const legacyQuestionBank: Record<string, any[]> = {
         'JavaScript': [
             { questionText: 'What is the output of: typeof null?', options: ['null', 'undefined', 'object', 'number'], correctAnswer: 'object', orderIndex: 1 },
             { questionText: 'Which method adds an element to the end of an array?', options: ['push()', 'pop()', 'shift()', 'unshift()'], correctAnswer: 'push()', orderIndex: 2 },
@@ -731,34 +761,36 @@ async function main() {
         ],
     };
 
-    // Seed questions for ALL tests
+    // Seed questions for all tests.
+    // Priority: seed-questions.ts (structured easy/medium/hard) > legacy flat bank.
+    // Skills with NO questions in either bank are skipped — they won't appear in the UI
+    // (validation-service already filters tests that only have generic placeholder questions).
+    let seededCount = 0;
+    let skippedCount = 0;
+
     for (const skill of allSkills) {
-        let questions: any[] = [];
+        const structured = skillQuestionBank[skill.name];
 
-        // Use specific questions if available
-        if (questionBank[skill.name] && questionBank[skill.name].length > 0) {
-            questions = questionBank[skill.name];
-        }
-
-        // Add Specific Questions to MEDIUM/HARD mainly, generic for others if needed
-        // BUT better: Use these real questions for ALL levels if we have enough?
-        // Let's split them: 1-3 Easy, 4-7 Medium, 8-10 Hard? Or just reuse for now to ensure quality
-
-        if (questions.length > 0) {
-            // Distribute questions if possible
-            // 1-4 Easy, 5-7 Medium, 8-10 Hard
-            await seedQuestionsForTest(`test-${skill.id}-EASY`, questions.slice(0, 4));
-            await seedQuestionsForTest(`test-${skill.id}-MEDIUM`, questions.slice(4, 7));
-            await seedQuestionsForTest(`test-${skill.id}-HARD`, questions.slice(7));
+        if (structured) {
+            // New structured bank: properly split easy / medium / hard questions
+            await seedQuestionsForTest(`test-${skill.id}-EASY`, structured.easy);
+            await seedQuestionsForTest(`test-${skill.id}-MEDIUM`, structured.medium);
+            await seedQuestionsForTest(`test-${skill.id}-HARD`, structured.hard);
+            seededCount++;
+        } else if (legacyQuestionBank[skill.name] && legacyQuestionBank[skill.name].length > 0) {
+            // Legacy bank: distribute flat list across tests (7 easy, 5 medium, 3 hard slice)
+            const q = legacyQuestionBank[skill.name];
+            await seedQuestionsForTest(`test-${skill.id}-EASY`, q.slice(0, 7));
+            await seedQuestionsForTest(`test-${skill.id}-MEDIUM`, q.slice(7, 12));
+            await seedQuestionsForTest(`test-${skill.id}-HARD`, q.slice(12, 15));
+            seededCount++;
         } else {
-            // Fallback for skills without specific questions
-            await seedQuestionsForTest(`test-${skill.id}-EASY`, getGenericQuestions(skill.name, 'EASY'));
-            await seedQuestionsForTest(`test-${skill.id}-MEDIUM`, getGenericQuestions(skill.name, 'MEDIUM'));
-            await seedQuestionsForTest(`test-${skill.id}-HARD`, getGenericQuestions(skill.name, 'HARD'));
+            // No questions available — skip. These skills won't show in the UI.
+            skippedCount++;
         }
     }
 
-    console.log(`✅ Seeded test questions for ${allSkills.length} skills`);
+    console.log(`✅ Seeded test questions for ${seededCount} skills (${skippedCount} skipped — no questions yet)`);
 
     // Seed subscription plans (Phase 4)
     const subscriptionPlans = [
@@ -771,54 +803,73 @@ async function main() {
                 resumeReviews: 3,
                 interviews: 1,
                 skillTests: 3,
-                jobAlerts: true,
-                prioritySupport: false,
+                communitySupport: true,
+                priorityEmailSupport: false,
+                advancedAnalytics: false,
+                dedicatedSuccessManager: false,
             },
             sortOrder: 0,
         },
         {
             name: 'starter',
             displayName: 'Starter',
-            priceMonthly: 299,
-            priceYearly: 2499,
+            priceMonthly: 349,
+            priceYearly: 3299,
             razorpayPlanId: 'plan_S6zfvOOu5j9WKA',
             features: {
                 resumeReviews: 15,
-                interviews: 5,
+                interviews: 6,
                 skillTests: 10,
-                jobAlerts: true,
-                prioritySupport: false,
+                communitySupport: true,
+                priorityEmailSupport: true,
+                advancedMockInterviews: true,
+                advancedAnalytics: false,
+                dedicatedSuccessManager: false,
             },
             sortOrder: 1,
         },
         {
             name: 'pro',
             displayName: 'Pro',
-            priceMonthly: 799,
-            priceYearly: 6999,
+            priceMonthly: 849,
+            priceYearly: 7999,
             razorpayPlanId: 'plan_S6zgEyCYs0G0Y8',
             features: {
-                resumeReviews: 'unlimited',
-                interviews: 20,
-                skillTests: 'unlimited',
-                jobAlerts: true,
-                prioritySupport: true,
+                resumeReviews: 50,
+                interviews: 25,
+                skillTests: 25,
+                communitySupport: true,
+                priorityEmailSupport: true,
+                advancedMockInterviews: true,
+                advancedAnalytics: true,
+                profilePromotion: true,
+                skillCertificationBadges: true,
+                priority24x7Support: true,
+                dedicatedSuccessManager: false,
             },
             sortOrder: 2,
         },
         {
             name: 'enterprise',
             displayName: 'Enterprise',
-            priceMonthly: 1999,
-            priceYearly: 17999,
+            priceMonthly: 4999,
+            priceYearly: 47999,
             razorpayPlanId: 'plan_S6zgnCCDTVKYtc',
             features: {
                 resumeReviews: 'unlimited',
                 interviews: 'unlimited',
                 skillTests: 'unlimited',
-                jobAlerts: true,
-                prioritySupport: true,
-                apiAccess: true,
+                communitySupport: true,
+                priorityEmailSupport: true,
+                advancedMockInterviews: true,
+                advancedAnalytics: true,
+                profilePromotion: true,
+                skillCertificationBadges: true,
+                priority24x7Support: true,
+                dedicatedSuccessManager: true,
+                customAIModels: true,
+                whitelabelReports: true,
+                fullAPIAccess: true,
             },
             sortOrder: 3,
         },

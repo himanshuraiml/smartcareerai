@@ -213,6 +213,96 @@ export class SubscriptionService {
     }
 
     /**
+     * Create a Razorpay order for a subscription plan (Standard Checkout flow).
+     * Does not require Razorpay plan IDs — works with any key/secret pair.
+     */
+    async createSubscriptionOrder(input: {
+        userId: string;
+        planName: string;
+        billingCycle?: 'monthly' | 'yearly';
+    }) {
+        const { userId, planName, billingCycle = 'monthly' } = input;
+
+        const plan = await this.getPlanByName(planName);
+        if (!plan) throw createError('Plan not found', 404, 'PLAN_NOT_FOUND');
+        if (plan.name === 'free') throw createError('Free plan does not require payment', 400, 'FREE_PLAN');
+
+        const priceINR = billingCycle === 'yearly' ? Number(plan.priceYearly) : Number(plan.priceMonthly);
+        const amountPaise = priceINR * 100; // Razorpay uses paise
+
+        if (amountPaise < 100) throw createError('Plan amount too low', 400, 'INVALID_AMOUNT');
+
+        const shortUserId = userId.replace(/-/g, '').substring(0, 8);
+        const receipt = `sub_${shortUserId}_${Date.now()}`;
+
+        const order = await razorpayService.createOrder({
+            amount: amountPaise,
+            receipt,
+            notes: { userId, planName, billingCycle },
+        });
+
+        logger.info(`Created subscription order ${order.id} for user ${userId}, plan ${planName}`);
+
+        return {
+            orderId: order.id,
+            amount: amountPaise,
+            currency: 'INR',
+            planName,
+            billingCycle,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+        };
+    }
+
+    /**
+     * Verify payment and activate subscription after Standard Checkout success.
+     */
+    async confirmSubscriptionPayment(input: {
+        userId: string;
+        orderId: string;
+        paymentId: string;
+        signature: string;
+        planName: string;
+        billingCycle?: 'monthly' | 'yearly';
+    }) {
+        const { userId, orderId, paymentId, signature, planName, billingCycle = 'monthly' } = input;
+
+        const isValid = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
+        if (!isValid) throw createError('Invalid payment signature', 400, 'INVALID_SIGNATURE');
+
+        const plan = await this.getPlanByName(planName);
+        if (!plan) throw createError('Plan not found', 404, 'PLAN_NOT_FOUND');
+
+        const periodDays = billingCycle === 'yearly' ? 365 : 30;
+        const periodEnd = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000);
+
+        const userSubscription = await prisma.userSubscription.upsert({
+            where: { userId },
+            create: {
+                userId,
+                planId: plan.id,
+                razorpaySubscriptionId: paymentId, // store payment ID as reference
+                status: 'ACTIVE',
+                currentPeriodStart: new Date(),
+                currentPeriodEnd: periodEnd,
+            },
+            update: {
+                planId: plan.id,
+                razorpaySubscriptionId: paymentId,
+                status: 'ACTIVE',
+                cancelAtPeriodEnd: false,
+                currentPeriodStart: new Date(),
+                currentPeriodEnd: periodEnd,
+            },
+            include: { plan: true },
+        });
+
+        await this.initializeCreditsForPlan(userId, plan);
+        logger.info(`Subscription activated via Standard Checkout for user ${userId}, plan ${planName}`);
+
+        return userSubscription;
+    }
+
+    /**
      * Cancel a subscription
      */
     async cancelSubscription(userId: string, cancelImmediately = false) {

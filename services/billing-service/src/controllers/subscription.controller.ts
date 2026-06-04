@@ -93,6 +93,66 @@ export class SubscriptionController {
     }
 
     /**
+     * Create a Razorpay order for a subscription plan (Standard Checkout)
+     */
+    async createOrder(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user!.id;
+            const { planName, billingCycle } = req.body;
+
+            if (!planName) {
+                return res.status(400).json({ success: false, error: { message: 'planName is required' } });
+            }
+
+            const order = await subscriptionService.createSubscriptionOrder({
+                userId,
+                planName,
+                billingCycle: billingCycle || 'monthly',
+            });
+
+            res.json({ success: true, data: order });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Confirm subscription payment after Standard Checkout
+     */
+    async confirmPayment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user!.id;
+            const { orderId, paymentId, signature, planName, billingCycle } = req.body;
+
+            if (!orderId || !paymentId || !signature || !planName) {
+                return res.status(400).json({ success: false, error: { message: 'orderId, paymentId, signature, and planName are required' } });
+            }
+
+            const subscription = await subscriptionService.confirmSubscriptionPayment({
+                userId,
+                orderId,
+                paymentId,
+                signature,
+                planName,
+                billingCycle: billingCycle || 'monthly',
+            });
+
+            res.json({
+                success: true,
+                data: {
+                    id: subscription.id,
+                    status: subscription.status,
+                    plan: subscription.plan,
+                    currentPeriodEnd: subscription.currentPeriodEnd,
+                },
+                message: 'Subscription activated successfully.',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * Cancel subscription
      */
     async cancel(req: Request, res: Response, next: NextFunction) {

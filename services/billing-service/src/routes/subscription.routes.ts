@@ -10,6 +10,8 @@ router.get('/plans', subscriptionController.getPlans);
 // Protected routes
 router.get('/', authMiddleware, subscriptionController.getSubscription);
 router.post('/subscribe', authMiddleware, subscriptionController.subscribe);
+router.post('/order', authMiddleware, subscriptionController.createOrder);
+router.post('/confirm', authMiddleware, subscriptionController.confirmPayment);
 router.post('/cancel', authMiddleware, subscriptionController.cancel);
 
 export { router as subscriptionRouter };

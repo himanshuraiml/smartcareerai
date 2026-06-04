@@ -32,7 +32,7 @@ export async function authFetch(
     const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
 
     // Get auth actions
-    const { refreshAccessToken, logout } = useAuthStore.getState();
+    const { refreshAccessToken } = useAuthStore.getState();
 
     // Default headers
     const headers = new Headers(fetchOptions.headers);
@@ -63,10 +63,11 @@ export async function authFetch(
                 headers: retryHeaders,
                 credentials: 'include',
             });
-        } else {
-            // Refresh failed, logout the user
-            logout();
         }
+        // If refresh failed, return the 401 response as-is.
+        // Callers are responsible for redirecting to login if needed.
+        // Do NOT call logout() here — that would wipe the session for
+        // transient failures (network hiccup, brief server downtime, etc.).
     }
 
     return response;

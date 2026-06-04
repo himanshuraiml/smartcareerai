@@ -10,10 +10,10 @@ function getRazorpayInstance(): Razorpay {
         const keyId = process.env.RAZORPAY_KEY_ID;
         const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-        if (!keyId || !keySecret || keyId.includes('xxxx') || keySecret.includes('xxxx')) {
+        const isPlaceholder = (v: string) => v.includes('xxxx') || v.startsWith('your-');
+        if (!keyId || !keySecret || isPlaceholder(keyId) || isPlaceholder(keySecret)) {
             logger.warn('Razorpay credentials not configured - payment features will be disabled');
-            // Return a mock instance for development
-            throw new Error('Razorpay credentials not configured');
+            throw new Error('Payment gateway is not configured. Please contact support.');
         }
 
         razorpay = new Razorpay({

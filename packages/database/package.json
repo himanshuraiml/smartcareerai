@@ -18,7 +18,8 @@
         "start": "prisma migrate deploy",
         "studio": "prisma studio",
         "test": "jest",
-        "seed:blog": "npx ts-node scripts/seed-blog-posts.ts"
+        "seed:blog": "npx ts-node scripts/seed-blog-posts.ts",
+        "seed:questions": "npx ts-node prisma/seed-skill-questions.ts"
     },
     "prisma": {
         "seed": "ts-node prisma/seed.ts"

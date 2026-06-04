@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown, GraduationCap, Briefcase, Building2, ArrowRight } from 'lucide-react';
+import { Menu, X, ChevronDown, GraduationCap, Briefcase, Building2, ArrowRight, LayoutDashboard, LogOut } from 'lucide-react';
 import Logo from '@/components/layout/Logo';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useAuthStore } from '@/store/auth.store';
 
 const AUDIENCE_LINKS = [
     { label: 'Students', href: '/solutions/students', icon: GraduationCap, desc: 'Resume scoring, mock interviews & skill badges', color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -17,9 +19,13 @@ const AUDIENCE_LINKS = [
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [audienceOpen, setAudienceOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const { theme } = useTheme();
     const isLight = theme === 'light';
+    const router = useRouter();
+    const { user, _hasHydrated, logout } = useAuthStore();
+    const isLoggedIn = _hasHydrated && !!user;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -100,13 +106,52 @@ export default function Navbar() {
 
                     {/* Desktop nav – right */}
                     <div className="hidden md:flex items-center gap-6">
-                        <Link href="/login" className={`text-sm font-medium transition-colors ${isLight ? 'text-blue-600 hover:text-blue-700' : 'text-[#3b82f6] hover:text-blue-400'}`}>
-                            Login
-                        </Link>
-                        <Link href="/register"
-                            className="px-5 py-2.5 rounded-lg bg-[#3b82f6] text-white text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
-                            Get Started
-                        </Link>
+                        {isLoggedIn ? (
+                            <div className="relative"
+                                onMouseEnter={() => setUserMenuOpen(true)}
+                                onMouseLeave={() => setUserMenuOpen(false)}>
+                                <button className="flex items-center gap-2 focus:outline-none">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
+                                        {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+                                    </div>
+                                    <span className={`text-sm font-medium ${isLight ? 'text-gray-700' : 'text-gray-200'}`}>
+                                        {user.name || user.email.split('@')[0]}
+                                    </span>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${isLight ? 'text-gray-500' : 'text-gray-400'} ${userMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <AnimatePresence>
+                                    {userMenuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 8 }}
+                                            className="absolute right-0 top-full pt-2 w-48 z-50"
+                                        >
+                                            <div className={`rounded-xl border shadow-xl overflow-hidden ${isLight ? 'bg-white border-gray-100' : 'bg-[#0B0F19] border-white/10'}`}>
+                                                <Link href="/dashboard"
+                                                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isLight ? 'text-gray-700 hover:bg-gray-50' : 'text-gray-200 hover:bg-white/5'}`}>
+                                                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                                </Link>
+                                                <button onClick={() => { logout(); router.push('/'); }}
+                                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-red-500 ${isLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'}`}>
+                                                    <LogOut className="w-4 h-4" /> Sign out
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            <>
+                                <Link href="/login" className={`text-sm font-medium transition-colors ${isLight ? 'text-blue-600 hover:text-blue-700' : 'text-[#3b82f6] hover:text-blue-400'}`}>
+                                    Login
+                                </Link>
+                                <Link href="/register"
+                                    className="px-5 py-2.5 rounded-lg bg-[#3b82f6] text-white text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
+                                    Get Started
+                                </Link>
+                            </>
+                        )}
                         <div className="ml-2"><ThemeToggle /></div>
                     </div>
 
@@ -150,8 +195,6 @@ export default function Navbar() {
                                     { label: 'Pricing', href: '/pricing' },
                                     { label: 'Blog', href: '/blog' },
                                     { label: 'Success Stories', href: '/success-stories' },
-                                    { label: 'Resources', href: '/resources' },
-                                    { label: 'Login', href: '/login' },
                                 ].map(item => (
                                     <Link key={item.href} href={item.href}
                                         className={`block px-3 py-3 rounded-lg font-semibold text-sm ${isLight ? 'text-gray-900 hover:bg-gray-50' : 'text-white hover:bg-white/5'}`}
@@ -159,11 +202,32 @@ export default function Navbar() {
                                         {item.label}
                                     </Link>
                                 ))}
-                                <Link href="/register"
-                                    className="block px-3 py-4 rounded-xl bg-blue-600 text-white font-bold text-center shadow-lg shadow-blue-500/20 mt-2"
-                                    onClick={() => setMobileMenuOpen(false)}>
-                                    Get Started Free
-                                </Link>
+                                {isLoggedIn ? (
+                                    <>
+                                        <Link href="/dashboard"
+                                            className={`block px-3 py-3 rounded-lg font-semibold text-sm ${isLight ? 'text-gray-900 hover:bg-gray-50' : 'text-white hover:bg-white/5'}`}
+                                            onClick={() => setMobileMenuOpen(false)}>
+                                            Dashboard
+                                        </Link>
+                                        <button onClick={() => { logout(); router.push('/'); setMobileMenuOpen(false); }}
+                                            className="w-full text-left px-3 py-3 rounded-lg font-semibold text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                                            Sign out
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link href="/login"
+                                            className={`block px-3 py-3 rounded-lg font-semibold text-sm ${isLight ? 'text-gray-900 hover:bg-gray-50' : 'text-white hover:bg-white/5'}`}
+                                            onClick={() => setMobileMenuOpen(false)}>
+                                            Login
+                                        </Link>
+                                        <Link href="/register"
+                                            className="block px-3 py-4 rounded-xl bg-blue-600 text-white font-bold text-center shadow-lg shadow-blue-500/20 mt-2"
+                                            onClick={() => setMobileMenuOpen(false)}>
+                                            Get Started Free
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </motion.div>
