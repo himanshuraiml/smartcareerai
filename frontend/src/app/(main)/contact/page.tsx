@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { authFetch } from "@/lib/auth-fetch";
 
 export default function ContactPage() {
-    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
     const [isLightMode, setIsLightMode] = useState(false);
 
     // Detect theme for dynamic styling
@@ -39,16 +39,33 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
+        setSuccess(false);
 
-        // Simulating an API call
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            const response = await authFetch("/auth/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+                skipAuth: true,
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.message || "Failed to send message. Please try again.");
+            }
+
             setSuccess(true);
             setFormData({ name: "", email: "", company: "", inquiryType: "demo", message: "" });
 
             // Reset success message after 5 seconds
             setTimeout(() => setSuccess(false), 5000);
-        }, 1500);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Something went wrong. Please try again later.";
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -89,8 +106,11 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-medium mb-1">Email Us</h4>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">support@placenxt.com</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">enterprise@placenxt.com</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            <a href="mailto:admin@placenxt.com" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors underline">
+                                                admin@placenxt.com
+                                            </a>
+                                        </p>
                                     </div>
                                 </div>
 
@@ -100,7 +120,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-medium mb-1">Call Us</h4>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">+1 (555) 123-4567</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">+91 XXXXX XXXXX</p>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">Mon-Fri, 9am-6pm IST</p>
                                     </div>
                                 </div>
@@ -111,7 +131,11 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-medium mb-1">Office</h4>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">123 Tech Park<br />Innovation Hub, IN 400001</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Tech Park 2, SRM Institute of Science and Technology,
+                                            <br />
+                                            Tiruchirappalli campus
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -201,6 +225,13 @@ export default function ContactPage() {
                                         placeholder="How can we help you?"
                                     />
                                 </div>
+
+                                {error && (
+                                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                                        {error}
+                                    </div>
+                                )}
 
                                 {success && (
                                     <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-green-600 dark:text-green-400 text-sm flex items-center gap-2">

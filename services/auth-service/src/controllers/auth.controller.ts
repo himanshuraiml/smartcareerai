@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { logger } from '../utils/logger';
 import { validateEmail } from '../utils/email-validation';
+import { sendContactFormEmail } from '../utils/email';
 
 const authService = new AuthService();
 
@@ -415,6 +416,29 @@ export class AuthController {
                 success: true,
                 data,
                 message: 'Data exported successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async contactInquiry(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { name, email, company, inquiryType, message } = req.body;
+
+            if (!name || !email || !message) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Name, email, and message are required'
+                });
+                return;
+            }
+
+            await sendContactFormEmail({ name, email, company, inquiryType, message });
+
+            res.json({
+                success: true,
+                message: 'Inquiry message sent successfully'
             });
         } catch (error) {
             next(error);

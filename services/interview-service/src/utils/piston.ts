@@ -6,7 +6,7 @@ import { logger } from './logger';
 // Default (or =piston)                → uses self-hosted Piston
 // ──────────────────────────────────────────────────────────────────────────────
 const PROVIDER = process.env.CODE_EXECUTION_PROVIDER || 'piston';
-const PISTON_API = process.env.PISTON_API_URL || 'http://localhost:2000/api/v2/piston';
+const PISTON_API = process.env.PISTON_API_URL || 'http://localhost:2000/api/v2';
 const JUDGE0_API = process.env.JUDGE0_API_URL || 'https://judge0-ce.p.rapidapi.com';
 const JUDGE0_RAPIDAPI_KEY = process.env.JUDGE0_RAPIDAPI_KEY || '';
 

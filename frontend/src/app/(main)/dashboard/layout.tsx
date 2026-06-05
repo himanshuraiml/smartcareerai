@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
 import {
     LayoutDashboard,
     FileText,
@@ -17,10 +16,7 @@ import {
     Menu,
     X,
     CreditCard,
-    RotateCw,
-    AlertTriangle,
     User,
-    Send,
     MessageSquare,
     FlaskConical,
     QrCode,
@@ -28,12 +24,11 @@ import {
     GraduationCap,
     BookOpen,
 } from 'lucide-react';
-import Image from 'next/image';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import Logo from '@/components/layout/Logo';
+import EmailVerificationBanner from '@/components/dashboard/EmailVerificationBanner';
 
 interface NavItem {
     href: string;
@@ -100,43 +95,9 @@ export default function DashboardLayout({
     }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, fetchUser, _hasHydrated } = useAuthStore();
+    const { user, logout, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
-    const { toast } = useToast();
-    const [isResending, setIsResending] = useState(false);
 
-    const handleResendVerification = async () => {
-        if (!user?.email) return;
-        setIsResending(true);
-        try {
-            const res = await authFetch('/auth/resend-verification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: user.email }),
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                toast({
-                    title: "Verification Email Sent",
-                    description: "Please check your inbox and verify your email.",
-                });
-            } else {
-                toast({
-                    title: "Error",
-                    description: data.message || "Failed to send verification email.",
-                });
-            }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "An unexpected error occurred.",
-            });
-        } finally {
-            setIsResending(false);
-        }
-    };
 
     const handleLogout = useCallback(() => {
         logout();
@@ -472,36 +433,8 @@ export default function DashboardLayout({
 
 
 
-                {/* Verification Warning */}
-                {!isInterviewRoom && user && !user.isVerified && (
-                    <div className="bg-yellow-50 dark:bg-yellow-500/10 border-b border-yellow-200 dark:border-yellow-500/20 px-6 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                                Please verify your email address ({user.email}) to unlock free credits and all features.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleResendVerification}
-                                disabled={isResending}
-                                className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors disabled:opacity-50"
-                            >
-                                <Send className="w-4 h-4" />
-                                {isResending ? 'Sending...' : 'Resend Email'}
-                            </button>
-                            <button
-                                onClick={() => fetchUser()}
-                                className="flex items-center gap-2 text-xs font-medium text-yellow-500 hover:text-yellow-400 transition-colors"
-                            >
-                                <RotateCw className="w-4 h-4" />
-                                Check Status
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 <div className={`flex-1 ${isInterviewRoom ? 'p-0' : 'p-6 lg:p-8'} overflow-y-auto overflow-x-hidden max-w-full`}>
+                    {!isInterviewRoom && <EmailVerificationBanner />}
                     {children}
                 </div>
             </main>

@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft, Key, Building2, GraduationCap, Briefcase } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLogin } from '@react-oauth/google';
 
 import Logo from '@/components/layout/Logo';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isDemo = searchParams.get('demo') === 'true';
     const { login, googleLogin, isLoading, error } = useAuthStore();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -185,8 +187,87 @@ export default function LoginPage() {
                         </Link>
                     </p>
                 </div>
+
+                {/* Quick Demo Login Card */}
+                {isDemo && (
+                    <div className="mt-6 p-6 rounded-2xl glass border border-white/10">
+                        <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                            <Key className="w-4 h-4 text-indigo-400" />
+                            Quick Demo Login
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                            Click any role below to automatically fill test credentials:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            {/* SRMIST Admin */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFormData({ email: 'admin@srmisttrichy.edu', password: 'InstAdmin123!' });
+                                    setFieldErrors({});
+                                }}
+                                className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/50 transition-all text-left group"
+                            >
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Building2 className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" />
+                                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Institute Admin</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block truncate">admin@srmisttrichy.edu</span>
+                            </button>
+
+                            {/* Student User */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFormData({ email: 'student@srmisttrichy.edu', password: 'Student123!' });
+                                    setFieldErrors({});
+                                }}
+                                className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/50 transition-all text-left group"
+                            >
+                                <div className="flex items-center gap-2 mb-1">
+                                    <GraduationCap className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" />
+                                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Student User</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block truncate">student@srmisttrichy.edu</span>
+                            </button>
+
+                            {/* Recruiter */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFormData({ email: 'recruiter@techhunters.io', password: 'Recruiter123!' });
+                                    setFieldErrors({});
+                                }}
+                                className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/50 transition-all text-left group"
+                            >
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Briefcase className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" />
+                                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Tech Recruiter</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block truncate">recruiter@techhunters.io</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center px-4">
+                <div className="w-full max-w-md">
+                    <div className="p-8 rounded-2xl glass text-center">
+                        <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
 

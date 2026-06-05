@@ -83,6 +83,7 @@ services:
   piston:
     image: ghcr.io/engineer-man/piston
     container_name: placenxt-piston
+    privileged: true
     restart: unless-stopped
     ports:
       - "2000:2000"
@@ -92,8 +93,8 @@ services:
       - /tmp:exec,size=512m
     ulimits:
       nofile:
-        soft: 65535
-        hard: 65535
+        soft: 65536
+        hard: 65536
 
   # Installs required language packages into Piston on first startup
   piston-init:
@@ -107,23 +108,23 @@ services:
       - -c
       - |
         echo "Waiting for Piston to be ready..."
-        until curl -sf http://piston:2000/api/v2/piston/runtimes > /dev/null; do sleep 3; done
+        until curl -sf http://piston:2000/api/v2/runtimes > /dev/null; do sleep 3; done
         echo "Installing language packages..."
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"python","version":"3.10.0"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"javascript","version":"18.15.0"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"java","version":"15.0.2"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"c++","version":"10.2.0"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"c","version":"10.2.0"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"typescript","version":"5.0.3"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"go","version":"1.16.2"}'
-        curl -sf -X POST http://piston:2000/api/v2/piston/packages \
+        curl -sf -X POST http://piston:2000/api/v2/packages \
           -H 'Content-Type: application/json' -d '{"language":"rust","version":"1.50.0"}'
         echo "Piston packages installed."
 

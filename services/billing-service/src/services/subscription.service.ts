@@ -50,6 +50,20 @@ export class SubscriptionService {
     async createSubscription(input: CreateSubscriptionInput) {
         const { userId, planName, billingCycle = 'monthly', userEmail, userName, userContact, couponCode } = input;
 
+        // Check if user is verified
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isVerified: true }
+        });
+
+        if (!user) {
+            throw createError('User not found', 404, 'USER_NOT_FOUND');
+        }
+
+        if (!user.isVerified) {
+            throw createError('Email verification required to subscribe or change plans', 403, 'EMAIL_NOT_VERIFIED');
+        }
+
         // Check for existing subscription
         const existingSubscription = await this.getUserSubscription(userId);
 
@@ -222,6 +236,20 @@ export class SubscriptionService {
         billingCycle?: 'monthly' | 'yearly';
     }) {
         const { userId, planName, billingCycle = 'monthly' } = input;
+
+        // Check if user is verified
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isVerified: true }
+        });
+
+        if (!user) {
+            throw createError('User not found', 404, 'USER_NOT_FOUND');
+        }
+
+        if (!user.isVerified) {
+            throw createError('Email verification required to subscribe or change plans', 403, 'EMAIL_NOT_VERIFIED');
+        }
 
         const plan = await this.getPlanByName(planName);
         if (!plan) throw createError('Plan not found', 404, 'PLAN_NOT_FOUND');

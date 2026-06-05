@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { logger } from './logger';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -7,7 +8,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3100';
 
 function getResendClient(): Resend | null {
   if (!RESEND_API_KEY) {
-    logger.warn('RESEND_API_KEY not configured — emails will not be sent');
+    logger.warn('RESEND_API_KEY not configured — Resend emails will not be sent');
     return null;
   }
   return new Resend(RESEND_API_KEY);
@@ -15,13 +16,31 @@ function getResendClient(): Resend | null {
 
 const resend = getResendClient();
 
+function getSMTPTransporter() {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (host && user && pass) {
+    logger.info(`SMTP configuration found. Creating SMTP transporter for ${host}:${port}`);
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465 || process.env.SMTP_SECURE === 'true',
+      auth: {
+        user,
+        pass,
+      },
+    });
+  }
+  return null;
+}
+
+const smtpTransporter = getSMTPTransporter();
+
 export async function sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
   const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
-
-  if (!resend) {
-    logger.warn(`Email not configured. Reset URL for ${to}: ${resetUrl}`);
-    return;
-  }
 
   const html = `
 <!DOCTYPE html>
@@ -55,28 +74,45 @@ export async function sendPasswordResetEmail(to: string, resetToken: string): Pr
 </body>
 </html>`;
 
-  try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject: 'Reset Your PlaceNxt Password',
-      html,
-    });
-    logger.info(`Password reset email sent to ${to}`);
-  } catch (error: any) {
-    logger.error(`Failed to send password reset email to ${to}: ${error.message}`);
-    throw error;
-  }
-}
+  const text = `Reset Your PlaceNxt Password: ${resetUrl}`;
 
+  if (smtpTransporter) {
+    try {
+      await smtpTransporter.sendMail({
+        from: EMAIL_FROM,
+        to,
+        subject: 'Reset Your PlaceNxt Password',
+        text,
+        html,
+      });
+      logger.info(`Password reset email sent to ${to} via SMTP`);
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send password reset email to ${to} via SMTP: ${error.message}`);
+    }
+  }
+
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to,
+        subject: 'Reset Your PlaceNxt Password',
+        html,
+      });
+      logger.info(`Password reset email sent to ${to} via Resend`);
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send password reset email to ${to} via Resend: ${error.message}`);
+      throw error;
+    }
+  }
+
+  logger.warn(`Email not configured. Reset URL for ${to}: ${resetUrl}`);
+}
 
 export async function sendVerificationEmail(to: string, verifyToken: string): Promise<void> {
   const verifyUrl = `${FRONTEND_URL}/verify-email?token=${verifyToken}`;
-
-  if (!resend) {
-    logger.warn(`Email not configured. Verify URL for ${to}: ${verifyUrl}`);
-    return;
-  }
 
   const html = `
 <!DOCTYPE html>
@@ -110,17 +146,129 @@ export async function sendVerificationEmail(to: string, verifyToken: string): Pr
 </body>
 </html>`;
 
-  try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject: 'Verify Your Email Address - PlaceNxt',
-      html,
-    });
-    logger.info(`Verification email sent to ${to}`);
-  } catch (error: any) {
-    logger.error(`Failed to send verification email to ${to}: ${error.message}`);
-    throw error;
+  const text = `Verify Your PlaceNxt Email: ${verifyUrl}`;
+
+  if (smtpTransporter) {
+    try {
+      await smtpTransporter.sendMail({
+        from: EMAIL_FROM,
+        to,
+        subject: 'Verify Your Email Address - PlaceNxt',
+        text,
+        html,
+      });
+      logger.info(`Verification email sent to ${to} via SMTP`);
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send verification email to ${to} via SMTP: ${error.message}`);
+    }
   }
+
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to,
+        subject: 'Verify Your Email Address - PlaceNxt',
+        html,
+      });
+      logger.info(`Verification email sent to ${to} via Resend`);
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send verification email to ${to} via Resend: ${error.message}`);
+      throw error;
+    }
+  }
+
+  logger.warn(`Email not configured. Verify URL for ${to}: ${verifyUrl}`);
+}
+
+export async function sendContactFormEmail(data: {
+  name: string;
+  email: string;
+  company?: string;
+  inquiryType: string;
+  message: string;
+}): Promise<void> {
+  const subject = `Contact Inquiry: ${data.inquiryType.toUpperCase()}`;
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0f0f23;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#1a1a2e;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+    <div style="padding:32px 32px 0;text-align:center;">
+      <h1 style="color:#818cf8;font-size:24px;margin:0 0 8px;">PlaceNxt</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#ffffff;font-size:20px;margin:0 0 16px;">New Contact Inquiry</h2>
+      <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:16px;margin-bottom:20px;color:#e5e7eb;">
+        <p style="margin:4px 0;"><strong>Name:</strong> ${data.name}</p>
+        <p style="margin:4px 0;"><strong>Email:</strong> ${data.email}</p>
+        <p style="margin:4px 0;"><strong>Company/Institution:</strong> ${data.company || 'N/A'}</p>
+        <p style="margin:4px 0;"><strong>Inquiry Type:</strong> ${data.inquiryType}</p>
+      </div>
+      <h3 style="color:#ffffff;font-size:16px;margin:0 0 8px;">Message:</h3>
+      <p style="color:#9ca3af;font-size:15px;line-height:1.6;margin:0 0 24px;white-space:pre-wrap;">${data.message}</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:24px 0;">
+      <p style="color:#6b7280;font-size:12px;margin:0;">
+        This email was sent automatically from the PlaceNxt Contact Form.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `
+New Contact Form Submission
+----------------------------
+Name: ${data.name}
+Email: ${data.email}
+Company: ${data.company || 'N/A'}
+Inquiry Type: ${data.inquiryType}
+
+Message:
+${data.message}
+  `;
+
+  if (smtpTransporter) {
+    try {
+      await smtpTransporter.sendMail({
+        from: EMAIL_FROM,
+        to: 'admin@placenxt.com',
+        subject,
+        text,
+        html,
+      });
+      logger.info('Contact form email sent via SMTP');
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send contact form email via SMTP: ${error.message}`);
+    }
+  }
+
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: 'admin@placenxt.com',
+        subject,
+        html,
+      });
+      logger.info('Contact form email sent via Resend');
+      return;
+    } catch (error: any) {
+      logger.error(`Failed to send contact form email via Resend: ${error.message}`);
+      throw error;
+    }
+  }
+
+  logger.warn(`No email configuration found (SMTP or Resend). Contact message details:
+    Name: ${data.name}
+    Email: ${data.email}
+    Company: ${data.company}
+    Inquiry Type: ${data.inquiryType}
+    Message: ${data.message}
+  `);
 }
 

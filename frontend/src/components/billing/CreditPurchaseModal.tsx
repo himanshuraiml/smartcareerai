@@ -5,6 +5,7 @@ import { Loader2, X, Tag, Check, AlertCircle } from "lucide-react";
 import useRazorpay from "@/hooks/useRazorpay";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from '@/lib/auth-fetch';
+import { useToast } from "@/hooks/use-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
@@ -41,6 +42,7 @@ export default function CreditPurchaseModal({
     onSuccess,
     initialCouponCode }: CreditPurchaseModalProps) {
     const { user } = useAuthStore();
+    const { toast } = useToast();
     const isRazorpayLoaded = useRazorpay();
     const [loading, setLoading] = useState(false);
     const [couponCode, setCouponCode] = useState(initialCouponCode || "");
@@ -84,6 +86,13 @@ export default function CreditPurchaseModal({
     };
 
     const handlePurchase = async (quantity: number) => {
+        if (user && !user.isVerified) {
+            toast({
+                title: "Verification Required",
+                description: "Please verify your email address to purchase credits.",
+            });
+            return;
+        }
         setLoading(true);
         try {
             // 1. Create Order

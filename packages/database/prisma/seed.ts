@@ -84,6 +84,53 @@ async function main() {
     });
     console.log(`✅ Seeded Institution Admin: ${instAdmin.id}`);
 
+    // Seed Student User for SRMIST
+    const studentPassword = await bcrypt.hash('Student123!', 12);
+    const student = await prisma.user.upsert({
+        where: { email: 'student@srmisttrichy.edu' },
+        update: {
+            role: 'USER',
+            passwordHash: studentPassword,
+            institutionId: institution.id,
+        },
+        create: {
+            email: 'student@srmisttrichy.edu',
+            passwordHash: studentPassword,
+            name: 'SRMIST Student',
+            role: 'USER',
+            isVerified: true,
+            institutionId: institution.id,
+        },
+    });
+    console.log(`✅ Seeded Student User: ${student.id}`);
+
+    await prisma.studentProfile.upsert({
+        where: { userId: student.id },
+        update: {
+            institutionId: institution.id,
+            branch: 'Computer Science and Engineering',
+            cgpa: 8.5,
+            graduationYear: 2026,
+            backlogs: 0,
+            skills: ['JavaScript', 'Python', 'React'],
+            readinessScore: 78.5,
+            atRiskLevel: 'LOW',
+        },
+        create: {
+            userId: student.id,
+            institutionId: institution.id,
+            branch: 'Computer Science and Engineering',
+            cgpa: 8.5,
+            graduationYear: 2026,
+            backlogs: 0,
+            skills: ['JavaScript', 'Python', 'React'],
+            readinessScore: 78.5,
+            atRiskLevel: 'LOW',
+        },
+    });
+    console.log(`✅ Seeded Student Profile for: ${student.email}`);
+
+
     // Seed job roles
     const jobRoles = [
         {

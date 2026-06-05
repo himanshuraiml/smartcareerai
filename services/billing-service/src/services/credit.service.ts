@@ -179,6 +179,20 @@ export class CreditService {
         try {
             logger.info(`Creating purchase order: userId=${userId}, creditType=${creditType}, quantity=${quantity}`);
 
+            // Check if user is verified
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { isVerified: true }
+            });
+
+            if (!user) {
+                throw createError('User not found', 404, 'USER_NOT_FOUND');
+            }
+
+            if (!user.isVerified) {
+                throw createError('Email verification required to purchase credits', 403, 'EMAIL_NOT_VERIFIED');
+            }
+
             // Get dynamic pricing
             const { prices, bundles } = await this.getDynamicPricing();
 

@@ -8,13 +8,8 @@ export const metadata: Metadata = {
 
 export default function KeystaticLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
-            <head />
-            <body>
-                {children}
-            </body>
-        </html>
+        <>
+            {children}
+        </>
     );
 }
-
-
