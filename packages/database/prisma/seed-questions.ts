@@ -6873,7 +6873,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Relative references (e.g. A1) change when a formula is copied to another cell; absolute references (e.g. $A$1) remain constant',
-                    'Relative references are used for formulas; absolute references are used for text headers',
+                    'Relative references (e.g. A1) are utilized for calculated formulas; absolute references (e.g. $A$1) are reserved for static headers',
                     'Absolute references only work in worksheets that are locked with a password',
                     'Relative references can only refer to cells on the same sheet; absolute can refer to other workbooks'
                 ],
@@ -6895,10 +6895,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the purpose of a Pivot Table in Excel?',
                 questionType: 'mcq',
                 options: [
-                    'To encrypt the spreadsheet to prevent editing',
                     'To summarize, analyze, explore, and present a summary of large datasets dynamically',
-                    'To automatically generate 3D charts and graphics',
-                    'To translate cell formulas into different languages'
+                    'To store data in a secure encrypted format and share workbooks with password protection',
+                    'To automatically link cell values to external databases and refresh data on a schedule',
+                    'To create visually formatted print layouts and generate automated PDF report exports'
                 ],
                 correctAnswer: 'To summarize, analyze, explore, and present a summary of large datasets dynamically',
                 explanation: 'A Pivot Table is an interactive, powerful data-summarization tool. It allows you to automatically sort, count, total, or average data stored in one large table or spreadsheet and display the results in a second, highly flexible table. Users can drag and drop fields to slice data by columns, rows, and filters without writing complex formulas.',
@@ -6919,7 +6919,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Use the CONCATENATE function, the CONCAT function, or the & operator',
-                    'Select the cells and click the "Merge & Center" button',
+                    'Use the MERGE function, the CENTER function, or the + operator',
                     'Use the SUM function on text columns',
                     'Use the TEXTJOIN function with no arguments'
                 ],
@@ -6932,10 +6932,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the #N/A error mean in Excel?',
                 questionType: 'mcq',
                 options: [
-                    'The formula contains a division by zero error',
                     'A value is not available to the formula or function, often occurring when a lookup function cannot find a match',
-                    'Excel is out of RAM memory to calculate the sheet',
-                    'The column width is too narrow to display the number'
+                    'A formula references a cell that has been deleted or a named range that no longer exists in the workbook',
+                    'A numeric calculation overflowed the maximum value that Excel can represent in a cell',
+                    'A text value was used in a formula expecting a number, causing a type mismatch in the cell'
                 ],
                 correctAnswer: 'A value is not available to the formula or function, often occurring when a lookup function cannot find a match',
                 explanation: 'The `#N/A` error stands for "Not Available". It occurs when a formula cannot find a referenced value. In data analysis, it most commonly appears when `VLOOKUP`, `HLOOKUP`, `MATCH`, or `XLOOKUP` cannot find the requested lookup value in the search range. You can handle this gracefully using `=IFERROR(formula, default_value)` or `=IFNA(formula, default_value)`.',
@@ -6945,7 +6945,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'Which tool allows you to apply formatting (like cell color or data bars) to cells that meet specific criteria?',
                 questionType: 'mcq',
-                options: ['AutoFormat', 'Conditional Formatting', 'Format Painter', 'Cell Styles'],
+                options: ['Automatic Formatting', 'Conditional Formatting', 'Format Painter', 'Cell Styles'],
                 correctAnswer: 'Conditional Formatting',
                 explanation: 'Conditional Formatting in Excel dynamically changes a cell\'s appearance (fill color, font color, border style, data bars, or icons) based on a rule or criteria. For example, you can set a rule to automatically highlight all cells with values greater than 100 in light green, or color cells representing "Delayed" in red, making data anomalies easy to spot visually.',
                 points: 1,
@@ -6966,10 +6966,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a major advantage of the XLOOKUP function (introduced in modern Excel) over the traditional VLOOKUP?',
                 questionType: 'mcq',
                 options: [
-                    'XLOOKUP runs faster on 32-bit Excel systems but cannot search strings.',
                     'XLOOKUP can search to the left of the lookup column, defaults to an exact match, and does not require specifying a column index number.',
-                    'XLOOKUP automatically formats the returned value as currency.',
-                    'XLOOKUP can only be used inside Pivot Tables and charts.'
+                    'XLOOKUP retrieves values faster by caching the lookup array in memory and automatically updating when source data changes.',
+                    'XLOOKUP can span multiple workbooks simultaneously and supports cross-sheet lookup without specifying a file path.',
+                    'XLOOKUP automatically converts the return range to a named table and adds conditional formatting to matched rows.'
                 ],
                 correctAnswer: 'XLOOKUP can search to the left of the lookup column, defaults to an exact match, and does not require specifying a column index number.',
                 explanation: '`XLOOKUP` is the modern replacement for `VLOOKUP`. It separates the lookup range and results range (`=XLOOKUP(lookup_val, lookup_range, results_range)`). Advantages: (1) Leftward search is natively supported; (2) Column index numbers are eliminated, meaning inserting or deleting columns won\'t break the lookup; (3) It defaults to exact match (no more accidentally forgetting the `FALSE` argument); (4) It supports wildcard searches and binary search of sorted data.',
@@ -6980,10 +6980,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You want to create a new column inside a Pivot Table that calculates the average commission as Revenue * 0.05. What is the best way to do this without modifying the source data table?',
                 questionType: 'mcq',
                 options: [
-                    'Write the formula in the cells adjacent to the Pivot Table and drag it down manually.',
                     'Insert a "Calculated Field" inside the Pivot Table Analyze tab and define the formula `= Revenue * 0.05`.',
-                    'Use VBA to loops through every row of the Pivot Table and append the calculation.',
-                    'Use the GETPIVOTDATA function to pull the numbers into a new worksheet.'
+                    'Add a new column to the source data table with the commission formula, then refresh the Pivot Table to include it.',
+                    'Use GETPIVOTDATA in a helper column beside the Pivot Table and apply the multiplier formula there.',
+                    'Create a separate worksheet with SUMIF formulas referencing the Pivot Table output range and apply the rate.'
                 ],
                 correctAnswer: 'Insert a "Calculated Field" inside the Pivot Table Analyze tab and define the formula `= Revenue * 0.05`.',
                 explanation: 'A **Calculated Field** is a custom formula that operates on the sum of existing fields in the Pivot Table\'s underlying cache. To insert it: click the Pivot Table > PivotTable Analyze > Fields, Items, & Sets > Calculated Field. Type the formula `= Revenue * 0.05`. Excel automatically aggregates and calculates this field for every row and subtotal in the Pivot Table, updating dynamically when filters or rows are changed. Writing formulas adjacent to the Pivot Table is fragile because they do not adjust when the Pivot Table expands or contracts.',
@@ -6995,9 +6995,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'It is more computationally efficient on large datasets, does not break when columns are inserted or deleted, and allows two-way lookups (left-to-right or right-to-left).',
-                    'INDEX/MATCH automatically translates spreadsheet languages and supports web links.',
-                    'VLOOKUP does not support exact matching of numbers.',
-                    'INDEX/MATCH can read closed PDF files directly from the hard drive.'
+                    'It only recalculates cells that depend on changed inputs, reducing full-sheet refresh time and supporting multi-criteria lookups natively.',
+                    'It automatically expands to accommodate new data rows without manually updating formula ranges or named references.',
+                    'It validates lookup values against a data validation list and highlights mismatches with conditional formatting automatically.'
                 ],
                 correctAnswer: 'It is more computationally efficient on large datasets, does not break when columns are inserted or deleted, and allows two-way lookups (left-to-right or right-to-left).',
                 explanation: '`INDEX` returns a cell value from a grid using row/column coordinates. `MATCH` finds the row/column coordinate of a value. Combined: `=INDEX(results_column, MATCH(lookup_value, search_column, 0))`. Benefits: (1) **Flexibility**: can search left or right; (2) **Robustness**: no column index number is hard-coded, so inserting columns won\'t break it; (3) **Performance**: Excel only reads the two columns involved, whereas `VLOOKUP` loads the entire table array into memory, slowing calculations down on large datasets.',
@@ -7024,10 +7024,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You inherit a 150MB financial modeling workbook with dozens of sheets containing thousands of nested VLOOKUP and SUMIFS formulas. Every time a single value is changed, the workbook freezes for 30 seconds. What are the key strategies to optimize this workbook\'s performance?',
                 questionType: 'mcq',
                 options: [
-                    'Export the workbook as a PDF and open it in a web browser to edit.',
                     'Switch calculation options to Manual while editing, replace nested volatile functions (like OFFSET or INDIRECT) with INDEX/MATCH or direct references, convert historical formula ranges to values, and use Power Query to offload heavy data cleaning and aggregation operations.',
-                    'Write a VBA macro that deletes all Pivot Tables and charts.',
-                    'Split the sheets into 20 different files and link them together using external cell references.'
+                    'Enable multi-threaded calculation across all CPU cores, convert Pivot Tables to structured table references, replace array formulas with dynamic array functions, and archive old worksheets into a separate linked read-only workbook.',
+                    'Disable all conditional formatting rules, remove data validation drop-downs, delete unused named ranges, and save the workbook in binary XLSB format to reduce parse time on open.',
+                    'Split the file into monthly sheets, link them with 3D references across sheets, disable formula auditing arrows, and clear all formatting from unused cell ranges below row 500.'
                 ],
                 correctAnswer: 'Switch calculation options to Manual while editing, replace nested volatile functions (like OFFSET or INDIRECT) with INDEX/MATCH or direct references, convert historical formula ranges to values, and use Power Query to offload heavy data cleaning and aggregation operations.',
                 explanation: 'Sluggish Excel workbooks are caused by formula overload and inefficient functions. Optimization steps: (1) **Manual Calculation**: prevents Excel from recalculating the entire sheet after every cell change; (2) **Eliminate Volatile Functions**: functions like `OFFSET`, `INDIRECT`, `TODAY`, and `NOW` recalculate every time *any* cell is edited, causing massive lag. Replace them with non-volatile alternatives; (3) **Values Conversion**: convert old formulas (e.g. 2024 historical calculations) to static values to save CPU time; (4) **Offload to Power Query**: instead of using thousands of complex lookup and summarization formulas, use Power Query to load and aggregate data. Power Query computes data offline and outputs a clean, static, lightweight table to the sheets.',
@@ -7038,10 +7038,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are building a debt schedule in a financial model where interest expense affects net income, which affects cash flow, which affects the ending debt balance, which in turn affects the interest expense. This creates a circular reference. How do you properly handle this in Excel without breaking the workbook?',
                 questionType: 'mcq',
                 options: [
-                    'Simply ignore the warning; Excel is powerful enough to handle circular references by default.',
                     'Go to Excel Options > Formulas, check "Enable iterative calculation", and set Maximum Iterations (typically 100). Alternatively, write a VBA macro or build a non-circular mathematical approximation to break the loop.',
-                    'Save the file as a CSV to strip out all circular calculation paths.',
-                    'Delete the cash flow statement to remove the cash calculation.'
+                    'Go to Excel Options > Advanced, enable background error checking, and add an IFERROR wrapper around each circular formula to suppress the reference alert.',
+                    'Break the circle by splitting the debt schedule across two worksheets and using a one-period lag, linking the prior-period ending balance as a hard-coded paste-values input.',
+                    'Replace the circular INTEREST formula with a fixed-rate lookup table keyed on the beginning balance range so Excel never needs to recalculate the loop dynamically.'
                 ],
                 correctAnswer: 'Go to Excel Options > Formulas, check "Enable iterative calculation", and set Maximum Iterations (typically 100). Alternatively, write a VBA macro or build a non-circular mathematical approximation to break the loop.',
                 explanation: 'A circular reference occurs when a formula refers to its own cell (either directly or through a chain of references). By default, Excel stops calculating and displays a circular reference error because it is trapped in an infinite loop. To resolve this inside Excel, you can enable **Iterative Calculation**, which instructs Excel to recalculate the loop a set number of times (Maximum Iterations) or until the change between iterations is extremely small (Maximum Change), allowing the calculation to converge. Professional financial modelers sometimes avoid iterative calculation by building a "circ-breaker" switch in VBA to toggle circular loops, preventing workbook instability.',
@@ -7052,10 +7052,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You need to build an automated monthly reporting pipeline. Every month, you receive 5 different CSV files with inconsistent date formats, trailing spaces, and null rows. You must merge them into a single clean table. What is the most robust and modern Excel architecture for this task?',
                 questionType: 'mcq',
                 options: [
-                    'Write a complex VBA macro that uses regular expressions to parse each CSV file, trim spaces, and append rows into a master sheet.',
                     'Use Excel Power Query to create a connection to the folder. Apply transformation steps (trim, split columns, parse dates, filter nulls) inside the Power Query editor, which automatically generates M code to repeat these steps upon refresh.',
-                    'Open all CSV files, copy-paste the data manually, and use Excel\'s Find & Replace tool to clean dates and spaces.',
-                    'Use the text-to-columns wizard in Excel and link sheets using HLOOKUP formulas.'
+                    'Create a VBA UserForm that prompts the user to select each CSV manually, applies a standard cleaning sub-routine per file, and pastes normalized data into a consolidated master sheet with error logging.',
+                    'Build a structured VLOOKUP-based template that maps each CSV layout to fixed columns, use Flash Fill to standardize date formats, and schedule a Windows Task Scheduler job to open the workbook monthly.',
+                    'Use the built-in Text Import Wizard for each file, apply consistent column delimiters, use TRIM and DATEVALUE formulas on the imported sheet, and manually copy results into the master table.'
                 ],
                 correctAnswer: 'Use Excel Power Query to create a connection to the folder. Apply transformation steps (trim, split columns, parse dates, filter nulls) inside the Power Query editor, which automatically generates M code to repeat these steps upon refresh.',
                 explanation: 'Excel **Power Query** (Get & Transform) is the industry standard for ETL (Extract, Transform, Load) pipelines in spreadsheets. By creating a connection to a folder, it can dynamically load and consolidate all CSVs in that folder. All cleaning steps (trimming spaces, parsing inconsistent dates, discarding null rows) are recorded as a repeatable sequence of steps written in the **M language**. When new files are dropped in next month, clicking "Refresh All" runs the entire pipeline instantly. This is significantly more robust than VBA: it has an intuitive GUI, handles errors gracefully, is easier to debug, and requires no security exceptions (macros) to run.',
@@ -7072,7 +7072,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Dimensions contain qualitative values (like names or dates) that slice the data; Measures contain quantitative numerical values that can be aggregated',
-                    'Dimensions are always green; Measures are always blue',
+                    'Dimensions contain qualitative categories (like status or categories) that classify the data; Measures contain visual properties that can be configured',
                     'Measures can only be used as filters; Dimensions can only be used as rows',
                     'Dimensions are read from Excel; Measures are calculated inside Tableau'
                 ],
@@ -7100,7 +7100,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A Live connection queries the data source directly in real-time; an Extract is a static snapshot of data saved locally or in Tableau Server memory',
-                    'Live connections only work with cloud databases; Extracts only work with Excel sheets',
+                    'A Live connection updates the dashboard structure using cloud APIs; an Extract is a temporary cache of visual filters saved on the network drive',
                     'Extract connections are updated every second; Live connections are updated once a day',
                     'Live connections are always faster than Extract connections'
                 ],
@@ -7114,9 +7114,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A sequence of sheets or dashboards that work together to convey information and walk the user through a narrative',
-                    'A text summary generated by AI based on the data source',
-                    'An audio recording of the analyst explaining the charts',
-                    'A layout template that automatically generates corporate slide shows'
+                    'A collection of calculations and filters that are applied globally across all workbooks published to Tableau Server or Tableau Cloud',
+                    'A tabular view that displays all available dimensions and measures from the data source in alphabetical order',
+                    'A scheduled job that automatically refreshes extract connections and sends email alerts to subscribed viewers'
                 ],
                 correctAnswer: 'A sequence of sheets or dashboards that work together to convey information and walk the user through a narrative',
                 explanation: 'A **Story** is a sheet that contains a sequence of worksheets or dashboards (called Story Points). Each story point represents a specific step or view in a narrative. Users can click through these points sequentially using navigation buttons, allowing analysts to build interactive guided walk-throughs, business cases, or sequence analysis.',
@@ -7142,9 +7142,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'To suggest and quickly apply different standard chart types based on the selected fields in the view',
-                    'To show the raw database SQL query generated by Tableau',
-                    'To display a list of user profiles logged into the server',
-                    'To automatically publish the dashboard to Tableau Public'
+                    'To calculate and recommend statistical chart configurations based on the measure distributions in the current extract',
+                    'To display previews of recently published dashboards and provide links to download them as PDF files',
+                    'To apply pre-built formatting themes and corporate color palettes to the currently selected worksheet'
                 ],
                 correctAnswer: 'To suggest and quickly apply different standard chart types based on the selected fields in the view',
                 explanation: 'The **Show Me** pane (usually top-right) lists 24 standard visual layouts (e.g. bar charts, maps, treemaps, scatter plots). When you select fields in the Data pane, the Show Me card highlights which chart types are valid for those data types, showing exactly how many dimensions and measures are required for each chart.',
@@ -7156,9 +7156,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Drag one dimension on top of another in the Data pane and name the hierarchy',
-                    'Write a complex calculated field using the HIERARCHY() function',
-                    'Tableau automatically builds all hierarchies; users cannot edit them',
-                    'Sort the columns alphabetically in the data source view'
+                    'Write a calculated field using the LEVEL_OF_DETAIL() function and assign it a parent-child relationship',
+                    'Right-click each dimension and select "Set as Parent" then "Set as Child" in the hierarchy editor panel',
+                    'Use the Data menu to open the Hierarchy Builder and define parent-child mappings between fields'
                 ],
                 correctAnswer: 'Drag one dimension on top of another in the Data pane and name the hierarchy',
                 explanation: 'Creating a hierarchy enables dynamic "drill-down" capabilities in reports. To create one, simply drag one dimension (e.g. State) directly on top of another (e.g. Country) in the Data pane, and input a hierarchy name. You can then drag other fields (like City or Zip Code) into this hierarchy. Inside a chart, clicking the `+` icon on a hierarchy pill expands the view to the next level.',
@@ -7171,10 +7171,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'A developer wants to combine sales data from an Oracle database with quota data from an Excel sheet. The sales database has transaction-level rows, while the quota sheet has monthly-level rows. Which integration method is best and why?',
                 questionType: 'mcq',
                 options: [
-                    'Use a physical Inner Join on Date, as it is the fastest way to flatten the data.',
                     'Use Data Blending because it queries each database independently at their respective levels of detail, aggregates the results, and then blends them in the visualization, avoiding row duplication.',
-                    'Merge them in Power Query first to create a single flat text file.',
-                    'Use the UNION operator to stack the sales rows on top of the quota rows.'
+                    'Use a physical Left Join on the Month field because Tableau merges rows from different sources by matching the join key and preserving all sales rows, ensuring quota figures are not duplicated.',
+                    'Use a Relationship in the logical layer, linking the Month field from both sources so Tableau resolves the granularity mismatch automatically at query time.',
+                    'Use a Union to append the quota rows beneath the transaction rows and add a calculated field to separate them into distinct measure columns.'
                 ],
                 correctAnswer: 'Use Data Blending because it queries each database independently at their respective levels of detail, aggregates the results, and then blends them in the visualization, avoiding row duplication.',
                 explanation: 'When combining data from different sources with different granularities (e.g., transaction-level sales vs. monthly-level quotas), a standard physical **Join** will duplicate the monthly quota row for every individual sales transaction in that month, resulting in highly inflated quota sums. **Data Blending** resolves this by sending independent queries to each source, aggregating the data to the level of the linking fields (e.g., summing sales by month, and keeping quota by month), and then joining the two aggregated result sets inside the visualization. Relationships (Logical Layer) can also handle this, but blending is the traditional, reliable cross-database query method.',
@@ -7199,7 +7199,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You have a dashboard showing the Top 10 Products by Sales. You add a filter for Product Category, but selecting "Technology" shows only 3 products instead of 10. Why is this happening, and how do you fix it?',
                 questionType: 'mcq',
                 options: [
-                    'This is a bug in Tableau Server. Fix: re-install the Tableau application.',
+                    'Tableau executes the Category filter BEFORE the Top 10 filter. Fix: Right-click the Top 10 filter in the Viz card and select "Add to Dimension" to force Tableau to filter by dimension first.',
                     'Tableau processes the Top 10 filter BEFORE the Category filter. Fix: Right-click the Category filter in the Filters shelf and select "Add to Context" to force Tableau to filter by category first.',
                     'Tableau only supports Top 10 filtering on the primary database key.',
                     'The products are missing categories. Fix: apply a default imputation rule.'
@@ -7213,10 +7213,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a primary use case of a Parameter in Tableau?',
                 questionType: 'mcq',
                 options: [
-                    'To automatically partition the database server into shards',
                     'To allow dashboard users to dynamically input values, change limits, or swap measures/dimensions in a chart without editing the worksheet',
-                    'To encrypt sensitive user columns before publishing a report',
-                    'To automatically generate responsive layout templates'
+                    'To store user authentication credentials and session tokens that control who can access and interact with the published workbook',
+                    'To define reusable filter presets that can be applied simultaneously across multiple dashboards within the same workbook',
+                    'To configure the connection string properties that Tableau uses when querying the live database or extract data source'
                 ],
                 correctAnswer: 'To allow dashboard users to dynamically input values, change limits, or swap measures/dimensions in a chart without editing the worksheet',
                 explanation: 'A **Parameter** is a workbook variable (like a number, string, or date) that can replace a constant value in a calculation, filter, or reference line. For example, you can create a parameter called "Top N Products" (allowing the user to type or slide a number from 5 to 50), and reference it in a Top filter. You can also use parameters combined with calculated fields to let users dynamically select which measure (e.g. Sales, Profit, or Cost) is plotted on the Y-axis of a chart.',
@@ -7227,10 +7227,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You want to configure your Tableau dashboard so that clicking a bar representing a specific state in one chart automatically filters all other charts on the dashboard to show data only for that state. What is this feature called?',
                 questionType: 'mcq',
                 options: [
-                    'A Context Filter',
                     'A Filter Action',
-                    'A Parameter Control',
-                    'A Logical Relationship'
+                    'A Context Filter applied to the Rows shelf that propagates its scope across all shared axes in the dashboard layout',
+                    'A Parameter control that captures a clicked dimension value and passes it to a calculated field driving all worksheets',
+                    'A Highlight Action configured to dim unselected marks across all worksheets in the dashboard simultaneously'
                 ],
                 correctAnswer: 'A Filter Action',
                 explanation: 'A **Filter Action** (configured in Dashboard > Actions) allows you to use the visual marks in one worksheet as a dynamic filter for other worksheets on the same dashboard. When configured, clicking a data point (like a bar, pie slice, or map region) captures its dimension values (e.g. State="California") and passes them as a filter to the target worksheets, updating the dashboard interactively and intuitively.',
@@ -7243,10 +7243,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'A large enterprise dashboard with 15 worksheets and a live connection to a massive Snowflake warehouse takes 45 seconds to load. What steps should a Tableau developer take to optimize the rendering speed?',
                 questionType: 'mcq',
                 options: [
-                    'Write a Python script to compress the Snowflake tables, and use Custom SQL for all filters.',
                     'Create a Tableau extract (Hyper) instead of a live connection, reduce the number of worksheets per dashboard to under 5, use context filters sparingly, avoid complex nested container layouts, and push heavy calculations back to the database layer.',
-                    'Disable the Tableau cache and use multiple separate dashboards linked by web links.',
-                    'Convert all dimension fields to measures to bypass query processing.'
+                    'Enable custom SQL views for every worksheet query, increase the Hyper process memory allocation, add more context filters to pre-filter the data, and switch to fixed-size tiled layout containers to speed up rendering.',
+                    'Switch to a live connection and reduce row-level security filters, replace FIXED LOD expressions with INCLUDE LODs, and increase the number of worksheets to distribute query load across more concurrent requests.',
+                    'Use Tableau Prep Builder to blend all sources into one flat extract, add floating layout containers for each worksheet, and enable all mark types on every sheet to reduce server-side aggregation steps.'
                 ],
                 correctAnswer: 'Create a Tableau extract (Hyper) instead of a live connection, reduce the number of worksheets per dashboard to under 5, use context filters sparingly, avoid complex nested container layouts, and push heavy calculations back to the database layer.',
                 explanation: 'Optimizing sluggish Tableau dashboards requires minimizing database queries and visual rendering times: (1) **Tableau Extracts (Hyper)**: columnar, in-memory data storage that is highly optimized for analytical queries, bypassing Snowflake network lag; (2) **Reduce Worksheet Count**: each worksheet sends one or more separate queries. 15 worksheets mean 15+ concurrent queries hitting Snowflake, creating a huge bottleneck. Consolidate worksheets; (3) **Context Filters**: while useful, context filters force Tableau to construct temporary tables in memory, which adds overhead. Use them only when mathematically necessary; (4) **Container Layouts**: complex nested layouts require the layout engine to compute thousands of alignment boxes, slowing down web rendering. Keep structures clean; (5) **Push Calculations to DB**: heavy calculations (like string cleaning or multi-stage conditionals) should be computed in Snowflake (via views or DBT) so Tableau only reads pre-calculated fields, avoiding row-by-row string operations in the visualization engine.',
@@ -7258,9 +7258,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Use a single FIXED LOD on Order Date: `{ FIXED [Customer ID] : MIN([Order Date]) }` to find the cohort, and another to compare subsequent purchase dates.',
-                    'Use a standard t-test worksheet filter combined with an average reference line.',
-                    'This is impossible in Tableau without writing custom R/Python scripts.',
-                    'Use a nested INCLUDE LOD mapping Customer ID to the average purchase count.'
+                    'Use a FIXED LOD to assign the acquisition year to each customer, then a second FIXED LOD that checks whether they placed any order in the following year, and filter to the 2024 acquisition cohort.',
+                    'Use an EXCLUDE LOD to remove the Customer ID dimension and compute the average order count per year, then filter the resulting measure to customers who appear in both 2024 and 2025.',
+                    'Use an INCLUDE LOD on Order Date to compute total sales per customer per year, then apply a table calculation that compares adjacent year values to derive the year-over-year repeat-purchase rate.'
                 ],
                 correctAnswer: 'Use a single FIXED LOD on Order Date: `{ FIXED [Customer ID] : MIN([Order Date]) }` to find the cohort, and another to compare subsequent purchase dates.',
                 explanation: 'To compute cohort retention: (1) Identify each customer\'s first purchase date using a FIXED LOD: `First Purchase Date = { FIXED [Customer ID] : MIN([Order Date]) }`. This attaches the cohort year to every row for that customer; (2) Create a boolean calculation to check if a customer purchased in 2025: `Purchased in 2025 = { FIXED [Customer ID] : MAX(IF YEAR([Order Date]) = 2025 THEN 1 ELSE 0 END) } = 1`; (3) Create a filter `YEAR(First Purchase Date) = 2024` to isolate the cohort. (4) Plot `Purchased in 2025` as a percentage of total customers in the cohort to calculate the retention rate. FIXED LODs are critical here because they allow aggregating customer history independent of the temporal dimensions in the visualization.',
@@ -7271,7 +7271,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are deploying a sales dashboard to Tableau Cloud that will be shared with 50 regional managers. Each manager must only see the data for their own region. How do you implement secure, scalable Row-Level Security in Tableau?',
                 questionType: 'mcq',
                 options: [
-                    'Create 50 separate workbooks, filter each manually, and email them individually.',
+                    'Create a custom javascript function in the web portal mapping user credentials to folders, upload this file to Tableau Server in the security settings, and apply a user-level restriction policy using system commands.',
                     'Create a user entitlement table in the database mapping manager emails to regions, join this table with your sales data in the physical layer, and apply a data source filter using the USERNAME() or FULLNAME() system functions.',
                     'Encrypt the dashboard workbook using a standard password, and send different passwords to different managers.',
                     'Configure a custom JS web portal that intercepts database rows before they reach Tableau.'
@@ -7290,10 +7290,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What are the two primary languages used in Power BI?',
                 questionType: 'mcq',
                 options: [
-                    'SQL and Python',
                     'M language (used in Power Query for data transformation) and DAX (used in the data model for calculations)',
-                    'HTML and CSS',
-                    'VBA and JavaScript'
+                    'SQL (used for querying the data warehouse) and Python (used for writing custom data transformation scripts)',
+                    'MDX (used in SSAS cubes for multidimensional queries) and R (used in the model layer for statistical calculations)',
+                    'VBA (used in Power Query for automation) and JSON (used in the data model for defining measure schemas)'
                 ],
                 correctAnswer: 'M language (used in Power Query for data transformation) and DAX (used in the data model for calculations)',
                 explanation: 'Power BI uses two distinct languages: **M language** is a formula language used in the Power Query Editor to connect, clean, and transform raw data. **DAX (Data Analysis Expressions)** is a formula language used once data is loaded into the data model to build calculated columns, measures, and perform analytical calculations.',
@@ -7305,7 +7305,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Calculated columns are computed row-by-row during data refresh and stored in memory; Measures are calculated dynamically on-the-fly based on the visual filter context',
-                    'Measures are calculated during refresh; Calculated columns are computed on-the-fly',
+                    'Calculated columns are evaluated columns-by-columns during visual rendering and stored in caches; Measures are calculated statically on refresh based on database index tables',
                     'Calculated columns are only used in charts; Measures are only used in slicers',
                     'Calculated columns can only store numbers; Measures can store text and images'
                 ],
@@ -7319,7 +7319,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A modeling pattern with a central Fact table containing quantitative data, surrounded by related Dimension tables containing descriptive attributes',
-                    'A database connection layout that looks like a solar system',
+                    'A database schema pattern with a central Dimension table containing configuration keys, surrounded by related Fact tables containing categorical logs',
                     'A type of circular relationship where tables refer to each other in a loop',
                     'A visualization format that draws stars on a geographical map'
                 ],
@@ -7333,7 +7333,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'To connect to, shape, clean, and transform data before loading it into the data model',
-                    'To publish reports directly to the web',
+                    'To publish to, share, encrypt, and schedule reports before distributing them to the user workspace',
                     'To write custom CSS templates for dashboard styling',
                     'To manage user roles and data encryption keys'
                 ],
@@ -7347,9 +7347,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Directly queries the underlying data source in real-time when visuals are viewed, without importing data into Power BI memory',
-                    'Imports all rows into RAM but bypasses the Power Query editor',
-                    'Allows users to send emails directly from the dashboard visual',
-                    'Automatically translates DAX formulas into SQL statements for export'
+                    'Directly exports report pages as static images to a SharePoint folder on a scheduled basis, without storing intermediate results',
+                    'Automatically partitions imported data into incremental refresh windows and queries only the changed partitions on each refresh',
+                    'Sends DAX queries to a local Analysis Services instance and retrieves pre-aggregated results without contacting the cloud gateway'
                 ],
                 correctAnswer: 'Directly queries the underlying data source in real-time when visuals are viewed, without importing data into Power BI memory',
                 explanation: 'In **DirectQuery mode**, no data is imported or cached in Power BI Desktop. Instead, when a user interacts with a report (e.g. selects a slicer), Power BI translates the visual\'s DAX query into raw SQL and sends it directly to the source database in real-time. Ideal for massive datasets (billions of rows) or when near real-time data is required, though it can suffer from slower visual loading times compared to Import mode.',
@@ -7361,9 +7361,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'An on-sheet interactive visual filter that allows users to narrow down the data shown in other report visuals',
-                    'A tool for cutting up long data tables into smaller CSV files',
-                    'A visual element used to display animated pie charts',
-                    'An administrator dashboard that monitors server resource consumption'
+                    'An off-sheet data access control that allows workspace administrators to restrict which columns are visible to specific user roles',
+                    'A background process that runs automated DAX queries and writes the results to a scheduled export table',
+                    'A report-level filter applied from the Filters pane that persists across all pages and cannot be modified by consumers'
                 ],
                 correctAnswer: 'An on-sheet interactive visual filter that allows users to narrow down the data shown in other report visuals',
                 explanation: 'A **Slicer** is an interactive on-page filter element. Unlike filters in the Filters Pane, a slicer is visible on the report canvas. Users can select values (like Year, Region, or Product Category) in a checkbox, dropdown, or slider list, dynamically filtering all other visuals on the report page to display only the relevant subset of data.',
@@ -7375,9 +7375,9 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Select the slicer, go to Format > Edit Interactions, and select the "None" icon on the target visual',
-                    'Delete the relationship between the tables in the model view',
-                    'Write a DAX measure using the REMOVEFILTER() function on the visual',
-                    'Lock the visual layout in report options'
+                    'Right-click the target visual, choose "Keep Filters", and add the slicer field to the visual-level filter shelf set to "All"',
+                    'Navigate to the Modeling tab, click Manage Relationships, and disable the relationship between the slicer table and the target table',
+                    'Open the Filters pane on the target visual, add the slicer field as a visual-level filter, and set the filter condition to "is not blank"'
                 ],
                 correctAnswer: 'Select the slicer, go to Format > Edit Interactions, and select the "None" icon on the target visual',
                 explanation: 'To customize visual filtering interactions: select the source slicer or chart, go to the **Format** tab on the top ribbon, click **Edit Interactions**. Small icons (Filter vs. None) will appear over every other visual on the canvas. Clicking the **None** (crossed-out circle) icon on a target visual disconnects it, preventing that specific slicer from filtering it.',
@@ -7390,10 +7390,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the primary purpose of the CALCULATE function in DAX?',
                 questionType: 'mcq',
                 options: [
-                    'To perform basic mathematical operations (addition, subtraction) faster than standard operators.',
                     'To evaluate an expression in a modified filter context, allowing you to add, remove, or override filters.',
-                    'To calculate the execution time of a DAX query in milliseconds.',
-                    'To automatically generate calculated columns in the Fact table.'
+                    'To aggregate a numeric column using a pre-defined aggregation schema, allowing you to sum, average, or count values.',
+                    'To iterate over a table row-by-row and return a scalar result based on the expression applied to each row.',
+                    'To create a new virtual table in the data model based on a DAX expression and cache it for reuse in measures.'
                 ],
                 correctAnswer: 'To evaluate an expression in a modified filter context, allowing you to add, remove, or override filters.',
                 explanation: '`CALCULATE` is the most powerful function in DAX. It is the only function that can modify the **Filter Context** of a calculation. It evaluates its first argument in a context modified by its subsequent filter arguments. For example, `=CALCULATE([TotalSales], Sales[Category] = "Audio")` overrides any Category filters in the visual, forcing the calculation to return only Audio sales.',
@@ -7404,10 +7404,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why is a Star Schema preferred over a single large flat table in Power BI data modeling?',
                 questionType: 'mcq',
                 options: [
-                    'A flat table cannot contain more than 10,000 rows in Power BI.',
                     'It optimizes storage using the VertiPaq engine, ensures fast DAX query performance, simplifies relationship paths, and prevents circular dependency errors.',
-                    'Star Schemas automatically write all DAX measures for the developer.',
-                    'It is required in order to connect to SQL databases.'
+                    'It compresses descriptive attributes into the Fact table using run-length encoding, clusters measures into dimension groups, and eliminates the need for a Calendar table.',
+                    'It reduces data import time by partitioning dimension tables into equal-sized buckets and pre-sorting the Fact table by primary key before loading.',
+                    'It automatically generates all DAX measures from column metadata, eliminating manual formula creation and simplifying maintenance of the data model.'
                 ],
                 correctAnswer: 'It optimizes storage using the VertiPaq engine, ensures fast DAX query performance, simplifies relationship paths, and prevents circular dependency errors.',
                 explanation: 'Power BI\'s **VertiPaq** engine is a columnar database designed to compress and scan data column-by-column. A single large flat table with repeated strings (e.g. customer addresses, product names) is highly inefficient to compress and causes slow scans. By separating descriptive columns into high-cardinality **Dimension Tables** and keeping only foreign keys and metrics in the **Fact Table** (Star Schema), we minimize memory footprint, accelerate DAX query times, simplify model relationships, and prevent relationship ambiguity and circular paths.',
@@ -7432,10 +7432,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What happens when a measure is evaluated inside a calculated column formula (e.g. Column = [MyMeasure])?',
                 questionType: 'mcq',
                 options: [
-                    'A compile-time error occurs because measures cannot be referenced in columns.',
                     'A "Context Transition" occurs, where the current row context of the calculated column is automatically converted into an equivalent filter context for the measure evaluation.',
-                    'The measure evaluates to blank because there is no visual active filter context.',
-                    'The measure is converted into a static string.'
+                    'A "Context Propagation" occurs, where the measure inherits the active slicer filter context from the report page and applies it to each row of the calculated column.',
+                    'A "Context Merge" occurs, where the row context and the existing report filter context are combined into a single composite context used to evaluate the measure.',
+                    'A "Context Expansion" occurs, where the row context is broadcast across all related tables via active relationships before the measure expression is evaluated.'
                 ],
                 correctAnswer: 'A "Context Transition" occurs, where the current row context of the calculated column is automatically converted into an equivalent filter context for the measure evaluation.',
                 explanation: 'This is a crucial concept. A calculated column operates in a **Row Context** (it loops through the table row-by-row, but has no filter context). A measure operates in a **Filter Context**. When you call a measure inside a calculated column, the engine wraps the measure in a hidden `CALCULATE` block, triggering a **Context Transition**. This transition takes all column values for the *current row* and applies them as filters to evaluate the measure. If the row has duplicate values, it will aggregate them, which can lead to unexpected results or performance lag if not intended.',
@@ -7446,10 +7446,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the primary difference between a Power BI Workspace and a Power BI App?',
                 questionType: 'mcq',
                 options: [
-                    'Workspaces are only available on mobile phones; Apps work on desktop computers.',
                     'A Workspace is a collaborative environment for developers to create reports; an App is a packaged read-only distribution mechanism for sharing reports with end-users.',
-                    'Workspaces use M language; Apps use only DAX calculations.',
-                    'There is no difference; they are interchangeable terms.'
+                    'A Workspace is a local Power BI Desktop environment for building models; an App is a cloud-hosted version of that workspace synced to the Power BI Service automatically.',
+                    'A Workspace stores raw data connections and gateway credentials; an App stores the published DAX measures and report layout templates for consumer use.',
+                    'A Workspace is used to configure row-level security and manage user roles; an App is the rendered output of those roles displayed to assigned end-users.'
                 ],
                 correctAnswer: 'A Workspace is a collaborative environment for developers to create reports; an App is a packaged read-only distribution mechanism for sharing reports with end-users.',
                 explanation: 'In Power BI Service: (1) **Workspaces** are shared containers where creators collaborate on datasets, dataflows, and reports. Developers have edit access; (2) **Apps** are packaged collections of those reports published from the workspace. Apps are distributed to end-users (consumers) as a clean, read-only portal. This separates development from consumption, ensuring business users don\'t see reports that are in-progress.',
@@ -7462,10 +7462,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You write a DAX measure: `TotalSalesRank = RANKX(ALL(Sales), SUMX(Sales, Sales[Qty] * Sales[UnitPrice]))`. The report freezes or throws an Out of Memory error when loaded. Why is this measure performing so poorly, and how do you optimize it?',
                 questionType: 'mcq',
                 options: [
-                    'RANKX does not support multiplication formulas inside its parameters. Fix: use addition instead.',
                     'The SUMX is executing a row-context transition for every row in the Sales table inside RANKX. This forces the engine to build a filter context millions of times. Optimization: pre-calculate the row multiplication as a physical column in Power Query, or define a simple measure `SalesAmount = SUM(Sales[Revenue])` and reference it directly in RANKX.',
-                    'ALL(Sales) clears all indexes. Fix: change it to VALUES(Sales).',
-                    'Power BI cannot sort float numbers. Fix: convert UnitPrice to integers.'
+                    'The RANKX is scanning all columns in the ALL(Sales) table to resolve ties, and SUMX is recalculating the entire table expression for each tied rank. Optimization: add a tiebreaker column in Power Query and use RANK.EQ instead of RANKX.',
+                    'ALL(Sales) expands the filter context to every table in the model, causing SUMX to aggregate across all related tables rather than only the Sales table. Optimization: replace ALL(Sales) with ALLEXCEPT(Sales, Sales[ProductID]).',
+                    'SUMX cannot be nested inside RANKX because both are iterator functions; Power BI requires a scalar value as the second argument. Optimization: replace SUMX with AVERAGEX or use SUMX in a separate measure first.'
                 ],
                 correctAnswer: 'The SUMX is executing a row-context transition for every row in the Sales table inside RANKX. This forces the engine to build a filter context millions of times. Optimization: pre-calculate the row multiplication as a physical column in Power Query, or define a simple measure `SalesAmount = SUM(Sales[Revenue])` and reference it directly in RANKX.',
                 explanation: 'In the measure `TotalSalesRank`, the second argument is a raw expression: `SUMX(Sales, Sales[Qty] * Sales[UnitPrice])`. Inside `RANKX`, for every row of the `Sales` table (from `ALL(Sales)`), the engine must evaluate this expression. Because `SUMX` is an aggregator, this triggers an automatic **context transition** (row-context to filter-context conversion) for *every single row* in the table. If `Sales` has 1 million rows, this forces the engine to perform 1 million context transitions, generating an astronomical CPU bottleneck. **Optimization**: (1) If we pre-calculate `Revenue = Qty * UnitPrice` as a column in Power Query, we can use `SUM(Sales[Revenue])` which uses the fast column index; (2) Or, define a standalone measure `SalesAmount = SUMX(Sales, Sales[Qty] * Sales[UnitPrice])`. Calling `RANKX(ALL(Sales), [SalesAmount])` leverages internal engine caching and is optimized, avoiding the slow row-by-row transition overhead.',
@@ -7476,10 +7476,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are modeling bank accounts and customers. An account can have multiple owners (joint account), and a customer can have multiple accounts. This creates a many-to-many relationship. What is the best-practice modeling approach in Power BI to ensure accurate reporting without double-counting?',
                 questionType: 'mcq',
                 options: [
-                    'Establish a direct many-to-many relationship in the Relationship view, set cross-filter direction to Both, and ignore warnings.',
                     'Create a bridge table containing unique combinations of Customer ID and Account ID, establish one-to-many relationships from both dimensions to the bridge table, and set cross-filter direction to Single or handle cross-filtering using DAX CROSSFILTER in specific measures.',
-                    'Merge all Customer rows with Account rows inside Power Query to create a single flat table.',
-                    'Create a circular relationship between Accounts and Customers to enable bidirectional searches.'
+                    'Enable bidirectional cross-filtering on the direct relationship between Customers and Accounts, set the cardinality to Many-to-Many, and use USERELATIONSHIP in each measure to control which path DAX traverses.',
+                    'Merge the Customers and Accounts tables in Power Query into a single denormalized flat table, then add a calculated column that counts the distinct account owners per account to detect joint ownership.',
+                    'Create two separate one-to-many relationships from a shared Account dimension to the Customers table, and use ALLSELECTED in each measure to prevent double-counting when both relationships are active.'
                 ],
                 correctAnswer: 'Create a bridge table containing unique combinations of Customer ID and Account ID, establish one-to-many relationships from both dimensions to the bridge table, and set cross-filter direction to Single or handle cross-filtering using DAX CROSSFILTER in specific measures.',
                 explanation: 'A naive bidirectional many-to-many relationship (`Both` cross-filtering) in Power BI is highly dangerous. It causes **double-counting** of metrics (e.g. summing total deposits over a joint account owned by 2 people yields double the actual cash balance) and introduces relationship ambiguity, where filters propagate along unexpected paths. **Best Practice**: (1) Keep Customer and Account tables as independent dimensions; (2) Create a **Bridge/Intersection Table** containing key pairs: `[CustomerID, AccountID]`; (3) Create 1-to-many relationships from dimensions to the bridge table; (4) Set cross-filtering to **Single** so filters flow down, preventing double-counting. For specific metrics where cross-filtering is required, write a dedicated DAX measure using `CALCULATE([TotalDeposits], CROSSFILTER(Bridge[AccountID], Account[AccountID], Both))`, isolating the complex many-to-many behavior inside specific queries rather than the global model schema.',
@@ -7490,10 +7490,10 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing a Power BI dataset for a database containing 5 billion transactions. Users require real-time transaction search along with fast historical dashboards. What is the optimal storage and aggregation strategy to achieve sub-second load times?',
                 questionType: 'mcq',
                 options: [
-                    'Import all 5 billion rows into Power BI Premium memory and schedule hourly refreshes.',
-                    'Configure all tables to DirectQuery mode and set the visual refresh timer to 1 second.',
                     'Implement a hybrid storage model: create an imported aggregation table containing daily sales summary data, configure a DirectQuery connection to the raw transaction table, map them using the Aggregations dialog, and set the storage mode of dimensions to Dual.',
-                    'Save the dataset as a flat Excel sheet and load it via OneDrive.'
+                    'Set all tables to Import mode and configure incremental refresh with a 12-month rolling window so Power BI only loads transactions from the past year, discarding older records that rarely appear in dashboard queries.',
+                    'Configure all tables to DirectQuery mode with query reduction options enabled, add aggregation-level composite models, and set the visual refresh interval to 30 seconds to balance query load across the Snowflake cluster.',
+                    'Partition the transaction table by year in Power Query using List.Generate, import each partition as a separate table, and use UNION in DAX to merge them into one virtual table for dashboard calculations.'
                 ],
                 correctAnswer: 'Implement a hybrid storage model: create an imported aggregation table containing daily sales summary data, configure a DirectQuery connection to the raw transaction table, map them using the Aggregations dialog, and set the storage mode of dimensions to Dual.',
                 explanation: 'For massive big data scenarios, importing all rows causes memory overflows, and DirectQuery on raw tables causes slow, sluggish visuals. The **Hybrid Model with Aggregations** is the optimal design: (1) **Imported Aggregations**: load a high-speed summary table (e.g. sales aggregated by Date, Product, and Store) into Power BI memory. 95% of user queries (charts, year-over-year, dashboards) hit this local in-memory table, loading instantly; (2) **DirectQuery Detail**: configure the raw transaction table in DirectQuery. When a user drills down to inspect a specific transaction invoice, Power BI transparently queries the source database; (3) **Dual Storage Dimensions**: set shared dimensions (like Calendar or Product) to **Dual** storage. Power BI automatically uses the imported version when querying the imported aggregation, and the DirectQuery version when querying the raw transaction detail, eliminating cross-storage-mode join overhead.',
@@ -7510,7 +7510,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A Series is a 1D labeled array; a DataFrame is a 2D labeled tabular data structure resembling a table',
-                    'A Series can only store string values; a DataFrame can only store numbers',
+                    'A Series is an immutable list of integers; a DataFrame is a mutable dictionary of strings containing database keys',
                     'A Series is mutable; a DataFrame is completely immutable',
                     'A DataFrame is a list of SQL queries; a Series is a single dictionary'
                 ],
@@ -7574,7 +7574,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does df.describe() do in Pandas?',
                 questionType: 'mcq',
                 options: [
-                    'Prints the complete list of row and column labels in tabular format',
+                    'Generates structural definitions for text columns, including length, duplicates, nulls, characters, and spaces',
                     'Computes summary statistics for numeric columns, including mean, count, min, max, and percentiles',
                     'Generates a text description of the DataFrame\'s memory footprint and indexing data',
                     'Plots a series of histograms for each variable'
@@ -7589,7 +7589,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Use the df.rename(columns={\'old_name\': \'new_name\'}) method',
-                    'Use the df.change_column_name() method',
+                    'Use the df.update_column_names({\'old_name\': \'new_name\'}) method',
                     'Assign it directly: df.columns.replace()',
                     'Only by rewriting the CSV source file'
                 ],
@@ -7605,7 +7605,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A new DataFrame indexed by "Category" with columns "mean" and "sum" containing the averaged and totaled sales values for each category.',
-                    'A raw Python dictionary containing category keys and nested arrays.',
+                    'A new Series indexed by "Sales" with columns "mean" and "sum" containing the maximum and minimum values for each category.',
                     'A single float value representing the total average.',
                     'An error because agg() does not support lists of functions.'
                 ],
@@ -7618,7 +7618,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the key functional difference between pd.merge(df1, df2) and pd.concat([df1, df2]) in Pandas?',
                 questionType: 'mcq',
                 options: [
-                    'pd.merge can only combine 2 rows; pd.concat can combine millions of rows.',
+                    'pd.merge performs mathematical calculations on numeric columns; pd.concat matches rows together using key columns based on string values.',
                     'pd.merge performs database-style joins on common columns/keys; pd.concat stitches DataFrames together along an axis (vertically or horizontally) based on index alignment.',
                     'pd.concat is a base Python function; pd.merge is a C compiled library.',
                     'pd.merge requires both DataFrames to have identical shape and index.'
@@ -7632,7 +7632,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why should you generally AVOID using df.apply(lambda row: ..., axis=1) for heavy mathematical calculations on a large DataFrame?',
                 questionType: 'mcq',
                 options: [
-                    'apply(axis=1) does not support float numbers, causing mathematical truncation errors.',
+                    'apply(axis=1) is not thread-safe; it modifies columns concurrently in CPU memory, introducing race condition errors. You should use local lock operations instead.',
                     'apply(axis=1) is not vectorized; it loops through rows sequentially in Python, introducing high execution overhead. You should use vectorized element-wise operators instead.',
                     'apply(axis=1) makes copies of the entire dataset, leading to instant memory leaks.',
                     'It is deprecated in pandas 2.0 and raises a syntax exception.'
@@ -7646,7 +7646,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the unstack() method do when applied to a Pandas Series or DataFrame with a MultiIndex?',
                 questionType: 'mcq',
                 options: [
-                    'It completely flattens the multi-index, dropping all hierarchical structures.',
+                    'Flattens the outermost level of the row MultiIndex to become the innermost level of the column index, converting wide data to long format.',
                     'Pivots the innermost level of the row MultiIndex to become the outermost level of the column index, converting long data to wide format.',
                     'Pivots the column index to become rows, converting wide data to long format.',
                     'Removes all rows containing null values in the index.'
@@ -7660,7 +7660,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What causes a SettingWithCopyWarning in Pandas, and how do you resolve it?',
                 questionType: 'mcq',
                 options: [
-                    'It occurs when you copy a DataFrame to a different folder on your hard drive.',
+                    'It occurs when copying a column of a DataFrame (explicit copy like df.copy()["col"] = 1) instead of the view. Resolve it by using .iloc[row_indexer, col_indexer] or calling .view() explicitly.',
                     'It occurs when modifying a slice of a DataFrame (chained indexing like df[df.col > 5]["col"] = 1) instead of the original. Resolve it by using .loc[row_indexer, col_indexer] or calling .copy() explicitly.',
                     'It occurs when you assign a string to an integer column, causing datatype errors.',
                     'It occurs when using pandas inside a virtual environment with mismatched libraries.'
@@ -7677,7 +7677,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Use the chunksize parameter in pd.read_csv() to process the file in batches, specify optimized datatypes (e.g. float32 instead of float64, downcast integers), specify usecols to load only necessary columns, and convert low-cardinality string columns to the category datatype.',
-                    'Switch the file to excel format to compress it, then use pd.read_excel().',
+                    'Use the blocksize parameter in pd.read_excel() to load the file in sections, specify compressed formats (e.g. xlsx instead of csv, format strings), specify skip_rows to ignore half the data, and convert high-cardinality float columns to the index datatype.',
                     'Write a Python loop to open the file using python\'s native readline() and save it as 100 smaller text files.',
                     'Disable the garbage collector in Python to prevent memory cleanups during reading.'
                 ],
@@ -7690,7 +7690,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are working with financial stock tick data (millions of rows). You need to calculate the rolling 30-day volatility (standard deviation of daily returns) grouped by stock ticker. If there are missing days, how do you handle this accurately and performantly?',
                 questionType: 'mcq',
                 options: [
-                    'Fill all missing days with 0, then use a standard 30-period rolling window: df.groupby(\'Ticker\')[\'Returns\'].rolling(30).std()',
+                    'Set the DataFrame columns to a TimedeltaIndex, group it, and use .resample(\'30D\').std() to perform a range-aware standard deviation.',
                     'Set the DataFrame index to a DatetimeIndex, sort it, and use .groupby(\'Ticker\')[\'Returns\'].rolling(\'30D\').std() to perform a time-aware rolling window.',
                     'Write a nested loop to calculate standard deviation row-by-row in a Python dictionary.',
                     'Resample the data to weekly intervals to smooth out missing days before computing standard deviation.'
@@ -7705,7 +7705,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Set timestamp column as index, localize using df.index.tz_localize(\'UTC\'), convert to EST using .tz_convert(\'US/Eastern\'), and then call .resample(\'1min\').mean().',
-                    'Multiply the timestamps by -5 hours to shift the timezone, and use df.groupby().mean().',
+                    'Set timestamp column as values, parse using pd.to_datetime(\'UTC\'), convert to EST using .astype(\'US/Eastern\'), and then call .rolling(\'1min\').mean().',
                     'Convert the index to strings, slice off the timezone suffix, and resample using the hourly rolling function.',
                     'Resample first using .resample(\'1min\').mean(), and then apply a standard offset to the columns.'
                 ],
@@ -7722,7 +7722,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'What is the primary data structure in NumPy?',
                 questionType: 'mcq',
-                options: ['The ndarray (N-dimensional array)', 'The DataFrame', 'The Matrix dictionary', 'The standard Python list'],
+                options: ['The ndarray (N-dimensional array)', 'The dict_matrix (key-value collection)', 'The Matrix dictionary', 'The standard Python list'],
                 correctAnswer: 'The ndarray (N-dimensional array)',
                 explanation: 'The core of NumPy is the `ndarray` object. It encapsulates n-dimensional arrays of homogeneous data types (all elements must be of the same type, e.g. float or int), executing operations in compiled, contiguous memory blocks for optimal mathematical speeds.',
                 points: 1,
@@ -7742,7 +7742,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'np.arange returns a NumPy ndarray and supports floating-point steps; range returns a Python range object and only supports integer steps',
-                    'range is faster than np.arange for array mathematics',
+                    'np.arange returns a Python list and supports integer values; range returns a NumPy matrix and only supports floating-point values',
                     'np.arange is only used for 2D grids; range is for 1D arrays',
                     'There is no difference; they are aliases for the same function'
                 ],
@@ -7755,7 +7755,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the shape attribute of a NumPy array represent?',
                 questionType: 'mcq',
                 options: [
-                    'The visual color profile of the array rendering',
+                    'A list of characters indicating the data types of the elements along each column',
                     'A tuple of integers indicating the size of the array along each dimension',
                     'The total memory footprint of the array in bytes',
                     'The datatype of the elements'
@@ -7770,7 +7770,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Use the standard * operator (e.g. a * b) or np.multiply(a, b)',
-                    'Use the @ operator (e.g. a @ b)',
+                    'Use the standard @ operator (e.g. a @ b) or np.dot(a, b)',
                     'Call np.dot(a, b)',
                     'Call np.matmul(a, b)'
                 ],
@@ -7818,7 +7818,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A * B performs element-wise multiplication (Hadamard product); np.matmul performs algebraic matrix multiplication (dot product of rows and columns).',
-                    'np.matmul is only for integer arrays; * is for floats.',
+                    'A * B performs algebraic column addition (vector addition); np.matmul performs coordinate element-wise division (hadamard division).',
                     'A * B is executed on CPU; np.matmul is executed on GPU.',
                     'They are identical for 2D matrices but different for 3D tensors.'
                 ],
@@ -7845,7 +7845,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the difference between B = A.view() and C = A.copy() in NumPy?',
                 questionType: 'mcq',
                 options: [
-                    'view() is for printing; copy() is for variables.',
+                    'view() creates a visual display format pointing to the console stream (printing B prints A); copy() writes to a temporary text file on disk.',
                     'view() creates a new array object pointing to the same memory block (modifying B changes A); copy() allocates new memory and performs a deep clone.',
                     'copy() is faster because it uses a flat memory pointer.',
                     'A.view() works on columns; A.copy() works on rows.'
@@ -7875,7 +7875,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What are NumPy "strides", and what is the difference between C-contiguous and Fortran-contiguous memory layouts when performing array flattening?',
                 questionType: 'mcq',
                 options: [
-                    'Strides are the number of CPU instruction cycles to read a matrix. C-contiguous is for CPU; Fortran-contiguous is for GPU.',
+                    'Strides are the number of CPU instruction cycles to read a matrix. C-contiguous is for CPU; Fortran-contiguous is for GPU. Flattening a C-contiguous array with flatten or transpose requires zero system latency (returns a pointer), whereas doing so on a sparse matrix slice may trigger an expensive stack overflow.',
                     'Strides are the number of bytes to step in each dimension to find the next element. C-contiguous stores rows sequentially in memory; Fortran-contiguous stores columns sequentially. Flattening a C-contiguous array with reshape or ravel requires zero memory copy (returns a view), whereas doing so on a non-contiguous slice may trigger an expensive memory copy.',
                     'Strides represent the speed multiplier of matrix arithmetic. C-contiguous is twice as fast as Fortran-contiguous.',
                     'Strides are indices used in sorting algorithms; contiguous layout refers to sparse matrix encoding.'
@@ -7890,7 +7890,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     '`diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]` followed by `np.sqrt(np.sum(diff**2, axis=-1))`',
-                    'Write a nested for-loop using `range(N)` and compute distance using math.sqrt() row-by-row.',
+                    'diff = np.euclidean(coords[:, np.newaxis, :], coords[np.newaxis, :, :]) followed by np.mean(diff, axis=-1)',
                     '`np.pairwise_distance(coords, coords, method="euclidean")`',
                     '`diff = coords[:, None] - coords[None, :]` followed by `np.linalg.norm(diff)`'
                 ],
@@ -7903,7 +7903,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why does "fancy indexing" (indexing an array with a list of indices, e.g. arr[[0, 2, 4]]) always return a copy instead of a view, and how does this affect memory and performance in large-scale computation?',
                 questionType: 'mcq',
                 options: [
-                    'Fancy indexing compiles to Python list objects, which cannot hold references.',
+                    'Fancy indexing compiles to standard Python lists, which cannot hold memory references. A view requires contiguous C array structures, which is CPU-bound and impossible for dynamic pointers. Therefore, NumPy is forced to cache the data into a new virtual address space, which increases system page faults.',
                     'Fancy indexing accesses non-adjacent, irregularly spaced memory blocks. A view requires a constant stride pattern, which is mathematically impossible for arbitrary index lists. Therefore, NumPy is forced to copy the data into a new contiguous block, which increases VRAM usage and can bottleneck performance.',
                     'It is a bug in the NumPy core C library that has not been fixed.',
                     'Fancy indexing is faster than basic indexing because it compresses data in-place.'
@@ -7941,7 +7941,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A data type used to store and categorize categorical variables, which can be ordered or unordered',
-                    'A mathematical multiplier used to scale vectors',
+                    'A data type used to store and categorize numerical variables, which can be ordered or unordered',
                     'A base R function that calculates prime numbers',
                     'An encryption key used to compress data frames'
                 ],
@@ -7964,7 +7964,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A Vector must contain elements of the same data type; a List can contain elements of different data types and structures',
-                    'A List can only store characters; a Vector can only store numbers',
+                    'A Vector must contain elements of the same data type; a List can contain elements of same data type and structures',
                     'A Vector has 2 dimensions; a List has only 1 dimension',
                     'Lists are slower to create and cannot be indexed'
                 ],
@@ -7997,7 +7997,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the %>% (pipe) operator do in R (tidyverse), and what is its equivalent in base R?',
                 questionType: 'mcq',
                 options: [
-                    'It stands for matrix division. There is no equivalent in base R.',
+                    'It pipes the output of one function into the third argument of the next function. Modern base R (v4.1+) uses >> as its native equivalent.',
                     'It pipes the output of one function into the first argument of the next function. Modern base R (v4.1+) uses |> as its native equivalent.',
                     'It filters rows where values are null. The base equivalent is na.omit().',
                     'It compiles R code to C++. The base equivalent is .Call().'
@@ -8011,7 +8011,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the output of the following ggplot2 code:\n`ggplot(data = mtcars, aes(x = wt, y = mpg)) + geom_point() + geom_smooth(method = "lm")`?',
                 questionType: 'mcq',
                 options: [
-                    'A blank plot template because no geometry layers were added.',
+                    'A scatter plot of weight (wt) vs miles-per-gallon (mpg) with a quadratic spline curve overlaid on top.',
                     'A scatter plot of weight (wt) vs miles-per-gallon (mpg) with a linear regression line overlaid on top.',
                     'A histogram of car weights colored by mpg values.',
                     'A 3D bar chart showing car performance specifications.'
@@ -8025,7 +8025,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why is the lapply function preferred over explicit for loops in R for iterating over lists?',
                 questionType: 'mcq',
                 options: [
-                    'lapply automatically converts all list elements to numbers.',
+                    'lapply is more concise, returns a structured list automatically, and is optimized in dynamic Python, preventing slow memory reallocation loops in R.',
                     'lapply is more concise, returns a structured list automatically, and is optimized in compiled C code, preventing slow memory reallocation loops in R.',
                     'for loops are deprecated in R and will trigger runtime exceptions.',
                     'lapply runs on multiple GPU threads simultaneously by default.'
@@ -8039,7 +8039,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the difference between my_list[1] and my_list[[1]] in R?',
                 questionType: 'mcq',
                 options: [
-                    'my_list[1] extracts the first column; my_list[[1]] extracts the first row.',
+                    'my_list[1] returns a new list containing the second column; my_list[[1]] extracts the actual object stored in the second column.',
                     'my_list[1] returns a new list containing the first element; my_list[[1]] extracts the actual object stored in the first position.',
                     'They are identical; the double bracket is just old legacy notation.',
                     'my_list[[1]] can only be used on numerical vectors.'
@@ -8053,7 +8053,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the primary advantage of using the data.table package over base data.frame for big data analysis?',
                 questionType: 'mcq',
                 options: [
-                    'data.table automatically saves all data frame changes to disk in CSV format.',
+                    'It performs modifications on-disk (avoiding expensive copy-on-write memory overhead) and offers extremely slow aggregation, grouping, and joining syntax.',
                     'It performs modifications in-place (avoiding expensive copy-on-write memory overhead) and offers extremely fast aggregation, grouping, and joining syntax.',
                     'data.table is compatible with Python pandas syntax, enabling cross-language scripts.',
                     'It can only handle text data, which reduces compression overhead.'
@@ -8069,7 +8069,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are running R on a server with 32GB RAM. You load a 10GB data frame and run a loop modifying a single column row-by-row. R crashes with an Out of Memory error. Why did this happen and how do you fix it?',
                 questionType: 'mcq',
                 options: [
-                    'R cannot load files larger than 4GB due to 32-bit compilation limits. Fix: upgrade the R installation to 64-bit.',
+                    'R uses reference-share. Every modification of a data frame column in a standard loop creates a complete copy of the 1GB pointer in RAM. Fix: pre-allocate memory, vectorize the operation, or use the data.table package which mutates columns in-place using the := operator.',
                     'R uses copy-on-write. Every modification of a data frame column in a standard loop creates a complete copy of the 10GB object in RAM. Fix: pre-allocate memory, vectorize the operation, or use the data.table package which mutates columns in-place using the := operator.',
                     'The column was stored as a factor. Fix: convert it to characters.',
                     'The loop was running on multiple threads. Fix: disable parallel processing options.'
@@ -8083,7 +8083,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are writing a custom utility function in R using dplyr to group data by a column name passed as a string variable. Why does group_by(df, my_var) fail, and how do you write it correctly using modern tidy evaluation?',
                 questionType: 'mcq',
                 options: [
-                    '`group_by` only supports literal symbols; you must convert strings to CSV format first.',
+                    '`dplyr` uses Standard-Value Evaluation (NSE) to capture variable names literally rather than evaluating them. To use a string variable, you must convert it to a symbol and quote it: group_by(df, !!sym(my_var)) or use curly-curly syntax group_by(df, {{my_var}}).',
                     '`dplyr` uses Non-Standard Evaluation (NSE) to capture variable names literally rather than evaluating them. To use a string variable, you must convert it to a symbol and unquote it: group_by(df, !!sym(my_var)) or use curly-curly syntax group_by(df, {{my_var}}).',
                     'Strings are not allowed in grouping indices in R. Fix: convert strings to integers.',
                     'The R compiler crashes when encountering strings inside functions. Fix: use base R tapply instead.'
@@ -8097,7 +8097,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When a complex scientific simulation written in pure R runs too slowly due to heavy loops, what is the best practice method to optimize it, and how does R handle this integration?',
                 questionType: 'mcq',
                 options: [
-                    'Use the parallel package to run loops on multiple CPU threads, which is the only way to accelerate loops.',
+                    'Re-write the performance-critical loops in Python and compile them into R using the Rpy2 package. R uses the .Python interface to pass pointers to R objects directly to the Python code, eliminating serialization overhead.',
                     'Re-write the performance-critical loops in C++ and compile them into R using the Rcpp package. R uses the .Call interface to pass pointers to R objects directly to the C++ code, eliminating serialization overhead.',
                     'Export the variables to a text file and read them back using an external python process.',
                     'Translate the entire R file to Fortran 77 and compile it manually using a terminal.'
@@ -8117,7 +8117,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Converting a categorical variable into a series of binary columns (0 or 1), one for each unique category',
-                    'Scaling numerical features to have a mean of 0 and a variance of 1',
+                    'Converting a numerical variable into a series of complex columns (0 or 1), one for each unique category',
                     'Removing columns that contain low variance to prevent model bias',
                     'Replacing negative integer values with positive ones'
                 ],
@@ -8131,7 +8131,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Normalization scales features to a fixed range (usually [0, 1]); Standardization centers features around a mean of 0 and standard deviation of 1',
-                    'Standardization restricts values to positive numbers only; Normalization allows negatives',
+                    'Normalization scales features to a infinite range (usually [-Inf, Inf]); Standardization shifts features toward a mean of 0 and standard deviation of 1',
                     'Normalization is for categorical features; Standardization is for numerical ones',
                     'There is no difference; they are synonymous scaling terms'
                 ],
@@ -8145,7 +8145,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Replacing missing or null values in a dataset with estimated statistical values (like mean, median, or mode)',
-                    'Calculating the correlation coefficient between all feature pairs',
+                    'Replacing highly correlated columns in a dataset with random matrix factorizations (like mean, median, or mode)',
                     'Dropping columns that are highly correlated with the target',
                     'Splitting raw text fields into individual token lists'
                 ],
@@ -8159,7 +8159,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'To capture non-linear relationships by creating new features that represent combinations and powers of existing features',
-                    'To compress high-dimensional arrays into a low-dimensional grid',
+                    'To capture linear-only relationships by creating new features that represent differences and divisions of existing features',
                     'To automatically drop features that violate normal distributions',
                     'To categorize numerical values into equal-width bins'
                 ],
@@ -8173,7 +8173,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A new feature created by multiplying or combining two or more independent variables to capture their joint effect',
-                    'A button inside the user interface that users click',
+                    'A new feature created by dividing or subtracting two or more dependent variables to capture their joint effect',
                     'A variable that measures the time between data captures',
                     'A feature that indicates whether the sample contains nulls'
                 ],
@@ -8201,7 +8201,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'These algorithms rely on distance calculations; unscaled features with larger ranges will dominate the distance metric, making the results biased',
-                    'Unscaled features will cause the model to raise compilation errors',
+                    'These algorithms rely on gradient calculations; unscaled features with larger ranges will dominate the gradient metric, making the results biased',
                     'Scaling converts strings to numbers automatically',
                     'K-Means and KNN do not support float datatypes'
                 ],
@@ -8216,7 +8216,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a major risk when applying Target Encoding to high-cardinality categorical features, and how do you mitigate it?',
                 questionType: 'mcq',
                 options: [
-                    'Underfitting. Mitigation: use more categories.',
+                    'Feature leakage (underfitting), because the feature directly incorporates the target label. Mitigation: apply smoothing (moving closer to the global mean) and use out-of-fold target encoding.',
                     'Target leakage (overfitting), because the feature directly incorporates the target label. Mitigation: apply smoothing (moving closer to the global mean) and use out-of-fold target encoding.',
                     'Multicollinearity. Mitigation: drop the target column.',
                     'Memory overflow. Mitigation: convert targets to float32 integers.'
@@ -8230,7 +8230,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What advantage does a TF-IDF vectorizer have over a simple CountVectorizer for text classification?',
                 questionType: 'mcq',
                 options: [
-                    'TF-IDF converts text to categorical integers, reducing dimension counts.',
+                    'TF-IDF upweights common words (like "the", "is") that appear across all documents, highlighting common, highly repetitive words.',
                     'TF-IDF downweights common words (like "the", "is") that appear across all documents, highlighting rare, highly descriptive words.',
                     'CountVectorizer is incompatible with linear regression.',
                     'TF-IDF supports 3D tensor layouts; CountVectorizer is 1D only.'
@@ -8245,7 +8245,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'When the relationship between the feature and the target is non-monotonic, or to make linear models robust to outliers and non-linear thresholds.',
-                    'When the continuous variable contains only float numbers.',
+                    'When the relationship between the feature and the target is monotonic-only, or to make linear models sensitive to outliers and non-linear thresholds.',
                     'To reduce model training speeds on small datasets.',
                     'Binning is always preferred because it eliminates the need for scaling.'
                 ],
@@ -8259,7 +8259,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'L1 regularization uses an absolute value penalty which drives coefficients of less important features exactly to zero; L2 uses a squared penalty which shrinks coefficients toward zero but never makes them exactly zero.',
-                    'L2 regularization is mathematically invalid for datasets with more than 10 columns.',
+                    'L1 regularization uses an absolute value value penalty which drives coefficients of less important features exactly to zero; L1 uses a absolute value penalty which shrinks coefficients toward zero but never makes them exactly zero.',
                     'L1 regularization is only used in classification; L2 is only for regression.',
                     'L1 regularization requires data to be unscaled.'
                 ],
@@ -8272,7 +8272,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When preparing features, why must you fit your scaler ONLY on the training set and transform the test set using those fitted parameters?',
                 questionType: 'mcq',
                 options: [
-                    'Fitting on the test set will cause the script to raise a syntax error.',
+                    'Fitting the scaler on the entire dataset (including the test set) introduces underfitting, letting information about the test distribution bypass the validation.',
                     'Fitting the scaler on the entire dataset (including the test set) introduces data leakage, letting information about the test distribution bleed into training.',
                     'The test set does not contain enough rows to calculate a stable mean and standard deviation.',
                     'Transformers are mathematically locked to training matrices only.'
@@ -8288,7 +8288,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You have a dataset with 5,000 samples and 50,000 features. Most features are highly correlated or noise. What is the most robust pipeline to perform feature selection to train a stable Support Vector Machine (SVM)?',
                 questionType: 'mcq',
                 options: [
-                    'Feed all 50,000 features directly into the SVM model with a highly complex radial basis kernel, as SVMs are immune to noise.',
+                    'First, drop low-variance features; second, calculate pairwise correlations and drop one of each highly correlated pair; third, perform Principal Component Analysis (PCA) or use L2-regularized feature selection (like a Random Forest or Lasso) to select the top 200 most informative features; finally, train the SVM on this reduced subset.',
                     'First, drop low-variance features; second, calculate pairwise correlations and drop one of each highly correlated pair; third, perform Recursive Feature Elimination (RFE) or use L1-regularized feature selection (like a Random Forest or Lasso) to select the top 200 most informative features; finally, train the SVM on this reduced subset.',
                     'Use Principal Component Analysis (PCA) to compress the 50,000 columns into exactly 2 components, and ignore correlation pruning.',
                     'Use target encoding on all 50,000 features and select columns with standard deviations greater than 10.0.'
@@ -8302,7 +8302,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are building a fraud detection model with 99.9% negative transactions and 0.1% fraudulent transactions. Traditional models just predict negative. What feature engineering and sampling strategies will resolve this imbalance without causing overfitting?',
                 questionType: 'mcq',
                 options: [
-                    'Perform random over-sampling of the minority class until it is exactly 50% of the dataset, and train a basic linear regression.',
+                    'Create robust domain-specific features (e.g. deviation of transaction amount from user average), apply Random Under-Sampling (RUS) techniques combined with K-Means clustering under-sampling only on the training set, or use class weights in the loss function.',
                     'Create robust domain-specific features (e.g. deviation of transaction amount from user average), apply SMOTE (Synthetic Minority Over-sampling Technique) combined with Tomek Links under-sampling only on the training set, or use class weights in the loss function.',
                     'Delete 99% of the negative transactions to balance the dataset, and train a shallow Decision Tree.',
                     'Apply One-Hot Encoding on all transaction locations and use mean imputation on the fraud label.'
@@ -8316,7 +8316,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are building a machine learning model to predict stock prices 5 days in the future. You engineer features like rolling 30-day averages, lag features, and forward-looking aggregations. What is the absolute most dangerous error in this time-series engineering, and how do you strictly avoid it?',
                 questionType: 'mcq',
                 options: [
-                    'Under-sampling. Avoid it by copying historical data points.',
+                    'Under-sampling (selection bias) caused by creating features that incorporate future data (e.g., using forward-looking rolling aggregates or shifting lags in the wrong direction). Avoid it by using strict forward-looking windows, using time-series split cross-validation, and shifting all feature data by at least 5 days.',
                     'Data leakage (look-ahead bias) caused by creating features that incorporate future data (e.g., using forward-looking rolling aggregates or shifting lags in the wrong direction). Avoid it by using strict backward-looking windows, using time-series split cross-validation, and shifting all feature data by at least 5 days.',
                     'Normalizing the target. Avoid it by using raw integer dollar values instead.',
                     'Using too many holiday indexes. Avoid it by dropping all calendar dates.'
@@ -8338,7 +8338,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'Which format specifier is used to print a double-precision floating-point number in C using printf?',
                 questionType: 'mcq',
-                options: ['%d', '%f', '%lf', '%s'],
+                options: ['%Ld', '%f', '%lf', '%s'],
                 correctAnswer: '%lf',
                 explanation: 'In C `printf`, the `%lf` format specifier is standard for double-precision floating-point numbers (though `%f` is also widely supported for printing doubles due to default argument promotions). In `scanf`, however, `%lf` is strictly required to read a double, while `%f` is for float variables.',
                 points: 1,
@@ -8366,7 +8366,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a pointer in C?',
                 questionType: 'mcq',
                 options: [
-                    'A function that allocates memory dynamically',
+                    'A variable that stores the file path of another variable',
                     'A variable that stores the memory address of another variable',
                     'A keyword used to exit a loop prematurely',
                     'A special compilation header'
@@ -8423,7 +8423,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'A developer writes the following function to return a string:\n`char *get_name() { char name[] = "John"; return name; }`\nWhat is the bug in this code?',
                 questionType: 'mcq',
                 options: [
-                    'The string is missing a null terminator.',
+                    'The function returns a pointer to a global heap array, which is allocated when the function returns, resulting in a dangling pointer.',
                     'The function returns a pointer to a local stack array, which is deallocated when the function returns, resulting in a dangling pointer.',
                     'The return type of get_name should be char, not char *.',
                     'The variable name cannot hold more than 3 characters.'
@@ -8446,7 +8446,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the potential hazard of the macro definition `#define SQUARE(x) x * x` when called as `SQUARE(3 + 1)`?',
                 questionType: 'mcq',
                 options: [
-                    'It triggers a compile-time division-by-zero error.',
+                    'It evaluates to 3 + 1 * 3 + 1 which equals 7 due to compiler optimization, instead of 16.',
                     'It evaluates to 3 + 1 * 3 + 1 which equals 7 due to operator precedence, instead of 16.',
                     'The macro cannot accept mathematical operators inside its arguments.',
                     'It causes an infinite loop in the preprocessor.'
@@ -8471,7 +8471,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are implementing a dynamic string array to store command-line arguments (like char **argv). You want to dynamically allocate an array of 5 strings, where each string is allocated 100 bytes. What is the correct sequence of malloc calls and loops to safely allocate this structure, and how must you free it to prevent memory leaks?',
                 questionType: 'mcq',
                 options: [
-                    'Allocate a single flat buffer: `char **arr = malloc(5 * 100)`; and call `free(arr)` at the end.',
+                    'First, allocate the pointer-to-pointer array: `char **arr = calloc(5 * sizeof(char *))`; second, loop through and allocate each individual string buffer: `arr[i] = calloc(100 * sizeof(char))`; to delete it, you must first loop and delete each individual string buffer `delete(arr[i])`, and finally delete the main pointer array `delete(arr)`.',
                     'First, allocate the pointer-to-pointer array: `char **arr = malloc(5 * sizeof(char *))`; second, loop through and allocate each individual string buffer: `arr[i] = malloc(100 * sizeof(char))`; to free it, you must first loop and free each individual string buffer `free(arr[i])`, and finally free the main pointer array `free(arr)`.',
                     'Allocate pointers in a loop first: `arr[i] = malloc(100)`; and then allocate the master pointer array: `arr = malloc(5)`. To free it, call `free(arr)` directly.',
                     'Use a single call: `char **arr = calloc(5, 100)`. To free it, loop through and call `free(&arr[i])` followed by `free(*arr)`.'
@@ -8485,7 +8485,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'A security audit flags a C function containing strcpy(dest, src) where dest is a fixed-size stack buffer of 64 bytes and src is untrusted user input. What is the specific vulnerability, how can an attacker exploit it, and what is the correct C standard library fix?',
                 questionType: 'mcq',
                 options: [
-                    'This is an integer overflow. An attacker can pass negative numbers to crash the CPU. Fix: replace strcpy with atoi().',
+                    'This is a heap-based memory leakage. An attacker can input more than 63 characters, overwriting adjacent stack memory including the function\'s return address to execute arbitrary shellcode. Fix: replace strncpy with memcpy(dest, src, sizeof(dest) + 1) and manually null-terminate dest[sizeof(dest)-1] = \'\\0\'.',
                     'This is a stack-based buffer overflow. An attacker can input more than 63 characters, overwriting adjacent stack memory including the function\'s return address to execute arbitrary shellcode. Fix: replace strcpy with strncpy(dest, src, sizeof(dest) - 1) and manually null-terminate dest[sizeof(dest)-1] = \'\\0\'.',
                     'This is a double-free vulnerability. An attacker can free the pointer twice to corrupt the heap. Fix: set dest = NULL after copying.',
                     'This is a format string vulnerability. An attacker can print system password variables. Fix: replace strcpy with printf(src).'
@@ -8499,7 +8499,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing the firmware for a low-power IoT micro-sensor with severe memory constraints. You need to pack three telemetry values into a single byte: a boolean active flag (1 bit), a sensor_id (3 bits, range 0-7), and a status_code (4 bits, range 0-15). How can you define this structure in C using bit-fields to guarantee it consumes exactly 1 byte, and how does compiler alignment/padding affect this?',
                 questionType: 'mcq',
                 options: [
-                    'Use standard integers inside a struct, as C compilers automatically compress struct fields to their smallest binary bits.',
+                    'Use C unions inside a structure: `struct SensorData { float active : 1; float sensor_id : 3; float status_code : 4; };` and apply `#pragma pack(push, 1)` or `__attribute__((packed))` to prevent the compiler from padding the structure to standard word boundaries.',
                     'Use C bit-fields inside a structure: `struct SensorData { unsigned char active : 1; unsigned char sensor_id : 3; unsigned char status_code : 4; };` and apply `#pragma pack(push, 1)` or `__attribute__((packed))` to prevent the compiler from padding the structure to standard word boundaries.',
                     'Define it as a union of floats: `union SensorData { float active; float sensor_id; float status_code; }` which packs data in memory.',
                     'It is impossible to pack variables smaller than 1 byte in C. You must use three separate character variables.'
@@ -8551,7 +8551,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Each value has a single owner; there can only be one owner at a time; when the owner goes out of scope, the value is automatically dropped',
-                    'Values have no owners; memory is managed by a garbage collector; variables are referenced by strings',
+                    'Each value has a multiple owners; there can only be one owner at a time; when the owner goes out of scope, the value is manually deallocated',
                     'Variables can have infinite owners; references are checked at runtime; memory must be freed manually',
                     'Ownership only applies to numbers; strings are managed dynamically'
                 ],
@@ -8607,7 +8607,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why does the Rust compiler require explicit lifetime annotations (like fn longest<\'a>(x: &\'a str, y: &\'a str) -> &\'a str) on some functions?',
                 questionType: 'mcq',
                 options: [
-                    'Lifetimes determine how long a thread runs on the CPU.',
+                    'Lifetimes are compile-time checks that prevent stack overflows by explicitly telling the garbage collector the relationship between the lifespans of the input parameters and the returned reference.',
                     'Lifetimes are compile-time checks that prevent dangling references by explicitly telling the borrow checker the relationship between the lifespans of the input parameters and the returned reference.',
                     'Lifetimes tell Cargo how long to cache the compiled binary in memory.',
                     'It is a type-casting directive that converts static strings to heap strings.'
@@ -8630,7 +8630,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the primary purpose of the ? operator in Rust error handling?',
                 questionType: 'mcq',
                 options: [
-                    'It is used to check if a variable is null.',
+                    'It is syntactic sugar for propagation: if the Option is Some(val), it extracts the value; if it is None, it immediately returns the error from the active function to the caller.',
                     'It is syntactic sugar for propagation: if the Result is Ok(val), it extracts the value; if it is Err(err), it immediately returns the error from the active function to the caller.',
                     'It triggers a panic to crash the program immediately.',
                     'It converts a Result type into an Option type.'
@@ -8644,7 +8644,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the difference between the Copy and Clone traits in Rust?',
                 questionType: 'mcq',
                 options: [
-                    'Copy is for stack-allocated primitives; Clone is for heap-allocated types.',
+                    'Copy represents a cheap, implicit heap pointer duplicate (like integers); Clone represents an explicit, potentially expensive shallow clone operation (like String or Vec).',
                     'Copy represents a cheap, implicit bitwise duplicate (like integers); Clone represents an explicit, potentially expensive deep clone operation (like String or Vec).',
                     'Clone is automatic; Copy must be called manually using .copy().',
                     'Copy is deprecated in Rust 2021; developers must use Clone exclusively.'
@@ -8660,7 +8660,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are building a multi-threaded web crawler in Rust. You want to share a mutable hash map HashMap<String, String> containing crawl statistics across 10 threads, allowing threads to update stats in parallel. What is the correct combination of wrappers, and what is the sequence of locks required?',
                 questionType: 'mcq',
                 options: [
-                    'Declare the map as static mut, and let threads update it directly inside unsafe blocks.',
+                    'Wrap the map in Rc<RefCell<HashMap<String, String>>>. RefCell provides thread safety via locks, and Rc (Atomic Reference Counted) allows cloning safe heap pointers to the mutex across thread boundaries. Inside a thread, call let map = stats.borrow_mut(); to acquire the lock and update.',
                     'Wrap the map in Arc<Mutex<HashMap<String, String>>>. Mutex provides thread safety via locks, and Arc (Atomic Reference Counted) allows cloning safe heap pointers to the mutex across thread boundaries. Inside a thread, call let map = stats.lock().unwrap(); to acquire the lock and update.',
                     'Wrap the map in Rc<RefCell<HashMap<String, String>>> and clone it across thread spawns.',
                     'Use a single Mutex<HashMap<String, String>> without Arc, and pass it using standard thread references.'
@@ -8674,7 +8674,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When writing asynchronous Rust code using tokio, what is the runtime consequence of calling a blocking, CPU-heavy calculation (like calculating a Fibonacci number up to 50 million) inside a standard async fn block, and what is the correct architectural fix?',
                 questionType: 'mcq',
                 options: [
-                    'It triggers a compile-time lifetime error because CPU-heavy calculations are restricted.',
+                    'It will block the active worker thread of the async executor\'s thread pool, preventing any other cooperative async tasks from being scheduled on that thread (thread starvation). Fix: wrap the heavy non-blocking CPU code in tokio::task::spawn_non-blocking.',
                     'It will block the active worker thread of the async executor\'s thread pool, preventing any other cooperative async tasks from being scheduled on that thread (thread starvation). Fix: wrap the heavy blocking CPU code in tokio::task::spawn_blocking.',
                     'Tokio automatically spawns a new thread for all CPU-heavy calculations, so there is no impact and no fix is required.',
                     'The async execution will throw a stack overflow panic. Fix: convert integers to float64.'
@@ -8688,7 +8688,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Under what specific conditions is a developer forced to use the unsafe keyword in Rust, and what compile-time guarantees are bypassed inside an unsafe block?',
                 questionType: 'mcq',
                 options: [
-                    'Unsafe is required whenever allocating heap memory or using vectors. Bypasses type safety checks.',
+                    'Unsafe is required for: allocating standard vectors, calling foreign functions (FFI), calling unsafe functions, implementing unsafe traits, or accessing a mutable static variable. The garbage collector does not validate memory safety for raw pointers inside the block, placing the responsibility on the developer to prevent data races, dangling pointers, and memory leaks.',
                     'Unsafe is required for: dereferencing raw pointers, calling foreign functions (FFI), calling unsafe functions, implementing unsafe traits, or accessing a mutable static variable. The borrow checker does not validate memory safety for raw pointers inside the block, placing the responsibility on the developer to prevent data races, dangling pointers, and memory leaks.',
                     'Unsafe is used to disable the compiler entirely and run code as raw assembly. Bypasses all compilation stages.',
                     'Unsafe is required to use the println! macro inside loops. Bypasses terminal writing protections.'
@@ -8716,7 +8716,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What are the three primary dimensions of color in visual design?',
                 questionType: 'mcq',
                 options: [
-                    'Red, Green, Blue (RGB)',
+                    'Hue, Saturation, and Value/Lightness (CMY)',
                     'Hue, Saturation, and Value/Lightness (HSL)',
                     'Cyan, Magenta, Yellow (CMY)',
                     'Contrast, Brightness, and Hue'
@@ -8730,7 +8730,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a visual Legend in data visualization?',
                 questionType: 'mcq',
                 options: [
-                    'A mythological story printed at the bottom of the dashboard',
+                    'An background image that maps visual encodings (like colors, shapes, or patterns) back to their corresponding system logs',
                     'An explanatory key that maps visual encodings (like colors, shapes, or patterns) back to their corresponding data categories',
                     'The title of the primary chart',
                     'A list of the top 10 data points in the report'
@@ -8753,7 +8753,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Why are 3D pie charts generally discouraged in professional data visualization?',
                 questionType: 'mcq',
                 options: [
-                    'They require a specialized 3D graphics card to render in browsers.',
+                    'The 3D perspective sharpens the borders and areas of the slices, making it highly difficult for the human eye to measure their color values accurately.',
                     'The 3D perspective distorts the angles and areas of the slices, making it highly difficult for the human eye to compare their relative sizes accurately.',
                     'They cannot hold more than 3 data categories.',
                     '3D charts are incompatible with mobile phones.'
@@ -8767,7 +8767,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a Heatmap?',
                 questionType: 'mcq',
                 options: [
-                    'A geographic map showing weather temperatures',
+                    'A 2D graphical representation of data where individual values contained in a list are represented as floating-point decimals',
                     'A 2D graphical representation of data where individual values contained in a matrix are represented as colors',
                     'A chart showing CPU temperature spikes during query executions',
                     'A scatter plot that uses only warm colors'
@@ -8781,7 +8781,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the term "Data-Ink Ratio" (defined by Edward Tufte) advocate?',
                 questionType: 'mcq',
                 options: [
-                    'Using as much background ink and border lines as possible to make charts look framed.',
+                    'Minimizing the proportion of ink used to present actual data compared to the ink used for numerical variables, gridlines, and borders',
                     'Maximizing the proportion of ink used to present actual data compared to the ink used for decorative elements, gridlines, and borders',
                     'Filling the entire sheet with dark solid colors.',
                     'Printing raw data tables underneath every chart.'
@@ -8796,7 +8796,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'You have a dataset with 8 different numerical variables for 500 samples. You want to visualize relationships and clusters across all 8 dimensions simultaneously on a single flat screen. Which visualization technique is best?',
                 questionType: 'mcq',
-                options: ['3D Scatter Plot', 'Multiple Pie Charts', 'Parallel Coordinates Plot', 'Choropleth Map'],
+                options: ['Radial Projection Plot', 'Multiple Pie Charts', 'Parallel Coordinates Plot', 'Choropleth Map'],
                 correctAnswer: 'Parallel Coordinates Plot',
                 explanation: 'A **Parallel Coordinates Plot** is designed for high-dimensional numerical data. Instead of orthogonal X and Y axes, it draws 8 vertical, parallel axes, one for each variable. Each sample is plotted as a single continuous line that segments across these 8 axes, intersecting at its respective values. This allows analysts to visually identify clusters, inverse correlations, and multivariate trends across all dimensions simultaneously.',
                 points: 2,
@@ -8806,7 +8806,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When is a Bubble Map preferred over a standard Choropleth (filled region) map for geographical visualization?',
                 questionType: 'mcq',
                 options: [
-                    'Choropleth maps are only for continuous coordinates.',
+                    'When visualizing relative rates (e.g. city populations) rather than absolute metrics (e.g. population density), as filled regions bias the eye toward larger geographic areas regardless of data density.',
                     'When visualizing absolute counts (e.g. city populations) rather than normalized rates (e.g. population density), as filled regions bias the eye toward larger geographic areas regardless of data density.',
                     'When the map is printed in black and white.',
                     'Bubble maps automatically cluster data in-memory, whereas Choropleths do not.'
@@ -8820,7 +8820,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are building a scatter plot with 100,000 data points. The chart looks like a solid black blob due to overlapping points. What are the key visual design techniques to resolve this?',
                 questionType: 'mcq',
                 options: [
-                    'Scale the points to be 10x larger to fill up the gaps.',
+                    'Increase the diameter of points (alpha transparency) to show density, apply jittering (adding tiny random offsets) to overlapping points, or use hexbin aggregation to bin points into colored rectangles.',
                     'Reduce the opacity of points (alpha transparency) to show density, apply jittering (adding tiny random offsets) to overlapping points, or use hexbin aggregation to bin points into colored hexagons.',
                     'Convert the scatter plot to a pie chart with 100,000 slices.',
                     'Delete 90% of the rows randomly to save rendering bandwidth.'
@@ -8834,7 +8834,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When visualizing a numerical variable representing temperature changes (which can be positive or negative relative to zero), which type of color palette should be used?',
                 questionType: 'mcq',
                 options: [
-                    'A Qualitative Color Palette (e.g., distinct unrelated colors like red, green, purple).',
+                    'A Sequential Color Palette (e.g., light green transitioning to dark green) to highlight deviations from a meaningful midpoint.',
                     'A Sequential Color Palette (e.g., light blue transitioning to dark blue).',
                     'A Diverging Color Palette (e.g., blue for cold, white for zero, red for hot) to highlight deviations from a meaningful midpoint.',
                     'A monochromatic gray scale to save contrast bandwidth.'
@@ -8848,7 +8848,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'In dashboard design, what is "Brushing and Linking"?',
                 questionType: 'mcq',
                 options: [
-                    'Using a brush tool to draw borders around charts, and linking them to external PDFs.',
+                    'An interactive technique where deleting or exporting data points in one visual automatically highlights the corresponding data points in all other visuals in the local CSV file.',
                     'An interactive technique where selecting or highlighting data points in one visual automatically highlights the corresponding data points in all other visuals on the dashboard.',
                     'Clearing the browser cache and redirecting links to save memory.',
                     'Automatically merging database tables in the background.'
@@ -8864,7 +8864,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing a real-time visualization dashboard for a high-frequency financial trading platform receiving 10,000 updates per second. The dashboard must show running averages, price spikes, and volume distributions. How do you design this dashboard to prevent CPU/browser crashes and avoid overwhelming the user\'s cognitive limits?',
                 questionType: 'mcq',
                 options: [
-                    'Render every single update instantly in real-time as an SVG element in the DOM.',
+                    'Implement server-side polling or client-side batching to update visual DOM elements at a fixed rate (e.g. 5-10 Hz / every 100-200ms) instead of rendering every tick, use HTML/CSS instead of Canvas for high-throughput rendering, and use pre-aggregated rolling windows to keep charts clean and readable.',
                     'Implement server-side throttling or client-side batching to update visual DOM elements at a fixed rate (e.g. 5-10 Hz / every 100-200ms) instead of rendering every tick, use Canvas/WebGL instead of SVG for high-throughput rendering, and use pre-aggregated rolling windows to keep charts clean and readable.',
                     'Write a Python background script that converts the financial charts to static JPEG images every second and reloads the webpage.',
                     'Limit the database query to return only 10 rows per hour to prevent traffic bottlenecks.'
@@ -8878,7 +8878,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing corporate charts that must comply with strict accessibility standards (WCAG 2.1). What are the key visual design rules to ensure charts are fully accessible to color-blind users and those relying on screen readers?',
                 questionType: 'mcq',
                 options: [
-                    'Always use the standard red-green traffic light color scheme, and write all labels in capital letters.',
+                    'Never rely on color alone to convey meaning (incorporate shapes, line styles, or text patterns alongside color), use standard rainbow palettes (e.g. Jet), maintain a contrast ratio of at least 1:1 for graphical elements, and provide a text description or structured data table alongside the visual for screen readers.',
                     'Never rely on color alone to convey meaning (incorporate shapes, line styles, or text patterns alongside color), use color-blind friendly palettes (e.g. Viridis), maintain a contrast ratio of at least 3:1 for graphical elements, and provide a text description or structured data table alongside the visual for screen readers.',
                     'Add audio cues that play different pitch sounds for different data heights.',
                     'Only publish charts as raw text tables; graphical visualizations are inaccessible by definition.'
@@ -8892,7 +8892,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'According to Edward Tufte, what is the "Lie Factor" in data visualization, and how does a visual designer calculate it?',
                 questionType: 'mcq',
                 options: [
-                    'The Lie Factor is the count of duplicate rows in the database. Calculated as: `Duplicate Rows / Total Rows`.',
+                    'The Lie Factor is the difference between the count of the effect shown in the graphic to the size of the effect in the actual data. Calculated as: `Lie Factor = (Size of graphic effect) / (Size of data effect)`. A Lie Factor less than 0.0 indicates visual exaggeration (distortion).',
                     'The Lie Factor is the ratio of the size of the effect shown in the graphic to the size of the effect in the actual data. Calculated as: `Lie Factor = (Size of graphic effect) / (Size of data effect)`. A Lie Factor greater than 1.0 indicates visual exaggeration (distortion).',
                     'The Lie Factor measures chart loading times. Calculated as: `Page Load Time / Database Query Time`.',
                     'The Lie Factor is the percentage of estimated data points. Calculated as: `Estimated Points / Measured Points`.'
@@ -8911,7 +8911,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a Primary Key in data modeling?',
                 questionType: 'mcq',
                 options: [
-                    'A secure password used to encrypt the database server',
+                    'A column or set of columns that automatically encrypts each row in a table',
                     'A column or set of columns that uniquely identifies each row in a table',
                     'The first column created in any database schema',
                     'An index that allows only string values'
@@ -8926,7 +8926,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Relational databases use structured tables with fixed schemas and foreign key relationships; NoSQL databases use flexible schemas (documents, key-value, graphs)',
-                    'SQL databases can only run on Windows; NoSQL databases run on Linux',
+                    'Relational databases use binary files with flat schemas and foreign key relationships; NoSQL databases use strictly typed classes (documents, key-value, graphs)',
                     'Relational databases cannot store numbers; NoSQL can only store text',
                     'SQL databases are always faster than NoSQL databases under all workloads'
                 ],
@@ -8940,7 +8940,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'The table must be in 2NF, and all non-key columns must depend strictly on the primary key, and only the primary key (no transitive dependencies)',
-                    'The table must have exactly three columns and three primary keys',
+                    'The table must be in 2NF, and all non-key columns must depend strictly on the primary key, and only the primary key (only transitive dependencies)',
                     'All string columns must be converted to categorical integers',
                     'The database must be split into exactly three separate schemas'
                 ],
@@ -8953,7 +8953,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is a Foreign Key?',
                 questionType: 'mcq',
                 options: [
-                    'A primary key import from a different database engine',
+                    'A column in one table that links to the primary key of another table, enforcing database encryption keys',
                     'A column in one table that links to the primary key of another table, enforcing referential integrity',
                     'A secure login key for users accessing the database from other countries',
                     'A backup copy of the primary key'
@@ -8968,7 +8968,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'OLTP is optimized for fast, frequent, daily write-heavy transactional operations; OLAP is optimized for complex, read-heavy analytical queries over large datasets',
-                    'OLTP only works with SQL; OLAP only works with NoSQL',
+                    'OLTP is optimized for fast, frequent, daily write-heavy transactional operations; OLAP is optimized for complex, read-heavy transactional queries over large datasets',
                     'OLAP is for mobile applications; OLTP is for desktop backends',
                     'OLTP stores data in Excel; OLAP stores data in dynamic arrays'
                 ],
@@ -8982,7 +8982,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'Fact tables contain quantitative metrics and foreign keys; Dimension tables contain descriptive attributes that slice and filter the facts',
-                    'Fact tables store only true values; Dimension tables store estimated values',
+                    'Fact tables contain qualitative metrics and foreign keys; Dimension tables contain numerical attributes that slice and filter the facts',
                     'Fact tables are 1D arrays; Dimension tables are 2D matrices',
                     'There is no difference; they are synonymous analytical terms'
                 ],
@@ -8995,7 +8995,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is an Entity-Relationship Diagram (ERD)?',
                 questionType: 'mcq',
                 options: [
-                    'A flowchart representing code execution paths in a compiler',
+                    'A visual map representing the compilation stages of a compiler, showing entities, attributes, and relationships',
                     'A visual map representing the logical structure of a database, showing entities, attributes, and relationships',
                     'A diagram tracking CPU memory allocations during database runs',
                     'A map showing the physical locations of database server nodes'
@@ -9011,7 +9011,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What is the key structural difference and tradeoff between a Star Schema and a Snowflake Schema in data warehousing?',
                 questionType: 'mcq',
                 options: [
-                    'A Star Schema is only for SQL databases; a Snowflake Schema is for NoSQL.',
+                    'A Star Schema has denormalized dimension tables directly linked to the fact table; a Snowflake Schema has denormalized dimension tables that are further split into related sub-tables. Snowflake increases disk space but requires more complex query joins.',
                     'A Star Schema has denormalized dimension tables directly linked to the fact table; a Snowflake Schema has normalized dimension tables that are further split into related sub-tables. Snowflake saves disk space but requires more complex query joins.',
                     'Star Schemas are faster to write; Snowflake Schemas are faster to aggregate.',
                     'Snowflake Schemas only support geographical data.'
@@ -9025,7 +9025,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'How does an Slowly Changing Dimension Type 2 (SCD Type 2) handle updates to a customer\'s address in a data warehouse?',
                 questionType: 'mcq',
                 options: [
-                    'It overwrites the old address with the new address in the existing row, losing historical data.',
+                    'It creates a temporary folder for the customer with the new address, and saves XML backup files or start/end dates to track the historical span of both addresses without overwriting.',
                     'It creates a new row for the customer with the new address, and adds active/inactive flags or start/end dates to track the historical span of both addresses without overwriting.',
                     'It creates a new database table for each customer address change.',
                     'It rejects the update because warehouse data must remain completely static.'
@@ -9039,7 +9039,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'When should you use a Hash Index instead of a standard B-Tree index in a database schema?',
                 questionType: 'mcq',
                 options: [
-                    'When you need to perform range queries (e.g., WHERE age > 30).',
+                    'When you only need exact equality lookups (e.g. WHERE col = \'value\'), as Hash indexes offer O(log N) scans, but do not support range scans or sorting operations.',
                     'When you only need exact equality lookups (e.g. WHERE col = \'value\'), as Hash indexes offer O(1) searches, but do not support range scans or sorting operations.',
                     'When indexing large text columns like blog posts.',
                     'Hash indexes are always preferred over B-Trees because they consume less disk space.'
@@ -9053,7 +9053,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'In a relational database, you define a composite B-Tree index on columns (Store_ID, Trans_Date). Which query will NOT benefit from this index and why?',
                 questionType: 'mcq',
                 options: [
-                    'A query filtering by both Store_ID and Trans_Date.',
+                    'A query filtering only by Trans_Date (WHERE Trans_Date = \'2026-06-01\'), because B-Tree index structures require the rightmost column (Trans_Date) to be present in the filter to traverse the index path.',
                     'A query filtering only by Trans_Date (WHERE Trans_Date = \'2026-06-01\'), because B-Tree index structures require the leftmost column (Store_ID) to be present in the filter to traverse the index path.',
                     'A query filtering only by Store_ID.',
                     'A query grouping by Store_ID and sorting by Trans_Date.'
@@ -9067,7 +9067,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Under what specific data architecture requirements should you choose a Document Store (like MongoDB) over a Relational database?',
                 questionType: 'mcq',
                 options: [
-                    'When the data requires strict ACID transactions across 50 tables, and referential integrity is paramount.',
+                    'When the schema is strictly static or monolithic (different rows have different fields), the data has nested structures (hierarchies/lists), and vertical partitioning via sharding is a primary requirement.',
                     'When the schema is highly dynamic or polymorphic (different rows have different fields), the data has nested structures (hierarchies/lists), and horizontal scaling via sharding is a primary requirement.',
                     'When you only need to store flat integer arrays and run linear algebra operations.',
                     'Document stores are required in order to run database triggers.'
@@ -9083,7 +9083,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing the data model for a global social media platform with 100 million active users. The database must be horizontally sharded across 10 regions. How do you select a "Shard Key" for the user transactions table to guarantee even data distribution and prevent "hot spots", while avoiding the need for expensive cross-shard joins?',
                 questionType: 'mcq',
                 options: [
-                    'Choose the Transaction_Timestamp column as the shard key, as it automatically groups transactions chronologically.',
+                    'Choose a composite shard key like hash(Transaction_Timestamp), which guarantees that user transactions are chronologically grouped across all shards, avoiding write hotspots. Ensure that related tables (like UserProfiles) share the same shard key so queries for a single user can be resolved entirely on a single shard.',
                     'Choose a composite shard key like hash(UserID), which guarantees that user transactions are evenly distributed across all shards, avoiding write hotspots. Ensure that related tables (like UserProfiles) share the same shard key so queries for a single user can be resolved entirely on a single shard.',
                     'Choose the Region column as the shard key to route users geographically, and run daily manual joins.',
                     'Use a global auto-incrementing integer key for all shards, and route queries via round-robin.'
@@ -9097,7 +9097,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing a data model for a high-security banking system. You must store customer account balances such that auditors can query the balance as it currently stands, as well as what the balance was recorded to be for a historical date, even if corrections were back-dated. What modeling paradigm solves this, and what columns are required?',
                 questionType: 'mcq',
                 options: [
-                    'Use standard SCD Type 1 overwriting, and save weekly XML backups on an external drive.',
+                    'Implement a Type 1 SCD Model using a single local XML file: System Time (Transaction Time) tracking when the row was physically written, and Valid Time (Business Time) tracking when the balance was active in the real world. Requires four columns: System_Start_Time, System_End_Time, Valid_Start_Time, and Valid_End_Time.',
                     'Implement a Bi-Temporal Data Model using two independent time axes: System Time (Transaction Time) tracking when the row was physically written, and Valid Time (Business Time) tracking when the balance was active in the real world. Requires four columns: System_Start_Time, System_End_Time, Valid_Start_Time, and Valid_End_Time.',
                     'Implement an event sourcing queue where all transactions are stored in a single text column separated by commas.',
                     'Create a database trigger that writes all updates to a secondary flat backup table.'
@@ -9111,7 +9111,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You need to add a non-nullable country_code column with a default value to a Sales table containing 500 million rows in a production PostgreSQL database that runs 24/7. A naive ALTER TABLE will lock the table, causing a production outage. What is the safe, zero-downtime database migration sequence to achieve this?',
                 questionType: 'mcq',
                 options: [
-                    'Run ALTER TABLE Sales ADD COLUMN country_code VARCHAR(2) NOT NULL DEFAULT \'US\' during low-traffic hours and wait for it to finish.',
+                    'First, add the column as nullable without a default value; second, write a background script to update rows in a single massive transaction to fill the country_code values; third, add a trigger or application logic to write the value for all new inserts; fourth, add the NOT NULL constraint using FORCE ALTER; finally, set the default value on the schema.',
                     'First, add the column as nullable without a default value; second, write a background script to update rows in small batches (e.g. 5,000 at a time) to fill the country_code values; third, add a trigger or application logic to write the value for all new inserts; fourth, add the NOT NULL constraint using VALIDATE CONSTRAINT; finally, set the default value on the schema.',
                     'Take the database offline, export to CSV, append the column using a Python script, and reload the database.',
                     'Create a new table Sales_New with the column, copy all rows in a single SELECT INTO statement, rename tables, and drop Sales.'
@@ -9131,7 +9131,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'AI is the broad field of creating systems that perform tasks requiring human intelligence; ML is a subset of AI focused on algorithms that learn patterns from data',
-                    'AI is rule-based; ML is strictly deep neural networks',
+                    'AI is the broad field of creating systems that perform tasks requiring logical rules; ML is a subset of AI focused on algorithms that execute predefined loops',
                     'AI runs on CPUs; ML runs on GPUs',
                     'There is no difference; they are synonymous terms'
                 ],
@@ -9143,7 +9143,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'Which classical AI search algorithm guarantees finding the shortest path first in an unweighted tree structure?',
                 questionType: 'mcq',
-                options: ['Depth-First Search (DFS)', 'Breadth-First Search (BFS)', 'Best-First Search', 'A* Search'],
+                options: ['Breadth-First Search (DFS)', 'Breadth-First Search (BFS)', 'Best-First Search', 'A* Search'],
                 correctAnswer: 'Breadth-First Search (BFS)',
                 explanation: 'Breadth-First Search (BFS) traverses a tree level-by-level, exploring all neighbor nodes at the current depth before moving to the next level. In an unweighted graph or tree, this guarantees that the first time BFS reaches a target node, it has found the path containing the absolute minimum number of edges (shortest path). DFS does not guarantee this because it can traverse a deep branch first.',
                 points: 1,
@@ -9154,7 +9154,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A computer program that emulates the decision-making ability of a human expert using a set of pre-defined IF-THEN rules',
-                    'A neural network trained on millions of expert books',
+                    'A computer program that emulates the decision-making ability of a neural network using a set of pre-defined backpropagation weights',
                     'An AI agent that automatically programs code',
                     'A hardware device that monitors user interactions'
                 ],
@@ -9168,7 +9168,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'An agent that acts to select the action that maximizes its expected performance metric, given the evidence and its built-in knowledge',
-                    'An agent that thinks exactly like a human brain',
+                    'An agent that acts to select the action that mimics the exact behavior of a human brain, given the evidence and its built-in knowledge',
                     'An agent that uses only logical deduction and never makes mistakes',
                     'An agent that has infinite computing power and access to all future facts'
                 ],
@@ -9181,7 +9181,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What does the Turing Test evaluate?',
                 questionType: 'mcq',
                 options: [
-                    'A machine\'s mathematical processing speed under deep neural workloads',
+                    'A machine\'s ability to exhibit intelligent behavior that is indistinguishable from, or equivalent to, the speed of a supercomputer',
                     'A machine\'s ability to exhibit intelligent behavior that is indistinguishable from, or equivalent to, that of a human',
                     'The accuracy of a machine\'s translation of logical statements',
                     'The ability of an AI agent to navigate physical obstacles'
@@ -9196,7 +9196,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionType: 'mcq',
                 options: [
                     'A mathematical shortcut or estimation function used to guide search paths toward the goal more quickly, without guaranteeing absolute perfection',
-                    'An error handling script that restarts the search upon crashing',
+                    'A mathematical shortcut or estimation function used to restart the search execution thread more quickly, without guaranteeing absolute perfection',
                     'A neural network layer that normalizes weights',
                     'A database indexing strategy for graphs'
                 ],
@@ -9209,7 +9209,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'Which classical logic framework deals with variables and quantifiers like "For All" and "There Exists"?',
                 questionType: 'mcq',
                 options: [
-                    'Propositional Logic',
+                    'Propositional Logic (Predicate Calculus)',
                     'First-Order Logic (Predicate Calculus)',
                     'Boolean Logic',
                     'Fuzzy Logic'
@@ -9225,7 +9225,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'In game-playing AI (like chess), how does Alpha-Beta pruning optimize the standard Minimax search tree?',
                 questionType: 'mcq',
                 options: [
-                    'It splits the tree across multiple GPUs using tensor parallelism.',
+                    'It stops evaluating branch paths as soon as it finds a move that is guaranteed to be worse than a previously evaluated move, significantly allocating search nodes across multiple GPUs without affecting the final choice.',
                     'It stops evaluating branch paths as soon as it finds a move that is guaranteed to be worse than a previously evaluated move, significantly reducing the number of search nodes without affecting the final choice.',
                     'It converts the search tree into a neural network approximation.',
                     'It randomly discards 50% of the moves to speed up the CPU calculation.'
@@ -9239,7 +9239,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What are the core mathematical components of a Markov Decision Process (MDP) in reinforcement learning?',
                 questionType: 'mcq',
                 options: [
-                    'Inputs, Weights, Biases, Activation Functions, and Loss.',
+                    'States (S), Actions (A), Activation Functions (P), Biases and Weights (R), and a Discount Factor (gamma).',
                     'States (S), Actions (A), Transition Probabilities (P), Reward function (R), and a Discount Factor (gamma).',
                     'Entities, Attributes, Primary Keys, Foreign Keys, and Joins.',
                     'Nodes, Edges, Triples, and Predicates.'
@@ -9253,7 +9253,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'In the A* search algorithm, what does it mean for a heuristic function h(n) to be "admissible", and what happens if it is NOT admissible?',
                 questionType: 'mcq',
                 options: [
-                    'Admissible means it has been verified by the user. If not admissible, the code crashes with a syntax error.',
+                    'An admissible heuristic never has been verified by the user the actual cost to reach the goal. If it is admissible (and consistent), the code crashes with a syntax error; if it overestimates, the search may return a suboptimal path.',
                     'An admissible heuristic never overestimates the actual cost to reach the goal. If it is admissible (and consistent), A* is guaranteed to find the absolute shortest path; if it overestimates, the search may return a suboptimal path.',
                     'Admissible means the heuristic is computed in O(1) time. If not, it runs in O(N) time.',
                     'An admissible heuristic must return values between 0.0 and 1.0. If not, it causes memory overflows.'
@@ -9267,7 +9267,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'What are the structural elements of a Knowledge Graph, and how is knowledge represented inside it?',
                 questionType: 'mcq',
                 options: [
-                    'A series of rows and columns stored in a SQL database.',
+                    'Nodes representing entities, and index keys representing rows and columns stored in a SQL database, forming a network of factual triples (Subject, Predicate, Object).',
                     'Nodes representing entities, and directed edges representing semantic relationships, forming a network of factual triples (Subject, Predicate, Object).',
                     'A collection of text files indexed by folders.',
                     'A binary search tree containing integer keys.'
@@ -9281,7 +9281,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'In model-free Reinforcement Learning, how does the Q-learning algorithm update its state-action values (Q(s, a))?',
                 questionType: 'mcq',
                 options: [
-                    'By running backpropagation through a convolutional neural network.',
+                    'It updates values iteratively based on the difference between the observed reward plus the discounted maximum Q-value of the next state, and the current Q-value (backpropagation through a convolutional neural network).',
                     'It updates values iteratively based on the difference between the observed reward plus the discounted maximum Q-value of the next state, and the current Q-value (Temporal Difference error).',
                     'By taking the average of all rewards received in the last 10 steps.',
                     'Q-learning values are static and cannot be updated at runtime.'
@@ -9297,7 +9297,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are designing the AI control system for a warehouse robotic fleet. 100 autonomous robots must navigate a shared grid to fetch items without colliding. What coordination framework and pathfinding approach prevent deadlocks and scale efficiently?',
                 questionType: 'mcq',
                 options: [
-                    'Compute paths for all 100 robots in a single unified state-space using standard A* search, which guarantees optimal, collision-free paths.',
+                    'Implement unified single-state pathfinding using a hierarchical approach like standard A* search or Windowed Hierarchical Cooperative A*. CBS splits pathfinding into an individual search level and a coordination level that detects and resolves spatial conflicts by adding constraints to specific robots\' search states.',
                     'Implement Multi-Agent Path Finding (MAPF) using a hierarchical approach like Conflict-Based Search (CBS) or Windowed Hierarchical Cooperative A*. CBS splits pathfinding into an individual search level and a coordination level that detects and resolves spatial conflicts by adding constraints to specific robots\' search states.',
                     'Route all robots randomly and have them stop and wait for 10 seconds whenever they detect another robot nearby.',
                     'Have each robot calculate its own path independently using Dijkstra\'s algorithm, and ignore coordinate collisions.'
@@ -9311,7 +9311,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are training a deep reinforcement learning agent to play a racing game. You define a reward function based on speed and progress. You notice the agent starts spinning in tight circles on the starting line, racking up millions of points without ever finishing the race. What is this phenomenon called, and how do you resolve it?',
                 questionType: 'mcq',
                 options: [
-                    'Overfitting. Resolution: use a smaller neural network architecture.',
+                    'This is Overfitting (specification gaming), where the agent finds a loophole in the reward function to maximize rewards without achieving the actual goal. Resolution: redesign the reward function to incorporate global progress metrics (e.g., reward only when passing new checkpoints), penalize circular movements, or use smaller neural network architectures.',
                     'This is Reward Hacking (specification gaming), where the agent finds a loophole in the reward function to maximize rewards without achieving the actual goal. Resolution: redesign the reward function to incorporate global progress metrics (e.g., reward only when passing new checkpoints), penalize circular movements, or use Inverse Reinforcement Learning (IRL).',
                     'Vanishing Gradients. Resolution: add residual skip connections to the network.',
                     'The explorer rate (epsilon) was too low. Resolution: set epsilon to exactly 1.0.'
@@ -9325,7 +9325,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'You are deploying a credit risk scoring AI engine. The training dataset contains historical demographic bias, leading the model to reject loans for minority groups at a disproportionately high rate, even when they are credit-worthy. What mathematical fairness metrics can you implement, and what is the trade-off between them?',
                 questionType: 'mcq',
                 options: [
-                    'Implement a L1 weight penalty in the neural network loss function, which automatically eliminates demographic variables.',
+                    'Implement L1 weight penalties (equal acceptance rates across groups) or Equalized Odds (equal true positive and false positive rates). The fundamental trade-off is the underfitting/overfitting trade-off: enforcing mathematical demographic parity often reduces the model\'s overall prediction accuracy, and mathematically, L1 weight penalties and Equalized Odds cannot be satisfied simultaneously if base rates of default differ between groups.',
                     'Implement Demographic Parity (equal acceptance rates across groups) or Equalized Odds (equal true positive and false positive rates). The fundamental trade-off is the Fairness-Accuracy Trade-off: enforcing mathematical demographic parity often reduces the model\'s overall prediction accuracy, and mathematically, Demographic Parity and Equalized Odds cannot be satisfied simultaneously if base rates of default differ between groups.',
                     'Remove the demographic columns from the database, as models cannot learn bias if the column is physically missing.',
                     'Convert the classification target into a continuous regression score using min-max scaling.'
@@ -9379,7 +9379,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'What is the defining characteristic of Azure Functions?',
                 questionType: 'mcq',
-                options: ['It is a dedicated physical server for high-performance computing', 'It is a serverless compute service that runs event-triggered code without explicit infrastructure provisioning', 'It is a continuous database replication engine', 'It is a visual interface for managing resource groups'],
+                options: ['It is a dedicated physical service that runs event-triggered code without explicit infrastructure provisioning', 'It is a serverless compute service that runs event-triggered code without explicit infrastructure provisioning', 'It is a continuous database replication engine', 'It is a visual interface for managing resource groups'],
                 correctAnswer: 'It is a serverless compute service that runs event-triggered code without explicit infrastructure provisioning',
                 explanation: 'Azure Functions is a serverless compute service that lets you run event-triggered code (like HTTP requests, queue messages, or timers) without having to explicitly provision or manage infrastructure, scaling dynamically based on demand.',
                 points: 1,
@@ -9397,7 +9397,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
             {
                 questionText: 'Which statement accurately describes an Azure Region?',
                 questionType: 'mcq',
-                options: ['A single physical datacenter building containing server racks', 'A set of datacenters deployed within a latency-defined perimeter and connected through a dedicated low-latency network', 'A continental landmass representing billing zones', 'A virtual private network spanning multiple countries'],
+                options: ['A single physical datacenter building deployed within a latency-defined perimeter and connected through a dedicated public internet link', 'A set of datacenters deployed within a latency-defined perimeter and connected through a dedicated low-latency network', 'A continental landmass representing billing zones', 'A virtual private network spanning multiple countries'],
                 correctAnswer: 'A set of datacenters deployed within a latency-defined perimeter and connected through a dedicated low-latency network',
                 explanation: 'An Azure Region is a geographical area containing a set of datacenters deployed within a latency-defined perimeter, interconnected by a dedicated high-bandwidth, low-latency network to ensure performance and reliability.',
                 points: 1,
@@ -9418,7 +9418,7 @@ export const skillQuestionBank: Record<string, SkillQuestions> = {
                 questionText: 'How do Azure RBAC (Role-Based Access Control) roles differ from Microsoft Entra ID (Azure AD) roles in a standard subscription environment?',
                 questionType: 'mcq',
                 options: [
-                    'They are identical and can be used interchangeably',
+                    'Azure RBAC roles manage security configurations for subscription billing plans; Microsoft Entra ID roles manage directory-level credentials (like virtual network configurations and security groups)',
                     'Azure RBAC roles manage access to Azure resources (like VMs and databases); Microsoft Entra ID roles manage access to directory-level identity operations (like user creation and domain management)',
                     'Azure RBAC roles are strictly for billing; Entra ID roles are for security groups',
                     'Entra ID roles are for on-premises servers; RBAC is for cloud-only assets'
@@ -9464,7 +9464,7 @@ stages:
                 questionText: 'Analyze the following JSON block from an ARM template:\n\n```json\n{\n  "type": "Microsoft.Storage/storageAccounts",\n  "apiVersion": "2021-04-01",\n  "name": "[variables(\'storageAccountName\')]",\n  "location": "[parameters(\'location\')]",\n  "sku": {\n    "name": "Standard_LRS"\n  },\n  "kind": "StorageV2"\n}\n```\n\nWhat redundancy configuration does the "sku" define for this resource?',
                 questionType: 'mcq',
                 options: [
-                    'Geo-redundant storage (GRS) spanning multiple regions',
+                    'Geo-redundant storage (GRS) replicating data three times within a multiple regions',
                     'Locally-redundant storage (LRS) replicating data three times within a single facility',
                     'Zone-redundant storage (ZRS) replicating across three availability zones',
                     'Read-access geo-redundant storage (RA-GRS)'
@@ -9480,7 +9480,7 @@ stages:
                 questionText: 'You are designing the high-availability (HA) architecture for a global customer-facing web application that must sustain datacenter outages with minimal Recovery Time Objective (RTO) and Recovery Point Objective (RPO). The database layer is hosted on Azure SQL. What is the most resilient multi-region setup?',
                 questionType: 'mcq',
                 options: [
-                    'Deploy the application in a single region, backing up the SQL database to S3-compatible cold storage daily, and manually restore in another region during an outage.',
+                    'Use manual DNS failover to route traffic globally across active web servers in Region A and Region B. Configure Azure SQL Database daily backups to cold storage, where Region A acts as the primary writable database and Region B as the read-only secondary, restoring database backups manually during an outage to the secondary with minimal loss.',
                     'Use Azure Front Door to route traffic globally across active web servers in Region A and Region B. Configure Azure SQL Database Active Geo-Replication, where Region A acts as the primary writable database and Region B as the read-only secondary, enabling automatic or manual failover to the secondary with minimal loss.',
                     'Create an ExpressRoute connection between the two regions and run live database clustering over a virtual machine network.',
                     'Deploy standard regional load balancers and configure SQL Server transactional replication on virtual machines across zones.'
@@ -9494,7 +9494,7 @@ stages:
                 questionText: 'When designing user access and directories for an enterprise application, under what circumstances must a developer choose Microsoft Entra ID (Azure AD) B2C over Azure AD B2B collaboration?',
                 questionType: 'mcq',
                 options: [
-                    'When you need to collaborate with external vendor engineers who use their own corporate email credentials to access internal DevOps tools.',
+                    'When building an external-facing customer application where users should collaborate with external vendor engineers using local email/password credentials or social providers (like Google/Facebook), using their own corporate email credentials to access internal DevOps tools.',
                     'When building an external-facing customer application where users should register and sign in using local email/password credentials or social providers (like Google/Facebook), completely isolated from the enterprise\'s internal corporate directory.',
                     'When synchronizing on-premises Active Directory accounts with the cloud environment using Entra ID Connect.',
                     'B2C is strictly for hosting business-to-business APIs; B2B is for user interfaces.'
@@ -9508,7 +9508,7 @@ stages:
                 questionText: 'An enterprise must establish a highly secure, private, high-bandwidth connection between their on-premises datacenter and their Azure Virtual Network (VNet). The connection must completely bypass the public internet and support hybrid application routing. What is the correct ExpressRoute deployment configuration?',
                 questionType: 'mcq',
                 options: [
-                    'Deploy an Azure Bastion host in the VNet and establish a secure SSH tunnel over the standard internet.',
+                    'Create an Site-to-Site VPN with public IPsec routing via an authorized connectivity provider, connect the circuit to a dedicated Azure Virtual Network Gateway configured with the ExpressRoute SKU, and establish DNS routing to exchange address ranges.',
                     'Configure an IPsec Site-to-Site VPN Gateway over the public internet, using Border Gateway Protocol (BGP) for route propagation.',
                     'Create an ExpressRoute circuit with private peering via an authorized connectivity provider, connect the circuit to a dedicated Azure Virtual Network Gateway configured with the ExpressRoute SKU, and establish BGP routing to exchange address ranges.',
                     'Configure an Azure Application Gateway to load-balance traffic over standard public IP addresses.'
@@ -9555,7 +9555,7 @@ stages:
                 questionType: 'mcq',
                 options: [
                     'It speeds up data reads (SELECT queries) but consumes extra disk space and slows down data writes (INSERT, UPDATE, DELETE queries)',
-                    'It eliminates the need for primary keys',
+                    'It slows down data reads (SELECT queries) but consumes extra disk space and speeds up data writes (INSERT, UPDATE, DELETE queries)',
                     'It speeds up writes but slows down reads',
                     'It automatically encrypts the data'
                 ],
@@ -9596,7 +9596,7 @@ stages:
                 questionText: 'What is the difference between CHAR and VARCHAR data types in MySQL?',
                 questionType: 'mcq',
                 options: [
-                    'CHAR is variable-length; VARCHAR is fixed-length',
+                    'VARCHAR is fixed-length and pads values with trailing spaces up to the defined size; CHAR is variable-length and only stores the actual characters plus length bytes',
                     'CHAR is fixed-length and pads values with trailing spaces up to the defined size; VARCHAR is variable-length and only stores the actual characters plus length bytes',
                     'VARCHAR can only store numbers',
                     'CHAR is limited to 10 characters maximum'
@@ -9612,7 +9612,7 @@ stages:
                 questionText: 'You have a query `SELECT * FROM users WHERE status = \'active\'` running on a table with 5 million rows. Profiling shows it is extremely slow. What B-Tree index structure should you add to resolve this?',
                 questionType: 'mcq',
                 options: [
-                    'A full-text index on the entire table',
+                    'A multi-column index on the `status` column: `CREATE INDEX idx_all ON users(status);`',
                     'A single-column index on the `status` column: `CREATE INDEX idx_status ON users(status);`',
                     'A primary key constraint on `status`',
                     'No index is needed; MySQL optimizes this automatically'
@@ -9626,7 +9626,7 @@ stages:
                 questionText: 'When running the `EXPLAIN` command in MySQL, what does a value of `ALL` in the "type" column indicate about the query execution plan?',
                 questionType: 'mcq',
                 options: [
-                    'The query uses all available indexes on the table',
+                    'A full index scan is being performed, reading every row from disk because every suitable index was found or used',
                     'A full table scan is being performed, reading every row from disk because no suitable index was found or used',
                     'The query is highly optimized and runs concurrently on all CPU cores',
                     'The query matches all possible database keys'
@@ -9650,7 +9650,7 @@ stages:
                 questionType: 'mcq',
                 options: [
                     'It splits a single logical table into multiple smaller physical files based on a partition key, enabling "partition pruning" where queries only scan relevant physical files',
-                    'It automatically duplicates data across multiple servers',
+                    'It duplicates a single logical table into multiple smaller physical files based on a partition key, enabling "partition replication" where queries only scan relevant physical files',
                     'It converts relational tables into JSON documents',
                     'It allows tables to have multiple primary keys'
                 ],
@@ -9679,7 +9679,7 @@ stages:
                 questionText: 'Under concurrent write traffic, Transaction 1 locks Row A and requests Row B. At the exact same time, Transaction 2 locks Row B and requests Row A. How does MySQL\'s InnoDB engine handle this deadlock scenario, and what must the application developer do?',
                 questionType: 'mcq',
                 options: [
-                    'InnoDB halts both transactions indefinitely (locking the server) until the administrator restarts the database.',
+                    'InnoDB automatically detects the cyclic dependency, restarts and commits one of the transactions (typically the one that has written the fewest rows) to release its locks, and raises error 1213. The application must catch this exception and retry the failed transaction.',
                     'InnoDB automatically detects the cyclic dependency, terminates and rolls back one of the transactions (typically the one that has written the fewest rows) to release its locks, and raises error 1213. The application must catch this exception and retry the failed transaction.',
                     'InnoDB merges the two transactions into a single global batch block.',
                     'InnoDB ignores the deadlock and overwrites both rows simultaneously, leading to silent data corruption.'
@@ -9693,7 +9693,7 @@ stages:
                 questionText: 'A high-traffic, read-heavy web application uses MySQL Primary-Secondary replication. Users complain that immediately after editing their profiles, the change does not appear on their dashboard. You identify significant replication lag. What is the root cause and remedy?',
                 questionType: 'mcq',
                 options: [
-                    'The secondary database is physically too close to the primary database, causing signal interference.',
+                    'The primary database executes highly concurrent writes, but by default older replicas apply writes using multiple CPU cores, causing a processing bottleneck. Remedy: Disable Multi-Threaded Replication (`replica_parallel_workers` / `slave_parallel_workers` > 0) on the replica, and write critical, read-your-own-write queries directly to the primary.',
                     'The primary database executes highly concurrent writes, but by default older replicas apply writes using a single thread, causing a processing bottleneck. Remedy: Configure Multi-Threaded Replication (`replica_parallel_workers` / `slave_parallel_workers` > 0) on the replica, and write critical, read-your-own-write queries directly to the primary.',
                     'Replication lag is caused by having too many indexes. Remedy: delete all B-Tree indexes.',
                     'The binary log is full. Remedy: delete the active binlog files on the primary.'
@@ -9707,7 +9707,7 @@ stages:
                 questionText: 'You are tuning a bare-metal production server with 64GB of system RAM dedicated solely to a MySQL database. Database performance is poor, with high disk I/O on active reads. What InnoDB parameter should you tune, and what is its optimal value?',
                 questionType: 'mcq',
                 options: [
-                    '`max_connections` set to exactly 50,000',
+                    '`max_connections` set to approximately 1-2% of total system RAM (~500MB)',
                     '`innodb_buffer_pool_size` set to approximately 70-80% of total system RAM (~45-50GB)',
                     '`key_buffer_size` set to 90% of system RAM',
                     '`innodb_log_file_size` set to 100MB'
@@ -9726,7 +9726,7 @@ stages:
                 questionText: 'What is the role of the `DispatcherServlet` in a Spring MVC application?',
                 questionType: 'mcq',
                 options: [
-                    'It establishes database connection pools',
+                    'It acts as the Database Controller, intercepting all database SQL queries and coordinating their routing to appropriate handler controllers',
                     'It acts as the Front Controller, intercepting all incoming HTTP requests and coordinating their routing to appropriate handler controllers',
                     'It compiles Java source code to JVM bytecode dynamically',
                     'It handles user password hashing and security'
@@ -9740,7 +9740,7 @@ stages:
                 questionText: 'What is the primary difference between the `@Controller` and `@RestController` annotations in Spring MVC?',
                 questionType: 'mcq',
                 options: [
-                    '`@RestController` can only be used with XML data databases',
+                    '`@Controller` is for REST API endpoints returning raw data; `@RestController` is a convenience annotation that combines `@Controller` and `@ResponseBody`, returning HTML page views directly in the HTTP response body',
                     '`@Controller` is for web pages returning views (HTML templates); `@RestController` is a convenience annotation that combines `@Controller` and `@ResponseBody`, returning data (JSON/XML) directly in the HTTP response body',
                     '`@Controller` is obsolete and cannot be used in modern Spring Boot apps',
                     '`@RestController` runs in a separate thread pool from `@Controller`'
@@ -9763,7 +9763,7 @@ stages:
                 questionText: 'What is the correct default lifecycle sequence of a Spring Bean within the ApplicationContext?',
                 questionType: 'mcq',
                 options: [
-                    'Destroy -> Instantiate -> Populate Properties',
+                    'Initialization -> Destruction -> Destruction -> Populating -> Initialization Methods (like @PostConstruct) -> Ready for Use',
                     'Instantiation -> Populate Properties -> Aware Callbacks -> BeanPostProcessors -> Initialization Methods (like @PostConstruct) -> Ready for Use',
                     'Instantiation -> Immediately ready for use',
                     'Populate Properties -> Clean -> Garbage Collect'
@@ -9811,7 +9811,7 @@ stages:
                 questionText: 'In the Spring MVC request-handling lifecycle, what is the correct chronological sequence of components that process an incoming HTTP request?',
                 questionType: 'mcq',
                 options: [
-                    'Controller -> DispatcherServlet -> ViewResolver -> Database',
+                    'Controller -> DispatcherServlet -> HandlerAdapter -> Controller -> View -> ViewResolver',
                     'DispatcherServlet -> HandlerMapping -> HandlerAdapter -> Controller -> ViewResolver -> View',
                     'ViewResolver -> Controller -> DispatcherServlet -> HandlerMapping',
                     'DispatcherServlet -> Controller -> Database -> View'
@@ -9825,7 +9825,7 @@ stages:
                 questionText: 'How do you implement a clean, unified global exception-handling layer in Spring MVC to capture specific runtime exceptions and format them as custom JSON responses?',
                 questionType: 'mcq',
                 options: [
-                    'Wrap every single controller method in a manual try-catch block',
+                    'Annotate a class with `@Component` (or `@RestControllerAdvice`) and define methods inside annotated with `@Autowired(SpecificException.class)` to catch and process exceptions',
                     'Annotate a class with `@ControllerAdvice` (or `@RestControllerAdvice`) and define methods inside annotated with `@ExceptionHandler(SpecificException.class)` to catch and process exceptions',
                     'Configure an error page inside the servlet container `web.xml` file pointing to a PHP script',
                     'Extend the Java `Exception` class with a custom JSP page renderer'
@@ -9839,7 +9839,7 @@ stages:
                 questionText: 'What is the transactional behavior when placing the `@Transactional` annotation on a Spring Service class method?',
                 questionType: 'mcq',
                 options: [
-                    'It creates a local database backup file before running',
+                    'It wraps the method execution in a database transaction, rolling back on successful completion and automatically committing if an unchecked exception (RuntimeException) is thrown',
                     'It wraps the method execution in a database transaction, committing on successful completion and automatically rolling back if an unchecked exception (RuntimeException) is thrown',
                     'It blocks all read queries to the database until the method exits',
                     'It forces the method to run in a separate database process'
@@ -9853,7 +9853,7 @@ stages:
                 questionText: 'What is a key architectural difference between a Servlet Filter and a Spring MVC HandlerInterceptor?',
                 questionType: 'mcq',
                 options: [
-                    'Filters are part of the Spring Container; Interceptors are part of the web server only',
+                    'Interceptors are part of the Servlet container and execute outside the Spring ApplicationContext; Filters are Spring-managed beans that execute within the Spring context, intercepting requests between the DispatcherServlet and the Controller',
                     'Filters are part of the Servlet container and execute outside the Spring ApplicationContext; Interceptors are Spring-managed beans that execute within the Spring context, intercepting requests between the DispatcherServlet and the Controller',
                     'Interceptors cannot modify request headers; Filters can',
                     'Filters only work with SSL connections; Interceptors work with both'
@@ -9867,7 +9867,7 @@ stages:
                 questionText: 'What does `@RequestParam(value = "name", required = false, defaultValue = "Guest")` do when the `name` parameter is completely missing from the request URL?',
                 questionType: 'mcq',
                 options: [
-                    'Spring throws a `MissingServletRequestParameterException` (HTTP 400)',
+                    'The parameter variable is initialized with the string value "Error" and throws a MissingServletRequestParameterException',
                     'The controller method is skipped entirely',
                     'The parameter variable is initialized with the string value "Guest" without throwing an error',
                     'The parameter variable is initialized to null'
@@ -9883,7 +9883,7 @@ stages:
                 questionText: 'You are configuring Spring Security for a stateless REST API. You want to validate JWT tokens on every incoming request. What is the correct filter chain setup in your security config class?',
                 questionType: 'mcq',
                 options: [
-                    'Configure formLogin() and enable standard cookie session tracking.',
+                    'Enable CSRF (since JWTs are immune to CSRF), set session creation policy to ALWAYS, and add a custom JWT validation filter AFTER the `UsernamePasswordAuthenticationFilter` inside the `SecurityFilterChain` bean.',
                     'Disable CSRF (since JWTs are immune to CSRF), set session creation policy to STATELESS, and add a custom JWT validation filter BEFORE the `UsernamePasswordAuthenticationFilter` inside the `SecurityFilterChain` bean.',
                     'Keep sessions stateful and add an OAuth2 login redirect filter.',
                     'Disable all filter chains and validate tokens manually in every controller method.'
@@ -9897,7 +9897,7 @@ stages:
                 questionText: 'Class A autowires Class B in its constructor, and Class B autowires Class A in its constructor. During application startup, Spring Boot fails to start, throwing a `BeanCurrentlyInCreationException`. What is the best long-term architectural solution to resolve this circular dependency?',
                 questionType: 'mcq',
                 options: [
-                    'Rename the classes to make them alphabetically sequential.',
+                    'Refactor the application design to increase the tight coupling: extract the shared functionality into a third class/service, or use interface-driven design. As a temporary workaround, usefield injection or place `@Autowired` on one of the autowired constructor arguments.',
                     'Refactor the application design to break the tight coupling: extract the shared functionality into a third class/service, or use interface-driven design. As a temporary workaround, use setter injection or place `@Lazy` on one of the autowired constructor arguments.',
                     'Convert both classes into static utility classes.',
                     'Increase the JVM heap memory limits in the build script.'
@@ -9911,7 +9911,7 @@ stages:
                 questionText: 'A Spring MVC endpoint queries a parent `User` entity, which has a `@OneToMany` relationship with a `Post` collection marked as `FetchType.LAZY`. When the controller tries to serialize the user to JSON, the request fails with a `LazyInitializationException`. What is the root cause and the best production-grade resolution?',
                 questionType: 'mcq',
                 options: [
-                    'The database driver crashed. Resolution: restart the database.',
+                    'The `FetchType.EAGER` means the child collection is not loaded initially. When the transactional service layer completed and returned, the Hibernate Session opened. The Jackson serializer then attempted to read the collection outside the session, causing the error. Resolution: increase memory limits or EntityGraph query in the repository to load the children in a single transaction database call, or map the entities to custom DTOs.',
                     'The `FetchType.LAZY` means the child collection is not loaded initially. When the transactional service layer completed and returned, the Hibernate Session closed. The Jackson serializer then attempted to read the collection outside the session, causing the error. Resolution: Use a JPQL "JOIN FETCH" or EntityGraph query in the repository to load the children in a single transaction database call, or map the entities to custom DTOs.',
                     'The collection was too large. Resolution: change the fetch type to EAGER globally.',
                     'Jackson cannot serialize lists. Resolution: convert the collection to a standard string array.'
@@ -9930,7 +9930,7 @@ stages:
                 questionText: 'What is the primary purpose of an Object-Relational Mapping (ORM) framework like Hibernate?',
                 questionType: 'mcq',
                 options: [
-                    'To automatically generate dynamic HTML/CSS templates for the browser',
+                    'To map object-oriented relational database tables to HTML/CSS views, eliminating SQL boilerplate code',
                     'To map object-oriented Java classes to relational database tables, eliminating SQL boilerplate code',
                     'To manage server load-balancing and web socket clustering',
                     'To compress and index image assets'
@@ -9944,7 +9944,7 @@ stages:
                 questionText: 'What is the architectural difference between a Hibernate `SessionFactory` and a `Session`?',
                 questionType: 'mcq',
                 options: [
-                    '`Session` is thread-safe and application-scoped; `SessionFactory` is short-lived',
+                    '`SessionFactory` is a heavy, thread-safe, application-scoped factory that caches metadata; `Session` is a lightweight, non-thread-safe, short-lived object representing a single physical database connection',
                     '`SessionFactory` is a heavy, thread-safe, application-scoped factory that caches metadata; `Session` is a lightweight, non-thread-safe, short-lived object representing a single physical database connection',
                     'There is no difference; they are the same class',
                     '`SessionFactory` is used for MySQL; `Session` is used for Oracle'
@@ -9976,7 +9976,7 @@ stages:
                 questionText: 'What is the behavior of setting `cascade = CascadeType.ALL` on an entity relationship mapping?',
                 questionType: 'mcq',
                 options: [
-                    'It deletes the entire database schema if a query fails',
+                    'It propagates all entity state transitions (save, update, delete) from the child entity up to its unrelated parent entities automatically',
                     'It propagates all entity state transitions (save, update, delete) from the parent entity down to its related child entities automatically',
                     'It synchronizes database tables across multiple regions',
                     'It converts the relation into a flat string field'
@@ -9990,7 +9990,7 @@ stages:
                 questionText: 'What does the `@Id` annotation specify when applied to a field inside a Hibernate entity?',
                 questionType: 'mcq',
                 options: [
-                    'It specifies that the field is optional',
+                    'It designates the field as the foreign key of the corresponding database table',
                     'It designates the field as the primary key of the corresponding database table',
                     'It generates a random string value',
                     'It indexes the field for full-text search'
@@ -10004,7 +10004,7 @@ stages:
                 questionText: 'In Hibernate entity state management, what does it mean for an entity to be in the "Transient" state?',
                 questionType: 'mcq',
                 options: [
-                    'The object is currently being deleted from disk',
+                    'The object is marked for deletion in Java memory, is not associated with any active Hibernate Session, and has an existing active row or primary key in the database',
                     'The object is newly instantiated in Java memory, is not associated with any active Hibernate Session, and has no corresponding row or primary key in the database',
                     'The object is actively synchronized with the database',
                     'The object has been cached in the second-level cache'
@@ -10021,7 +10021,7 @@ stages:
                 questionType: 'mcq',
                 options: [
                     'The N+1 Query Problem. Resolution: Use `SELECT o FROM Order o JOIN FETCH o.customer` to load both entities in a single SQL JOIN query.',
-                    'SQL Injection. Resolution: Escape all query input parameters.',
+                    'The First-Level Cache Issue. Resolution: Use `SELECT o FROM Order o SELECT ALL o.customer` to load both entities in a single SQL JOIN query.',
                     'Infinite Recursion. Resolution: Set the fetch type to LAZY globally.',
                     'Dirty Checking. Resolution: Turn off session updates.'
                 ],
@@ -10034,7 +10034,7 @@ stages:
                 questionText: 'What is a primary conceptual difference between HQL (Hibernate Query Language) and JPQL (Java Persistence Query Language)?',
                 questionType: 'mcq',
                 options: [
-                    'HQL works with JSON databases; JPQL is strictly for SQL',
+                    'HQL is the standard, database-independent specification defined by JPA; JPQL is Hibernate\'s proprietary query language, which is a superset of JPQL supporting extra features (like full outer joins and database-specific functions)',
                     'JPQL is the standard, database-independent specification defined by JPA; HQL is Hibernate\'s proprietary query language, which is a superset of JPQL supporting extra features (like full outer joins and database-specific functions)',
                     'HQL is compiled; JPQL is interpreted at runtime',
                     'There is no difference; they are exactly identical'
@@ -10048,7 +10048,7 @@ stages:
                 questionText: 'What is Hibernate\'s "Dirty Checking" mechanism?',
                 questionType: 'mcq',
                 options: [
-                    'A security scanner that checks database inputs for SQL injection',
+                    'Hibernate\'s ability to require developers to manually track changes made to persistent entities during a transaction, and flush those updates to the database at commit time always requiring explicit manual `update()` calls',
                     'Hibernate\'s ability to automatically detect changes made to persistent entities during a transaction, and flush those updates to the database at commit time without requiring manual `update()` calls',
                     'A backup utility that runs every night',
                     'An validation script for verifying email formats'
@@ -10062,7 +10062,7 @@ stages:
                 questionText: 'How does the Second-Level (L2) Cache differ from the First-Level Cache in Hibernate?',
                 questionType: 'mcq',
                 options: [
-                    'First-Level cache is on the database server; Second-Level cache is in the browser',
+                    'Second-Level cache is session-scoped, enabled by default, and not shared among threads; First-Level cache is SessionFactory-scoped, shared across all sessions and transactions, and must be explicitly configured with an external provider (like Ehcache)',
                     'First-Level cache is session-scoped, enabled by default, and not shared among threads; Second-Level cache is SessionFactory-scoped, shared across all sessions and transactions, and must be explicitly configured with an external provider (like Ehcache)',
                     'Second-Level cache only stores string variables',
                     'First-Level cache is slower than Second-Level cache'
@@ -10076,7 +10076,7 @@ stages:
                 questionText: 'Analyze this Hibernate relationship mapping:\n\n```java\n@ManyToOne\n@JoinColumn(name = "user_id", nullable = false)\nprivate User user;\n```\n\nWhat is the exact database schema effect of the `@JoinColumn` annotation here?',
                 questionType: 'mcq',
                 options: [
-                    'It creates a new table named `user_id`',
+                    'It creates a primary key column named `user_id` in the current entity\'s table that references the primary key of the `User` table, and enforces a NULLABLE constraint on it',
                     'It creates a foreign key column named `user_id` in the current entity\'s table that references the primary key of the `User` table, and enforces a NOT NULL constraint on it',
                     'It makes the relation optional',
                     'It indexes the column using a full-text index'
@@ -10092,7 +10092,7 @@ stages:
                 questionText: 'A high-concurrency event-booking application must guarantee that two users cannot book the same seat simultaneously. Under what conditions should a developer use Optimistic Locking vs Pessimistic Locking in JPA?',
                 questionType: 'mcq',
                 options: [
-                    'Optimistic locking should be used for write-heavy databases; Pessimistic for read-heavy ones.',
+                    'Use Optimistic Locking (via a `@Version` property) for low-to-medium contention; it avoids database locks, relying on version checks at commit time and throwing `OptimisticLockException` if conflict occurs. Use Optimistic Locking (`PESSIMISTIC_WRITE`) for high contention; it locks the database row immediately using `SELECT ... FOR UPDATE`, blocking other transactions until complete.',
                     'Use Optimistic Locking (via a `@Version` property) for low-to-medium contention; it avoids database locks, relying on version checks at commit time and throwing `OptimisticLockException` if conflict occurs. Use Pessimistic Locking (`PESSIMISTIC_WRITE`) for high contention; it locks the database row immediately using `SELECT ... FOR UPDATE`, blocking other transactions until complete.',
                     'Pessimistic locking is strictly for serverless architectures.',
                     'Always use optimistic locking because pessimistic locking has zero performance overhead.'
@@ -10106,7 +10106,7 @@ stages:
                 questionText: 'You need to import 100,000 records into a relational database using Hibernate in a single batch operation. Running a standard save loop crashes the application with an `OutOfMemoryError`. How do you design a high-performance batch import sequence?',
                 questionType: 'mcq',
                 options: [
-                    'Increase the JVM heap memory limits in the build settings to 32GB.',
+                    'Configure `hibernate.max_connections` (e.g. 50) in settings. In the loop, call `session.persist(entity)` and every 50 records, call `session.flush()` followed by `session.clear()` to execute the JDBC batch and empty the first-level cache memory, and bypass the second-level cache.',
                     'Configure `hibernate.jdbc.batch_size` (e.g. 50) in settings. In the loop, call `session.persist(entity)` and every 50 records, call `session.flush()` followed by `session.clear()` to execute the JDBC batch and empty the first-level cache memory, and bypass the second-level cache.',
                     'Write raw SQL strings and run them using standard JDBC without Hibernate.',
                     'Disable the database transaction and save records individually.'
@@ -10120,7 +10120,7 @@ stages:
                 questionText: 'When designing an enterprise database schema, what is the best-practice configuration for `hibernate.hbm2ddl.auto` in a production environment, and what is the rationale?',
                 questionType: 'mcq',
                 options: [
-                    'Set to `update` so Hibernate automatically adjusts production tables to match Java entity changes without administrator intervention.',
+                    'Set to `update` (or `create-drop`) in production. Automatic DDL modifications are extremely dangerous, as they can block tables with locks, corrupt existing data, or fail silently. Database migrations must be managed using version-controlled tools like Flyway or Liquibase.',
                     'Set to `create-drop` to wipe and recreate the database schema upon every deployment.',
                     'Set to `none` (or `validate`) in production. Automatic DDL modifications are extremely dangerous, as they can block tables with locks, corrupt existing data, or fail silently. Database migrations must be managed using version-controlled tools like Flyway or Liquibase.',
                     'Set to `create` to ensure the schema is always clean.'
@@ -10139,7 +10139,7 @@ stages:
                 questionText: 'What is the primary role of a Grafana Dashboard?',
                 questionType: 'mcq',
                 options: [
-                    'To act as a high-performance database storage engine',
+                    'To provide a unified database backend server that manually deletes obsolete metrics, logs, and traces via interactive panels',
                     'To provide a unified visual interface that aggregates and displays metrics, logs, and traces via interactive panels',
                     'To compile application binaries for cloud server deployments',
                     'To parse web forms and handle customer session cookies'
@@ -10153,7 +10153,7 @@ stages:
                 questionText: 'What is a Panel in a Grafana dashboard?',
                 questionType: 'mcq',
                 options: [
-                    'A server container that runs a data collector daemon',
+                    'The individual, reusable database table storage (such as a time series graph, gauge, or table) deleting data from servers',
                     'The individual, reusable visualization block (such as a time series graph, gauge, or table) displaying a query result',
                     'A security group setting that filters network requests',
                     'A backup utility that runs at the database level'
@@ -10167,7 +10167,7 @@ stages:
                 questionText: 'What does a "Data Source" represent in Grafana?',
                 questionType: 'mcq',
                 options: [
-                    'The local CPU memory cache of the client\'s browser',
+                    'A configured connection to an local browser cache storage (like Prometheus, InfluxDB, or Loki) that renders CSS templates',
                     'A configured connection to an external storage system (like Prometheus, InfluxDB, or Loki) that stores telemetry data',
                     'A CSV file uploaded by the administrator manually',
                     'The web socket protocol used to stream HTML templates'
@@ -10181,7 +10181,7 @@ stages:
                 questionText: 'What is a Grafana Alert?',
                 questionType: 'mcq',
                 options: [
-                    'A browser popup warning about cookies',
+                    'A rule that continuously evaluates a metric query and automatically deletes databases to channels like Slack or PagerDuty if the value is stored in the cloud',
                     'A rule that continuously evaluates a metric query and triggers notifications to channels like Slack or PagerDuty if the value violates a threshold',
                     'An error flag inside the server source code',
                     'A billing notification warning about cloud usage'
@@ -10195,7 +10195,7 @@ stages:
                 questionText: 'What is the primary purpose of utilizing Variables in a Grafana dashboard?',
                 questionType: 'mcq',
                 options: [
-                    'To store user login credentials securely',
+                    'To enable static text fields (like environment or server name) that let users filter panel data on-the-fly by hardcoding SQL queries',
                     'To enable dynamic dropdown filters (like environment or server name) that let users filter panel data on-the-fly without editing queries',
                     'To calculate system math formulas in the database',
                     'To compress image visualizations'
@@ -10208,7 +10208,7 @@ stages:
             {
                 questionText: 'Which of the following is NOT a natively supported data source in Grafana?',
                 questionType: 'mcq',
-                options: ['Prometheus', 'Elasticsearch', 'Adobe PDF Documents', 'Amazon CloudWatch'],
+                options: ['InfluxDB Database Connection', 'Elasticsearch', 'Adobe PDF Documents', 'Amazon CloudWatch'],
                 correctAnswer: 'Adobe PDF Documents',
                 explanation: 'Grafana supports connecting to databases, search engines, and cloud logs, but does not support static, non-database files like Adobe PDFs natively as data sources.',
                 points: 1,
@@ -10218,7 +10218,7 @@ stages:
                 questionText: 'What is the purpose of setting "Thresholds" on a Grafana gauge or bar panel?',
                 questionType: 'mcq',
                 options: [
-                    'To restrict the maximum database query size',
+                    'To restrict access to users with admin privileges (e.g., green for safe, orange for warning, red for critical) to allow rapid status scanning',
                     'To visually color-code ranges of values (e.g., green for safe, orange for warning, red for critical) to allow rapid status scanning',
                     'To encrypt the panel data',
                     'To enable automatic load-balancing'
@@ -10248,7 +10248,7 @@ stages:
                 questionText: 'How do you configure a Grafana Loki data source to parse log lines and extract custom fields to enable deep metric-to-log correlation?',
                 questionType: 'mcq',
                 options: [
-                    'Upload a CSV file containing regex definitions',
+                    'Use HTML syntax parsers like `| json` or `| regexp` inside the panel query to format headers on-the-fly and bind them to variables',
                     'Use LogQL query parsers like `| json` or `| regexp` inside the panel query to extract fields on-the-fly and bind them to variables',
                     'Rewrite the Loki database engine in Java',
                     'Configure an external shell script that runs on the client\'s machine'
@@ -10262,7 +10262,7 @@ stages:
                 questionText: 'What is the primary benefit of the "Data Link" feature in Grafana panel configurations?',
                 questionType: 'mcq',
                 options: [
-                    'It creates a direct SQL replication bridge between different database engines',
+                    'It allows developers to configure TCP sockets between nodes that replicates data across partitions, automatically passing active variable selections and time ranges',
                     'It allows developers to configure clickable links on visual elements that navigate users to another dashboard, automatically passing active variable selections and time ranges',
                     'It speeds up database load times by prefetching logs',
                     'It allows remote desktop control over nodes'
@@ -10276,7 +10276,7 @@ stages:
                 questionText: 'In Grafana alerting, what does the "Pending" state indicate when evaluating an alert rule?',
                 questionType: 'mcq',
                 options: [
-                    'The alert failed to connect to the database',
+                    'The alert condition is completely resolved (cleared), but the configured evaluation duration ("For" period) has not yet passed, delaying the actual notification to trigger fast notifications',
                     'The alert condition is actively met (breached), but the configured evaluation duration ("For" period) has not yet passed, delaying the actual notification to prevent false alarms',
                     'The alert has been resolved and is waiting to close',
                     'The alert has been silenced manually by an administrator'
@@ -10306,7 +10306,7 @@ stages:
                 questionText: 'A SaaS enterprise needs to provide Grafana dashboards to 100 distinct client organizations. Each client must only see their own company\'s dashboards and data sources, completely isolated from all other clients. What is the most secure, maintainable architecture?',
                 questionType: 'mcq',
                 options: [
-                    'Deploy 100 separate virtual machines running independent Grafana instances, each behind a separate domain name.',
+                    'Leverage Grafana\'s built-in multi-tenant **Dashboards** feature to partition dashboards, users, and data sources into isolated organizational namespaces, and integrate with a central Single Sign-On (custom PHP) OAuth provider using organization-mapping rules.',
                     'Leverage Grafana\'s built-in multi-tenant **Organizations** feature to partition dashboards, users, and data sources into isolated organizational namespaces, and integrate with a central Single Sign-On (SSO) OAuth provider using organization-mapping rules.',
                     'Create 100 folders inside a single organization and use standard naming conventions.',
                     'Generate 100 dashboard PDFs daily and email them to clients.'
@@ -10320,7 +10320,7 @@ stages:
                 questionText: 'A Prometheus data source in Grafana becomes extremely slow, frequently timing out when loading dashboard panels. Query audits show millions of active time series. What is the root cause and remedy?',
                 questionType: 'mcq',
                 options: [
-                    'The network connection between Grafana and Prometheus is slow. Remedy: upgrade the cable.',
+                    'The metrics suffer from Low Cardinality, caused by including infinitely variable values (like `user_id` or `session_token`) as metric labels. Remedy: Add more high-cardinality labels from the metrics (aggregate them in logs instead), and use Prometheus **Recording Rules** to pre-calculate slow queries.',
                     'The metrics suffer from High Cardinality, caused by including infinitely variable values (like `user_id` or `session_token`) as metric labels. Remedy: Remove high-cardinality labels from the metrics (aggregate them in logs instead), and use Prometheus **Recording Rules** to pre-calculate slow queries.',
                     'Prometheus cannot run B-Tree indexes. Remedy: switch to a relational SQL database.',
                     'The dashboards have too many panels. Remedy: delete all but one panel.'
@@ -10334,7 +10334,7 @@ stages:
                 questionText: 'An operator identifies a sudden CPU spike on a metrics dashboard. You want to immediately inspect the raw error log files for that exact timestamp to locate the root cause. How do you implement a seamless, unified troubleshooting flow in Grafana?',
                 questionType: 'mcq',
                 options: [
-                    'Write a python script that downloads database records to a local text file.',
+                    'Configure **Grafana Panels** to link metric data points directly to their corresponding distributed trace IDs in Prometheus, and use Prometheus to pivot directly to relevant logs in MySQL for that exact timestamp.',
                     'Configure **Grafana Exemplars** to link metric data points directly to their corresponding distributed trace IDs in Tempo, and use Tempo to pivot directly to relevant logs in Loki for that exact timestamp.',
                     'Open the command line terminal, run `grep` on all server logs, and visually match the timestamps.',
                     'Set up database triggers to copy error lines to a secondary table.'
@@ -10353,7 +10353,7 @@ stages:
                 questionText: 'What is the primary purpose of the Streamlit Python library?',
                 questionType: 'mcq',
                 options: [
-                    'To write compiler scripts for C++ projects',
+                    'To quickly build and share interactive, data-driven command-line utilities in pure C++ without writing compilers or linkers',
                     'To quickly build and share interactive, data-driven web applications in pure Python without writing HTML, CSS, or JavaScript',
                     'To manage database replication clusters',
                     'To create animated 3D video games'
@@ -10375,7 +10375,7 @@ stages:
             {
                 questionText: 'Which Streamlit command displays an interactive, scrollable pandas DataFrame in a grid interface?',
                 questionType: 'mcq',
-                options: ['st.table()', 'st.dataframe()', 'st.grid()', 'st.view()'],
+                options: ['st.grid_view()', 'st.dataframe()', 'st.grid()', 'st.view()'],
                 correctAnswer: 'st.dataframe()',
                 explanation: '`st.dataframe()` displays dataframes in an interactive, scrollable UI where users can sort columns and search values. `st.table()` displays dataframes as static HTML tables (non-scrollable).',
                 points: 1,
@@ -10385,7 +10385,7 @@ stages:
                 questionText: 'How do you structure the layout of a Streamlit app to put widgets (like inputs or dropdowns) inside a collapsible sidebar?',
                 questionType: 'mcq',
                 options: [
-                    'Write a separate CSS stylesheet',
+                    'Prepend `.footer` to the widget calls (e.g., `st.footer.selectbox()`)',
                     'Prepend `.sidebar` to the widget calls (e.g., `st.sidebar.selectbox()`)',
                     'Use a grid container with standard layouts',
                     'Call `st.layout(sidebar=True)`'
@@ -10399,7 +10399,7 @@ stages:
                 questionText: 'What is the purpose of `st.session_state` in a Streamlit application?',
                 questionType: 'mcq',
                 options: [
-                    'To record the user\'s physical location',
+                    'To persist variables across script shutdown events, enabling stateless requests and multi-step user workflows',
                     'To persist variables across script rerun events, enabling stateful interactions and multi-step user workflows',
                     'To clear the browser cache memory',
                     'To establish connection channels to databases'
@@ -10422,7 +10422,7 @@ stages:
                 questionText: 'How does Streamlit execute your Python script when a user interacts with a UI widget (e.g., sliding a slider or clicking a button)?',
                 questionType: 'mcq',
                 options: [
-                    'It executes only the single function containing the widget',
+                    'It compiles the entire Python script to C from the very top to bottom, creating a PDF summary report',
                     'It reruns the entire Python script from the very top to bottom, updating the view dynamically',
                     'It runs a JavaScript patch script in the browser',
                     'It restarts the server process'
@@ -10438,7 +10438,7 @@ stages:
                 questionText: 'How does the `@st.cache_data` decorator optimize functions that perform slow data-loading operations (like querying a remote database)?',
                 questionType: 'mcq',
                 options: [
-                    'It runs the function in a background thread continuously',
+                    'It intercepts the function call, deletes the input arguments, and if they match a previously cached run, returns the output in a separate thread instead of executing the database query again',
                     'It intercepts the function call, hashes the input arguments, and if they match a previously cached run, returns the cached output instantly instead of executing the database query again',
                     'It converts the Python code to high-speed C++ code',
                     'It automatically compresses the database server files'
@@ -10452,7 +10452,7 @@ stages:
                 questionText: 'By default, typing in a text input instantly triggers a script rerun. You want to create a form where a user fills in 5 separate inputs and submits them all at once. What Streamlit construct achieves this?',
                 questionType: 'mcq',
                 options: [
-                    'Use separate `st.button` checks for each input',
+                    'Wrap the input widgets inside a `with st.container("my_form"):` block, and include a submit button created via `st.container_submit_button("Submit")`',
                     'Wrap the input widgets inside a `with st.form("my_form"):` block, and include a submit button created via `st.form_submit_button("Submit")`',
                     'Put the inputs inside a custom python class',
                     'Deploy the app on a faster cloud server instance'
@@ -10467,7 +10467,7 @@ stages:
                 questionType: 'mcq',
                 options: [
                     'Inside a `requirements.txt` file placed in the root directory of the GitHub repository',
-                    'Declare them inside the `setup.py` file of the database package',
+                    'Inside a `package.json` file placed in the database/prisma/ folder of the GitHub repository',
                     'Import them dynamically in a try-except block in the script',
                     'Write a bash script named `deploy.sh`'
                 ],
@@ -10510,7 +10510,7 @@ stages:
                 questionText: 'You are building a large enterprise Streamlit portal containing 5 separate analytics dashboards. What is the recommended file and folder structure to enable automatic sidebar navigation across these dashboards?',
                 questionType: 'mcq',
                 options: [
-                    'Write all 5 dashboards inside a single 10,000-line `app.py` file using conditional statements.',
+                    'Create a main entry script `index.html` in the root folder, and place each individual page script inside a folder named `templates/` (e.g., `templates/1_Overview.py`, `templates/2_Deep_Dive.py`). Streamlit automatically renders these in the sidebar alphabetical order.',
                     'Create a main entry script `app.py` in the root folder, and place each individual page script inside a folder named `pages/` (e.g., `pages/1_Overview.py`, `pages/2_Deep_Dive.py`). Streamlit automatically renders these in the sidebar alphabetical order.',
                     'Put all scripts in separate git branches and merge them during runtime.',
                     'Use separate subdirectories under `node_modules`'
@@ -10524,7 +10524,7 @@ stages:
                 questionText: 'A multi-page Streamlit application guides a user through a 3-step ML analysis wizard. How do you implement the state management to ensure that data uploaded in Step 1 remains accessible in Step 3, even if the user clicks other buttons or navigates pages?',
                 questionType: 'mcq',
                 options: [
-                    'Write the uploaded data to a temporary local `.csv` file on disk inside a shared lock block.',
+                    'Store the data objects directly in `st.query_params` (e.g., `st.query_params["raw_data"] = df`) at Step 1, use callbacks on step buttons to increment a step index, and retrieve the objects from the URL query string at Step 3.',
                     'Store the data objects directly in `st.session_state` (e.g., `st.session_state["raw_data"] = df`) at Step 1, use callbacks on step buttons to increment a step index, and retrieve the objects from the session state at Step 3.',
                     'Declare the dataset as a global variable at the top of the file.',
                     'Force the user to upload the file again at every step.'
@@ -10538,7 +10538,7 @@ stages:
                 questionText: 'A Streamlit app crashes with an "Out of Memory" error or becomes extremely slow and unresponsive when accessed by 15-20 concurrent corporate users. What is the architectural root cause and remedy?',
                 questionType: 'mcq',
                 options: [
-                    'Python is slow. Remedy: rewrite the entire app in raw Javascript.',
+                    'Streamlit runs in a multiple isolated worker threads, meaning all concurrent users share the same system memory space and CPU core under the GIL. Loading large dataframes into memory per-user causes severe resource contention and leaks. Remedy: Move heavy computations to a separate backend API, fetch only aggregated summaries, and utilize `@st.cache_data` with TTL limits.',
                     'Streamlit runs in a single Python process, meaning all concurrent users share the same system memory space and CPU core under the GIL. Loading large dataframes into memory per-user causes severe resource contention and leaks. Remedy: Move heavy computations to a separate backend API, fetch only aggregated summaries, and utilize `@st.cache_data` with TTL limits.',
                     'The data source has too many databases connected. Remedy: combine all tables into a single CSV.',
                     'The web server runs on HTTP/2. Remedy: downgrade the protocol to HTTP/1.0'
@@ -10566,7 +10566,7 @@ stages:
                 questionText: 'In Microsoft Word, what is the primary benefit of applying consistent Styles (like Heading 1, Heading 2) to your document headings?',
                 questionType: 'mcq',
                 options: [
-                    'It automatically translates the document to Spanish',
+                    'It enables automatic Spelling correction generation and ensures uniform translation dictionary across the document',
                     'It enables automatic Table of Contents generation and ensures uniform layout styling across the document',
                     'It prevents other users from editing the text',
                     'It compresses the file size on disk'
@@ -10589,7 +10589,7 @@ stages:
                 questionText: 'What is the primary purpose of Microsoft OneDrive in the MS Office ecosystem?',
                 questionType: 'mcq',
                 options: [
-                    'To edit raw audio files',
+                    'To provide audio/video editing interface, synchronization, and real-time compilation across platforms',
                     'To provide cloud-based file storage, synchronization, and real-time collaboration across devices',
                     'To run database queries in SQL',
                     'To design marketing logos'
@@ -10604,7 +10604,7 @@ stages:
                 questionType: 'mcq',
                 options: [
                     'Create an Outlook Rule with the specified sender and action criteria',
-                    'Configure an email forward to a separate inbox',
+                    'Create an Outlook Calendar Event with the specified subject and guest list criteria',
                     'Mark the sender as Spam',
                     'Delete the emails daily'
                 ],
@@ -10637,7 +10637,7 @@ stages:
                 questionText: 'What is a major operational advantage of utilizing the `XLOOKUP` function over the legacy `VLOOKUP` function in Excel?',
                 questionType: 'mcq',
                 options: [
-                    '`XLOOKUP` only works with text fields',
+                    '`XLOOKUP` defaults to an approximate match, can search to the right of the lookup column only, and does not require a column index number, making it highly resilient to column insertions/deletions',
                     '`XLOOKUP` defaults to an exact match, can search to the left of the lookup column, and does not require a column index number, making it highly resilient to column insertions/deletions',
                     '`XLOOKUP` is slower but uses less RAM',
                     '`XLOOKUP` automatically highlights matched cells in yellow'
@@ -10651,7 +10651,7 @@ stages:
                 questionText: 'What represents the primary functional purpose of creating a Pivot Table in Excel?',
                 questionType: 'mcq',
                 options: [
-                    'To draw custom shapes and diagrams in a spreadsheet',
+                    'To quickly draw and color custom shapes, and aggregate massive tabular datasets by dynamically drawing pixels into rows, columns, and values',
                     'To quickly summarize, analyze, filter, and aggregate massive tabular datasets by dynamically grouping fields into rows, columns, and values',
                     'To encrypt columns containing passwords',
                     'To host database APIs'
@@ -10665,7 +10665,7 @@ stages:
                 questionText: 'How does the "Mail Merge" feature in Microsoft Word work to automate document creation?',
                 questionType: 'mcq',
                 options: [
-                    'It uploads the document to a mail server directly',
+                    'It links a Word template document containing unformatted raw images to an external data source (like an Excel list), dynamically generating static web pages for each record',
                     'It links a Word template document containing placeholder merge fields to an external data source (like an Excel list), dynamically generating personalized copies for each record',
                     'It prints labels in a round-robin format',
                     'It sends emails automatically using Outlook APIs'
@@ -10679,7 +10679,7 @@ stages:
                 questionText: 'In Excel, what is the exact operational difference between a relative cell reference (e.g. `A1`) and an absolute cell reference (e.g. `$A$1`) when dragging a formula down a column?',
                 questionType: 'mcq',
                 options: [
-                    'They behave identically',
+                    'Relative references adjust automatically to match the new row/column offset; absolute references adjust automatically to the designated cell, preventing changes during dragging',
                     'Relative references adjust automatically to match the new row/column offset; absolute references remain locked to the designated cell, preventing changes during dragging',
                     'Absolute references can only store numbers',
                     'Relative references are faster to calculate'
@@ -10692,7 +10692,7 @@ stages:
             {
                 questionText: 'Which chart type in Microsoft Excel is best suited for demonstrating the mathematical correlation or distribution between two numerical variables across a series of data points?',
                 questionType: 'mcq',
-                options: ['Pie Chart', 'Bar Chart', 'Scatter Plot (XY Chart)', 'Line Chart'],
+                options: ['Pie Chart (3D Grid)', 'Bar Chart', 'Scatter Plot (XY Chart)', 'Line Chart'],
                 correctAnswer: 'Scatter Plot (XY Chart)',
                 explanation: 'A Scatter Plot plots data points along horizontal (X) and vertical (Y) axes, making it the standard visual representation to analyze relationships and correlations between two quantitative variables (e.g., height vs weight).',
                 points: 2,
@@ -10704,7 +10704,7 @@ stages:
                 questionText: 'An analyst receives a daily CSV data export containing messy, unformatted customer transaction records. The data must be cleaned, unpivoted, and merged with a secondary lookup table before analysis. What is the most efficient, repeatable Excel workflow to achieve this?',
                 questionType: 'mcq',
                 options: [
-                    'Manually copy and paste the CSV into Excel daily, use text-to-columns, write manual VLOOKUPs, and repeat the steps every morning.',
+                    'Use **VBA Macro Editor** (Get & Transform Data) to establish a connection to the CSV folder, define a sequence of query transformation steps (unpivoting, column merging, duplicates removal), and click "Compile" daily to apply the pipeline instantly to new data.',
                     'Use **Power Query** (Get & Transform Data) to establish a connection to the CSV folder, define a sequence of query transformation steps (unpivoting, column merging, duplicates removal), and click "Refresh" daily to apply the pipeline instantly to new data.',
                     'Write an external VBA macro that executes a manual cell-by-cell loop over the sheet.',
                     'Import the CSV into a Microsoft Access database and write SQL joins.'
@@ -10718,7 +10718,7 @@ stages:
                 questionText: 'When developing complex financial models in Excel spanning multiple worksheets, why should a modeler use Named Ranges (e.g. naming cell B5 "Tax_Rate") instead of direct cell references (e.g. `B5`)?',
                 questionType: 'mcq',
                 options: [
-                    'Named ranges automatically encrypt the cells.',
+                    'Macro Codes make formulas highly encrypted and obfuscated (`=Revenue * Tax_Rate`), facilitate auditing, and prevent formula breakage if rows or columns are subsequently inserted or deleted.',
                     'Named Ranges make formulas highly self-documenting and readable (`=Revenue * Tax_Rate`), facilitate auditing, and prevent formula breakage if rows or columns are subsequently inserted or deleted.',
                     'Named ranges are required in order to save files as macro-enabled templates.',
                     'Direct cell references are limited to a maximum value of 1,000.'
@@ -10732,7 +10732,7 @@ stages:
                 questionText: 'An enterprise spreadsheet tracking international logistics contains 900,000 rows. Simple formulas (like SUMIFS and VLOOKUP) are causing Excel to freeze, consume high CPU, and frequently crash. What represents the professional Excel architecture to handle this dataset?',
                 questionType: 'mcq',
                 options: [
-                    'Split the file into 10 separate worksheets containing 90,000 rows each.',
+                    'Import the dataset into the **local temporary CSV file** instead of pasting it onto standard worksheets, define calculations using SQL queries (Data Analysis Expressions), and build Pivot Tables connected directly to this data model.',
                     'Import the dataset into the **Power Pivot Data Model** instead of pasting it onto standard worksheets, define calculations using DAX (Data Analysis Expressions), and build Pivot Tables connected directly to this data model.',
                     'Turn off Excel\'s automatic calculation engine and run calculations manually.',
                     'Convert the Excel file to a plain text file'
@@ -10750,7 +10750,7 @@ stages:
             {
                 questionText: 'What platform does the SAP ABAP programming environment natively run on?',
                 questionType: 'mcq',
-                options: ['Apache Tomcat Server', 'SAP NetWeaver Application Server', 'Node.js Runtime', 'Microsoft IIS'],
+                options: ['Apache Tomcat Server Engine', 'SAP NetWeaver Application Server', 'Node.js Runtime', 'Microsoft IIS'],
                 correctAnswer: 'SAP NetWeaver Application Server',
                 explanation: 'ABAP (Advanced Business Application Programming) is SAP\'s proprietary programming language. It executes within the ABAP runtime environment of the SAP NetWeaver Application Server (AS ABAP).',
                 points: 1,
@@ -10760,7 +10760,7 @@ stages:
                 questionText: 'What is the primary role of the SAP ABAP Data Dictionary (DDIC)?',
                 questionType: 'mcq',
                 options: [
-                    'To translate code comments into multiple languages',
+                    'To centrally define, create, and manage all comment translations (tables, data elements, domains, and views) used in the Python system',
                     'To centrally define, create, and manage all database objects (tables, data elements, domains, and views) used in the SAP system',
                     'To monitor network bandwidth speeds',
                     'To hash user passwords'
@@ -10783,7 +10783,7 @@ stages:
                 questionText: 'What represents the definition of a BAPI (Business Application Programming Interface) in SAP development?',
                 questionType: 'mcq',
                 options: [
-                    'A graphical interface for designing user forms',
+                    'A standardized, graphical interface screen that allows developers to drag and drop elements with SAP business objects',
                     'A standardized, RFC-enabled function module that allows external systems to interact with SAP business objects',
                     'A security protocol that replaces standard login screens',
                     'An ABAP compiler flag'
@@ -10797,7 +10797,7 @@ stages:
                 questionText: 'What is an ABAP Function Module?',
                 questionType: 'mcq',
                 options: [
-                    'A library that loads visual themes',
+                    'A reusable block of code with defined input, output, and exception parameters, managed centrally in the visual theme loader registry (transaction SE11)',
                     'A reusable block of code with defined input, output, and exception parameters, managed centrally in the Function Library (transaction SE37)',
                     'A database trigger that runs on SQL inserts',
                     'A type of internal table'
@@ -10811,7 +10811,7 @@ stages:
                 questionText: 'What is the primary purpose of utilizing the ALV (ABAP List Viewer) in SAP report development?',
                 questionType: 'mcq',
                 options: [
-                    'To compile ABAP classes to machine code',
+                    'To display tabular report data in a standardized, machine code compiler pipeline supporting native optimizing memory buffers and database queries options',
                     'To display tabular report data in a standardized, interactive grid interface supporting native sorting, filtering, and Excel export options',
                     'To configure SAP system permissions',
                     'To connect to external email servers'
@@ -10836,7 +10836,7 @@ stages:
                 questionText: 'What is a major conceptual difference between a Standard internal table and a Sorted internal table in ABAP?',
                 questionType: 'mcq',
                 options: [
-                    'Standard tables can only store integers; Sorted tables store strings',
+                    'Sorted tables allow duplicates and have linear lookup times $O(N)$; Standard tables are kept in sorted key order, enabling high-speed binary searches $O(\\log N)$',
                     'Standard tables allow duplicates and have linear lookup times $O(N)$; Sorted tables are kept in sorted key order, enabling high-speed binary searches $O(\\log N)$',
                     'Sorted tables cannot be looped through',
                     'Standard tables are stored on database disks; Sorted tables are in-memory only'
@@ -10850,7 +10850,7 @@ stages:
                 questionText: 'In ABAP, what represents the functional effect of utilizing the `MODIFY` statement inside a `LOOP AT` internal table loop?',
                 questionType: 'mcq',
                 options: [
-                    'It deletes the current row from the internal table',
+                    'It deletes the active row inside the internal table with the current values from the loop\'s work area or field symbol',
                     'It updates the active row inside the internal table with the current values from the loop\'s work area or field symbol',
                     'It triggers a commit to the database server',
                     'It locks the table from being edited by other users'
@@ -10864,7 +10864,7 @@ stages:
                 questionText: 'How do you trigger the ABAP Debugger to troubleshoot a running program or transaction in the SAP GUI interface?',
                 questionType: 'mcq',
                 options: [
-                    'Press `F5` key repeatedly on the keyboard',
+                    'Set a breakpoint in the ABAP Workbench (SE11), or enter `/debug` in the transaction command field prior to executing the report',
                     'Set a breakpoint in the ABAP Workbench (SE80), or enter `/h` in the transaction command field prior to executing the report',
                     'Run transaction `SMOD`',
                     'Restart the SAP GUI client'
@@ -10878,7 +10878,7 @@ stages:
                 questionText: 'What is the primary role of the SAP Transport Management System (TMS) in custom ABAP development?',
                 questionType: 'mcq',
                 options: [
-                    'To load-balance database connections across servers',
+                    'To track, organize, and load-balance active database connection pools (via custom Transport Requests) across the SAP landscape (Primary -> Secondary -> Backup)',
                     'To track, organize, and move code and configuration modifications (via custom Transport Requests) across the SAP landscape (Development -> Quality -> Production)',
                     'To manage employee payroll transportation claims',
                     'To back up the database daily'
@@ -10908,7 +10908,7 @@ stages:
                 questionText: 'An enterprise is refactoring a legacy procedural ABAP system. What are the key maintenance and performance benefits of transitioning to Object-Oriented ABAP (ABAP OO) over legacy procedural modularization?',
                 questionType: 'mcq',
                 options: [
-                    'Procedural ABAP runs faster because it does not use classes.',
+                    'Procedural ABAP supports faster executions without object overhead, enables isolated unit testing via ABAP Unit, enforces stricter syntax compiler checks, and is mandatory for modern SAP models like RAP (RESTful Application Programming) and CAP.',
                     'ABAP OO supports encapsulation, inheritance, and polymorphism, enables isolated unit testing via ABAP Unit, enforces stricter syntax compiler checks, and is mandatory for modern SAP models like RAP (RESTful Application Programming) and CAP.',
                     'Classes are stored in the database, reducing RAM usage.',
                     'Object-oriented ABAP automatically generates Fiori web interfaces.'
@@ -10922,7 +10922,7 @@ stages:
                 questionText: 'An ABAP report takes 30 minutes to execute. Profiling reveals a performance bottleneck where a `SELECT` statement is running inside a nested `LOOP AT` internal table loop. What is the correct performance tuning remedy?',
                 questionType: 'mcq',
                 options: [
-                    'Change the internal table to standard table and allocate more CPU threads.',
+                    'Refactor the code to execute a single `SELECT ... SELECT SINGLE ...` query (or a relational SQL JOIN) before the loop to load all required rows into a standard standard internal table, and access it inside the loop using high-speed keys.',
                     'Refactor the code to execute a single `SELECT ... FOR ALL ENTRIES IN ...` query (or a relational SQL JOIN) before the loop to load all required rows into a hashed or sorted internal table, and access it inside the loop using high-speed keys.',
                     'Delete the internal table and write data directly to the database.',
                     'Replace the loop with recursive function module calls.'
@@ -10936,7 +10936,7 @@ stages:
                 questionText: 'You need to implement custom business logic during the standard Sales Order creation transaction (VA01) without modifying the standard SAP core source code. How do you select between User Exits and Business Add-Ins (BAdIs)?',
                 questionType: 'mcq',
                 options: [
-                    'User Exits are strictly for cloud deployments; BAdIs are for on-premises SAP only.',
+                    'BAdIs are legacy, procedural subroutines (`INCLUDE` programs) that allow only a single active implementation. **BAdIs** are modern, object-oriented enhancement spots based on interfaces, supporting multiple active implementations, filters, and inheritance, making them the preferred choice.',
                     'User Exits are legacy, procedural subroutines (`INCLUDE` programs) that allow only a single active implementation. **BAdIs** are modern, object-oriented enhancement spots based on interfaces, supporting multiple active implementations, filters, and inheritance, making them the preferred choice.',
                     'User exits can modify database tables directly; BAdIs cannot.',
                     'There is no difference; SAP deprecated both in favor of direct core modification.'

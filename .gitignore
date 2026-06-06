@@ -52,6 +52,7 @@ env
 
 # markdown files
 *.md
+docs/
 
 
 smartcareer_backup_*.dumps
