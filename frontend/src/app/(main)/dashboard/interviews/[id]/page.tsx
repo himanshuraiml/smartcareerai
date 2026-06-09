@@ -285,8 +285,12 @@ export default function InterviewRoomPage() {
         setAudioAnalysis(null);
 
         try {
+            const extension = audioBlob.type.includes('mp4') ? 'mp4'
+                : audioBlob.type.includes('ogg') ? 'ogg'
+                : audioBlob.type.includes('aac') ? 'aac'
+                : 'webm';
             const formData = new FormData();
-            formData.append('audio', audioBlob, 'answer.webm');
+            formData.append('audio', audioBlob, `answer.${extension}`);
             formData.append('questionId', question.id);
 
             const response = await authFetch(`/interviews/sessions/${sessionId}/answer/audio`, {
@@ -340,8 +344,9 @@ export default function InterviewRoomPage() {
         setLastFeedback(null);
 
         try {
+            const extension = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
             const formData = new FormData();
-            formData.append('video', videoBlob, 'answer.webm');
+            formData.append('video', videoBlob, `answer.${extension}`);
             formData.append('questionId', question.id);
 
             const response = await authFetch(`/interviews/sessions/${sessionId}/answer/video`, {

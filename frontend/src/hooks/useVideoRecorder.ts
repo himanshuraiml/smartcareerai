@@ -82,9 +82,26 @@ export function useVideoRecorder(options: UseVideoRecorderOptions = {}): UseVide
                 throw new Error('Failed to get media stream');
             }
 
-            const mediaRecorder = new MediaRecorder(streamRef.current, {
-                mimeType: 'video/webm;codecs=vp9,opus',
-            });
+            // Determine best supported MIME type (e.g., Safari requires video/mp4)
+            const mimeTypes = [
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=vp8,opus',
+                'video/webm',
+                'video/mp4;codecs=avc1,mp4a.40.2',
+                'video/mp4'
+            ];
+            let selectedMimeType = '';
+            for (const mimeType of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(mimeType)) {
+                    selectedMimeType = mimeType;
+                    break;
+                }
+            }
+
+            const mediaRecorder = new MediaRecorder(
+                streamRef.current,
+                selectedMimeType ? { mimeType: selectedMimeType } : undefined
+            );
 
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
@@ -96,7 +113,7 @@ export function useVideoRecorder(options: UseVideoRecorderOptions = {}): UseVide
             };
 
             mediaRecorder.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || 'video/webm' });
                 const url = URL.createObjectURL(blob);
                 setVideoBlob(blob);
                 setVideoUrl(url);

@@ -8,11 +8,21 @@ let groq: Groq | null = null;
 
 function getGroqClient(): Groq {
     if (!groq) {
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            throw new Error('GROQ_API_KEY is not configured');
+        const whisperApiUrl = process.env.WHISPER_API_URL;
+        if (whisperApiUrl) {
+            logger.info(`Initializing Whisper client with self-hosted URL: ${whisperApiUrl}`);
+            groq = new Groq({
+                apiKey: process.env.WHISPER_API_KEY || 'dummy-key',
+                baseURL: whisperApiUrl,
+            });
+        } else {
+            const apiKey = process.env.GROQ_API_KEY;
+            if (!apiKey) {
+                throw new Error('GROQ_API_KEY is not configured');
+            }
+            logger.info('Initializing Whisper client with Groq Cloud API');
+            groq = new Groq({ apiKey });
         }
-        groq = new Groq({ apiKey });
     }
     return groq;
 }
@@ -51,10 +61,17 @@ export class WhisperService {
             fs.writeFileSync(tempPath, audioBuffer);
 
             try {
-                // Use Groq Whisper for transcription
+                // Use custom model if using self-hosted, else default to Groq's Whisper model
+                const modelName = process.env.WHISPER_API_URL
+                    ? (process.env.WHISPER_MODEL || 'tiny')
+                    : 'whisper-large-v3-turbo';
+
+                logger.info(`Using model: ${modelName}`);
+
+                // Use Groq Whisper (or self-hosted OpenAI-compatible) for transcription
                 const transcription = await client.audio.transcriptions.create({
                     file: fs.createReadStream(tempPath),
-                    model: 'whisper-large-v3-turbo',
+                    model: modelName,
                     response_format: 'verbose_json',
                     language: 'en',
                 }) as any;
