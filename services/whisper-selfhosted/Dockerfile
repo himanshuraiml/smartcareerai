@@ -1,1 +1,1 @@
-FROM fedirz/faster-whisper-server:latest
+FROM fedirz/faster-whisper-server:latest-cpu
