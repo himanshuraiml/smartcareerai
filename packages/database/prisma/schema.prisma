@@ -77,6 +77,17 @@ model User {
   labProgress          UserLabProgress[]
   challengeSubmissions ChallengeSubmission[]
 
+  // Engagement Phase 1 — Daily Challenges & Skill Mastery
+  dailyChallengeCompletions DailyChallengeCompletion[]
+  skillMasteries            SkillMastery[]
+  userSprintProgress        UserSprintProgress[]
+
+  // Phase 2 — Weekly Leagues & Community Questions
+  leagueMemberships  LeagueMembership[]
+  leagueHistory      UserLeagueHistory[]
+  communityQuestions CommunityQuestion[]
+  notificationPreference NotificationPreference?
+
   // Tier 3: F19 push subscriptions
   pushSubscriptions PushSubscription[]
 
@@ -232,6 +243,13 @@ model Skill {
   courses     Course[]
   skillTests  SkillTest[]
   skillBadges SkillBadge[]
+
+  // Engagement Phase 1
+  skillMasteries SkillMastery[]
+  sprintCards    SkillSprintCard[]
+
+  // Phase 2 — Community Questions
+  communityQuestions CommunityQuestion[]
 
   @@map("skills")
 }
@@ -533,6 +551,7 @@ model TestQuestion {
   explanation   String? @db.Text
   points        Int     @default(1)
   orderIndex    Int     @default(0) @map("order_index")
+  source        String  @default("seeded") // "seeded", "ai_generated", "community"
 
   // Relations
   test SkillTest @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -581,6 +600,7 @@ enum BadgeType {
   INTERMEDIATE
   ADVANCED
   EXPERT
+  MASTER
   VERIFIED
 }
 
@@ -1512,20 +1532,70 @@ model CodingSubmission {
 // ============================================
 
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  type      String   @default("job_alert")
-  title     String
-  message   String
-  metadata  Json?
-  isRead    Boolean  @default(false) @map("is_read")
-  createdAt DateTime @default(now()) @map("created_at")
-
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  
+  // Content
+  type        String    @default("general")  // streak, league, challenge, mastery, system, community
+  title       String
+  message     String
+  
+  // Rich metadata
+  metadata    Json?     // { ctaUrl, ctaLabel, icon, color, imageUrl }
+  category    String    @default("info")     // info, success, warning, urgent
+  
+  // Status
+  isRead      Boolean   @default(false) @map("is_read")
+  readAt      DateTime? @map("read_at")
+  
+  // Delivery tracking
+  channels    String[]  @default(["in_app"]) // in_app, email, whatsapp, push
+  deliveredAt Json?     @map("delivered_at") // { in_app: timestamp, email: timestamp, ... }
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  expiresAt   DateTime? @map("expires_at")   // Auto-delete after N days
+  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   @@index([userId, isRead])
+  @@index([userId, createdAt])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model NotificationPreference {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  
+  // Channel toggles
+  inAppEnabled    Boolean   @default(true) @map("in_app_enabled")
+  emailEnabled    Boolean   @default(true) @map("email_enabled")
+  whatsappEnabled Boolean   @default(false) @map("whatsapp_enabled") // opt-in
+  pushEnabled     Boolean   @default(true) @map("push_enabled")
+  
+  // Category toggles
+  streakAlerts    Boolean   @default(true) @map("streak_alerts")
+  leagueAlerts    Boolean   @default(true) @map("league_alerts")
+  challengeAlerts Boolean   @default(true) @map("challenge_alerts")
+  masteryAlerts   Boolean   @default(true) @map("mastery_alerts")
+  communityAlerts Boolean   @default(true) @map("community_alerts")
+  systemAlerts    Boolean   @default(true) @map("system_alerts")
+  
+  // Quiet hours
+  quietHoursStart String?   @map("quiet_hours_start") // "22:00"
+  quietHoursEnd   String?   @map("quiet_hours_end")   // "08:00"
+  timezone        String    @default("Asia/Kolkata")
+  
+  // WhatsApp
+  whatsappPhone   String?   @map("whatsapp_phone")
+  whatsappOptInAt DateTime? @map("whatsapp_opt_in_at")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notification_preferences")
 }
 
 // ============================================
@@ -2331,4 +2401,292 @@ model BlogPost {
   @@index([authorId])
   @@index([category])
   @@map("blog_posts")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 1: DAILY CHALLENGES
+// ============================================
+
+model DailyChallenge {
+  id             String   @id @default(uuid())
+  date           DateTime @unique @db.Date
+
+  // Quiz content — snapshot of the questions served that day
+  quizQuestionIds String[] @map("quiz_question_ids") // TestQuestion IDs
+  quizSkillId     String?  @map("quiz_skill_id")     // Primary skill for the quiz
+  insightId       String?  @map("insight_id")
+  sprintSkillId   String?  @map("sprint_skill_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  completions DailyChallengeCompletion[]
+
+  @@index([date])
+  @@map("daily_challenges")
+}
+
+model DailyChallengeCompletion {
+  id            String @id @default(uuid())
+  userId        String @map("user_id")
+  challengeId   String @map("challenge_id")
+
+  // What was completed
+  quizCompleted   Boolean @default(false) @map("quiz_completed")
+  quizScore       Int?    @map("quiz_score")
+  quizCorrect     Int?    @map("quiz_correct")
+  quizTotal       Int?    @map("quiz_total")
+  quizTimeMs      Int?    @map("quiz_time_ms")
+  insightRead     Boolean @default(false) @map("insight_read")
+  insightReaction String? @map("insight_reaction")
+  sprintCompleted Boolean @default(false) @map("sprint_completed")
+
+  // Aggregate
+  isPerfectDay  Boolean @default(false) @map("is_perfect_day")
+  totalXpEarned Int     @default(0) @map("total_xp_earned")
+
+  completedAt DateTime @default(now()) @map("completed_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId, completedAt])
+  @@map("daily_challenge_completions")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 1: CAREER INSIGHTS
+// ============================================
+
+model CareerInsight {
+  id        String  @id @default(uuid())
+  title     String
+  content   String  @db.Text
+  category  String  // "Resume Tip", "Interview Tip", "Career Insight", "Tech Tip", "Soft Skills", "Pro Tip"
+  icon      String  // Lucide icon name
+  color     String  // Tailwind color class e.g. "text-blue-500"
+  source    String  @default("curated") // "curated", "ai_generated"
+  tags      String[]
+  isActive  Boolean @default(true) @map("is_active")
+
+  usedOnDate DateTime? @map("used_on_date") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([isActive, usedOnDate])
+  @@map("career_insights")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 1: SKILL MASTERY TIERS
+// ============================================
+
+enum MasteryLevel {
+  BEGINNER      // Bronze — pass basic quiz 60%+
+  INTERMEDIATE  // Silver — pass intermediate 70%+ & 3 daily quizzes
+  ADVANCED      // Gold — pass advanced 75%+ & 7 daily quizzes
+  EXPERT        // Platinum — pass expert 80%+ & community contribution
+  MASTER        // Diamond — maintain Expert 30 days + top 10%
+}
+
+model SkillMastery {
+  id              String       @id @default(uuid())
+  userId          String       @map("user_id")
+  skillId         String       @map("skill_id")
+  level           MasteryLevel @default(BEGINNER)
+
+  // Progress tracking
+  currentLevelXp  Int   @default(0) @map("current_level_xp")
+  requiredLevelXp Int   @default(100) @map("required_level_xp")
+
+  // Quiz history at current level
+  quizzesCompleted Int    @default(0) @map("quizzes_completed")
+  quizAvgScore     Float? @map("quiz_avg_score")
+  lastQuizAt       DateTime? @map("last_quiz_at")
+
+  // Level-up eligibility
+  canLevelUp      Boolean   @default(false) @map("can_level_up")
+  levelUpCooldown DateTime? @map("level_up_cooldown")
+
+  // Timestamps
+  levelReachedAt DateTime @default(now()) @map("level_reached_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@map("skill_masteries")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 1: SKILL SPRINT (FLASHCARDS)
+// ============================================
+
+model SkillSprintCard {
+  id         String     @id @default(uuid())
+  skillId    String     @map("skill_id")
+  front      String     @db.Text // Question / concept
+  back       String     @db.Text // Answer / explanation
+  difficulty Difficulty  @default(EASY)
+  tags       String[]
+  isActive   Boolean    @default(true) @map("is_active")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId, difficulty])
+  @@map("skill_sprint_cards")
+}
+
+model UserSprintProgress {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  cardId       String    @map("card_id")
+  confidence   Int       @default(0) // 0-5 spaced repetition score
+  nextReviewAt DateTime? @map("next_review_at")
+  reviewCount  Int       @default(0) @map("review_count")
+  lastReviewAt DateTime? @map("last_review_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, nextReviewAt])
+  @@map("user_sprint_progress")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 2: WEEKLY LEAGUES
+// ============================================
+
+enum LeagueTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum LeagueOutcome {
+  PROMOTED
+  DEMOTED
+  STAYED
+  SHIELDED
+}
+
+model League {
+  id          String             @id @default(uuid())
+  tier        LeagueTier
+  weekStart   DateTime           @map("week_start") @db.Date // Monday date
+  weekEnd     DateTime           @map("week_end") @db.Date   // Sunday date
+  groupIndex  Int                @default(0) @map("group_index") // Multiple leagues per tier per week
+  isActive    Boolean            @default(true) @map("is_active")
+  processedAt DateTime?          @map("processed_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  memberships LeagueMembership[]
+
+  @@unique([tier, weekStart, groupIndex])
+  @@index([weekStart, isActive])
+  @@map("leagues")
+}
+
+model LeagueMembership {
+  id               String         @id @default(uuid())
+  leagueId         String         @map("league_id")
+  userId           String         @map("user_id")
+  weeklyXp         Int            @default(0) @map("weekly_xp")
+  rank             Int?
+  outcome          LeagueOutcome?
+  hasShield        Boolean        @default(false) @map("has_shield")
+  daysActive       Int            @default(0) @map("days_active")
+  quizzesCompleted Int            @default(0) @map("quizzes_completed")
+  perfectDays      Int            @default(0) @map("perfect_days")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, userId])
+  @@index([userId])
+  @@index([leagueId, weeklyXp(sort: Desc)])
+  @@map("league_memberships")
+}
+
+model UserLeagueHistory {
+  id        String        @id @default(uuid())
+  userId    String        @map("user_id")
+  weekStart DateTime      @map("week_start") @db.Date
+  tier      LeagueTier
+  finalRank Int           @map("final_rank")
+  weeklyXp  Int           @map("weekly_xp")
+  outcome   LeagueOutcome
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId])
+  @@map("user_league_history")
+}
+
+// ============================================
+// ENGAGEMENT PHASE 2: COMMUNITY QUESTIONS
+// ============================================
+
+enum CommunityQuestionStatus {
+  DRAFT
+  SUBMITTED
+  AI_REVIEW
+  PEER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model CommunityQuestion {
+  id             String                  @id @default(uuid())
+  authorId       String                  @map("author_id")
+  skillId        String                  @map("skill_id")
+  questionText   String                  @map("question_text") @db.Text
+  options        Json
+  correctAnswer  String                  @map("correct_answer")
+  explanation    String                  @db.Text
+  difficulty     Difficulty              @default(MEDIUM)
+  tags           String[]
+  status         CommunityQuestionStatus @default(DRAFT)
+  aiQualityScore Float?                  @map("ai_quality_score")
+  aiNotes        String?                 @map("ai_notes") @db.Text
+  upvotes        Int                     @default(0)
+  downvotes      Int                     @default(0)
+  peerReviewCount Int                     @default(0) @map("peer_review_count")
+  reviewedBy     String?                 @map("reviewed_by")
+  reviewNotes    String?                 @map("review_notes") @db.Text
+  reviewedAt     DateTime?               @map("reviewed_at")
+  testQuestionId String?                 @unique @map("test_question_id")
+  xpAwarded      Boolean                 @default(false) @map("xp_awarded")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+
+  author User                    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  skill  Skill                   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  votes  CommunityQuestionVote[]
+
+  @@index([status, skillId])
+  @@index([authorId])
+  @@map("community_questions")
+}
+
+model CommunityQuestionVote {
+  id         String   @id @default(uuid())
+  questionId String   @map("question_id")
+  voterId    String   @map("voter_id")
+  isUpvote   Boolean  @map("is_upvote")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  question CommunityQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, voterId])
+  @@map("community_question_votes")
 }

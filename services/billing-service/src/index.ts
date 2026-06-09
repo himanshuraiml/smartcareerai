@@ -10,6 +10,8 @@ import { webhookRouter } from './routes/webhook.routes';
 import { promotionRouter } from './routes/promotion.routes';
 import { engagementRouter } from './routes/engagement.routes';
 import { futureLabRouter } from './routes/futurelab.routes';
+import { leagueRouter } from './routes/league.routes';
+import { setupLeagueResetCron } from './cron/league-reset.cron';
 import { errorHandler } from './middleware/error.middleware';
 import { contextMiddleware } from './middleware/context.middleware';
 import { logger } from './utils/logger';
@@ -49,12 +51,14 @@ app.use('/promotions', promotionRouter);
 app.use('/webhook', webhookRouter);
 app.use('/engagement', engagementRouter);
 app.use('/future-lab', futureLabRouter);
+app.use('/leagues', leagueRouter);
 
 // Error handler
 app.use(errorHandler);
 
 app.listen(PORT, () => {
     logger.info(`💳 Billing Service running on port ${PORT}`);
+    setupLeagueResetCron();
 });
 
 export default app;

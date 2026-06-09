@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     User, Mail, Briefcase, Camera, Save, Check, Loader2,
@@ -646,33 +647,23 @@ export default function SettingsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-6 rounded-2xl glass-card"
+                    className="p-8 rounded-2xl glass-card text-center space-y-6 max-w-lg mx-auto"
                 >
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Notification Preferences</h2>
-                    <div className="space-y-4">
-                        {[
-                            { id: 'job-alerts' as keyof typeof notifications, label: 'Job Alerts', description: 'New job matches based on your profile' },
-                            { id: 'skill-tips' as keyof typeof notifications, label: 'Skill Tips', description: 'Weekly recommendations to improve your skills' },
-                            { id: 'interview-reminders' as keyof typeof notifications, label: 'Interview Reminders', description: 'Reminders for scheduled mock interviews' },
-                            { id: 'marketing' as keyof typeof notifications, label: 'Marketing Emails', description: 'Occasional updates about new features' },
-                        ].map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                                <div>
-                                    <p className="text-gray-900 dark:text-white font-medium">{item.label}</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={notifications[item.id]}
-                                        onChange={(e) => setNotifications({ ...notifications, [item.id]: e.target.checked })}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
-                                </label>
-                            </div>
-                        ))}
+                    <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto text-indigo-400">
+                        <Bell className="w-8 h-8 animate-bounce" />
                     </div>
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Notification Preferences</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Configure channel deliveries (In-App, Email, WhatsApp, Push), set up Quiet Hours (Do Not Disturb), and link your phone number for instant alerts.
+                        </p>
+                    </div>
+                    <Link
+                        href="/dashboard/settings/notifications"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all"
+                    >
+                        Configure Preferences &rarr;
+                    </Link>
                 </motion.div>
             )}
 

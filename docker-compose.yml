@@ -81,6 +81,8 @@ services:
       - RECRUITER_SERVICE_URL=http://recruiter-service:3012
       - EMAIL_SERVICE_URL=http://email-tracking-service:3013
       - MEDIA_SERVICE_URL=http://media-service:3014
+      - DAILY_CHALLENGE_SERVICE_URL=http://daily-challenge-service:3017
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3019
       - REDIS_URL=redis://redis:6379
     depends_on:
       redis:
@@ -374,6 +376,50 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+
+  daily-challenge-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: daily-challenge-service
+    container_name: placenxt-daily-challenge
+    restart: unless-stopped
+    ports:
+      - "3017:3017"
+    environment:
+      - NODE_ENV=production
+      - PORT=3017
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      args:
+        SERVICE_NAME: notification-service
+    container_name: placenxt-notification
+    restart: unless-stopped
+    ports:
+      - "3019:3019"
+    environment:
+      - NODE_ENV=production
+      - NOTIFICATION_SERVICE_PORT=3019
+      - DATABASE_URL=postgresql://${DB_USER:-placenxt}:${DB_PASSWORD:-placenxt123}@postgres:5432/${DB_NAME:-placenxt_db}
+      - BILLING_SERVICE_URL=http://billing-service:3010
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres:
         condition: service_healthy
 
 volumes:

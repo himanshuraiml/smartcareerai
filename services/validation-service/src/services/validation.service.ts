@@ -229,6 +229,92 @@ export class ValidationService {
             },
         });
 
+        // Award XP to user (Base 100 XP, +150 XP if passed)
+        const baseXp = 100;
+        const passBonusXp = passed ? 150 : 0;
+        const xpAmount = baseXp + passBonusXp;
+
+        // 1. Update user global XP
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                xp: { increment: xpAmount }
+            }
+        });
+
+        // 2. Sync with competitive league weekly XP
+        try {
+            // Calculate weekStart matching the IST-aligned week range (Monday 00:00 IST / Sunday 18:30 UTC)
+            const now = new Date();
+            const day = now.getUTCDay();
+            const hours = now.getUTCHours();
+            const minutes = now.getUTCMinutes();
+
+            let diffDays = day;
+            if (day === 0 && (hours < 18 || (hours === 18 && minutes < 30))) {
+                diffDays = 7;
+            }
+
+            const weekStart = new Date(now);
+            weekStart.setUTCDate(now.getUTCDate() - diffDays);
+            weekStart.setUTCHours(18, 30, 0, 0);
+
+            // Find membership
+            const membership = await prisma.leagueMembership.findFirst({
+                where: {
+                    userId,
+                    league: {
+                        weekStart,
+                        isActive: true,
+                    },
+                },
+            });
+
+            if (membership) {
+                await prisma.leagueMembership.update({
+                    where: { id: membership.id },
+                    data: {
+                        weeklyXp: { increment: xpAmount },
+                        daysActive: { increment: 1 },
+                    },
+                });
+                logger.info(`Incremented weekly XP by ${xpAmount} for user ${userId} in league membership ${membership.id}`);
+            } else {
+                // If they don't have a membership yet, create one (assign to Bronze league)
+                let league = await prisma.league.findFirst({
+                    where: {
+                        tier: 'BRONZE',
+                        weekStart,
+                        isActive: true,
+                    },
+                });
+
+                if (!league) {
+                    league = await prisma.league.create({
+                        data: {
+                            tier: 'BRONZE',
+                            weekStart,
+                            weekEnd: new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000 - 1000),
+                            groupIndex: 0,
+                            isActive: true,
+                        },
+                    });
+                }
+
+                await prisma.leagueMembership.create({
+                    data: {
+                        leagueId: league.id,
+                        userId,
+                        weeklyXp: xpAmount,
+                        daysActive: 1,
+                    },
+                });
+                logger.info(`Created Bronze league membership and credited ${xpAmount} weekly XP for user ${userId}`);
+            }
+        } catch (err: any) {
+            logger.warn(`Failed to update league weekly XP for user ${userId}: ${err.message}`);
+        }
+
         // If passed, award badge
         let badge: any = null;
         if (passed) {
@@ -273,6 +359,50 @@ export class ValidationService {
             }
 
             logger.info(`Awarded ${badgeType} badge to user ${userId} for skill ${test.skill.name}`);
+        }
+
+        // 3. Record quiz attempt in skill mastery system (non-blocking)
+        try {
+            const existing = await prisma.skillMastery.findFirst({
+                where: { userId, skillId: test.skillId },
+            });
+
+            const xpEarned = Math.round(score * 0.5); // up to 50 XP per test
+
+            if (existing) {
+                const newCount = existing.quizzesCompleted + 1;
+                const prevAvg = existing.quizAvgScore ?? 0;
+                const newAvg = prevAvg > 0
+                    ? (prevAvg * existing.quizzesCompleted + score) / newCount
+                    : score;
+                const newLevelXp = Math.min(existing.currentLevelXp + xpEarned, existing.requiredLevelXp);
+                await prisma.skillMastery.update({
+                    where: { id: existing.id },
+                    data: {
+                        quizzesCompleted: newCount,
+                        quizAvgScore: newAvg,
+                        lastQuizAt: new Date(),
+                        currentLevelXp: newLevelXp,
+                        canLevelUp: newLevelXp >= existing.requiredLevelXp,
+                    },
+                });
+            } else {
+                await prisma.skillMastery.create({
+                    data: {
+                        userId,
+                        skillId: test.skillId,
+                        quizzesCompleted: 1,
+                        quizAvgScore: score,
+                        lastQuizAt: new Date(),
+                        currentLevelXp: Math.min(xpEarned, 100),
+                        requiredLevelXp: 100,
+                        canLevelUp: xpEarned >= 100,
+                    },
+                });
+            }
+            logger.info(`Mastery updated for user ${userId}, skill ${test.skill.name}`);
+        } catch (err: any) {
+            logger.warn(`Failed to update skill mastery for user ${userId}: ${err.message}`);
         }
 
         logger.info(`Test completed: ${score}% (${passed ? 'PASSED' : 'FAILED'})`);

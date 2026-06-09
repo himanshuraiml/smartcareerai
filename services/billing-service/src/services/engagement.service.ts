@@ -135,6 +135,58 @@ export class EngagementService {
         const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
         const rewardAvailable = !lastLogin || lastLogin < todayStart;
 
+        // Fetch user completions from the last 7 days to build the streak calendar
+        const sevenDaysAgo = new Date(todayStart);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const completions = await prisma.dailyChallengeCompletion.findMany({
+            where: {
+                userId,
+                completedAt: {
+                    gte: sevenDaysAgo,
+                },
+            },
+            select: {
+                completedAt: true,
+                isPerfectDay: true,
+                quizCompleted: true,
+                insightRead: true,
+                sprintCompleted: true,
+            },
+        });
+
+        const calendar: any[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(todayStart);
+            d.setDate(d.getDate() - i);
+            
+            const dayEnd = new Date(d);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const dayCompletions = completions.filter(c => {
+                const date = new Date(c.completedAt);
+                return date >= d && date <= dayEnd;
+            });
+
+            const hasActivity = dayCompletions.length > 0;
+            const isPerfect = dayCompletions.some(c => c.isPerfectDay);
+            const quizDone = dayCompletions.some(c => c.quizCompleted);
+            const insightDone = dayCompletions.some(c => c.insightRead);
+            const sprintDone = dayCompletions.some(c => c.sprintCompleted);
+            const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+            calendar.push({
+                date: d.toISOString().split('T')[0],
+                label,
+                hasActivity,
+                isPerfect,
+                quizDone,
+                insightDone,
+                sprintDone,
+                isToday: i === 0,
+            });
+        }
+
         return {
             streakCount,
             xp,
@@ -144,6 +196,7 @@ export class EngagementService {
             rewardAvailable,
             nextMilestoneDays: STREAK_MILESTONE_DAYS - (streakCount % STREAK_MILESTONE_DAYS),
             lastLoginAt: user.lastLoginAt,
+            sevenDayCalendar: calendar,
         };
     }
 }

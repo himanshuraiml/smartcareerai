@@ -13,6 +13,8 @@ import {
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
+// @ts-ignore
+import confetti from 'canvas-confetti';
 
 interface Skill { id: string; name: string; category: string; demandScore: number; }
 interface UserSkill { id: string; skill: Skill; proficiencyLevel: string; isVerified: boolean; }
@@ -39,6 +41,16 @@ const PROFICIENCY_CONFIG: Record<string, { color: string; bg: string; border: st
     beginner: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-amber-200 dark:border-amber-500/20' },
 };
 
+const MASTERY_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'MASTER'];
+
+const MASTERY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; barColor: string }> = {
+    BEGINNER: { label: 'Beginner', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-amber-200 dark:border-amber-500/20', barColor: 'bg-amber-500' },
+    INTERMEDIATE: { label: 'Intermediate', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10', border: 'border-blue-200 dark:border-blue-500/20', barColor: 'bg-blue-500' },
+    ADVANCED: { label: 'Advanced', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/20', barColor: 'bg-emerald-500' },
+    EXPERT: { label: 'Expert', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10', border: 'border-purple-200 dark:border-purple-500/20', barColor: 'bg-purple-500' },
+    MASTER: { label: 'Master', color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-500/10', border: 'border-pink-200 dark:border-pink-500/20', barColor: 'bg-pink-500' },
+};
+
 const TABS = [
     { id: 'skills', label: 'My Skills', icon: Zap },
     { id: 'gap', label: 'Gap Analysis', icon: Target },
@@ -61,6 +73,11 @@ export default function SkillsPage() {
     const [certifications, setCertifications] = useState<Certification[]>([]);
     const [loadingCerts, setLoadingCerts] = useState(false);
 
+    const [masteries, setMasteries] = useState<any[]>([]);
+    const [loadingMastery, setLoadingMastery] = useState(false);
+    const [levelingUpSkillId, setLevelingUpSkillId] = useState<string | null>(null);
+    const [masteryError, setMasteryError] = useState<string | null>(null);
+
     const selectedRole = user?.targetJobRole?.title || 'Software Developer';
 
     const fetchUserSkills = useCallback(async () => {
@@ -69,6 +86,40 @@ export default function SkillsPage() {
             if (r.ok) setUserSkills((await r.json()).data || []);
         } catch { } finally { setLoading(false); }
     }, [user]);
+
+    const fetchMasteries = useCallback(async () => {
+        try {
+            setLoadingMastery(true);
+            const r = await authFetch('/skills/mastery');
+            if (r.ok) setMasteries((await r.json()).data || []);
+        } catch { } finally { setLoadingMastery(false); }
+    }, [user]);
+
+    const handleLevelUp = async (skillId: string) => {
+        setLevelingUpSkillId(skillId);
+        setMasteryError(null);
+        try {
+            const r = await authFetch(`/skills/mastery/${skillId}/level-up`, {
+                method: 'POST'
+            });
+            if (r.ok) {
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+                await fetchUserSkills();
+                await fetchMasteries();
+            } else {
+                const errData = await r.json();
+                setMasteryError(errData.message || 'Failed to level up skill.');
+            }
+        } catch (err) {
+            setMasteryError('An unexpected error occurred during level up.');
+        } finally {
+            setLevelingUpSkillId(null);
+        }
+    };
 
     const fetchAllSkills = useCallback(async () => {
         try {
@@ -142,8 +193,14 @@ export default function SkillsPage() {
     };
 
     useEffect(() => {
-        if (user) { fetchUserSkills(); fetchAllSkills(); fetchAttempts(); fetchTests(); }
-    }, [user, fetchUserSkills, fetchAllSkills, fetchAttempts, fetchTests]);
+        if (user) {
+            fetchUserSkills();
+            fetchAllSkills();
+            fetchAttempts();
+            fetchTests();
+            fetchMasteries();
+        }
+    }, [user, fetchUserSkills, fetchAllSkills, fetchAttempts, fetchTests, fetchMasteries]);
 
     useEffect(() => {
         if (!user) return;
@@ -207,7 +264,7 @@ export default function SkillsPage() {
                             <Settings className="w-4.5 h-4.5" style={{ width: '18px', height: '18px' }} />
                         </Link>
                         <button
-                            onClick={fetchUserSkills}
+                            onClick={() => { fetchUserSkills(); fetchMasteries(); }}
                             className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-indigo-500 transition-colors"
                             title="Refresh"
                         >
@@ -266,6 +323,13 @@ export default function SkillsPage() {
                             </div>
 
                             <div className="p-6">
+                                {masteryError && (
+                                    <div className="mb-4 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl flex items-center gap-2 text-sm font-semibold">
+                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                        <span>{masteryError}</span>
+                                        <button onClick={() => setMasteryError(null)} className="ml-auto text-xs hover:underline">Dismiss</button>
+                                    </div>
+                                )}
                                 {loading ? (
                                     <LoadingSpinner text="Loading your skills..." />
                                 ) : userSkills.length === 0 ? (
@@ -279,43 +343,153 @@ export default function SkillsPage() {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {userSkills.map((us, i) => {
-                                            const prof = PROFICIENCY_CONFIG[us.proficiencyLevel?.toLowerCase()] || PROFICIENCY_CONFIG.beginner;
+                                            const mastery = masteries.find(m => m.skillId === us.skill.id);
                                             const nextLevel = getNextTestLevel(us.skill.id);
+                                            
+                                            // Determine current level config
+                                            const currentLvl = mastery?.level || 'BEGINNER';
+                                            const prof = MASTERY_CONFIG[currentLvl] || MASTERY_CONFIG.BEGINNER;
+                                            const currentLevelIdx = MASTERY_LEVELS.indexOf(currentLvl);
+
+                                            // Cooldown calculation
+                                            const isCooldownActive = mastery?.levelUpCooldown && new Date(mastery.levelUpCooldown) > new Date();
+
                                             return (
                                                 <motion.div
                                                     key={us.id}
                                                     initial={{ opacity: 0, y: 8 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: i * 0.04 }}
-                                                    className="group flex items-center gap-4 p-5 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] hover:border-indigo-200 dark:hover:border-indigo-500/20 hover:bg-white dark:hover:bg-white/5 transition-all duration-200"
+                                                    className="group flex flex-col p-5 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] hover:border-indigo-200 dark:hover:border-indigo-500/20 hover:bg-white dark:hover:bg-white/5 transition-all duration-200"
                                                 >
-                                                    <div className={`w-10 h-10 rounded-xl ${prof.bg} border ${prof.border} flex items-center justify-center flex-shrink-0`}>
-                                                        <Zap className={`w-5 h-5 ${prof.color}`} />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-[15px] font-semibold text-gray-900 dark:text-white truncate">{us.skill.name}</p>
-                                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${prof.bg} ${prof.border} ${prof.color}`}>
-                                                                {us.proficiencyLevel}
-                                                            </span>
-                                                            {us.isVerified ? (
-                                                                <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                                                    <CheckCircle2 className="w-3 h-3" /> Verified
-                                                                </span>
-                                                            ) : nextLevel === 'COMPLETED' ? (
-                                                                <span className="flex items-center gap-1 text-[11px] text-purple-500 font-medium">
-                                                                    <Award className="w-3 h-3" /> Mastered
-                                                                </span>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => handleTakeTest(us.skill.id, undefined, true)}
-                                                                    className="flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-500 transition-colors"
-                                                                >
-                                                                    <PlayCircle className="w-3 h-3" />
-                                                                    Take {nextLevel} Test
-                                                                </button>
-                                                            )}
+                                                    {/* Card Header (Skill Name & Badge) */}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-xl ${prof.bg} border ${prof.border} flex items-center justify-center flex-shrink-0`}>
+                                                            <Zap className={`w-5 h-5 ${prof.color}`} />
                                                         </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-[15px] font-bold text-gray-900 dark:text-white truncate">{us.skill.name}</p>
+                                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${prof.bg} ${prof.border} ${prof.color}`}>
+                                                                    {currentLvl}
+                                                                </span>
+                                                                {us.isVerified && (
+                                                                    <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                                                        <CheckCircle2 className="w-3 h-3" /> Verified
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* XP Progress Bar */}
+                                                    {mastery && (
+                                                        <div className="space-y-1 mt-4">
+                                                            <div className="flex justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500">
+                                                                <span>XP PROGRESS</span>
+                                                                <span>{mastery.currentLevelXp} / {mastery.requiredLevelXp} XP</span>
+                                                            </div>
+                                                            <div className="w-full bg-gray-200/50 dark:bg-white/5 rounded-full h-1.5 overflow-hidden border border-gray-205/20">
+                                                                <div
+                                                                    className={`h-full rounded-full ${prof.barColor} transition-all duration-300`}
+                                                                    style={{ width: `${Math.min(100, (mastery.currentLevelXp / mastery.requiredLevelXp) * 100)}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* 5-Tier Dots Roadmap */}
+                                                    <div className="flex items-center justify-between mt-4 px-1">
+                                                        {MASTERY_LEVELS.map((lvl, idx) => {
+                                                            const lvlCfg = MASTERY_CONFIG[lvl];
+                                                            const isCompleted = idx < currentLevelIdx;
+                                                            const isActive = idx === currentLevelIdx;
+                                                            const isLocked = idx > currentLevelIdx;
+                                                            
+                                                            return (
+                                                                <div key={lvl} className="flex flex-col items-center relative flex-1 last:flex-none">
+                                                                    {/* Connecting Line (except last) */}
+                                                                    {idx < MASTERY_LEVELS.length - 1 && (
+                                                                        <div className={`absolute top-2.5 left-1/2 w-full h-[2px] -z-10 ${
+                                                                            idx < currentLevelIdx ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-white/10'
+                                                                        }`} />
+                                                                    )}
+                                                                    {/* Node Dot */}
+                                                                    <div
+                                                                        title={lvlCfg.label}
+                                                                        className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ${
+                                                                            isCompleted
+                                                                                ? 'bg-indigo-600 text-white border border-indigo-600'
+                                                                                : isActive
+                                                                                ? `${lvlCfg.bg} ${lvlCfg.color} border-2 border-indigo-500 shadow-sm animate-pulse`
+                                                                                : 'bg-gray-200 dark:bg-white/5 text-gray-405 border border-gray-200 dark:border-white/10'
+                                                                        }`}
+                                                                    >
+                                                                        {isCompleted ? '✓' : idx + 1}
+                                                                    </div>
+                                                                    {/* Label */}
+                                                                    <span className={`text-[9px] mt-1 font-medium ${
+                                                                        isActive ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400'
+                                                                    }`}>
+                                                                        {lvlCfg.label.substring(0, 3)}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* Stats Info */}
+                                                    {mastery && (
+                                                        <div className="flex items-center justify-between mt-4 pt-2.5 border-t border-gray-100 dark:border-white/5 text-[11px] text-gray-400 font-medium">
+                                                            <span>Quizzes Completed: <strong className="text-gray-700 dark:text-gray-300">{mastery.quizzesCompleted}</strong></span>
+                                                            <span>Avg Score: <strong className="text-gray-700 dark:text-gray-300">{mastery.quizAvgScore !== null ? `${mastery.quizAvgScore}%` : 'N/A'}</strong></span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Actions section */}
+                                                    <div className="mt-3">
+                                                        {mastery?.canLevelUp ? (
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.02 }}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                disabled={levelingUpSkillId === us.skill.id}
+                                                                onClick={() => handleLevelUp(us.skill.id)}
+                                                                className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+                                                            >
+                                                                {levelingUpSkillId === us.skill.id ? (
+                                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                ) : (
+                                                                    <>
+                                                                        <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                                                        Level Up! (+250 XP)
+                                                                    </>
+                                                                )}
+                                                            </motion.button>
+                                                        ) : isCooldownActive ? (
+                                                            <div className="w-full py-2 bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-1.5 border border-gray-205/30 dark:border-white/5">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                Cooldown: {(() => {
+                                                                    const diffMs = new Date(mastery.levelUpCooldown).getTime() - new Date().getTime();
+                                                                    const hrs = Math.ceil(diffMs / (1000 * 60 * 60));
+                                                                    return `${hrs}h left`;
+                                                                })()}
+                                                            </div>
+                                                        ) : nextLevel !== 'COMPLETED' ? (
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.02 }}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                onClick={() => handleTakeTest(us.skill.id, undefined, true)}
+                                                                className="w-full py-2 bg-white dark:bg-white/5 border border-indigo-205 dark:border-white/10 hover:border-indigo-600 dark:hover:border-indigo-500 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1"
+                                                            >
+                                                                <PlayCircle className="w-3.5 h-3.5" />
+                                                                Take {nextLevel} Test
+                                                            </motion.button>
+                                                        ) : (
+                                                            <div className="w-full py-2 bg-purple-50 dark:bg-purple-505/10 text-purple-600 dark:text-purple-400 text-xs font-bold rounded-xl text-center flex items-center justify-center gap-1 border border-purple-200/30 dark:border-purple-500/10">
+                                                                <Award className="w-3.5 h-3.5 text-purple-500" />
+                                                                Grand Master Level
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             );

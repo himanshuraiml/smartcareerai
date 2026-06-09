@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     FileText, Target, Briefcase, TrendingUp, ArrowRight,
-    Zap, Award, Flame, Star, Sparkles, Brain, FlaskConical
+    Zap, Award, Flame, Star, Sparkles, Brain, FlaskConical, Trophy, CheckCircle2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import CareerRoadmap, { RoadmapStage, DEFAULT_ROADMAP_STAGES } from '@/components/roadmap/CareerRoadmap';
@@ -13,6 +13,7 @@ import Leaderboard from '@/components/gamification/Leaderboard';
 import PlacementReadyScore from '@/components/gamification/PlacementReadyScore';
 import SkillTestSuggestion from '@/components/dashboard/SkillTestSuggestion';
 import StreakBanner from '@/components/dashboard/StreakBanner';
+import LeagueResultModal from '@/components/gamification/LeagueResultModal';
 
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -41,6 +42,7 @@ export default function DashboardPage() {
         badgesEarned: 0
     });
     const [loading, setLoading] = useState(true);
+    const [dailyDone, setDailyDone] = useState({ quiz: false, insight: false, sprint: false });
 
     const fetchStats = useCallback(async () => {
         if (!user) return;
@@ -91,6 +93,16 @@ export default function DashboardPage() {
         else setGreeting('Good evening');
 
         fetchStats();
+
+        authFetch('/daily-challenges')
+            .then(r => r.ok ? r.json() : null)
+            .then(d => {
+                if (d?.data?.completion) {
+                    const c = d.data.completion;
+                    setDailyDone({ quiz: !!c.quizCompleted, insight: !!c.insightRead, sprint: !!c.sprintCompleted });
+                }
+            })
+            .catch(() => {});
     }, [fetchStats]);
 
     // Calculate roadmap stages based on user progress
@@ -302,6 +314,53 @@ export default function DashboardPage() {
             {/* Daily Streak & Rewards Banner */}
             <StreakBanner />
 
+            {/* Daily Challenges CTA */}
+            {(() => {
+                const completedCount = [dailyDone.quiz, dailyDone.insight, dailyDone.sprint].filter(Boolean).length;
+                const isPerfectDay = completedCount === 3;
+                return (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+                        <Link href="/dashboard/daily" className="group block">
+                            <div className={`relative overflow-hidden rounded-2xl p-[1.5px] shadow-md transition-all duration-300 group-hover:shadow-lg group-hover:scale-[1.005] ${isPerfectDay ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400' : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500'}`}>
+                                <div className="bg-white dark:bg-gray-900 rounded-[14px] px-5 py-4 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${isPerfectDay ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gradient-to-br from-amber-400 to-orange-500'}`}>
+                                            {isPerfectDay ? <Star className="w-5 h-5 text-white" /> : <Trophy className="w-5 h-5 text-white" />}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <span className="text-[15px] font-bold text-gray-900 dark:text-white">
+                                                    {isPerfectDay ? 'Perfect Day!' : "Today's Challenges"}
+                                                </span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isPerfectDay ? 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30'}`}>
+                                                    {completedCount}/3
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                {[
+                                                    { label: 'Quiz', done: dailyDone.quiz },
+                                                    { label: 'Insight', done: dailyDone.insight },
+                                                    { label: 'Sprint', done: dailyDone.sprint },
+                                                ].map(({ label, done }) => (
+                                                    <span key={label} className={`flex items-center gap-1 text-xs font-medium ${done ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                                                        <CheckCircle2 className={`w-3.5 h-3.5 ${done ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`} />
+                                                        {label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex-shrink-0 flex items-center gap-1.5 text-sm font-bold text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                                        {isPerfectDay ? 'View' : 'Start'}
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    </motion.div>
+                );
+            })()}
+
             {/* Placement-Ready Score */}
             <PlacementReadyScore
                 avgScore={stats.avgScore}
@@ -402,7 +461,8 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Leaderboard */}
-                    <Leaderboard currentUserXp={xp} />
+                    <Leaderboard />
+                    <LeagueResultModal />
                 </div>
             </div>
         </div>

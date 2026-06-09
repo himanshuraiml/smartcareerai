@@ -23,9 +23,13 @@ import {
     GitBranch,
     GraduationCap,
     BookOpen,
+    Trophy,
+    PenSquare,
+    Bell,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { authFetch } from '@/lib/auth-fetch';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import Logo from '@/components/layout/Logo';
 import EmailVerificationBanner from '@/components/dashboard/EmailVerificationBanner';
@@ -66,7 +70,46 @@ const otherItems: NavItem[] = [
 
 
 const dashboardItem: NavItem = { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', iconColor: 'text-blue-400' };
-const allNavItems = [dashboardItem, ...journeyItems, ...learningItems, ...otherItems];
+const dailyHubItem: NavItem = { href: '/dashboard/daily', icon: Trophy, label: 'Daily Challenges', iconColor: 'text-amber-400', badge: 'Daily' };
+const allNavItems = [dashboardItem, dailyHubItem, ...journeyItems, ...learningItems, ...otherItems];
+
+const LEAGUE_THEMES = {
+    BRONZE: {
+        bg: 'bg-amber-500/10 dark:bg-amber-500/15',
+        border: 'border-amber-500/20 dark:border-amber-500/30',
+        text: 'text-amber-600 dark:text-amber-400',
+        label: 'Bronze',
+        icon: '🥉'
+    },
+    SILVER: {
+        bg: 'bg-slate-500/10 dark:bg-slate-500/15',
+        border: 'border-slate-500/20 dark:border-slate-500/30',
+        text: 'text-slate-500 dark:text-slate-300',
+        label: 'Silver',
+        icon: '🥈'
+    },
+    GOLD: {
+        bg: 'bg-yellow-500/10 dark:bg-yellow-500/15',
+        border: 'border-yellow-500/20 dark:border-yellow-500/30',
+        text: 'text-yellow-600 dark:text-yellow-400',
+        label: 'Gold',
+        icon: '🥇'
+    },
+    PLATINUM: {
+        bg: 'bg-sky-500/10 dark:bg-sky-500/15',
+        border: 'border-sky-500/20 dark:border-sky-500/30',
+        text: 'text-sky-500 dark:text-sky-400',
+        label: 'Platinum',
+        icon: '💎'
+    },
+    DIAMOND: {
+        bg: 'bg-violet-500/10 dark:bg-violet-500/15',
+        border: 'border-violet-500/20 dark:border-violet-500/30',
+        text: 'text-violet-500 dark:text-violet-400',
+        label: 'Diamond',
+        icon: '🔷'
+    }
+};
 
 // Helper function to get proper page title from pathname
 const getPageTitle = (pathname: string | null): string => {
@@ -97,6 +140,8 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { user, logout, _hasHydrated } = useAuthStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isContributor, setIsContributor] = useState(false);
+    const [leagueTier, setLeagueTier] = useState<string | null>(null);
 
 
     const handleLogout = useCallback(() => {
@@ -146,6 +191,36 @@ export default function DashboardLayout({
         if (sessionStorage.getItem('pn_daily_login_pinged')) return;
         sessionStorage.setItem('pn_daily_login_pinged', '1');
         authFetch('/billing/engagement/daily-login', { method: 'POST' }).catch(() => { /* non-critical */ });
+    }, [user, _hasHydrated]);
+
+    // Check contributor eligibility and fetch league tier
+    useEffect(() => {
+        if (!user || !_hasHydrated) return;
+
+        authFetch('/skills/mastery')
+            .then((res) => {
+                if (res.ok) return res.json();
+                return null;
+            })
+            .then((masteries) => {
+                if (Array.isArray(masteries)) {
+                    const hasExpert = masteries.some((m) => m.level === 'EXPERT' || m.level === 'MASTER');
+                    setIsContributor(hasExpert);
+                }
+            })
+            .catch(() => {});
+
+        authFetch('/leagues/current')
+            .then((res) => {
+                if (res.ok) return res.json();
+                return null;
+            })
+            .then((data) => {
+                if (data && data.success && data.data && data.data.membership) {
+                    setLeagueTier(data.data.membership.league.tier);
+                }
+            })
+            .catch(() => {});
     }, [user, _hasHydrated]);
 
     if (!_hasHydrated || !user) {
@@ -266,34 +341,46 @@ export default function DashboardLayout({
                                 <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                     Learning &amp; Tools
                                 </p>
-                                <div className="space-y-1 mb-3">
-                                    {learningItems.map((item) => {
-                                        const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-                                        return (
-                                            <Link
-                                                key={item.href}
-                                                href={item.href}
-                                                onClick={() => setSidebarOpen(false)}
-                                                className={`
-                                                    relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
-                                                    ${isActive
-                                                        ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
-                                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
-                                                `}
-                                            >
-                                                {isActive && (
-                                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
-                                                )}
-                                                <item.icon className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
-                                                <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>{item.label}</span>
-                                                {item.badge && (
-                                                    <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
+                                 <div className="space-y-1 mb-3">
+                                    {(() => {
+                                        const dynamicLearningItems = [...learningItems];
+                                        if (isContributor) {
+                                            dynamicLearningItems.push({
+                                                href: '/dashboard/contribute',
+                                                icon: PenSquare,
+                                                label: 'Contribute',
+                                                iconColor: 'text-teal-400',
+                                                badge: 'Expert'
+                                            });
+                                        }
+                                        return dynamicLearningItems.map((item) => {
+                                            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    onClick={() => setSidebarOpen(false)}
+                                                    className={`
+                                                        relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
+                                                        ${isActive
+                                                            ? 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-500/15 dark:to-sky-500/10 text-blue-700 dark:text-white shadow-sm'
+                                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                                                    `}
+                                                >
+                                                    {isActive && (
+                                                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-600 to-teal-500" />
+                                                    )}
+                                                    <item.icon className={`flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                                                    <span className={`font-semibold text-[15px] ${isActive ? 'text-blue-700 dark:text-white' : ''}`}>{item.label}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 uppercase tracking-wider">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        });
+                                    })()}
                                 </div>
 
                                 {/* Institution-only items */}
@@ -364,21 +451,36 @@ export default function DashboardLayout({
                                     <MessageSquare className="w-4 h-4" />
                                 </Link>
 
+                                <NotificationBell />
+
                                 <ThemeToggle />
 
                                 {/* User Dropdown */}
                                 <div className="relative group">
-                                    <button className="flex items-center gap-2 p-1 pl-3 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 transition-all hover:border-blue-500/30">
-                                        <div className="flex flex-col items-end mr-1">
-                                            <span className="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-none">
+                                    <button className="flex items-center gap-3 p-1.5 pl-3.5 pr-1.5 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 transition-all duration-200 hover:border-blue-500/30 hover:bg-white/80 dark:hover:bg-white/10 hover:shadow-sm">
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200 leading-none">
                                                 {user?.name?.split(' ')[0] || "User"}
                                             </span>
-                                            <span className="text-[9px] text-gray-500 dark:text-gray-500 font-medium mt-0.5">
+                                            <span className="text-[9px] text-gray-400 dark:text-gray-500 font-semibold mt-1">
                                                 Candidate
                                             </span>
                                         </div>
+
+                                        {leagueTier && (
+                                            (() => {
+                                                const theme = LEAGUE_THEMES[leagueTier as keyof typeof LEAGUE_THEMES] || LEAGUE_THEMES.BRONZE;
+                                                return (
+                                                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-sm transition-all duration-200 group-hover:scale-105 ${theme.bg} ${theme.border} ${theme.text}`}>
+                                                        <span className="text-xs leading-none">{theme.icon}</span>
+                                                        <span className="hidden sm:inline-block">{theme.label}</span>
+                                                    </div>
+                                                );
+                                            })()
+                                        )}
+
                                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-teal-600 flex items-center justify-center shrink-0 shadow-md">
-                                            <span className="text-white text-[10px] font-black">
+                                            <span className="text-white text-[11px] font-black">
                                                 {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
                                             </span>
                                         </div>
@@ -398,6 +500,10 @@ export default function DashboardLayout({
                                             <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                                 <CreditCard className="w-3.5 h-3.5" />
                                                 Billing & Credits
+                                            </Link>
+                                            <Link href="/dashboard/notifications" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                                <Bell className="w-3.5 h-3.5" />
+                                                Notifications
                                             </Link>
                                             <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                                 <Settings className="w-3.5 h-3.5" />
@@ -425,7 +531,20 @@ export default function DashboardLayout({
                                 <div className="flex items-center gap-2">
                                     <Logo width={100} height={33} />
                                 </div>
-                                <ThemeToggle />
+                                <div className="flex items-center gap-3">
+                                    {leagueTier && (
+                                        (() => {
+                                            const theme = LEAGUE_THEMES[leagueTier as keyof typeof LEAGUE_THEMES] || LEAGUE_THEMES.BRONZE;
+                                            return (
+                                                <div className={`flex items-center justify-center w-7 h-7 rounded-lg border text-[10px] font-black shadow-sm ${theme.bg} ${theme.border} ${theme.text}`} title={`${theme.label} League`}>
+                                                    <span className="text-xs leading-none">{theme.icon}</span>
+                                                </div>
+                                            );
+                                        })()
+                                    )}
+                                    <NotificationBell />
+                                    <ThemeToggle />
+                                </div>
                             </div>
                         </header>
                     </>

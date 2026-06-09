@@ -461,6 +461,7 @@ const ASSESSMENT_SERVICE_URL = process.env.ASSESSMENT_SERVICE_URL || 'http://loc
 const ADMIN_SERVICE_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3011';
 const RECRUITER_SERVICE_URL = process.env.RECRUITER_SERVICE_URL || 'http://localhost:3008';
 const REPORT_SERVICE_URL = process.env.REPORT_SERVICE_URL || 'http://localhost:4010';
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3019';
 
 app.use(
     `${API_PREFIX}/assessments`,
@@ -480,6 +481,11 @@ app.use(
 app.use(
     `${API_PREFIX}/future-lab`,
     createProxyMiddleware(createProxyOptions(BILLING_SERVICE_URL, { [`^${API_PREFIX}/future-lab`]: '/future-lab' }))
+);
+
+app.use(
+    `${API_PREFIX}/leagues`,
+    createProxyMiddleware(createProxyOptions(BILLING_SERVICE_URL, { [`^${API_PREFIX}/leagues`]: '/leagues' }))
 );
 
 app.use(
@@ -581,6 +587,32 @@ app.use(
     createProxyMiddleware(createProxyOptions(AI_INTERVIEWER_SERVICE_URL, { [`^${API_PREFIX}/ai-interviews`]: '/ai-interviews' }))
 );
 
+// ============================================
+// DAILY CHALLENGE SERVICE (port 3017)
+// ============================================
+
+const DAILY_CHALLENGE_SERVICE_URL = process.env.DAILY_CHALLENGE_SERVICE_URL || 'http://localhost:3017';
+
+app.use(
+    `${API_PREFIX}/daily-challenges`,
+    createProxyMiddleware(createProxyOptions(DAILY_CHALLENGE_SERVICE_URL, { [`^${API_PREFIX}/daily-challenges`]: '' }))
+);
+
+app.use(
+    `${API_PREFIX}/community`,
+    createProxyMiddleware(createProxyOptions(DAILY_CHALLENGE_SERVICE_URL, { [`^${API_PREFIX}/community`]: '/community' }))
+);
+
+app.use(
+    `${API_PREFIX}/notifications`,
+    createProxyMiddleware(createProxyOptions(NOTIFICATION_SERVICE_URL, { [`^${API_PREFIX}/notifications`]: '/notifications' }))
+);
+
+app.use(
+    `${API_PREFIX}/webhooks/whatsapp`,
+    createProxyMiddleware(createProxyOptions(NOTIFICATION_SERVICE_URL, { [`^${API_PREFIX}/webhooks/whatsapp`]: '/webhooks/whatsapp' }))
+);
+
 // Note: JSON parsing already configured above with size limits
 
 // 404 handler
@@ -628,6 +660,8 @@ const server = app.listen(PORT, () => {
     logger.info(`📧 Email Tracking Service: ${EMAIL_SERVICE_URL}`);
     logger.info(`📹 Media Service: ${MEDIA_SERVICE_URL}`);
     logger.info(`📋 Report Service: ${REPORT_SERVICE_URL}`);
+    logger.info(`🎯 Daily Challenge Service: ${DAILY_CHALLENGE_SERVICE_URL}`);
+    logger.info(`🔔 Notification Service: ${NOTIFICATION_SERVICE_URL}`);
 });
 
 // Initialize Socket.io Event Bus
