@@ -97,9 +97,12 @@ export default function DashboardPage() {
         authFetch('/daily-challenges')
             .then(r => r.ok ? r.json() : null)
             .then(d => {
-                if (d?.data?.completion) {
-                    const c = d.data.completion;
-                    setDailyDone({ quiz: !!c.quizCompleted, insight: !!c.insightRead, sprint: !!c.sprintCompleted });
+                if (d?.data) {
+                    setDailyDone({
+                        quiz: !!d.data.quiz?.completed,
+                        insight: !!d.data.insight?.read,
+                        sprint: !!d.data.sprint?.completed,
+                    });
                 }
             })
             .catch(() => {});
