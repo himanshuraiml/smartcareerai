@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { ArrowLeft, User, Award, Clock, Activity, FileText, AlertCircle, MessageSquare, Mail, TrendingUp, TrendingDown, ShieldAlert, Percent, ClipboardList, Star, Camera, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import { motion, AnimatePresence } from "framer-motion";
@@ -69,6 +70,7 @@ export default function CandidateProfilePage() {
     const [applications, setApplications] = useState<Application[]>([]);
 
     const [loading, setLoading] = useState(true);
+    const [avatarError, setAvatarError] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"overview" | "applications" | "scorecards" | "proctoring">("overview");
     const [scorecards, setScorecards] = useState<any[]>([]);
@@ -148,6 +150,7 @@ export default function CandidateProfilePage() {
 
             const profData = await profRes.json();
             setCandidate(profData.data);
+            setAvatarError(false);
 
             if (appsRes.ok) {
                 const appsData = await appsRes.json();
@@ -279,9 +282,15 @@ export default function CandidateProfilePage() {
 
                     <div className="relative flex flex-col md:flex-row gap-6 md:gap-10 items-start">
                         {/* Avatar */}
-                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-500/20 shrink-0 border-4 border-white dark:border-gray-900 -mt-6 bg-white shrink">
-                            {candidate.avatarUrl ? (
-                                <img src={candidate.avatarUrl} alt={candidate.name} className="w-full h-full rounded-2xl object-cover" />
+                        <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-500/20 shrink-0 border-4 border-white dark:border-gray-900 -mt-6 bg-white shrink overflow-hidden">
+                            {candidate.avatarUrl && !avatarError ? (
+                                <Image
+                                    src={candidate.avatarUrl}
+                                    alt={candidate.name}
+                                    fill
+                                    className="object-cover"
+                                    onError={() => setAvatarError(true)}
+                                />
                             ) : (
                                 initial
                             )}

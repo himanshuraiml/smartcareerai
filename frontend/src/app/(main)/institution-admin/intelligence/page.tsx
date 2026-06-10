@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
     AlertTriangle, Brain, CheckCircle, ChevronRight,
@@ -19,6 +20,7 @@ export default function IntelligencePage() {
     const [riskyStudents, setRiskyStudents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [calculating, setCalculating] = useState(false);
+    const [failedAvatars, setFailedAvatars] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         fetchIntelligenceData();
@@ -247,17 +249,14 @@ export default function IntelligencePage() {
                                     <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-white/[0.01] transition-colors group">
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center font-black text-violet-600 overflow-hidden">
-                                                    {student.user.avatarUrl ? (
-                                                        <img
+                                                <div className="relative w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center font-black text-violet-600 overflow-hidden">
+                                                    {student.user.avatarUrl && !failedAvatars[student.user.id || idx] ? (
+                                                        <Image
                                                             src={student.user.avatarUrl}
                                                             alt={student.user.name}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                                const parent = (e.target as HTMLImageElement).parentElement;
-                                                                if (parent) parent.innerHTML = `<span>${student.user.name?.[0]}</span>`;
-                                                            }}
+                                                            fill
+                                                            className="object-cover"
+                                                            onError={() => setFailedAvatars(prev => ({ ...prev, [student.user.id || idx]: true }))}
                                                         />
                                                     ) : (
                                                         student.user.name?.[0] || <User className="w-5 h-5" />

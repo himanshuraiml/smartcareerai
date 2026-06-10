@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -70,6 +71,7 @@ export default function SavedCandidatesPage() {
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [search, setSearch] = useState("");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+    const [failedAvatars, setFailedAvatars] = useState<Record<string, boolean>>({});
 
     const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
         setToast({ msg, type });
@@ -82,7 +84,10 @@ export default function SavedCandidatesPage() {
         try {
             const res = await authFetch("/recruiter/candidates/saved");
             const data = await res.json();
-            if (res.ok) setCandidates(data.data || []);
+            if (res.ok) {
+                setCandidates(data.data || []);
+                setFailedAvatars({});
+            }
         } catch {
             showToast("Failed to load saved candidates", "error");
         } finally {
@@ -330,9 +335,15 @@ export default function SavedCandidatesPage() {
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                         {/* Avatar + info */}
                                         <div className="flex items-start gap-3 flex-1 min-w-0">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                                {item.candidate.avatarUrl ? (
-                                                    <img src={item.candidate.avatarUrl} alt="" className="w-full h-full object-cover rounded-2xl" />
+                                            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                                                {item.candidate.avatarUrl && !failedAvatars[item.candidateId] ? (
+                                                    <Image
+                                                        src={item.candidate.avatarUrl}
+                                                        alt=""
+                                                        fill
+                                                        className="object-cover"
+                                                        onError={() => setFailedAvatars(prev => ({ ...prev, [item.candidateId]: true }))}
+                                                    />
                                                 ) : (
                                                     <span className="text-white font-bold text-sm">{initials}</span>
                                                 )}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
     User, Mail, Briefcase, Camera, Save, Check, Loader2,
@@ -15,6 +16,7 @@ import { fetchJobRoles, type JobRole } from '@/lib/job-roles';
 export default function SettingsPage() {
     const router = useRouter();
     const { user, updateTargetJobRole, logout, setAvatarUrl, fetchUser } = useAuthStore();
+    const [avatarError, setAvatarError] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -79,6 +81,11 @@ export default function SettingsPage() {
         };
         fetchInstitutions();
     }, []);
+
+    // Reset avatar error when avatar changes
+    useEffect(() => {
+        setAvatarError(false);
+    }, [user?.avatarUrl]);
 
     // Initialize form with user data
     useEffect(() => {
@@ -327,12 +334,16 @@ export default function SettingsPage() {
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile Photo</h2>
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                {user?.avatarUrl ? (
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt="Profile"
-                                        className="w-24 h-24 rounded-2xl object-cover"
-                                    />
+                                {user?.avatarUrl && !avatarError ? (
+                                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden">
+                                        <Image
+                                            src={user.avatarUrl}
+                                            alt="Profile"
+                                            fill
+                                            className="object-cover"
+                                            onError={() => setAvatarError(true)}
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
                                         {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}

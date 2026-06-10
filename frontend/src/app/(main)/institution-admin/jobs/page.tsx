@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Briefcase, Search, Loader2, Filter, Building, MapPin, CheckCircle, XCircle, Info, Users, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authFetch } from '@/lib/auth-fetch';
@@ -151,7 +152,7 @@ export default function JobMarketplacePage() {
                                     <div className="flex gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
                                             {job.recruiter?.organization?.logoUrl ? (
-                                                <img src={job.recruiter?.organization?.logoUrl} alt="" className="w-8 h-8 rounded-lg" />
+                                                <Image src={job.recruiter.organization.logoUrl} alt="" width={32} height={32} className="rounded-lg object-contain" />
                                             ) : (
                                                 <Building className="w-6 h-6 text-gray-400" />
                                             )}

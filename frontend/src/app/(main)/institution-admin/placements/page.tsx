@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Briefcase, Search, Loader2, Download, Filter, Building, Calendar, CheckCircle, Clock, MapPin, ExternalLink, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/auth.store';
@@ -43,6 +44,7 @@ export default function PlacementsPage() {
         averagePackage: 0,
         topCompanies: [] as any[]
     });
+    const [failedAvatars, setFailedAvatars] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         if (user) {
@@ -251,17 +253,14 @@ export default function PlacementsPage() {
                                                 >
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 flex items-center justify-center flex-shrink-0 text-violet-600 font-bold overflow-hidden border border-violet-100 dark:border-violet-500/10">
-                                                                {offer.avatarUrl ? (
-                                                                    <img
+                                                            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 flex items-center justify-center flex-shrink-0 text-violet-600 font-bold overflow-hidden border border-violet-100 dark:border-violet-500/10">
+                                                                {offer.avatarUrl && !failedAvatars[offer.id] ? (
+                                                                    <Image
                                                                         src={offer.avatarUrl}
                                                                         alt={offer.studentName}
-                                                                        className="w-full h-full object-cover"
-                                                                        onError={(e) => {
-                                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                                            const parent = (e.target as HTMLImageElement).parentElement;
-                                                                            if (parent) parent.innerHTML = `<span>${offer.studentName.charAt(0)}</span>`;
-                                                                        }}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                        onError={() => setFailedAvatars(prev => ({ ...prev, [offer.id]: true }))}
                                                                     />
                                                                 ) : (
                                                                     <span>{offer.studentName.charAt(0)}</span>

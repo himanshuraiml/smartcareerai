@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import AIInterviewConfig from "@/components/recruiter/AIInterviewConfig";
 import CandidateEvalModal from "@/components/recruiter/CandidateEvalModal";
@@ -733,6 +734,7 @@ function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onIn
     invitedInfo?: { sessionId: string; type: 'AI' | 'COPILOT'; meetLink?: string };
     showToast: (message: string, type: "success" | "error") => void;
 }) {
+    const [avatarError, setAvatarError] = useState(false);
     const hasScore = applicant.overallScore != null && applicant.overallScore > 0;
     
     const getRiskStyles = (risk?: string) => {
@@ -765,10 +767,18 @@ function ApplicantCard({ applicant, onEvaluate, onSummary, onJustification, onIn
 
             <div className="flex items-center gap-4 mb-5">
                 <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-indigo-500/20">
-                        {applicant.avatarUrl
-                            ? <img src={applicant.avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
-                            : applicant.name.charAt(0).toUpperCase()}
+                    <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-indigo-500/20 overflow-hidden">
+                        {applicant.avatarUrl && !avatarError ? (
+                            <Image
+                                src={applicant.avatarUrl}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                onError={() => setAvatarError(true)}
+                            />
+                        ) : (
+                            applicant.name.charAt(0).toUpperCase()
+                        )}
                     </div>
                     {invitedInfo && (
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-[#111827] rounded-full border-2 border-white dark:border-[#111827] flex items-center justify-center">

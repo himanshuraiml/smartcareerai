@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
     Search,
@@ -187,6 +188,7 @@ function ImportStudentsModal({ isOpen, onClose, onSuccess }: ImportModalProps) {
 }
 
 export default function UniversityStudentsPage() {
+    const [failedAvatars, setFailedAvatars] = useState<Record<string, boolean>>({});
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -388,17 +390,14 @@ export default function UniversityStudentsPage() {
                                     >
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0 text-white font-black shadow-lg shadow-violet-500/20 overflow-hidden">
-                                                    {student.avatarUrl ? (
-                                                        <img
+                                                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0 text-white font-black shadow-lg shadow-violet-500/20 overflow-hidden">
+                                                    {student.avatarUrl && !failedAvatars[student.id] ? (
+                                                        <Image
                                                             src={student.avatarUrl}
                                                             alt={student.name}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                                const parent = (e.target as HTMLImageElement).parentElement;
-                                                                if (parent) parent.innerHTML = `<span>${student.name.charAt(0)}</span>`;
-                                                            }}
+                                                            fill
+                                                            className="object-cover"
+                                                            onError={() => setFailedAvatars(prev => ({ ...prev, [student.id]: true }))}
                                                         />
                                                     ) : (
                                                         <span>{student.name.charAt(0)}</span>

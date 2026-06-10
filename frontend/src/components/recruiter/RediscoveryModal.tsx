@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X, Search, UserCheck, Star, Briefcase, Zap, UserPlus } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
+import Image from "next/image";
 
 interface RecommendedCandidate {
     id: string;
@@ -117,7 +118,7 @@ export default function RediscoveryModal({ jobId, onClose, onInvite }: Rediscove
                                 >
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                                         {candidate.avatarUrl ? (
-                                            <img src={candidate.avatarUrl} alt="" className="w-full h-full rounded-xl object-cover" />
+                                            <Image src={candidate.avatarUrl} alt="" width={48} height={48} className="rounded-xl object-cover" />
                                         ) : (
                                             candidate.name.charAt(0).toUpperCase()
                                         )}

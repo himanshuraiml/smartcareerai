@@ -23,6 +23,10 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
+                hostname: '**.railway.app',
+            },
+            {
+                protocol: 'https',
                 hostname: 'placenxt.com',
             },
             {

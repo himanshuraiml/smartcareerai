@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
     Building2,
     Save,
@@ -43,6 +44,11 @@ export default function InstitutionSettingsPage() {
     const [name, setName] = useState("");
     const [logoUrl, setLogoUrl] = useState("");
     const [address, setAddress] = useState("");
+    const [previewError, setPreviewError] = useState(false);
+
+    useEffect(() => {
+        setPreviewError(false);
+    }, [logoUrl]);
 
     // Password change state
     const [savingPassword, setSavingPassword] = useState(false);
@@ -266,9 +272,9 @@ export default function InstitutionSettingsPage() {
                                 {activeTab === 'profile' && (
                                     <form onSubmit={handleSaveProfile} className="space-y-8">
                                         <div className="flex items-center gap-4 mb-8">
-                                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-500/20 overflow-hidden p-1.5">
+                                            <div className="relative w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-500/20 overflow-hidden p-1.5">
                                                 {logoUrl ? (
-                                                    <img src={logoUrl} alt="Institution Logo" className="max-w-full max-h-full object-contain" />
+                                                    <Image src={logoUrl} alt="Institution Logo" width={36} height={36} className="object-contain" />
                                                 ) : (
                                                     <Building2 className="w-6 h-6 text-emerald-500" />
                                                 )}
@@ -315,18 +321,22 @@ export default function InstitutionSettingsPage() {
                                                             placeholder="https://example.com/assets/logo.png"
                                                         />
                                                     </div>
-                                                    {logoUrl && (
-                                                        <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white shrink-0 shadow-sm flex items-center justify-center p-1">
-                                                            <img
+                                                    {logoUrl && !previewError ? (
+                                                        <div className="relative w-12 h-12 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white shrink-0 shadow-sm flex items-center justify-center p-1">
+                                                            <Image
                                                                 src={logoUrl}
                                                                 alt="Logo Preview"
-                                                                className="max-w-full max-h-full object-contain"
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
-                                                                }}
+                                                                width={40}
+                                                                height={40}
+                                                                className="object-contain"
+                                                                onError={() => setPreviewError(true)}
                                                             />
                                                         </div>
-                                                    )}
+                                                    ) : logoUrl ? (
+                                                        <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-bold shrink-0 shadow-sm flex items-center justify-center text-lg">
+                                                            {name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    ) : null}
                                                 </div>
                                                 <p className="text-[10px] text-gray-500 ml-1">Provide a direct link to your institution's logo SVG or PNG.</p>
                                             </div>

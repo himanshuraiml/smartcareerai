@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cmsApi, BlogPostData } from '@/lib/cms-api';
 import { ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import DOMPurify from 'dompurify';
@@ -26,6 +27,7 @@ export default function PreviewPostPage() {
     const id = params.id as string;
     const [post, setPost] = useState<BlogPostData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
         cmsApi.getPostById(id).then(setPost).catch(() => {}).finally(() => setLoading(false));
@@ -87,12 +89,17 @@ export default function PreviewPostPage() {
                 </div>
 
                 {/* Cover image */}
-                {post.coverImage && (
-                    <img
-                        src={post.coverImage}
-                        alt={post.title}
-                        className="w-full h-64 object-cover rounded-2xl mb-8"
-                    />
+                {post.coverImage && !imageError && (
+                    <div className="relative w-full h-64 rounded-2xl mb-8 overflow-hidden">
+                        <Image
+                            src={post.coverImage}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                            onError={() => setImageError(true)}
+                            unoptimized
+                        />
+                    </div>
                 )}
 
                 {/* Content — sanitized before rendering */}

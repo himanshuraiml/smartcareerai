@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from "@/store/auth.store";
 import { authFetch } from "@/lib/auth-fetch";
 import Link from "next/link";
+import Image from "next/image";
 
 const COLORS = ["#8B5CF6", "#EC4899", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#06B6D4", "#84CC16"];
 
@@ -115,6 +116,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // ─── Activity Feed Item ────────────────────────────────────────────────────────
 function ActivityFeedItem({ item, isLast }: { item: ActivityItem; isLast: boolean }) {
+    const [hasError, setHasError] = useState(false);
     const success = item.success;
     const time = item.time || item.completedAt || item.createdAt;
     const message = item.message || (() => {
@@ -133,29 +135,19 @@ function ActivityFeedItem({ item, isLast }: { item: ActivityItem; isLast: boolea
                 <div className="absolute left-[15px] top-8 bottom-[-20px] w-px bg-gray-200 dark:bg-gray-700" />
             )}
             <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 border-2 border-white dark:border-gray-900 overflow-hidden
-                ${!item.student?.avatarUrl ? (
+                ${(!item.student?.avatarUrl || hasError) ? (
                     success === true ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400" :
                         success === false ? "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400" :
                             "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
                 ) : ""}`}
             >
-                {item.student?.avatarUrl ? (
-                    <img
+                {item.student?.avatarUrl && !hasError ? (
+                    <Image
                         src={item.student.avatarUrl}
                         alt={item.student.name || ""}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                                parent.classList.add(
-                                    success === true ? "bg-emerald-100" :
-                                        success === false ? "bg-rose-100" : "bg-indigo-100"
-                                );
-                                // Re-insert the icon logic if necessary, but keep it simple
-                            }
-                        }}
+                        fill
+                        className="object-cover"
+                        onError={() => setHasError(true)}
                     />
                 ) : (
                     success === true ? <CheckCircle2 className="w-4 h-4" /> :

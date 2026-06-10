@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
     Save,
     Bell,
@@ -190,6 +191,7 @@ export default function RecruiterSettingsPage() {
     // ─── Org tab ──────────────────────────────────────────────────────────────
     const [org, setOrg] = useState<Organization | null>(null);
     const [orgLoading, setOrgLoading] = useState(false);
+    const [logoError, setLogoError] = useState(false);
 
     const [brandingData, setBrandingData] = useState({
         customDomain: "",
@@ -271,6 +273,7 @@ export default function RecruiterSettingsPage() {
             if (res.status === 404) { setOrg(null); return; }
             const data = await res.json();
             setOrg(data.data);
+            setLogoError(false);
             setBrandingData({
                 customDomain: data.data.customDomain || "",
                 isWhiteLabel: data.data.isWhiteLabel || false,
@@ -805,9 +808,15 @@ export default function RecruiterSettingsPage() {
                                                     <div className="flex flex-col gap-2">
                                                         <label className={labelClasses}>Company Logo</label>
                                                         <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-gray-800 rounded-xl">
-                                                            <div className="w-12 h-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden p-1 shadow-sm">
-                                                                {org.logoUrl ? (
-                                                                    <img src={org.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                                            <div className="relative w-12 h-12 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden p-1 shadow-sm">
+                                                                {org.logoUrl && !logoError ? (
+                                                                    <Image
+                                                                        src={org.logoUrl}
+                                                                        alt="Logo"
+                                                                        fill
+                                                                        className="object-contain"
+                                                                        onError={() => setLogoError(true)}
+                                                                    />
                                                                 ) : (
                                                                     <Building2 className="w-6 h-6 text-gray-400" />
                                                                 )}

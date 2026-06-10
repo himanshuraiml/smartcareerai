@@ -8,6 +8,7 @@ import {
     Monitor, Camera, AlertTriangle, Shield, Code, Users
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 const formatTimeMs = (ms: number) => { const s = Math.floor(ms/1000); const m = Math.floor(s/60); return `${m.toString().padStart(2, "0")}:${(s%60).toString().padStart(2, "0")}`; };
 import { useVideoRecorder } from "@/hooks/useVideoRecorder";
@@ -696,10 +697,11 @@ export default function MixedInterviewRoomPage() {
 
                                     {/* Avatar image */}
                                     <div className={`relative w-40 h-40 rounded-full overflow-hidden border-4 ${isRecording ? 'border-indigo-400' : 'border-indigo-500/50'} shadow-lg shadow-indigo-500/20`}>
-                                        <img
+                                        <Image
                                             src={interviewer.avatar}
                                             alt={interviewer.name}
-                                            className="w-full h-full object-cover"
+                                            fill
+                                            className="object-cover"
                                         />
                                     </div>
 
