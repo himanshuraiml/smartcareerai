@@ -13,15 +13,14 @@ export const authMiddleware = (req: Request, _res: Response, next: NextFunction)
         // Check for user ID header (passed by API gateway after JWT verification)
         const userIdHeader = req.headers['x-user-id'];
         if (userIdHeader) {
-            // Decode (not verify — gateway already verified) to get role claim
             const authHeader = req.headers.authorization;
-            let role: string | undefined;
             if (authHeader?.startsWith('Bearer ')) {
-                const decoded = jwt.decode(authHeader.split(' ')[1]) as JwtPayload | null;
-                role = decoded?.role;
+                if (!process.env.JWT_SECRET) throw new AppError('Server configuration error', 500);
+                const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET) as JwtPayload;
+                (req as any).user = { id: userIdHeader, role: decoded.role, email: decoded.email };
+                return next();
             }
-            (req as any).user = { id: userIdHeader, role };
-            return next();
+            throw new AppError('Authentication token required', 401);
         }
 
         const authHeader = req.headers.authorization;

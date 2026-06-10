@@ -7,7 +7,7 @@ import { sentimentTimelineService } from './sentiment-timeline.service';
 import { logger } from '../utils/logger';
 
 const MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || 'http://localhost:3014';
-const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
+const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET ?? '';
 
 const FILLER_WORDS = [
     'um', 'uh', 'like', 'you know', 'sort of', 'kind of',

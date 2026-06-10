@@ -15,9 +15,10 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
 }
 
 export function internalAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-    const secret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
-    if (req.headers['x-internal-secret'] !== secret) {
-        res.status(401).json({ error: 'Unauthorized — invalid internal secret' });
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    const provided = req.headers['x-internal-secret'];
+    if (!expected || !provided || provided !== expected) {
+        res.status(401).json({ error: 'Unauthorized — missing or invalid internal secret' });
         return;
     }
     next();

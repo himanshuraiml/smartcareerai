@@ -187,9 +187,8 @@ export class ResumeService {
     /**
      * Get decrypted file buffer and metadata
      */
-    async getDecryptedFile(resumeId: string, userId?: string) {
-        const where: any = { id: resumeId, isActive: true };
-        if (userId) where.userId = userId;
+    async getDecryptedFile(resumeId: string, userId: string) {
+        const where: any = { id: resumeId, userId, isActive: true };
 
         const resume = await prisma.resume.findFirst({ where });
 
@@ -215,11 +214,9 @@ export class ResumeService {
         };
     }
 
-    async getDownloadUrl(resumeId: string) {
-        // For encrypted files, we need the client to request the decrypted file via an API endpoint.
-        // We'll return the relative API path instead of a MinIO presigned URL.
+    async getDownloadUrl(resumeId: string, userId: string) {
         const resume = await prisma.resume.findFirst({
-            where: { id: resumeId, isActive: true },
+            where: { id: resumeId, userId, isActive: true },
         });
 
         if (!resume) {

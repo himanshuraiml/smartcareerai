@@ -122,54 +122,14 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
 // INPUT SANITIZATION
 // ============================================
 
-export const sanitizeInput = (req: Request, _res: Response, next: NextFunction): void => {
-    // Sanitize query parameters
-    if (req.query) {
-        Object.keys(req.query).forEach(key => {
-            if (typeof req.query[key] === 'string') {
-                req.query[key] = sanitizeString(req.query[key] as string);
-            }
-        });
-    }
-
-    // Sanitize body (for non-file uploads)
-    if (req.body && typeof req.body === 'object') {
-        req.body = sanitizeObject(req.body);
-    }
-
+// Body mutation removed: Prisma's parameterized queries prevent SQLi natively,
+// React's JSX escaping and DOMPurify (used at render sites) prevent XSS.
+// Regex-based body rewriting caused false positives on legitimate content
+// (apostrophes, code snippets, CSS) and gave a false sense of security
+// without blocking encoded or attribute-based payloads.
+export const sanitizeInput = (_req: Request, _res: Response, next: NextFunction): void => {
     next();
 };
-
-function sanitizeString(str: string): string {
-    // Remove potential XSS vectors
-    return str
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '')
-        .trim();
-}
-
-function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
-    const sanitized: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-        if (typeof value === 'string') {
-            sanitized[key] = sanitizeString(value);
-        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            sanitized[key] = sanitizeObject(value as Record<string, unknown>);
-        } else if (Array.isArray(value)) {
-            sanitized[key] = value.map(item =>
-                typeof item === 'string' ? sanitizeString(item) :
-                    typeof item === 'object' && item !== null ? sanitizeObject(item as Record<string, unknown>) :
-                        item
-            );
-        } else {
-            sanitized[key] = value;
-        }
-    }
-
-    return sanitized;
-}
 
 // ============================================
 // SQL INJECTION PREVENTION

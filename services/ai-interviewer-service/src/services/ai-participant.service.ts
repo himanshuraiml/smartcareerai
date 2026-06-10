@@ -34,7 +34,7 @@ export class AIParticipantService {
     constructor(meetingId: string) {
         this.meetingId = meetingId;
         this.mediaServiceUrl = process.env.MEDIA_SERVICE_URL || 'http://localhost:3014';
-        this.internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
+        this.internalSecret = process.env.INTERNAL_SERVICE_SECRET ?? '';
     }
 
     /** Create PlainTransport + Producer in media-service and cache params. */

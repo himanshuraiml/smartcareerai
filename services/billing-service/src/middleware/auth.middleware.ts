@@ -27,15 +27,13 @@ export const authMiddleware = async (
         if (userIdHeader) {
             const authHeader = req.headers.authorization;
             if (authHeader?.startsWith('Bearer ')) {
+                if (!process.env.JWT_SECRET) throw createError('Server configuration error', 500, 'CONFIG_ERROR');
                 const token = authHeader.split(' ')[1];
-                const decoded = jwt.decode(token) as JwtPayload | null;
-                if (decoded) {
-                    req.user = { ...decoded, id: userIdHeader };
-                    return next();
-                }
+                const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
+                req.user = { ...decoded, id: userIdHeader };
+                return next();
             }
-            req.user = { id: userIdHeader, email: '', role: '' } as JwtPayload;
-            return next();
+            throw createError('Authentication token required', 401, 'NO_TOKEN');
         }
 
         // Fallback: verify JWT directly (for direct service calls without gateway)

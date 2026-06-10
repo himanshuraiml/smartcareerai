@@ -58,7 +58,12 @@ export const roleMiddleware = (allowedRoles: string[]) => {
 
         try {
             const token = (authHeader as string).substring(7);
-            const decoded = jwt.decode(token) as any;
+            const secret = process.env.JWT_SECRET;
+            if (!secret) {
+                res.status(500).json({ error: 'Server configuration error' });
+                return;
+            }
+            const decoded = jwt.verify(token, secret) as any;
             const userRole = decoded?.role;
 
             if (!userRole || !allowedRoles.includes(userRole)) {

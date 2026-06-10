@@ -50,9 +50,10 @@ app.use('/meetings/:id/recording', recordingRouter);
 app.use('/meetings/:id/ai-transport', aiTransportRouter);
 
 // Internal callback: called by interview-service when meeting analysis completes
-const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
 app.post('/internal/meetings/:meetingId/analysis-ready', (req, res) => {
-    if (req.headers['x-internal-secret'] !== INTERNAL_SECRET) {
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    const provided = req.headers['x-internal-secret'];
+    if (!expected || !provided || provided !== expected) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
     const { meetingId } = req.params;

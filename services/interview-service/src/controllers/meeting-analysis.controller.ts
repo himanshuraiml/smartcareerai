@@ -3,11 +3,10 @@ import { meetingTranscriptionService } from '../services/meeting-transcription.s
 import { meetingIntelligenceService } from '../services/meeting-intelligence.service';
 import { logger } from '../utils/logger';
 
-const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
-
 function verifyInternalSecret(req: Request, res: Response): boolean {
-    const secret = req.headers['x-internal-secret'];
-    if (secret !== INTERNAL_SECRET) {
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    const provided = req.headers['x-internal-secret'];
+    if (!expected || !provided || provided !== expected) {
         res.status(401).json({ success: false, error: 'Unauthorized internal call' });
         return false;
     }

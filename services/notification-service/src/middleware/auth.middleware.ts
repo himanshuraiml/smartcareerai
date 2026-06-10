@@ -25,15 +25,17 @@ export const authMiddleware = async (
         if (userIdHeader) {
             const authHeader = req.headers.authorization;
             if (authHeader?.startsWith('Bearer ')) {
-                const token = authHeader.split(' ')[1];
-                const decoded = jwt.decode(token) as JwtPayload | null;
-                if (decoded) {
-                    req.user = { ...decoded, id: userIdHeader };
-                    return next();
+                const secret = process.env.JWT_SECRET;
+                if (!secret) {
+                    loggerError(new Error('JWT_SECRET not configured'));
+                    return res.status(500).json({ success: false, error: 'Server configuration error' });
                 }
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, secret) as JwtPayload;
+                req.user = { ...decoded, id: userIdHeader };
+                return next();
             }
-            req.user = { id: userIdHeader, email: '', role: '' } as JwtPayload;
-            return next();
+            return res.status(401).json({ success: false, error: 'Authentication token required' });
         }
 
         const authHeader = req.headers.authorization;
@@ -42,7 +44,11 @@ export const authMiddleware = async (
         }
 
         const token = authHeader.split(' ')[1];
-        const secret = process.env.JWT_SECRET || 'fallback_secret';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            loggerError(new Error('JWT_SECRET not configured'));
+            return res.status(500).json({ success: false, error: 'Server configuration error' });
+        }
         const decoded = jwt.verify(token, secret) as JwtPayload;
 
         req.user = decoded;

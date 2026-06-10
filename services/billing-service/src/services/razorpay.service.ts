@@ -178,15 +178,19 @@ export class RazorpayService {
         paymentId: string,
         signature: string
     ): boolean {
-        const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-            .update(`${orderId}|${paymentId}`)
-            .digest('hex');
-
-        return crypto.timingSafeEqual(
-            Buffer.from(expectedSignature, 'hex'),
-            Buffer.from(signature, 'hex')
-        );
+        try {
+            const expected = Buffer.from(
+                crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+                    .update(`${orderId}|${paymentId}`)
+                    .digest('hex'),
+                'hex'
+            );
+            const provided = Buffer.from(signature || '', 'hex');
+            if (expected.length !== provided.length) return false;
+            return crypto.timingSafeEqual(expected, provided);
+        } catch {
+            return false;
+        }
     }
 
     /**
@@ -197,15 +201,19 @@ export class RazorpayService {
         paymentId: string,
         signature: string
     ): boolean {
-        const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-            .update(`${paymentId}|${subscriptionId}`)
-            .digest('hex');
-
-        return crypto.timingSafeEqual(
-            Buffer.from(expectedSignature, 'hex'),
-            Buffer.from(signature, 'hex')
-        );
+        try {
+            const expected = Buffer.from(
+                crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+                    .update(`${paymentId}|${subscriptionId}`)
+                    .digest('hex'),
+                'hex'
+            );
+            const provided = Buffer.from(signature || '', 'hex');
+            if (expected.length !== provided.length) return false;
+            return crypto.timingSafeEqual(expected, provided);
+        } catch {
+            return false;
+        }
     }
 
     /**
@@ -217,15 +225,17 @@ export class RazorpayService {
             logger.error('RAZORPAY_WEBHOOK_SECRET is not set');
             return false;
         }
-        const expectedSignature = crypto
-            .createHmac('sha256', secret)
-            .update(body)
-            .digest('hex');
-
-        return crypto.timingSafeEqual(
-            Buffer.from(expectedSignature, 'hex'),
-            Buffer.from(signature, 'hex')
-        );
+        try {
+            const expected = Buffer.from(
+                crypto.createHmac('sha256', secret).update(body).digest('hex'),
+                'hex'
+            );
+            const provided = Buffer.from(signature || '', 'hex');
+            if (expected.length !== provided.length) return false;
+            return crypto.timingSafeEqual(expected, provided);
+        } catch {
+            return false;
+        }
     }
 
     /**

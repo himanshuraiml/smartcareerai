@@ -104,7 +104,8 @@ export class ResumeController {
     async download(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const result = await resumeService.getDownloadUrl(id);
+            const userId = (req as any).user.id;
+            const result = await resumeService.getDownloadUrl(id, userId);
 
             res.json({
                 success: true,
@@ -147,7 +148,8 @@ export class ResumeController {
     async downloadFile(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const { buffer, mimeType, fileName } = await resumeService.getDecryptedFile(id);
+            const userId = (req as any).user.id;
+            const { buffer, mimeType, fileName } = await resumeService.getDecryptedFile(id, userId);
 
             res.setHeader('Content-Type', mimeType);
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);

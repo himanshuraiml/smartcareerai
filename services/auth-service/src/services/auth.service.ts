@@ -111,6 +111,11 @@ export class AuthService {
             throw new AppError('Invalid email or password', 401);
         }
 
+        // Reject unverified accounts (Google users are always verified)
+        if (!user.isVerified) {
+            throw new AppError('Please verify your email address before logging in', 403);
+        }
+
         // Generate tokens
         const tokens = await this.generateTokens({
             id: user.id,

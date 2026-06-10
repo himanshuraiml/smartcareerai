@@ -55,8 +55,7 @@ export default function WarRoomOperations() {
         if (!selectedDriveId) return toast.error("Select a drive prior to export.");
         try {
             setIsExporting(true);
-            const token = localStorage.getItem("accessToken");
-            if (!token || !user?.adminForInstitutionId) return; // Fetch for placements
+            if (!user?.adminForInstitutionId) return;
             const res = await authFetch(`/institution-admin/${user?.adminForInstitutionId}/ops/drives/${selectedDriveId}/attendance`);
             if (!res.ok) throw new Error("Failed to export attendance");
 
@@ -102,7 +101,6 @@ export default function WarRoomOperations() {
 
         try {
             setIsProcessingScan(true);
-            const token = localStorage.getItem("accessToken");
             const res = await authFetch(`/institution-admin/${user?.adminForInstitutionId}/ops/drives/${selectedDriveId}/attendance/scan`, {
                 method: "POST",
                 body: JSON.stringify({ qrCode })
@@ -128,8 +126,7 @@ export default function WarRoomOperations() {
     const fetchMetrics = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem("accessToken");
-            if (!user?.adminForInstitutionId || !token) return;
+            if (!user?.adminForInstitutionId) return;
 
             const res = await authFetch(`/institution-admin/dashboard`);// Dashboard is generic for the admin, or uses ID if needed. Wait, institution.routes says /dashboard. Gateway maps analytics/overview to dashboard. Let's use /institution-admin/dashboard.
 

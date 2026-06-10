@@ -3,11 +3,11 @@ import { createAITransport, closeAITransport } from '../controllers/ai-transport
 
 export const aiTransportRouter = Router({ mergeParams: true });
 
-const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
-
 /** Validate internal service-to-service secret */
 aiTransportRouter.use((req, res, next) => {
-    if (req.headers['x-internal-secret'] !== INTERNAL_SECRET) {
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    const provided = req.headers['x-internal-secret'];
+    if (!expected || !provided || provided !== expected) {
         res.status(401).json({ error: 'Unauthorized — missing or invalid internal secret' });
         return;
     }

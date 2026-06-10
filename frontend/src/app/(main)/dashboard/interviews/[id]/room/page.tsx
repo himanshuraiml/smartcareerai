@@ -519,7 +519,7 @@ export default function InterviewRoomPage() {
                                 ].map((item, i) => (
                                     <li key={i} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#9ca3af' }}>
                                         <span style={{ color: '#4b5563', flexShrink: 0 }}>•</span>
-                                        <span dangerouslySetInnerHTML={{ __html: item.replace(/([^.]+\.)/g, '<strong style="color:#d1d5db">$1</strong> ').trim() }} />
+                                        <span>{item}</span>
                                     </li>
                                 ))}
                             </ul>

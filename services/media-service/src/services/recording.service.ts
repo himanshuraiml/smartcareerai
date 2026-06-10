@@ -10,7 +10,7 @@ import { logger } from '../utils/logger';
 
 const TRANSCRIPT_CHUNK_SECONDS = 5;
 const INTERVIEW_SERVICE_URL = process.env.INTERVIEW_SERVICE_URL || 'http://localhost:3007';
-const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret';
+const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET ?? '';
 
 interface ActiveRecording {
     ffmpegProcess: ChildProcess;

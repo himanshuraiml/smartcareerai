@@ -26,18 +26,17 @@ export const authMiddleware = async (
         // Check for user ID header (passed by API gateway after JWT verification)
         const userIdHeader = req.headers['x-user-id'] as string | undefined;
         if (userIdHeader) {
-            // Gateway already verified the JWT — decode (without verification) for role/email info
             const authHeader = req.headers.authorization;
             if (authHeader?.startsWith('Bearer ')) {
+                const secret = process.env.JWT_SECRET;
+                if (!secret) throw createError('Server configuration error', 500, 'CONFIG_ERROR');
                 const token = authHeader.split(' ')[1];
-                const decoded = jwt.decode(token) as JwtPayload | null;
-                if (decoded) {
-                    req.user = { ...decoded, id: userIdHeader };
-                    return next();
-                }
+                const decoded = jwt.verify(token, secret) as JwtPayload;
+                req.user = { ...decoded, id: userIdHeader };
+                return next();
             }
-            req.user = { id: userIdHeader, email: '', role: '' } as JwtPayload;
-            return next();
+            // x-user-id without a Bearer token is unexpected; reject to prevent role spoofing
+            throw createError('Authentication token required', 401, 'NO_TOKEN');
         }
 
         // Fallback: verify JWT directly (for direct service calls without gateway)
