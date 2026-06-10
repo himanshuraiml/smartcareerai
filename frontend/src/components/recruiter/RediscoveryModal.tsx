@@ -33,6 +33,13 @@ export default function RediscoveryModal({ jobId, onClose, onInvite }: Rediscove
             if (!res.ok) throw new Error("Failed to search AI memory");
             const data = await res.json();
             setCandidates(data.data || []);
+            // Google Tag Manager Event
+            (window as any).dataLayer = (window as any).dataLayer || [];
+            (window as any).dataLayer.push({
+                event: 'ai_sourcing_triggered',
+                jobId: jobId,
+                candidatesFound: (data.data || []).length
+            });
         } catch (err: any) {
             setError(err.message || "An error occurred");
         } finally {

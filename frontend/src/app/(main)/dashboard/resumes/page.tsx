@@ -108,6 +108,12 @@ export default function ResumesPage() {
             }
 
             setResumes((prev) => [data.data, ...prev]);
+            // Google Tag Manager Event
+            (window as any).dataLayer = (window as any).dataLayer || [];
+            (window as any).dataLayer.push({
+                event: 'resume_upload_success',
+                fileName: file.name
+            });
             setTimeout(fetchResumes, 2000);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed');
@@ -179,6 +185,13 @@ export default function ResumesPage() {
                 setAtsResult(data.data);
                 setAnalyzedResumeId(resumeId);
                 setShowAtsModal(true);
+                // Google Tag Manager Event
+                (window as any).dataLayer = (window as any).dataLayer || [];
+                (window as any).dataLayer.push({
+                    event: 'resume_score_success',
+                    score: data.data.overallScore,
+                    jobRole: targetRole
+                });
                 // Refresh list to update latestAnalysis
                 fetchResumes();
 

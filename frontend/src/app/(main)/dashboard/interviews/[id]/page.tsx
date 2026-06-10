@@ -257,6 +257,14 @@ export default function InterviewRoomPage() {
                 method: 'POST'
             });
             if (response.ok) {
+                // Google Tag Manager Event
+                (window as any).dataLayer = (window as any).dataLayer || [];
+                (window as any).dataLayer.push({
+                    event: 'interview_start_success',
+                    sessionId: sessionId,
+                    interviewType: session?.type,
+                    difficulty: session?.difficulty
+                });
                 // Route based on interview type
                 if (session?.type === 'HR' || session?.type === 'BEHAVIORAL') {
                     router.push(`/dashboard/interviews/${sessionId}/hr-room`);
@@ -454,6 +462,14 @@ export default function InterviewRoomPage() {
             if (response.ok) {
                 const data = await response.json();
                 setSession(data.data.session);
+                // Google Tag Manager Event
+                (window as any).dataLayer = (window as any).dataLayer || [];
+                (window as any).dataLayer.push({
+                    event: 'interview_complete_success',
+                    sessionId: sessionId,
+                    interviewType: session?.type,
+                    overallScore: data.data.session?.overallScore
+                });
             }
         } catch (err) {
             console.error('Failed to complete interview:', err);
